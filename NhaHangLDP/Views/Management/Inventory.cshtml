@@ -1,0 +1,238 @@
+﻿@model NhaHangLDP.Models.InventoryStatsViewModel
+@{
+    ViewBag.Title = "Tổng Quan Kho";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="fas fa-warehouse me-2"></i>Tổng Quan Kho Nguyên Liệu</h2>
+        <p class="text-light">Theo dõi tình trạng kho và nguyên liệu</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: rgba(40, 167, 69, 0.3);">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <h4>@Model.TotalIngredients</h4>
+            <p>Tổng Nguyên Liệu</p>
+            <small class="text-success">Đang quản lý</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: rgba(255, 193, 7, 0.3);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h4>@Model.LowStockItems</h4>
+            <p>Sắp Hết Hàng</p>
+            <small class="text-warning">Cần nhập thêm</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: rgba(220, 53, 69, 0.3);">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h4>@Model.ExpiredItems</h4>
+            <p>Sắp Hết Hạn</p>
+            <small class="text-danger">Trong 7 ngày</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: rgba(0, 123, 255, 0.3);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <h4>@Model.TotalInventoryValue.ToString("N0") VNĐ</h4>
+            <p>Giá Trị Kho</p>
+            <small class="text-info">Tổng tài sản</small>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="stat-card">
+            <h5><i class="fas fa-bolt me-2"></i>Thao Tác Nhanh</h5>
+            <div class="row">
+                <div class="col-md-2">
+                    <a href="@Url.Action("StockInbound", "Management")" class="btn btn-custom w-100">
+                        <i class="fas fa-plus-circle d-block mb-2"></i>
+                        Nhập Kho
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="@Url.Action("StockOutbound", "Management")" class="btn btn-custom w-100">
+                        <i class="fas fa-minus-circle d-block mb-2"></i>
+                        Xuất Kho
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="@Url.Action("CreateIngredient", "Management")" class="btn btn-custom w-100">
+                        <i class="fas fa-plus d-block mb-2"></i>
+                        Thêm Nguyên Liệu
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="@Url.Action("DamagedStock", "Management")" class="btn btn-custom w-100">
+                        <i class="fas fa-exclamation-triangle d-block mb-2"></i>
+                        Báo Hàng Hỏng
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="@Url.Action("InventoryReport", "Management")" class="btn btn-custom w-100">
+                        <i class="fas fa-chart-bar d-block mb-2"></i>
+                        Báo Cáo
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="@Url.Action("IngredientList", "Management")" class="btn btn-custom w-100">
+                        <i class="fas fa-list d-block mb-2"></i>
+                        Danh Sách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Low Stock Items -->
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5><i class="fas fa-exclamation-triangle text-warning me-2"></i>Nguyên Liệu Sắp Hết</h5>
+            @if (Model.LowStockList != null && Model.LowStockList.Any())
+            {
+                foreach (var item in Model.LowStockList)
+                {
+                    <div class="inventory-item low-stock">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>@item.IngredientName</strong>
+                                <div class="small">
+                                    Còn: @item.CurrentStock @item.Unit / Tối thiểu: @item.MinimumStock @item.Unit
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-warning">@item.StockPercentage%</span>
+                            </div>
+                        </div>
+                        <div class="progress progress-custom mt-2">
+                            <div class="progress-bar bg-warning" style="width: @(item.StockPercentage + "%")"></div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted">
+                    <i class="fas fa-check-circle fa-3x mb-3"></i>
+                    <p>Tất cả nguyên liệu đều đủ số lượng</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Expiring Items -->
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5><i class="fas fa-clock text-danger me-2"></i>Nguyên Liệu Sắp Hết Hạn</h5>
+            @if (Model.ExpiringList != null && Model.ExpiringList.Any())
+            {
+                foreach (var item in Model.ExpiringList)
+                {
+                    <div class="inventory-item @(item.DaysToExpiry <= 1 ? "out-of-stock" : "low-stock")">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>@item.IngredientName</strong>
+                                <div class="small">
+                                    Số lượng: @item.Quantity | Lô: @item.BatchNumber
+                                </div>
+                                <div class="small text-muted">
+                                    Hết hạn: @item.ExpiryDate.ToString("dd/MM/yyyy")
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge @(item.DaysToExpiry <= 1 ? "bg-danger" : "bg-warning")">
+                                    @item.DaysToExpiry ngày
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center text-muted">
+                    <i class="fas fa-calendar-check fa-3x mb-3"></i>
+                    <p>Không có nguyên liệu nào sắp hết hạn</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Damage Statistics -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="stat-card">
+            <h5><i class="fas fa-chart-line me-2"></i>Thống Kê Thiệt Hại Theo Tháng</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="text-center">
+                        <h4 class="text-danger">@Model.MonthlyDamageValue.ToString("N0") VNĐ</h4>
+                        <p class="mb-0">Thiệt hại tháng này</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <canvas id="damageChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Damage Chart
+        const damageCtx = document.getElementById('damageChart').getContext('2d');
+        new Chart(damageCtx, {
+            type: 'line',
+            data: {
+                labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6'],
+                datasets: [{
+                    label: 'Thiệt hại (VNĐ)',
+                    data: [800000, 1200000, 950000, 1100000, 1350000, 1200000],
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: { color: '#fff' }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: '#fff' } },
+                    y: { ticks: { color: '#fff' } }
+                }
+            }
+        });
+
+        // Auto refresh every 5 minutes
+        setTimeout(function () {
+            location.reload();
+        }, 300000);
+    </script>
+}

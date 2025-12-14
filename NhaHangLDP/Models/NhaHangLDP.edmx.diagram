@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="6162b377d536458babbb7c827aa647c9" Name="Diagram1">
+        <EntityTypeShape EntityType="NhaHangLDPModel.Account" Width="1.5" PointX="3" PointY="11.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.AppSetting" Width="1.5" PointX="5.75" PointY="2" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Bill" Width="1.5" PointX="5.25" PointY="16.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Booking" Width="1.5" PointX="7.5" PointY="24.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.CashierShift" Width="1.5" PointX="5.25" PointY="20.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.DamagedStock" Width="1.5" PointX="8.25" PointY="15" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Employee" Width="1.5" PointX="3" PointY="16" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Ingredient" Width="1.5" PointX="8.25" PointY="6.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.MenuCombo" Width="1.5" PointX="3" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.MenuComboItem" Width="1.5" PointX="5.25" PointY="6.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.MenuItem" Width="1.5" PointX="3" PointY="4.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.MenuItemIngredient" Width="1.5" PointX="10.5" PointY="6" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Order" Width="1.5" PointX="7.5" PointY="18.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.OrderDetail" Width="1.5" PointX="9.75" PointY="21.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.PriceHistory" Width="1.5" PointX="5.25" PointY="12.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.RestaurantTable" Width="1.5" PointX="5.25" PointY="24.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.ReturnBill" Width="1.5" PointX="10.5" PointY="14.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.ReturnBillDetail" Width="1.5" PointX="12.75" PointY="15" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Role" Width="1.5" PointX="0.75" PointY="15.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.ShiftSupportStaff" Width="1.5" PointX="10.5" PointY="18.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.StockInbound" Width="1.5" PointX="8.25" PointY="10.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.StockInboundDetail" Width="1.5" PointX="10.5" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Supplier" Width="1.5" PointX="6" PointY="9.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.TableArea" Width="1.5" PointX="3" PointY="25.125" IsExpanded="true" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Account_Role" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Bill_Employee_Cashier" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Bill_Order" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_ReturnBill_Bill" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Booking_RestaurantTable" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_CashierShift_Employee" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Order_CashierShift" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_ShiftSupportStaff_CashierShift" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_DamagedStock_Employee" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_DamagedStock_Ingredient" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Employee_Role" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Order_Employee_Waiter" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_PriceHistory_Employee" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_ReturnBill_Employee" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_ShiftSupportStaff_Employee" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_StockInbound_Employee" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_MenuItemIngredient_Ingredient" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_StockInboundDetail_Ingredient" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_MenuComboItem_MenuCombo" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_MenuComboItem_MenuItem" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_MenuItemIngredient_MenuItem" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_OrderDetail_MenuItem" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_PriceHistory_MenuItem" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_ReturnBillDetail_MenuItem" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Order_RestaurantTable" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_OrderDetail_Order" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_RestaurantTable_TableArea" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_ReturnBillDetail_ReturnBill" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_StockInbound_Supplier" ManuallyRouted="false" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_StockInboundDetail_StockInbound" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

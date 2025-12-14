@@ -1,0 +1,337 @@
+﻿@{
+    ViewBag.Title = "Test Demo - Kết Nối Thống Kê Đặt Bàn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    body {
+        background: linear-gradient(135deg, #1e3c72, #2a5298);
+        min-height: 100vh;
+        color: #fff;
+    }
+
+    .demo-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .success-card {
+        background: rgba(40, 167, 69, 0.1);
+        border: 2px solid #28a745;
+        border-radius: 15px;
+        padding: 30px;
+        margin: 20px 0;
+        text-align: center;
+    }
+
+    .feature-list {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+
+    .feature-icon {
+        color: #28a745;
+        margin-right: 15px;
+        font-size: 1.2rem;
+    }
+
+    .test-buttons {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+
+    .btn-test {
+        background: linear-gradient(135deg, #ffc107, #ff9800);
+        border: none;
+        color: #333;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: bold;
+        margin: 5px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-test:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+            color: #333;
+        }
+
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+
+    .status-success {
+        background-color: #28a745;
+    }
+
+    .status-info {
+        background-color: #17a2b8;
+    }
+
+    .status-warning {
+        background-color: #ffc107;
+    }
+</style>
+
+<div class="demo-container">
+    <div class="row">
+        <div class="col-12 text-center mb-4">
+            <h2 class="text-warning">🎉 Hoàn Thành Kết Nối Thống Kê Đặt Bàn!</h2>
+            <p class="lead">Hệ thống đã được cập nhật để đồng bộ dữ liệu giữa trang thu ngân và trang thống kê</p>
+        </div>
+    </div>
+
+    <div class="success-card">
+        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+        <h4 class="text-success">Thành Công!</h4>
+        <p class="mb-0">
+            Bây giờ khi bạn đặt bàn ở trang thu ngân, dữ liệu sẽ <strong>tự động cập nhật</strong>
+            trong trang thống kê đặt bàn theo thời gian thực.
+        </p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="feature-list">
+                <h5 class="text-warning mb-3">
+                    <i class="fas fa-cogs me-2"></i>Tính năng đã được thêm
+                </h5>
+
+                <div class="feature-item">
+                    <span class="status-indicator status-success"></span>
+                    <div>
+                        <strong>Kết nối Database thật</strong>
+                        <br><small class="text-muted">Thay thế dữ liệu mock bằng dữ liệu từ database</small>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="status-indicator status-success"></span>
+                    <div>
+                        <strong>Tạo Booking record</strong>
+                        <br><small class="text-muted">Khi đặt bàn sẽ tự động tạo record trong bảng Bookings</small>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="status-indicator status-success"></span>
+                    <div>
+                        <strong>Modal đặt bàn nâng cấp</strong>
+                        <br><small class="text-muted">Thu thập thông tin khách hàng chi tiết (tên, SĐT, ghi chú)</small>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="status-indicator status-success"></span>
+                    <div>
+                        <strong>Thống kê theo thời gian thực</strong>
+                        <br><small class="text-muted">Trang thống kê hiển thị dữ liệu mới nhất từ database</small>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="status-indicator status-success"></span>
+                    <div>
+                        <strong>Tính toán doanh thu chính xác</strong>
+                        <br><small class="text-muted">Phân biệt doanh thu từ đặt bàn và khách vãng lai</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="test-buttons">
+                <h5 class="text-warning mb-3">
+                    <i class="fas fa-flask me-2"></i>Test tính năng
+                </h5>
+
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("TableArea", "Cashier")" class="btn btn-test">
+                        <i class="fas fa-table me-2"></i>
+                        Mở Trang Thu Ngân - Đặt Bàn
+                    </a>
+
+                    <a href="@Url.Action("BookingAnalytics", "ReportsManagement")" class="btn btn-test">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Mở Trang Thống Kê Đặt Bàn
+                    </a>
+
+                    <button class="btn btn-test" onclick="showTestSteps()">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Hướng Dẫn Test
+                    </button>
+                </div>
+            </div>
+
+            <div class="feature-list">
+                <h5 class="text-info mb-3">
+                    <i class="fas fa-code me-2"></i>Cải tiến kỹ thuật
+                </h5>
+
+                <div class="feature-item">
+                    <span class="status-indicator status-info"></span>
+                    <div>
+                        <strong>Database Transaction</strong>
+                        <br><small class="text-muted">Đảm bảo tính toàn vẹn dữ liệu</small>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="status-indicator status-info"></span>
+                    <div>
+                        <strong>Entity Framework Include</strong>
+                        <br><small class="text-muted">Tối ưu truy vấn, tránh lỗi N+1 query</small>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <span class="status-indicator status-info"></span>
+                    <div>
+                        <strong>Error Handling</strong>
+                        <br><small class="text-muted">Xử lý lỗi toàn diện với try-catch</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="testStepsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: #2c3e50; color: #fff;">
+            <div class="modal-header" style="border-color: #34495e;">
+                <h5 class="modal-title">
+                    <i class="fas fa-clipboard-list me-2"></i>Hướng Dẫn Test Tính Năng
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Làm theo các bước dưới đây để test việc đồng bộ dữ liệu
+                </div>
+
+                <h6 class="text-warning">Bước 1: Mở 2 tab trình duyệt</h6>
+                <ul class="mb-3">
+                    <li>Tab 1: Trang Thu Ngân - Quản lý bàn</li>
+                    <li>Tab 2: Trang Thống kê đặt bàn</li>
+                </ul>
+
+                <h6 class="text-warning">Bước 2: Kiểm tra dữ liệu ban đầu</h6>
+                <ul class="mb-3">
+                    <li>Xem số lượng đặt bàn hiện tại trong trang thống kê</li>
+                    <li>Ghi nhớ các con số để so sánh</li>
+                </ul>
+
+                <h6 class="text-warning">Bước 3: Đặt bàn mới</h6>
+                <ul class="mb-3">
+                    <li>Ở trang thu ngân, chọn 1 bàn trống</li>
+                    <li>Click "Đặt bàn"</li>
+                    <li>Điền thông tin khách hàng (tên, SĐT, thời gian)</li>
+                    <li>Nhấn "Đặt bàn"</li>
+                </ul>
+
+                <h6 class="text-warning">Bước 4: Kiểm tra cập nhật</h6>
+                <ul class="mb-3">
+                    <li>Quay lại tab thống kê</li>
+                    <li>Làm mới trang (F5)</li>
+                    <li>Kiểm tra số liệu đã tăng lên chưa</li>
+                </ul>
+
+                <div class="alert alert-success mt-3">
+                    <i class="fas fa-check me-2"></i>
+                    <strong>Thành công!</strong> Nếu số liệu thống kê tăng lên,
+                    nghĩa là việc đồng bộ đã hoạt động đúng.
+                </div>
+            </div>
+            <div class="modal-footer" style="border-color: #34495e;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function showTestSteps() {
+            var modal = new bootstrap.Modal(document.getElementById('testStepsModal'));
+            modal.show();
+        }
+
+        // Auto notification
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                showNotification('🚀 Tính năng đồng bộ đặt bàn đã được kích hoạt!', 'success');
+            }, 1000);
+        });
+
+        function showNotification(message, type) {
+            var bgClass = type === 'success' ? 'alert-success' : 'alert-info';
+            var notification = document.createElement('div');
+            notification.className = 'alert ' + bgClass + ' position-fixed';
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 350px; animation: slideIn 0.5s ease;';
+            notification.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>${message}</span>
+                    <button type="button" class="btn-close" onclick="this.closest('.alert').remove()"></button>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+
+            setTimeout(function () {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOut 0.5s ease';
+                    setTimeout(() => notification.remove(), 500);
+                }
+            }, 5000);
+        }
+    </script>
+
+    <style>
+        @@keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @@keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+}

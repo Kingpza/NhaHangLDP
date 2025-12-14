@@ -1,0 +1,121 @@
+﻿@{
+    ViewBag.Title = "Debug Session Information";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="container">
+    <h2 class="text-danger"><i class="fas fa-bug me-2"></i>Debug Session Information</h2>
+    
+    <div class="alert alert-warning">
+        <strong>Cảnh báo:</strong> Đây là trang debug tạm thời. Xóa sau khi sửa xong lỗi!
+    </div>
+
+    <div class="stat-card">
+        <h4>Thông tin Session hiện tại:</h4>
+
+        <table class="table table-bordered">
+            <tr>
+                <td><strong>UserRole:</strong></td>
+          <td class="@(ViewBag.DebugInfo.UserRole == "NULL" ? "text-danger" : "text-success")">
+               @ViewBag.DebugInfo.UserRole
+      </td>
+       </tr>
+            <tr>
+     <td><strong>Username:</strong></td>
+    <td class="@(ViewBag.DebugInfo.Username == "NULL" ? "text-danger" : "text-success")">
+       @ViewBag.DebugInfo.Username
+        </td>
+            </tr>
+        <tr>
+       <td><strong>UserId:</strong></td>
+                <td class="@(ViewBag.DebugInfo.UserId == "NULL" ? "text-danger" : "text-success")">
+  @ViewBag.DebugInfo.UserId
+          </td>
+            </tr>
+   <tr>
+         <td><strong>EmployeeId:</strong></td>
+       <td class="@(ViewBag.DebugInfo.EmployeeId == "NULL" ? "text-danger" : "text-success")">
+       @ViewBag.DebugInfo.EmployeeId
+             </td>
+            </tr>
+         <tr>
+        <td><strong>FullName:</strong></td>
+                <td class="@(ViewBag.DebugInfo.FullName == "NULL" ? "text-danger" : "text-success")">
+            @ViewBag.DebugInfo.FullName
+       </td>
+            </tr>
+        <tr>
+  <td><strong>IsAuthenticated:</strong></td>
+                <td class="@(ViewBag.DebugInfo.IsAuthenticated ? "text-success" : "text-danger")">
+               @ViewBag.DebugInfo.IsAuthenticated
+  </td>
+       </tr>
+  <tr>
+  <td><strong>AuthenticationType:</strong></td>
+         <td>@ViewBag.DebugInfo.AuthenticationType</td>
+            </tr>
+            <tr>
+       <td><strong>SessionId:</strong></td>
+     <td><code>@ViewBag.DebugInfo.SessionId</code></td>
+            </tr>
+   <tr>
+              <td><strong>All Session Keys:</strong></td>
+        <td>
+      @if (ViewBag.DebugInfo.AllSessionKeys.Length > 0)
+          {
+              <ul>
+     @foreach (var key in ViewBag.DebugInfo.AllSessionKeys)
+     {
+     <li><code>@key</code></li>
+          }
+        </ul>
+    }
+        else
+            {
+ <span class="text-danger">Không có session keys nào!</span>
+           }
+          </td>
+  </tr>
+        </table>
+    </div>
+
+    <div class="stat-card">
+        <h4>Khuyến nghị:</h4>
+      <ul>
+        @if (ViewBag.DebugInfo.UserRole == "NULL")
+            {
+     <li class="text-danger">❌ <strong>Session UserRole bị mất!</strong> Cần đăng nhập lại.</li>
+         }
+            else
+     {
+     <li class="text-success">✅ Session UserRole OK: @ViewBag.DebugInfo.UserRole</li>
+     }
+            
+    @if (ViewBag.DebugInfo.Username == "NULL")
+     {
+      <li class="text-danger">❌ <strong>Session Username bị mất!</strong> Cần đăng nhập lại.</li>
+         }
+       else
+            {
+         <li class="text-success">✅ Session Username OK: @ViewBag.DebugInfo.Username</li>
+     }
+            
+     @if (!ViewBag.DebugInfo.IsAuthenticated)
+   {
+  <li class="text-warning">⚠️ User.Identity.IsAuthenticated = false (có thể bình thường với session-based auth)</li>
+     }
+      </ul>
+    </div>
+
+    <div class="text-center">
+     <a href="@Url.Action("Login", "Account")" class="btn btn-primary me-2">
+        <i class="fas fa-sign-in-alt me-2"></i>Đăng Nhập Lại
+        </a>
+        <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-2"></i>Quay Lại Settings
+     </a>
+        <a href="@Url.Action("Dashboard", "Management")" class="btn btn-outline-secondary">
+      <i class="fas fa-home me-2"></i>Về Dashboard
+   </a>
+    </div>
+</div>

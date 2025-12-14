@@ -1,0 +1,360 @@
+﻿@model NhaHangLDP.Models.StockOutboundViewModel
+@{
+    ViewBag.Title = "Xuất Kho Nguyên Liệu";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2><i class="fas fa-arrow-up me-2"></i>Xuất Kho Nguyên Liệu</h2>
+        <p class="text-light">Xuất nguyên liệu cho các bộ phận sử dụng</p>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="@Url.Action("StockOutboundList", "Management")" class="btn btn-outline-light me-2">
+            <i class="fas fa-list me-2"></i>Danh Sách Phiếu Xuất
+        </a>
+        <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-secondary">
+            <i class="fas fa-warehouse me-2"></i>Quay Lại Kho
+        </a>
+    </div>
+</div>
+
+<!-- Stock Outbound Form -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="stat-card">
+            <h5 class="mb-4"><i class="fas fa-edit me-2"></i>Thông Tin Xuất Kho</h5>
+
+            @using (Html.BeginForm("ProcessStockOutbound", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Chọn nguyên liệu <span class="text-danger">*</span></label>
+                            <select class="form-select" name="ingredientId" id="ingredientSelect" required>
+                                <option value="">-- Chọn nguyên liệu cần xuất --</option>
+                                @if (Model != null && Model.AvailableIngredients != null)
+                                {
+                                    foreach (var ingredient in Model.AvailableIngredients)
+                                    {
+                                        <option value="@ingredient.Id" 
+                                                data-name="@ingredient.Name" 
+                                                data-unit="@ingredient.Unit" 
+                                                data-current="@ingredient.AvailableStock" 
+                                                data-minimum="@(ingredient.LowStockThreshold ?? 0)"
+                                                data-cost="@ingredient.EstimatedCost">
+                                            @ingredient.Name (Tồn: @ingredient.AvailableStock.ToString("N1") @ingredient.Unit)
+                                        </option>
+                                    }
+                                }
+                            </select>
+                            <div class="invalid-feedback">
+                                Vui lòng chọn nguyên liệu cần xuất.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Số lượng xuất <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="quantity" id="quantityInput" 
+                                       step="0.1" min="0.1" placeholder="0.0" required>
+                                <span class="input-group-text" id="unitDisplay">Đơn vị</span>
+                            </div>
+                            <div class="invalid-feedback">
+                                Vui lòng nhập số lượng hợp lệ.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Tồn kho hiện tại</label>
+                            <input type="text" class="form-control" id="currentStock" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Tồn kho sau xuất</label>
+                            <input type="text" class="form-control" id="remainingStock" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Trạng thái</label>
+                            <input type="text" class="form-control" id="stockStatus" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Lý do xuất kho <span class="text-danger">*</span></label>
+                            <select class="form-select" name="purpose" required>
+                                <option value="">-- Chọn lý do xuất --</option>
+                                <option value="Sử dụng sản xuất">Sử dụng sản xuất</option>
+                                <option value="Phục vụ bếp">Phục vụ bếp</option>
+                                <option value="Hỏng hóc">Hỏng hóc</option>
+                                <option value="Hết hạn">Hết hạn</option>
+                                <option value="Kiểm kê">Kiểm kê</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Vui lòng chọn lý do xuất kho.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Giá trị ước tính</label>
+                            <input type="text" class="form-control" id="estimatedValue" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-control" name="notes" rows="3" placeholder="Ghi chú chi tiết về lý do xuất kho..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo me-2"></i>Đặt Lại
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-check me-2"></i>Xác Nhận Xuất Kho
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="stat-card">
+            <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Thông Tin Chi Tiết</h5>
+            <div id="ingredientInfo">
+                <div class="text-center text-muted">
+                    <i class="fas fa-box fa-2x mb-2"></i>
+                    <p>Chọn nguyên liệu để xem thông tin</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <h5 class="mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Cảnh Báo</h5>
+            <div id="warningInfo">
+                <div class="text-center text-success">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <p>Chưa có cảnh báo</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card bg-info text-white">
+            <h5 class="mb-3"><i class="fas fa-lightbulb me-2"></i>Lưu Ý</h5>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-check me-2"></i>Kiểm tra tồn kho trước khi xuất</li>
+                <li><i class="fas fa-check me-2"></i>Ghi rõ lý do xuất kho</li>
+                <li><i class="fas fa-check me-2"></i>Cập nhật ngay sau xuất kho</li>
+                <li><i class="fas fa-check me-2"></i>Báo cáo nếu có hỏng hóc</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ingredientSelect = document.getElementById('ingredientSelect');
+            const quantityInput = document.getElementById('quantityInput');
+            const unitDisplay = document.getElementById('unitDisplay');
+            const currentStock = document.getElementById('currentStock');
+            const remainingStock = document.getElementById('remainingStock');
+            const stockStatus = document.getElementById('stockStatus');
+            const estimatedValue = document.getElementById('estimatedValue');
+            const ingredientInfo = document.getElementById('ingredientInfo');
+            const warningInfo = document.getElementById('warningInfo');
+
+            ingredientSelect.addEventListener('change', function () {
+                const option = this.options[this.selectedIndex];
+                updateIngredientInfo(option);
+            });
+
+            quantityInput.addEventListener('input', function () {
+                const option = ingredientSelect.options[ingredientSelect.selectedIndex];
+                calculateRemaining(option);
+            });
+
+            function updateIngredientInfo(option) {
+                if (option.value) {
+                    const name = option.dataset.name;
+                    const unit = option.dataset.unit;
+                    const current = parseFloat(option.dataset.current) || 0;
+                    const minimum = parseFloat(option.dataset.minimum) || 0;
+                    const cost = parseFloat(option.dataset.cost) || 0;
+
+                    unitDisplay.textContent = unit;
+                    currentStock.value = current.toLocaleString('vi-VN') + ' ' + unit;
+
+                    // Set max quantity to current stock
+                    quantityInput.max = current;
+                    quantityInput.placeholder = `Tối đa: ${current}`;
+
+                    // Update ingredient info
+                    ingredientInfo.innerHTML = `
+                        <div class="mb-2">
+                            <small class="text-muted">Tên nguyên liệu:</small>
+                            <div><strong>${name}</strong></div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Tồn kho hiện tại:</small>
+                            <div><strong class="${current <= minimum ? 'text-warning' : 'text-success'}">${current.toLocaleString('vi-VN')} ${unit}</strong></div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Ngưỡng tối thiểu:</small>
+                            <div>${minimum.toLocaleString('vi-VN')} ${unit}</div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Giá ước tính:</small>
+                            <div><strong>${cost.toLocaleString('vi-VN')} VNĐ/${unit}</strong></div>
+                        </div>
+                    `;
+
+                    calculateRemaining(option);
+                } else {
+                    unitDisplay.textContent = 'Đơn vị';
+                    currentStock.value = '';
+                    quantityInput.max = '';
+                    quantityInput.placeholder = '0.0';
+                    remainingStock.value = '';
+                    stockStatus.value = '';
+                    estimatedValue.value = '';
+
+                    ingredientInfo.innerHTML = `
+                        <div class="text-center text-muted">
+                            <i class="fas fa-box fa-2x mb-2"></i>
+                            <p>Chọn nguyên liệu để xem thông tin</p>
+                        </div>
+                    `;
+
+                    warningInfo.innerHTML = `
+                        <div class="text-center text-success">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <p>Chưa có cảnh báo</p>
+                        </div>
+                    `;
+                }
+            }
+
+            function calculateRemaining(option) {
+                if (!option.value) return;
+
+                const current = parseFloat(option.dataset.current) || 0;
+                const minimum = parseFloat(option.dataset.minimum) || 0;
+                const cost = parseFloat(option.dataset.cost) || 0;
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const remaining = current - quantity;
+                const unit = option.dataset.unit;
+                const totalValue = quantity * cost;
+
+                remainingStock.value = remaining.toLocaleString('vi-VN') + ' ' + unit;
+                estimatedValue.value = totalValue.toLocaleString('vi-VN') + ' VNĐ';
+
+                // Update status and styling
+                let status = '';
+                let statusClass = '';
+                let warnings = [];
+
+                if (quantity > current) {
+                    status = 'Không đủ hàng';
+                    statusClass = 'text-danger';
+                    quantityInput.classList.add('is-invalid');
+                    warnings.push({
+                        type: 'danger',
+                        icon: 'fas fa-times-circle',
+                        message: `Không đủ hàng! Chỉ còn ${current.toLocaleString('vi-VN')} ${unit}`
+                    });
+                } else if (remaining < minimum) {
+                    status = 'Dưới mức tối thiểu';
+                    statusClass = 'text-warning';
+                    quantityInput.classList.remove('is-invalid');
+                    warnings.push({
+                        type: 'warning',
+                        icon: 'fas fa-exclamation-triangle',
+                        message: `Sau xuất sẽ dưới mức tối thiểu (${minimum.toLocaleString('vi-VN')} ${unit})`
+                    });
+                } else {
+                    status = 'Đủ hàng';
+                    statusClass = 'text-success';
+                    quantityInput.classList.remove('is-invalid');
+                }
+
+                stockStatus.value = status;
+                stockStatus.className = 'form-control ' + statusClass;
+                remainingStock.className = 'form-control ' + statusClass;
+
+                // Update warnings
+                if (warnings.length > 0) {
+                    warningInfo.innerHTML = warnings.map(warning =>
+                        `<div class="alert alert-${warning.type} py-2">
+                            <i class="${warning.icon} me-2"></i>
+                            <small>${warning.message}</small>
+                        </div>`
+                    ).join('');
+                } else {
+                    warningInfo.innerHTML = `
+                        <div class="text-center text-success">
+                            <i class="fas fa-check-circle fa-2x mb-2"></i>
+                            <p>Đủ hàng để xuất</p>
+                        </div>
+                    `;
+                }
+            }
+
+            // Reset form
+            window.resetForm = function () {
+                if (confirm('Bạn có chắc muốn đặt lại form? Tất cả dữ liệu sẽ bị mất.')) {
+                    document.querySelector('form').reset();
+                    updateIngredientInfo({ value: '' });
+                }
+            }
+
+            // Form validation
+            (function () {
+                'use strict';
+                window.addEventListener('load', function () {
+                    var forms = document.getElementsByClassName('needs-validation');
+                    var validation = Array.prototype.filter.call(forms, function (form) {
+                        form.addEventListener('submit', function (event) {
+                            if (form.checkValidity() === false) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+
+                            // Additional validation for stock
+                            const option = ingredientSelect.options[ingredientSelect.selectedIndex];
+                            if (option.value) {
+                                const current = parseFloat(option.dataset.current) || 0;
+                                const quantity = parseFloat(quantityInput.value) || 0;
+
+                                if (quantity > current) {
+                                    event.preventDefault();
+                                    alert('Số lượng xuất vượt quá tồn kho hiện có!');
+                                    return;
+                                }
+                            }
+
+                            form.classList.add('was-validated');
+                        }, false);
+                    });
+                }, false);
+            })();
+        });
+    </script>
+}

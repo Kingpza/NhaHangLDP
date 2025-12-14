@@ -1,0 +1,246 @@
+﻿@model NhaHangLDP.Models.StockInboundListViewModel
+@{
+    ViewBag.Title = "Danh Sách Phiếu Nhập Kho";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .management-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+            color: white;
+        }
+
+        .badge-status {
+            padding: 0.5rem 1rem;
+            border-radius: 15px;
+            font-weight: 500;
+        }
+
+        .badge-completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .badge-draft {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .search-filters {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="management-header text-center">
+        <div class="container">
+            <h1><i class="fas fa-list-alt"></i> Danh Sách Phiếu Nhập Kho</h1>
+            <p class="mb-0">Quản lý và theo dõi các phiếu nhập kho</p>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between">
+            <div>
+                <a href="@Url.Action("StockInbound", "Management")" class="btn btn-custom">
+                    <i class="fas fa-plus-circle me-2"></i>Tạo Phiếu Nhập Mới
+                </a>
+            </div>
+            <div>
+                <a href="@Url.Action("StockOutboundList", "Management")" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-sign-out-alt me-2"></i>Phiếu Xuất Kho
+                </a>
+                <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-secondary">
+                    <i class="fas fa-warehouse me-2"></i>Quay Lại Kho
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Data Table -->
+    <div class="table-container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5><i class="fas fa-table me-2"></i>Danh Sách Phiếu Nhập (@Model.InboundList.Count)</h5>
+            <div>
+                <button class="btn btn-outline-success btn-sm" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel me-1"></i>Xuất Excel
+                </button>
+            </div>
+        </div>
+
+        @if (Model.InboundList.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã Phiếu</th>
+                            <th>Ngày Nhập</th>
+                            <th>Nhân Viên</th>
+                            <th>Nhà Cung Cấp</th>
+                            <th>Số Lượng Items</th>
+                            <th>Tổng Chi Phí</th>
+                            <th>Trạng Thái</th>
+                            <th>Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.InboundList)
+                        {
+                            <tr>
+                                <td>
+                                    <strong class="text-primary">@item.InboundCode</strong>
+                                </td>
+                                <td>@item.InboundDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@item.EmployeeName</td>
+                                <td>@(item.SupplierName ?? "Không có")</td>
+                                <td>
+                                    <span class="badge bg-info">@item.ItemCount items</span>
+                                </td>
+                                <td>
+                                    <strong class="text-success">@item.TotalCost.ToString("N0") VNĐ</strong>
+                                </td>
+                                <td>
+                                    <span class="badge badge-completed">@item.Status</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="viewDetails(@item.Id)"
+                                                title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-outline-success" onclick="printInbound(@item.Id)"
+                                                title="In phiếu">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary Statistics -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="text-primary">@Model.InboundList.Count</h5>
+                            <small class="text-muted">Tổng số phiếu</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="text-success">@Model.InboundList.Sum(x => x.TotalCost).ToString("N0") VNĐ</h5>
+                            <small class="text-muted">Tổng giá trị nhập</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="text-info">@(Model.InboundList.Any() ? Model.InboundList.Average(x => x.TotalCost).ToString("N0") : "0") VNĐ</h5>
+                            <small class="text-muted">Giá trị TB/phiếu</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="text-warning">@Model.InboundList.Count(x => x.InboundDate.Date == DateTime.Now.Date)</h5>
+                            <small class="text-muted">Phiếu hôm nay</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Chưa có phiếu nhập kho nào</h5>
+                <p class="text-muted mb-3">Tạo phiếu nhập kho đầu tiên để bắt đầu quản lý</p>
+                <a href="@Url.Action("StockInbound", "Management")" class="btn btn-custom">
+                    <i class="fas fa-plus-circle me-2"></i>Tạo Phiếu Nhập Mới
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function viewDetails(id) {
+            // Implement view details modal or redirect
+            alert('Xem chi tiết phiếu nhập #' + id);
+        }
+
+        function printInbound(id) {
+            // Implement print functionality
+            alert('In phiếu nhập #' + id);
+        }
+
+        function exportToExcel() {
+            // Implement Excel export
+            alert('Xuất Excel (chức năng đang phát triển)');
+        }
+    </script>
+}

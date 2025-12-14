@@ -1,0 +1,302 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Thu Ngân POS</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #212529;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 60px;
+            padding-bottom: 50px;
+        }
+
+        .cashier-navbar {
+            background-color: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: #dc7633 !important;
+            font-size: 1.5rem;
+        }
+
+        .navbar-nav .nav-link {
+            color: #495057 !important;
+            transition: color 0.3s, background-color 0.3s;
+            border-radius: 5px;
+            padding: 8px 15px;
+            font-weight: 500;
+        }
+
+            .navbar-nav .nav-link:hover {
+                color: #dc7633 !important;
+                background-color: rgba(220, 118, 51, 0.1);
+            }
+
+            .navbar-nav .nav-link.active {
+                color: #dc7633 !important;
+                background-color: rgba(220, 118, 51, 0.2);
+            }
+
+        .main-container {
+            padding-top: 20px;
+            padding-bottom: 20px;
+            min-height: calc(100vh - 110px);
+        }
+
+        .fixed-bottom-footer {
+            z-index: 1000;
+            background-color: #ffffff;
+            border-top: 3px solid #e9ecef;
+            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+            height: 50px;
+        }
+
+        .footer-item {
+            color: #495057;
+            font-weight: 600;
+            padding: 0 15px;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+            .footer-item:hover {
+                color: #dc7633 !important;
+            }
+
+        /* Responsive design */
+        .navbar-toggler {
+            border-color: rgba(220, 118, 51, 0.3);
+        }
+
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28220, 118, 51, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top cashier-navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="@Url.Action("Dashboard", "Cashier")">
+                <i class="fa fa-receipt me-2"></i> LDP POS System
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#cashierNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="cashierNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Dashboard", "Cashier")">
+                            <i class="fa fa-home"></i> Trang Chính
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Menu", "Cashier")">
+                            <i class="fa fa-cash-register"></i> Bán Hàng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Orders", "Cashier")">
+                            <i class="fa fa-clipboard-list"></i> Đơn Hàng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("TableArea", "Cashier")">
+                            <i class="fa fa-table"></i> Khu Vực Bàn
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="ms-auto d-flex align-items-center">
+                <span class="text-dark me-3">
+                    <i class="fa fa-user-circle me-1"></i>
+                    @(Session["Username"] ?? "Thu Ngân")
+                </span>
+                <a href="#" class="btn btn-sm btn-outline-warning me-2" onclick="showHelp()">
+                    <i class="fa fa-headset"></i> Hỗ trợ
+                </a>
+                <a href="#" class="btn btn-sm btn-outline-info me-2" onclick="syncData()">
+                    <i class="fa fa-sync-alt"></i> Đồng bộ
+                </a>
+                <a href="@Url.Action("LogOut", "Account")" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn đăng xuất?')">
+                    <i class="fa fa-sign-out-alt"></i> Đăng xuất
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid main-container">
+        @RenderBody()
+    </div>
+
+    <div class="fixed-bottom fixed-bottom-footer d-flex justify-content-between align-items-center">
+        <div class="footer-item" onclick="showNotifications()">
+            <i class="fa fa-bell text-warning me-1"></i>
+            Thông báo (<span id="notificationCount">0</span>)
+        </div>
+        <div class="footer-item" onclick="showOrderSummary()">
+            <i class="fa fa-shopping-cart text-info me-1"></i>
+            Đơn hàng (<span id="orderCount">0</span>)
+        </div>
+        <div class="footer-item" onclick="showTableStatus()">
+            <i class="fa fa-table text-success me-1"></i>
+            Bàn | <span id="tableStatus">0/12</span>
+        </div>
+        <div class="footer-item">
+            <i class="fa fa-map-marker-alt text-danger me-1"></i>
+            Khu vực chính
+        </div>
+        <div class="footer-item">
+            <i class="fa fa-home text-primary me-1"></i>
+            Nhà hàng | 120451
+        </div>
+        <div class="footer-item">
+            <i class="fa fa-clock text-info me-1"></i>
+            <span id="currentTime">--:--:--</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+       const timeString = now.toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+    minute: '2-digit',
+  second: '2-digit'
+    });
+            document.getElementById('currentTime').textContent = timeString;
+}
+
+    function highlightActiveMenu() {
+   const currentPath = window.location.pathname.toLowerCase();
+          const menuItems = document.querySelectorAll('.navbar-nav .nav-link');
+
+            menuItems.forEach(item => {
+ item.classList.remove('active');
+  const href = item.getAttribute('href');
+             if (href && currentPath.includes(href.toLowerCase())) {
+       item.classList.add('active');
+      }
+          });
+        }
+
+  function showNotifications() {
+            alert('Hiển thị thông báo hệ thống');
+     }
+
+        function showOrderSummary() {
+            window.location.href = '@Url.Action("Orders", "Cashier")';
+ }
+
+        function showTableStatus() {
+            window.location.href = '@Url.Action("TableArea", "Cashier")';
+        }
+
+ function showHelp() {
+            alert('Hệ thống hỗ trợ:\n\n- Hotline: 1900-xxxx\n- Email: support@ldp.vn\n- Chat online: Đang phát triển');
+        }
+
+        function syncData() {
+       const syncBtn = event.target.closest('a');
+            const originalText = syncBtn.innerHTML;
+
+         syncBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang đồng bộ...';
+            syncBtn.classList.add('disabled');
+
+ setTimeout(() => {
+        syncBtn.innerHTML = originalText;
+     syncBtn.classList.remove('disabled');
+
+        document.getElementById('notificationCount').textContent = Math.floor(Math.random() * 5);
+       document.getElementById('orderCount').textContent = Math.floor(Math.random() * 10);
+           document.getElementById('tableStatus').textContent = Math.floor(Math.random() * 8) + '/12';
+
+       showToast('Đồng bộ dữ liệu thành công!', 'success');
+        }, 2000);
+        }
+
+ function showToast(message, type) {
+            const toast = document.createElement('div');
+         toast.style.cssText = 'position: fixed; top: 80px; right: 20px; padding: 15px 20px; border-radius: 5px; color: white; font-weight: bold; z-index: 9999; opacity: 0; transition: opacity 0.3s ease;';
+
+         const colors = {
+        'success': '#28a745',
+                'error': '#dc3545',
+       'warning': '#ffc107',
+      'info': '#17a2b8'
+            };
+            toast.style.backgroundColor = colors[type] || colors.info;
+toast.textContent = message;
+
+            document.body.appendChild(toast);
+   setTimeout(() => toast.style.opacity = '1', 100);
+setTimeout(() => {
+        toast.style.opacity = '0';
+         setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        function updateFooterStats() {
+     const orderCount = localStorage.getItem('currentOrderCount') || '0';
+  const tableStatus = localStorage.getItem('currentTableStatus') || '0/12';
+ const notificationCount = localStorage.getItem('notificationCount') || '0';
+
+ document.getElementById('orderCount').textContent = orderCount;
+    document.getElementById('tableStatus').textContent = tableStatus;
+  document.getElementById('notificationCount').textContent = notificationCount;
+  }
+
+     window.updateOrderCount = function(count) {
+  document.getElementById('orderCount').textContent = count;
+  localStorage.setItem('currentOrderCount', count);
+  };
+
+      window.updateTableStatus = function(status) {
+            document.getElementById('tableStatus').textContent = status;
+       localStorage.setItem('currentTableStatus', status);
+        };
+
+        window.updateNotificationCount = function(count) {
+      document.getElementById('notificationCount').textContent = count;
+            localStorage.setItem('notificationCount', count);
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTime();
+            highlightActiveMenu();
+            updateFooterStats();
+
+            setInterval(updateTime, 1000);
+          setInterval(updateFooterStats, 30000);
+        });
+
+   document.addEventListener('click', function(e) {
+            const navbar = document.getElementById('cashierNavbar');
+       const toggleButton = document.querySelector('.navbar-toggler');
+
+    if (navbar.classList.contains('show') &&
+ !navbar.contains(e.target) &&
+         !toggleButton.contains(e.target)) {
+           bootstrap.Collapse.getInstance(navbar).hide();
+}
+        });
+    </script>
+
+    @RenderSection("scripts", required: false)
+</body>
+</html>

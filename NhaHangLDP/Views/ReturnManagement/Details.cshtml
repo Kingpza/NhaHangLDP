@@ -1,0 +1,253 @@
+﻿@model NhaHangLDP.Models.ReturnBill
+
+@{
+    ViewBag.Title = "Chi Tiết Phiếu Trả Hàng";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-dark">
+        <i class="fas fa-file-alt me-2"></i>Chi Tiết Phiếu Trả Hàng
+    </h2>
+    <div>
+        <a href="javascript:window.print()" class="btn btn-outline-primary me-2">
+            <i class="fas fa-print me-2"></i>In Phiếu
+        </a>
+        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay Lại
+        </a>
+    </div>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    <!-- Return Bill Information -->
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5 class="mb-3 text-primary">
+                <i class="fas fa-info-circle me-2"></i>Thông Tin Phiếu Trả
+            </h5>
+
+            <table class="table table-borderless">
+                <tr>
+                    <td class="fw-bold">Mã Phiếu:</td>
+                    <td><span class="badge bg-primary">RTN-@Model.ReturnBillID.ToString("D6")</span></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Hóa Đơn Gốc:</td>
+                    <td><span class="badge bg-info">HD-@Model.OriginalBillID.ToString("D6")</span></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Ngày Trả:</td>
+                    <td>
+                        <i class="fas fa-calendar me-1"></i>
+                        @Model.ReturnDate.ToString("dd/MM/yyyy HH:mm")
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Nhân Viên Xử Lý:</td>
+                    <td>
+                        <i class="fas fa-user me-1"></i>
+                        @Model.Employee.FullName
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Tổng Hoàn Trả:</td>
+                    <td>
+                        <strong class="text-success fs-5">
+                            @Model.TotalRefundAmount.ToString("N0") ₫
+                        </strong>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Original Bill Information -->
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5 class="mb-3 text-info">
+                <i class="fas fa-receipt me-2"></i>Thông Tin Hóa Đơn Gốc
+            </h5>
+
+            <table class="table table-borderless">
+                <tr>
+                    <td class="fw-bold">Mã Hóa Đơn:</td>
+                    <td>HD-@Model.Bill.Id.ToString("D6")</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Ngày Lập:</td>
+                    <td>
+                        <i class="fas fa-calendar me-1"></i>
+                        @Model.Bill.BillDate.ToString("dd/MM/yyyy HH:mm")
+                    </td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Bàn:</td>
+                    <td>Bàn @(Model.Bill.Order?.RestaurantTable?.TableNumber ?? "N/A")</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Tổng Tiền Gốc:</td>
+                    <td>@Model.Bill.FinalAmount.ToString("N0") ₫</td>
+                </tr>
+                <tr>
+                    <td class="fw-bold">Phương Thức TT:</td>
+                    <td>
+                        <span class="badge bg-secondary">@Model.Bill.PaymentMethod</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Return Reason -->
+<div class="stat-card mb-4">
+    <h5 class="mb-3 text-warning">
+        <i class="fas fa-comment-alt me-2"></i>Lý Do Trả Hàng
+    </h5>
+    <div class="alert alert-warning">
+        <p class="mb-0">@Model.Reason</p>
+    </div>
+</div>
+
+<!-- Return Items Details -->
+<div class="stat-card">
+    <h5 class="mb-3 text-success">
+        <i class="fas fa-list me-2"></i>Chi Tiết Món Trả (@Model.ReturnBillDetail.Count món)
+    </h5>
+
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>STT</th>
+                    <th>Tên Món</th>
+                    <th>Số Lượng</th>
+                    <th>Đơn Giá</th>
+                    <th>Thành Tiền</th>
+                    <th>Trạng Thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{int stt = 1;}
+                @foreach (var detail in Model.ReturnBillDetail)
+                {
+                    <tr>
+                        <td>@stt</td>
+                        <td>
+                            <strong>@detail.MenuItem.Name</strong>
+                            @if (!string.IsNullOrEmpty(detail.MenuItem.Description))
+                            {
+                                <br><small class="text-muted">@detail.MenuItem.Description</small>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">@detail.Quantity</span>
+                        </td>
+                        <td>@detail.UnitPrice.ToString("N0") ₫</td>
+                        <td>
+                            <strong>@((detail.Quantity * detail.UnitPrice).ToString("N0")) ₫</strong>
+                        </td>
+                        <td>
+                            @if (detail.IsDamaged)
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Hàng Hỏng
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Hàng Tốt
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                    stt++;
+                }
+            </tbody>
+            <tfoot class="table-warning">
+                <tr>
+                    <th colspan="4" class="text-end">Tổng Tiền Hoàn Trả:</th>
+                    <th colspan="2">
+                        <span class="fs-5 text-success fw-bold">
+                            @Model.TotalRefundAmount.ToString("N0") ₫
+                        </span>
+                    </th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<!-- Statistics Summary -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <div class="stat-icon" style="background: rgba(40, 167, 69, 0.2); color: #28a745;">
+                <i class="fas fa-check"></i>
+            </div>
+            <h4>@Model.ReturnBillDetail.Count(d => !d.IsDamaged)</h4>
+            <p class="text-muted">Món Hàng Tốt</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <div class="stat-icon" style="background: rgba(220, 53, 69, 0.2); color: #dc3545;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h4>@Model.ReturnBillDetail.Count(d => d.IsDamaged)</h4>
+            <p class="text-muted">Món Hàng Hỏng</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <div class="stat-icon" style="background: rgba(23, 162, 184, 0.2); color: #17a2b8;">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <h4>@Math.Round((decimal)Model.TotalRefundAmount / Model.Bill.FinalAmount * 100, 1)%</h4>
+            <p class="text-muted">Tỷ Lệ Hoàn Trả</p>
+        </div>
+    </div>
+</div>
+
+@section styles {
+    <style>
+        @@media print {
+            .btn, .alert, .navbar {
+                display: none !important;
+            }
+
+            .management-sidebar {
+                display: none !important;
+            }
+
+            .main-content {
+                margin: 0 !important;
+                box-shadow: none !important;
+            }
+
+            .stat-card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+        }
+    </style>
+}
+
+@section scripts {
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function () {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

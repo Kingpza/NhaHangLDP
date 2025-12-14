@@ -1,0 +1,37 @@
+﻿@model List<NhaHangLDP.Models.MenuItem>
+
+@{
+    ViewBag.Title = "Thực đơn";
+    Layout = "~/Views/Shared/_PublicLayout.cshtml";
+}
+
+
+<div class="row">
+    @if (Model != null && Model.Any())
+    {
+        foreach (var item in Model)
+        {
+            string formattedPrice = string.Format("{0:N0} VNĐ", item.Price);
+
+            string imageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl));
+
+            <div class="col-md-4 mb-4">
+                <a href="@Url.Action("Detail", "Public", new { id = item.Id })" style="text-decoration: none; color: inherit;">
+                    <div class="card food-card h-100">
+                        <img src="@imageUrl" class="card-img-top" alt="@item.Name" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Name</h5>
+                            <p class="card-text text-danger fw-bold">@formattedPrice</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <p class="text-center fs-5">Chưa có món ăn nào để hiển thị.</p>
+        </div>
+    }
+</div>

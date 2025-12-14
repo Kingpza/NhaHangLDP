@@ -1,0 +1,376 @@
+﻿@{
+        ViewBag.Title = "Mở Ca Làm Việc";
+        Layout = "~/Views/Shared/_CashierLayout.cshtml";
+}
+
+<style>
+    .open-shift-container {
+        min-height: calc(100vh - 140px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .shift-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .shift-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .shift-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #dc7633, #e67e22);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+        color: #fff;
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid rgba(220, 118, 51, 0.3);
+        color: #495057;
+        border-radius: 10px;
+        padding: 12px 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 1);
+            border-color: #dc7633;
+            color: #495057;
+            box-shadow: 0 0 0 0.2rem rgba(220, 118, 51, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: rgba(108, 117, 125, 0.7);
+        }
+
+    /* Styling cho quick amount buttons */
+    .quick-amounts {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .quick-amount-btn {
+        flex: 1;
+        padding: 8px 12px;
+        background: rgba(220, 118, 51, 0.1);
+        border: 2px solid rgba(220, 118, 51, 0.3);
+        color: #dc7633;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 100px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .quick-amount-btn:hover {
+            background: rgba(220, 118, 51, 0.2);
+            border-color: #dc7633;
+            transform: translateY(-1px);
+        }
+
+        .quick-amount-btn.active {
+            background: #dc7633;
+            color: #fff;
+            border-color: #dc7633;
+        }
+
+    .btn-open-shift {
+        background: linear-gradient(135deg, #dc7633, #e67e22);
+        border: none;
+        color: #fff;
+        font-weight: bold;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+        .btn-open-shift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 118, 51, 0.4);
+            color: #fff;
+        }
+
+        .btn-open-shift:disabled {
+            background: rgba(108, 117, 125, 0.5);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+    .shift-info {
+        background: rgba(248, 249, 250, 0.8);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Styling for validation */
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: 5px;
+    }
+
+    /* Text color fixes for light mode */
+    .shift-header h2 {
+        color: #dc7633 !important;
+    }
+
+    .shift-header p {
+        color: #495057 !important;
+    }
+
+    .shift-info .text-warning {
+        color: #dc7633 !important;
+    }
+
+    .shift-info .text-info {
+        color: #17a2b8 !important;
+    }
+
+    .shift-info .text-dark {
+        color: #495057 !important;
+    }
+
+    .form-label {
+        color: #495057 !important;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+</style>
+
+<div class="open-shift-container">
+    <div class="shift-card">
+        <div class="shift-header">
+            <div class="shift-icon">
+                <i class="fas fa-cash-register"></i>
+            </div>
+            <h2 class="text-warning mb-2">Mở Ca Làm Việc</h2>
+            <p class="text-light">Bắt đầu ca làm việc mới để sử dụng hệ thống POS</p>
+        </div>
+
+        <div class="shift-info">
+            <div class="row">
+                <div class="col-6">
+                    <small class="text-muted">Nhân viên:</small>
+                    <div class="text-warning fw-bold">@(Session["Username"] ?? "Thu Ngân")</div>
+                </div>
+                <div class="col-6 text-end">
+                    <small class="text-muted">Thời gian:</small>
+                    <div class="text-info fw-bold" id="currentTime"></div>
+                </div>
+            </div>
+        </div>
+
+        <form id="openShiftForm">
+            <div class="mb-3">
+                <label for="openingAmount" class="form-label text-light">
+                    <i class="fas fa-coins me-2"></i>Tiền mặt đầu ca (VNĐ) <span class="text-danger">*</span>
+                </label>
+
+                <!-- Quick amount selection buttons -->
+                <div class="quick-amounts">
+                    <button type="button" class="quick-amount-btn" data-amount="500000">
+                        500K
+                    </button>
+                    <button type="button" class="quick-amount-btn" data-amount="1000000">
+                        1 Triệu
+                    </button>
+                    <button type="button" class="quick-amount-btn" data-amount="1500000">
+                        1.5 Triệu
+                    </button>
+                </div>
+
+                <!-- FIXED: Bỏ step="1000" để cho phép nhập bất kỳ số nào -->
+                <input type="number"
+                       class="form-control"
+                       id="openingAmount"
+                       name="openingAmount"
+                       placeholder="Nhập số tiền mặt ban đầu (bắt buộc)"
+                       required
+                       min="1"
+                       step="any">
+                <div class="invalid-feedback" id="amountError"></div>
+            </div>
+
+            <div class="mb-4">
+                <label for="notes" class="form-label text-light">
+                    <i class="fas fa-sticky-note me-2"></i>Ghi chú (không bắt buộc)
+                </label>
+                <textarea class="form-control"
+                          id="notes"
+                          name="notes"
+                          rows="3"
+                          placeholder="Ghi chú về ca làm việc..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-open-shift" id="submitBtn">
+                <i class="fas fa-play me-2"></i>Bắt Đầu Ca Làm Việc
+            </button>
+        </form>
+    </div>
+</div>
+
+@section scripts {
+    // Cập nhật thời gian thực
+    <script>
+    function updateTime() {
+        var now = new Date();
+        var timeString = now.toLocaleString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+        document.getElementById('currentTime').textContent = timeString;
+    }
+
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // Quick amount selection functionality
+    var quickAmountBtns = document.querySelectorAll('.quick-amount-btn');
+    var openingAmountInput = document.getElementById('openingAmount');
+
+    quickAmountBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            // Remove active class from all buttons
+            quickAmountBtns.forEach(function(b) {
+                b.classList.remove('active');
+            });
+
+            // Add active class to clicked button
+            this.classList.add('active');
+
+            // Set the amount in input
+            var amount = this.getAttribute('data-amount');
+            openingAmountInput.value = amount;
+
+            // Clear validation errors
+            clearValidationErrors();
+        });
+    });
+
+    // Clear validation errors function
+    function clearValidationErrors() {
+        openingAmountInput.classList.remove('is-invalid');
+        document.getElementById('amountError').textContent = '';
+    }
+
+    // Validate opening amount
+    function validateOpeningAmount() {
+        var amount = parseFloat(openingAmountInput.value);
+
+        if (!amount || amount <= 0) {
+            openingAmountInput.classList.add('is-invalid');
+            document.getElementById('amountError').textContent = 'Vui lòng nhập số tiền mặt đầu ca (phải lớn hơn 0)';
+            return false;
+        }
+
+        clearValidationErrors();
+        return true;
+    }
+
+    // Real-time validation
+    openingAmountInput.addEventListener('input', function() {
+        if (this.value) {
+            clearValidationErrors();
+
+            // Remove active class from quick buttons if user types custom amount
+            var enteredAmount = parseFloat(this.value);
+            var isQuickAmount = false;
+
+            quickAmountBtns.forEach(function(btn) {
+                var btnAmount = parseFloat(btn.getAttribute('data-amount'));
+                if (enteredAmount === btnAmount) {
+                    btn.classList.add('active');
+                    isQuickAmount = true;
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+    });
+
+    // Form submission handler
+    document.getElementById('openShiftForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Validate opening amount
+        if (!validateOpeningAmount()) {
+            return;
+        }
+
+        var openingAmount = document.getElementById('openingAmount').value;
+        var notes = document.getElementById('notes').value;
+
+        // Disable button để tránh double submit
+        var submitBtn = document.getElementById('submitBtn');
+        var originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+
+        // Gửi request
+        fetch('@Url.Action("StartShift", "Cashier")', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'openingAmount=' + openingAmount + '&notes=' + encodeURIComponent(notes)
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+        if (data.success) {
+        // Direct redirect without confirmation
+        window.location.href = '@Url.Action("Dashboard", "Cashier")';
+        } else {
+        alert('Lỗi: ' + data.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        }
+        })
+        .catch(function(error) {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi mở ca!');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        });
+    });
+    </script>
+}

@@ -1,0 +1,176 @@
+﻿@model IEnumerable<NhaHangLDP.Models.RestaurantTable>
+
+@{
+    ViewBag.Title = "Quản Lý Bàn";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-table text-primary"></i> Quản Lý Bàn</h2>
+    <a href="@Url.Action("CreateTable")" class="btn btn-custom">
+        <i class="fas fa-plus"></i> Thêm Bàn Mới
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(40, 167, 69, 0.2); color: #28a745;">
+                <i class="fas fa-table"></i>
+            </div>
+            <h4>@Model.Count()</h4>
+            <p class="mb-0">Tổng Số Bàn</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(40, 167, 69, 0.2); color: #28a745;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h4>@Model.Count(t => t.Status == "Available")</h4>
+            <p class="mb-0">Bàn Trống</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(255, 193, 7, 0.2); color: #ffc107;">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <h4>@Model.Count(t => t.Status == "Occupied")</h4>
+            <p class="mb-0">Bàn Có Khách</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(220, 53, 69, 0.2); color: #dc3545;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h4>@Model.Count(t => t.Status == "Reserved")</h4>
+            <p class="mb-0">Bàn Đặt Trước</p>
+        </div>
+    </div>
+</div>
+
+<!-- Table Management -->
+<div class="table-custom">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Số Bàn</th>
+                    <th>Khu Vực</th>
+                    <th>Số Ghế</th>
+                    <th>Trạng Thái</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var table in Model.OrderBy(t => t.TableArea.Name).ThenBy(t => t.TableNumber))
+                    {
+                        <tr>
+                            <td>
+                                <strong>@table.TableNumber</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">@table.TableArea.Name</span>
+                            </td>
+                            <td>
+                                <i class="fas fa-chair"></i> @table.Capacity người
+                            </td>
+                            <td>
+                                @if (table.Status == "Available")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> Trống
+                                    </span>
+                                }
+                                else if (table.Status == "Occupied")
+                                {
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-utensils"></i> Có Khách
+                                    </span>
+                                }
+                                else if (table.Status == "Reserved")
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-calendar-check"></i> Đặt Trước
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">
+                                        <i class="fas fa-exclamation-triangle"></i> Không Khả Dụng
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="@Url.Action("EditTable", new { id = table.Id })"
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm"
+                                            onclick="deleteTable(@table.Id, '@table.TableNumber')">
+                                        <i class="fas fa-trash"></i> Xóa
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="fas fa-table fa-3x mb-3 d-block"></i>
+                            Chưa có bàn nào được tạo
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+     function deleteTable(id, tableName) {
+ if (confirm(`Bạn có chắc chắn muốn xóa bàn "${tableName}"?`)) {
+      $.ajax({
+        url: '@Url.Action("DeleteTable")',
+         type: 'POST',
+       data: { id: id },
+        success: function(result) {
+        if (result.success) {
+         location.reload();
+     } else {
+       alert(result.message);
+           }
+ },
+      error: function() {
+   alert('Có lỗi xảy ra. Vui lòng thử lại.');
+      }
+     });
+      }
+      }
+    </script>
+}

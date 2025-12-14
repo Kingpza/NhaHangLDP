@@ -1,0 +1,392 @@
+﻿@model NhaHangLDP.Models.StockInboundViewModel
+@{
+    ViewBag.Title = "Nhập Kho Nguyên Liệu";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+        }
+
+        .item-entry .form-control, .item-entry .form-select {
+            border-radius: 8px;
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg,#3aa0ff 0,#5b4bdc 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: .5rem 1rem;
+        }
+
+        .table-responsive {
+            max-height: 520px;
+            overflow: auto;
+        }
+
+        .small-muted {
+            font-size: .85rem;
+            color: #6c757d;
+        }
+
+        .stat-box {
+            background: #f1f9ff;
+            padding: .75rem;
+            border-radius: 8px;
+        }
+    </style>
+}
+
+<div class="container-fluid py-3">
+    <div class="mb-3">
+        <h3><i class="fas fa-warehouse me-2"></i>Nhập Kho Nguyên Liệu</h3>
+    </div>
+
+    @using (Html.BeginForm("StockInbound", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.StockInbound.InboundCode)
+        @Html.HiddenFor(m => m.StockInbound.CreatedBy)
+        @Html.HiddenFor(m => m.StockInbound.Status)
+
+        <div class="row g-3">
+            <!-- LEFT: Thông tin phiếu + form thêm 1 nguyên liệu -->
+            <div class="col-md-6">
+                <div class="panel">
+                    <h5>Thông Tin Phiếu Nhập</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label">Mã phiếu</label>
+                            <input type="text" class="form-control" value="@DateTime.Now.ToString("yyyyMMddHHmmss")" readonly />
+                            <div class="small-muted">Tự động</div>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            @Html.LabelFor(m => m.StockInbound.InboundDate, "Ngày nhập")
+                            @Html.TextBoxFor(m => m.StockInbound.InboundDate, new { @class = "form-control", type = "datetime-local", required = "required" })
+                            @Html.ValidationMessageFor(m => m.StockInbound.InboundDate, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            @Html.LabelFor(m => m.StockInbound.EmployeeId, "Nhân viên")
+                            @Html.DropDownListFor(m => m.StockInbound.EmployeeId,
+                                new SelectList(ViewBag.Employees as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "FullName", Session["UserId"]),
+"-- Chọn --", new { @class = "form-select", required = "required" })
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            @Html.LabelFor(m => m.StockInbound.SupplierId, "Nhà cung cấp (tùy chọn)")
+                            @Html.DropDownListFor(m => m.StockInbound.SupplierId,
+                                new SelectList(ViewBag.Suppliers as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "Name"),
+                                "-- Chọn --", new { @class = "form-select" })
+                        </div>
+                        <div class="col-12 mb-2">
+                            @Html.LabelFor(m => m.StockInbound.Notes, "Ghi chú")
+                            @Html.TextAreaFor(m => m.StockInbound.Notes, new { @class = "form-control", rows = 2 })
+                        </div>
+                    </div>
+
+                    <hr />
+
+                    <h6 class="mt-2">Thêm Nguyên Liệu</h6>
+                    <div class="item-entry">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-6">
+                                <label class="form-label">Nguyên liệu</label>
+                                <select id="selIngredient" class="form-select">
+                                    <option value="">-- Chọn nguyên liệu --</option>
+                                    @if (Model?.AvailableIngredients != null)
+                                    {
+                                        foreach (var ing in Model.AvailableIngredients)
+                                        {
+                                            <option value="@ing.Id" data-name="@ing.Name" data-unit="@ing.Unit" data-current="@ing.AvailableStock">
+                                                @ing.Name (@ing.Unit)
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Số lượng</label>
+                                <input id="inpQty" type="number" step="0.1" min="0" class="form-control" placeholder="0" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Đơn vị</label>
+                                <input id="inpUnit" type="text" class="form-control" readonly />
+                            </div>
+
+                            <div class="col-md-4 mt-1">
+                                <label class="form-label">Giá nhập (VNĐ)</label>
+                                <input id="inpPrice" type="number" min="0" step="1000" class="form-control" placeholder="0" />
+                            </div>
+
+                            <div class="col-md-4 mt-1">
+                                <label class="form-label">Hạn sử dụng</label>
+                                <input id="inpExpiry" type="date" class="form-control" />
+                            </div>
+
+                            <div class="col-md-4 mt-1">
+                                <label class="form-label">Số lô</label>
+                                <input id="inpBatch" type="text" class="form-control" placeholder="LOT001" />
+                            </div>
+
+                            <div class="col-12 mt-2 d-flex gap-2">
+                                <button type="button" class="btn btn-add" onclick="addToList()"> <i class="fas fa-plus me-1"></i> Thêm vào danh sách</button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="clearEntry()">Xóa nhập</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- RIGHT: Danh sách đang nhập -->
+            <div class="col-md-6">
+                <div class="panel">
+                    <h5>Danh Sách Đang Nhập</h5>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered align-middle" id="incomingTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Nguyên liệu</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn vị</th>
+                                    <th>Giá</th>
+                                    <th>Thành tiền</th>
+                                    <th>Hạn dùng</th>
+                                    <th>Số lô</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Các dòng sẽ được chèn bởi JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-3 gx-2">
+                        <div class="col-md-6">
+                            <div class="stat-box">
+                                <div><strong>Tổng số loại:</strong> <span id="statCount">0</span></div>
+                                <div class="small-muted">Số loại nguyên liệu đã thêm</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-box">
+                                <div><strong>Tổng giá trị:</strong> <span id="statTotal">0 VNĐ</span></div>
+                                <div class="small-muted">Tổng tiền tạm tính</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-danger" onclick="clearAllList()">Xóa tất cả</button>
+                        <div>
+                            <button type="submit" name="submitType" value="draft" class="btn btn-outline-warning me-2">Lưu nháp</button>
+                            <button type="submit" name="submitType" value="complete" class="btn btn-primary">Hoàn thành nhập kho</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Container để chứa các input ẩn (chi tiết) sẽ được tạo tự động -->
+        <div id="hiddenDetailsContainer"></div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        let listIndex = 0;
+        let items = []; // giữ tạm danh sách đối tượng trước khi submit
+
+        // khi chọn ingredient -> show đơn vị và tồn kho hiện tại
+        document.getElementById('selIngredient').addEventListener('change', function () {
+            const opt = this.options[this.selectedIndex];
+            if (!opt || !opt.value) {
+                document.getElementById('inpUnit').value = '';
+                document.getElementById('currentStockDisplay').textContent = '-';
+                return;
+            }
+            const unit = opt.dataset.unit || '';
+            const current = opt.dataset.current || '0';
+            document.getElementById('inpUnit').value = unit;
+            document.getElementById('currentStockDisplay').textContent = Number(current).toLocaleString('vi-VN') + ' ' + unit;
+        });
+
+        function clearEntry() {
+            document.getElementById('selIngredient').value = '';
+            document.getElementById('inpQty').value = '';
+            document.getElementById('inpPrice').value = '';
+            document.getElementById('inpExpiry').value = '';
+            document.getElementById('inpBatch').value = '';
+            document.getElementById('inpUnit').value = '';
+            document.getElementById('currentStockDisplay').textContent = '-';
+        }
+
+        function addToList() {
+            const sel = document.getElementById('selIngredient');
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt || !opt.value) { alert('Chọn nguyên liệu'); return; }
+
+            const ingredientId = opt.value;
+            const ingredientName = opt.dataset.name || opt.text;
+            const unit = opt.dataset.unit || '';
+            const currentStock = parseFloat(opt.dataset.current || 0);
+
+            const qty = parseFloat(document.getElementById('inpQty').value) || 0;
+            const price = parseFloat(document.getElementById('inpPrice').value) || 0;
+            const expiry = document.getElementById('inpExpiry').value || '';
+            const batch = document.getElementById('inpBatch').value || '';
+
+            if (qty <= 0) { alert('Nhập số lượng > 0'); return; }
+            if (price < 0) { alert('Giá phải >= 0'); return; }
+
+            // tạo object item
+            const item = {
+                IngredientId: ingredientId,
+                IngredientName: ingredientName,
+                Unit: unit,
+                CurrentStock: currentStock,
+                Quantity: qty,
+                UnitPrice: price,
+                ExpiryDate: expiry,
+                BatchNumber: batch,
+                Index: listIndex
+            };
+
+            items.push(item);
+            renderListRow(item);
+            createHiddenInputs(item);
+
+            listIndex++;
+            updateStats();
+            clearEntry();
+        }
+
+        function renderListRow(item) {
+            const tbody = document.querySelector('#incomingTable tbody');
+            const tr = document.createElement('tr');
+            tr.id = 'row-' + item.Index;
+
+            const moneyFmt = (v) => Number(v).toLocaleString('vi-VN') + ' VNĐ';
+            const numFmt = (v) => Number(v).toLocaleString('vi-VN');
+
+            tr.innerHTML = `
+                        <td class="text-center">${tbody.children.length + 1}</td>
+                        <td>${item.IngredientName}</td>
+                        <td class="text-end">${numFmt(item.Quantity)}</td>
+                        <td>${item.Unit}</td>
+                        <td class="text-end">${moneyFmt(item.UnitPrice)}</td>
+                        <td class="text-end">${moneyFmt(item.Quantity * item.UnitPrice)}</td>
+                        <td>${item.ExpiryDate || '-'}</td>
+                        <td>${item.BatchNumber || '-'}</td>
+                        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(${item.Index})"><i class="fas fa-trash"></i></button></td>
+                    `;
+
+            tbody.appendChild(tr);
+        }
+
+        function createHiddenInputs(item) {
+            // mỗi item sẽ có một div chứa các input ẩn với index item.Index
+            const container = document.getElementById('hiddenDetailsContainer');
+            const wrapper = document.createElement('div');
+            wrapper.id = `hidden-${item.Index}`;
+
+            const make = (name, value) => {
+                const inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = `Details[${item.Index}].${name}`;
+                inp.value = value;
+                return inp;
+            };
+
+            wrapper.appendChild(make('IngredientId', item.IngredientId));
+            wrapper.appendChild(make('IngredientName', item.IngredientName));
+            wrapper.appendChild(make('Unit', item.Unit));
+            wrapper.appendChild(make('Quantity', item.Quantity));
+            wrapper.appendChild(make('UnitPrice', item.UnitPrice));
+            wrapper.appendChild(make('ExpiryDate', item.ExpiryDate));
+            wrapper.appendChild(make('BatchNumber', item.BatchNumber));
+
+            container.appendChild(wrapper);
+        }
+        function removeItem(index) {
+            // xóa khỏi mảng items
+            items = items.filter(i => i.Index !== index);
+            // xóa row bảng
+            const row = document.getElementById('row-' + index);
+            if (row) row.remove();
+            // xóa input ẩn
+            const hid = document.getElementById('hidden-' + index);
+            if (hid) hid.remove();
+            // cập nhật numbering lại
+            renumberRows();
+            updateStats();
+        }
+
+        function renumberRows() {
+            const rows = document.querySelectorAll('#incomingTable tbody tr');
+            rows.forEach((r, idx) => {
+                r.children[0].textContent = idx + 1;
+            });
+        }
+
+        function clearAllList() {
+            if (!confirm('Xóa hết danh sách đang nhập?')) return;
+            items = [];
+            document.querySelector('#incomingTable tbody').innerHTML = '';
+            document.getElementById('hiddenDetailsContainer').innerHTML = '';
+            listIndex = 0;
+            updateStats();
+        }
+
+        function updateStats() {
+            const count = items.length;
+            let total = 0;
+            items.forEach(i => total += (i.Quantity * i.UnitPrice));
+            document.getElementById('statCount').textContent = count;
+            document.getElementById('statTotal').textContent = total.toLocaleString('vi-VN') + ' VNĐ';
+        }
+
+        // khởi tạo: nếu cần một item mặc định, không bắt buộc
+        document.addEventListener('DOMContentLoaded', function () {
+            // set date time mặc định cho inbound date nếu input tồn tại
+            const inbound = document.querySelector('input[name="StockInbound.InboundDate"]');
+            if (inbound && !inbound.value) {
+                const now = new Date();
+                const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                inbound.value = local;
+            }
+        });
+
+        (function () {
+            'use strict';
+            window.addEventListener('load', function () {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (items.length === 0) {
+                            alert('Vui lòng thêm ít nhất 1 nguyên liệu vào danh sách trước khi lưu/hoàn thành.');
+                            event.preventDefault();
+                            event.stopPropagation();
+                            return;
+                        }
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+    </script>
+}

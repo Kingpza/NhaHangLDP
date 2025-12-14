@@ -1,0 +1,212 @@
+﻿@{
+    ViewBag.Title = "Debug - Database Information";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fas fa-bug"></i> Debug - Database Information</h3>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger">
+                            <h4>❌ Database Connection Error:</h4>
+                            <p><strong>@ViewBag.Error</strong></p>
+                            @if (ViewBag.StackTrace != null)
+                            {
+                                <details>
+                                    <summary>Stack Trace</summary>
+                                    <pre>@ViewBag.StackTrace</pre>
+                                </details>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success">
+                            <h4>✅ Database Connection: OK</h4>
+                            <p>Current Time: <strong>@ViewBag.DebugInfo.CurrentTime</strong></p>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>📊 Tables Count</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-group">
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                Bills <span class="badge bg-primary">@ViewBag.DebugInfo.TablesCount.Bills</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                Orders <span class="badge bg-success">@ViewBag.DebugInfo.TablesCount.Orders</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                CashierShifts <span class="badge bg-info">@ViewBag.DebugInfo.TablesCount.CashierShifts</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                Employees <span class="badge bg-warning">@ViewBag.DebugInfo.TablesCount.Employees</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                MenuItems <span class="badge bg-danger">@ViewBag.DebugInfo.TablesCount.MenuItems</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between">
+                                                RestaurantTables <span class="badge bg-secondary">@ViewBag.DebugInfo.TablesCount.RestaurantTables</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>🧾 Recent Bills (Top 5)</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        @if (ViewBag.DebugInfo.RecentBills.Count > 0)
+                                        {
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>ID</th>
+                                                            <th>Date</th>
+                                                            <th>Amount</th>
+                                                            <th>Status</th>
+                                                            <th>Payment</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var bill in ViewBag.DebugInfo.RecentBills)
+                                                        {
+                                                            <tr>
+                                                                <td>@bill.Id</td>
+                                                                <td>@bill.BillDate.ToString("dd/MM HH:mm")</td>
+                                                                <td>@bill.FinalAmount.ToString("N0") VNĐ</td>
+                                                                <td>
+                                                                    <span class="badge bg-@(bill.Status == "Paid" ? "success" : "warning")">
+                                                                        @bill.Status
+                                                                    </span>
+                                                                </td>
+                                                                <td>@bill.PaymentMethod</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-muted">No bills found</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>⏰ Active Shifts</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        @if (ViewBag.DebugInfo.ActiveShifts.Count > 0)
+                                        {
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Shift ID</th>
+                                                            <th>Cashier ID</th>
+                                                            <th>Start Time</th>
+                                                            <th>Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var shift in ViewBag.DebugInfo.ActiveShifts)
+                                                        {
+                                                            <tr>
+                                                                <td>@shift.Id</td>
+                                                                <td>@shift.CashierId</td>
+                                                                <td>@shift.StartTime.ToString("dd/MM HH:mm")</td>
+                                                                <td>
+                                                                    <span class="badge bg-success">@shift.Status</span>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-muted">No active shifts</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>🛠️ Quick Actions</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <button class="btn btn-primary btn-sm mb-2" onclick="generateSampleData()">
+                                            <i class="fas fa-database"></i> Generate Sample Data
+                                        </button>
+                                        <br>
+                                        <a href="@Url.Action("RevenueAnalytics", "ReportsManagement")" class="btn btn-success btn-sm mb-2">
+                                            <i class="fas fa-chart-line"></i> Test Revenue Analytics
+                                        </a>
+                                        <br>
+                                        <a href="@Url.Action("SalesAnalytics", "ReportsManagement")" class="btn btn-info btn-sm mb-2">
+                                            <i class="fas fa-chart-bar"></i> Test Sales Analytics
+                                        </a>
+                                        <br>
+                                        <button class="btn btn-warning btn-sm" onclick="location.reload()">
+                                            <i class="fas fa-sync"></i> Refresh Debug Info
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function generateSampleData() {
+    if (confirm('Generate sample data for testing? This will add fake orders and bills to the database.')) {
+        fetch('@Url.Action("GenerateSampleData", "ReportsManagement")', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Sample data generated successfully!');
+                location.reload();
+            } else {
+                alert('Error generating sample data: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error occurred while generating sample data!');
+        });
+    }
+}
+</script>

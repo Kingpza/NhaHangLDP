@@ -1,0 +1,1055 @@
+﻿@model NhaHangLDP.Models.ShiftDetailsViewModel
+@{
+    ViewBag.Title = "Chi Tiết Ca Làm Việc";
+    Layout = "~/Views/Shared/_CashierLayout.cshtml";
+}
+
+<style>
+    .shift-details-container {
+        padding: 0;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .shift-info-section {
+        background: rgba(40, 167, 69, 0.1);
+        border: 1px solid #28a745;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .employees-summary-section {
+        background: rgba(23, 162, 184, 0.1);
+        border: 1px solid #17a2b8;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .filter-section {
+        background: rgba(248, 249, 250, 0.9);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .period-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .period-tab {
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid rgba(220, 118, 51, 0.3);
+        color: #6c757d;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .period-tab.active,
+        .period-tab:hover {
+            background: rgba(220, 118, 51, 0.1);
+            color: #dc7633;
+            border-color: #dc7633;
+            text-decoration: none;
+        }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid rgba(220, 118, 51, 0.3);
+        color: #495057;
+        border-radius: 8px;
+        padding: 10px 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 1);
+            border-color: #dc7633;
+            color: #495057;
+            box-shadow: 0 0 0 0.2rem rgba(220, 118, 51, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: rgba(108, 117, 125, 0.7);
+        }
+
+    .btn-filter {
+        background: linear-gradient(135deg, #dc7633, #e67e22);
+        border: none;
+        color: #fff;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-filter:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(220, 118, 51, 0.4);
+            color: #fff;
+        }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .summary-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s ease;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+        }
+
+    .summary-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #dc7633;
+        margin-bottom: 5px;
+    }
+
+    .summary-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .employees-quick-view {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .employee-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+        .employee-item:last-child {
+            border-bottom: none;
+        }
+
+    .employee-name {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .employee-role {
+        font-size: 0.8rem;
+        padding: 2px 6px;
+        border-radius: 10px;
+        background: rgba(23, 162, 184, 0.2);
+        color: #17a2b8;
+    }
+
+    .employee-status {
+        font-size: 0.8rem;
+    }
+
+    .status-active {
+        color: #28a745;
+    }
+
+    .status-inactive {
+        color: #6c757d;
+    }
+
+    .orders-table-container {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        overflow-x: auto;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .orders-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+        .orders-table th,
+        .orders-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .orders-table th {
+            background: rgba(220, 118, 51, 0.2);
+            color: #dc7633;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .orders-table td {
+            color: #495057;
+        }
+
+        .orders-table tr:hover {
+            background: rgba(220, 118, 51, 0.05);
+        }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .status-completed {
+        background: rgba(40, 167, 69, 0.3);
+        color: #28a745;
+    }
+
+    .status-pending {
+        background: rgba(255, 193, 7, 0.3);
+        color: #ffc107;
+    }
+
+    .status-cancelled {
+        background: rgba(220, 53, 69, 0.3);
+        color: #dc3545;
+    }
+
+    .order-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+    .btn-action {
+        padding: 4px 8px;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view {
+        background: #17a2b8;
+        color: white;
+    }
+
+        .btn-view:hover {
+            background: #138496;
+        }
+
+    .btn-reprint {
+        background: #28a745;
+        color: white;
+    }
+
+        .btn-reprint:hover {
+            background: #1e7e34;
+        }
+
+    .btn-manage-employees {
+        background: linear-gradient(135deg, #17a2b8, #20c997);
+        border: none;
+        color: #fff;
+        font-weight: bold;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+        .btn-manage-employees:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
+            color: #fff;
+            text-decoration: none;
+        }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-link {
+        background: transparent;
+        border: none;
+        color: #dc7633;
+        padding: 8px 12px;
+        margin: 0 2px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .page-link:hover,
+        .page-link.active {
+            background: #dc7633;
+            color: #fff;
+        }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+    .page-header h4 {
+        color: #dc7633 !important;
+    }
+
+    .page-header small {
+        color: #6c757d !important;
+    }
+
+    .form-label {
+        color: #495057 !important;
+        font-weight: 500;
+    }
+
+    .shift-info-section h6 {
+        color: #28a745 !important;
+    }
+
+    .shift-info-section .text-dark {
+        color: #495057 !important;
+    }
+
+    .employees-summary-section h6 {
+        color: #17a2b8 !important;
+    }
+
+    .employees-summary-section .text-dark {
+        color: #495057 !important;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.4em 0.7em;
+    }
+</style>
+<div class="shift-details-container">
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="text-warning mb-1">
+                    <i class="fas fa-list-alt me-2"></i>Chi Tiết Ca Làm Việc
+                </h4>
+                <small class="text-muted">Xem lịch sử hóa đơn theo ca làm việc và quản lý nhân viên</small>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="@Url.Action("Dashboard", "Cashier")" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (Model?.ShiftInfo != null)
+    {
+        <div class="shift-info-section">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-success mb-3">
+                        <i class="fas fa-user-clock me-2"></i>Thông tin ca làm việc
+                    </h6>
+
+                    <div class="d-flex flex-wrap align-items-center mb-2" style="gap: 5px;">
+                        <strong class="text-dark">Thu ngân:</strong>
+                        <span class="badge bg-primary" data-employee-id="@(Model.ShiftInfo.Employee?.Id ?? 0)">
+                            <i class="fas fa-star me-1"></i>
+                            @(Model.ShiftInfo.Employee?.FullName ?? "N/A")
+                        </span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center mb-2" style="gap: 5px;">
+                        <strong class="text-dark">Nhân viên thêm vào ca:</strong>
+                        @if (Model.ShiftInfo.ShiftSupportStaff != null && Model.ShiftInfo.ShiftSupportStaff.Any())
+                        {
+                            foreach (var supportStaff in Model.ShiftInfo.ShiftSupportStaff)
+                            {
+                                <span class="badge bg-secondary" data-employee-id="@supportStaff.Employee.Id">
+                                    <i class="fas fa-user me-1"></i>
+                                    @supportStaff.Employee.FullName
+                                </span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted small">Không có</span>
+                        }
+                    </div>
+
+                    <p class="text-dark mb-2">
+                        <strong>Bắt đầu:</strong> @Model.ShiftInfo.StartTime.ToString("HH:mm dd/MM/yyyy")
+                    </p>
+                    @if (Model.ShiftInfo.EndTime.HasValue)
+                    {
+                        <p class="text-dark mb-2">
+                            <strong>Kết thúc:</strong> @Model.ShiftInfo.EndTime.Value.ToString("HH:mm dd/MM/yyyy")
+                        </p>
+                    }
+                    <p class="text-dark mb-0">
+                        <strong>Thời gian làm việc:</strong> @Model.WorkingTimeDisplay
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-success mb-3">
+                        <i class="fas fa-money-bill-wave me-2"></i>Thống kê ca
+                    </h6>
+                    <p class="text-dark mb-2">
+                        <strong>Tiền mặt đầu ca:</strong> @Model.ShiftInfo.InitialCash.ToString("#,##0") VNĐ
+                    </p>
+                    <p class="text-dark mb-2">
+                        <strong>Tổng doanh thu:</strong> @Model.TotalRevenue.ToString("#,##0") VNĐ
+                    </p>
+                    <p class="text-dark mb-2">
+                        <strong>Tổng đơn hàng:</strong> @Model.TotalOrders
+                    </p>
+                    <p class="text-dark mb-0">
+                        <strong>Trạng thái ca:</strong>
+                        <span class="badge @(Model.ShiftInfo.Status == "Active" ? "bg-success" : "bg-secondary")">
+                            @(Model.ShiftInfo.Status == "Active" ? "Đang hoạt động" : "Đã đóng")
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="filter-section">
+    </div>
+
+    <div class="summary-cards" id="summaryCards">
+    </div>
+
+    <div class="orders-table-container">
+        <div id="ordersTableContainer">
+            @if (Model?.Orders != null && Model.Orders.Any())
+            {
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Mã hóa đơn</th>
+                            <th>Ngày</th>
+                            <th>Giờ</th>
+                            <th>Bàn</th>
+                            <th>Số món</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <td><strong>@order.OrderId</strong></td>
+                                <td>
+                                    <strong>
+                                        @if (order.BillId.HasValue)
+                                        {
+                                            @order.BillId.Value.ToString()
+                                        }
+                                    </strong>
+                                </td>
+                                <td>@order.Date</td>
+                                <td>@order.Time</td>
+                                <td>@order.TableNumber</td>
+                                <td>@order.ItemCount món</td>
+                                <td><strong>@order.TotalAmount.ToString("#,##0") VNĐ</strong></td>
+                                <td>
+                                    <span class="status-badge status-@order.Status">
+                                        @order.StatusDisplay
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="order-actions">
+                                        <button class="btn-action btn-view" onclick="viewOrderDetailFromModel(@order.Id)" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-action btn-reprint" onclick="reprintOrder('@order.OrderId')" title="In lại hóa đơn">
+                                            <i class="fas fa-print"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-file-invoice"></i>
+                    <h5>Không có đơn hàng nào</h5>
+                    <p>Chưa có đơn hàng nào trong ca làm việc này.</p>
+                </div>
+            }
+        </div>
+
+        <div class="pagination-container" id="paginationContainer" style="display: none;">
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+</div>
+
+@section scripts {
+    <script>
+    var ordersFromModel = [];
+    @if (Model?.Orders != null)
+    {
+        <text>
+        ordersFromModel = [
+        @foreach (var order in Model.Orders)
+            {
+            <text>
+            {
+                id: @order.Id,
+                orderId: '@order.OrderId',
+                billId: @(order.BillId.HasValue ? order.BillId.Value.ToString() : "null"),
+                tableNumber: '@order.TableNumber',
+                orderTime: new Date('@order.OrderTime.ToString("yyyy-MM-ddTHH:mm:ss")'),
+                date: '@order.Date',
+                time: '@order.Time',
+                status: '@order.Status',
+                statusDisplay: '@order.StatusDisplay',
+                totalAmount: @order.TotalAmount,
+                paymentMethod: '@order.PaymentMethod',
+                itemCount: @order.ItemCount,
+                isPaid: @(order.IsPaid.ToString().ToLower()),
+                cashierName: '@order.CashierName',
+                items: [
+            @foreach (var item in order.Items)
+            {
+                    <text>
+                    {
+                        name: '@Html.Raw(item.Name.Replace("'", "\\'"))',
+                        quantity: @item.Quantity,
+                        price: @item.Price,
+                        total: @item.Total,
+description: '@Html.Raw((item.Description ?? "").Replace("'", "\\'"))'
+                    },
+                    </text>
+            }
+                ]
+            },
+            </text>
+            }
+        ];
+        </text>
+    }
+
+    var currentPeriod = 'today';
+    var currentPage = 1;
+    var totalPages = 1;
+    var currentOrderId = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setDefaultDates();
+        console.log('Loaded', ordersFromModel.length, 'orders from database model');
+    });
+
+    function setDefaultDates() {
+        var today = new Date();
+        var todayStr = today.toISOString().split('T')[0];
+
+        document.getElementById('fromDate').value = todayStr;
+        document.getElementById('toDate').value = todayStr;
+    }
+
+    function selectPeriod(period) {
+        currentPeriod = period;
+
+        document.querySelectorAll('.period-tab').forEach(function(tab) {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-period="${period}"]`).classList.add('active');
+
+        var customFilter = document.getElementById('customDateFilter');
+        if (period === 'custom') {
+            customFilter.style.display = 'block';
+        } else {
+            customFilter.style.display = 'none';
+        }
+
+        loadShiftData();
+    }
+
+    function loadShiftData() {
+        var fromDate, toDate;
+        var today = new Date();
+
+        if (currentPeriod === 'today') {
+            fromDate = toDate = today.toISOString().split('T')[0];
+        } else if (currentPeriod === 'month') {
+            fromDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+            toDate = today.toISOString().split('T')[0];
+        } else {
+            fromDate = document.getElementById('fromDate').value;
+            toDate = document.getElementById('toDate').value;
+
+            if (!fromDate || !toDate) {
+                showToast('Vui lòng chọn khoảng thời gian!', 'error');
+                return;
+            }
+        }
+
+        var search = document.getElementById('searchInput').value;
+
+        document.getElementById('ordersTableContainer').innerHTML = `
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        `;
+
+        fetch('@Url.Action("GetShiftOrdersData", "Cashier")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `fromDate=${fromDate}&toDate=${toDate}&search=${search}&page=${currentPage}`
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                renderOrdersTable(data.orders);
+                updateSummaryCards(data.summary);
+updatePagination(data.totalPages);
+            } else {
+                showError('Lỗi khi tải dữ liệu: ' + data.message);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showError('Có lỗi xảy ra khi tải dữ liệu!');
+        });
+    }
+
+    function viewOrderDetailFromModel(orderId) {
+        var order = ordersFromModel.find(o => o.id === orderId);
+        if (!order) {
+            viewOrderDetail(orderId);
+            return;
+        }
+
+        renderOrderDetailFromModel(order);
+        var modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+        modal.show();
+
+        currentOrderId = order.orderId;
+    }
+
+    function renderOrderDetailFromModel(order) {
+        var subtotal = order.items.reduce((sum, item) => sum + item.total, 0);
+        var vat = Math.round(subtotal * 0.1);
+        var total = subtotal + vat;
+
+        var billIdHtml = order.billId ? `<p><strong>Mã hóa đơn:</strong> ${order.billId}</p>` : '';
+
+        var detailHtml = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-warning">Thông tin đơn hàng</h6>
+                <p><strong>Mã đơn:</strong> ${order.orderId}</p>
+                ${billIdHtml} <p><strong>Ngày:</strong> ${order.date}</p>
+                <p><strong>Giờ:</strong> ${order.time}</p>
+                <p><strong>Bàn:</strong> ${order.tableNumber}</p>
+                <p><strong>Thu ngân:</strong> ${order.cashierName}</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-warning">Thanh toán</h6>
+                <p><strong>Tạm tính:</strong> ${subtotal.toLocaleString()} VNĐ</p>
+                <p><strong>Thuế VAT:</strong> ${vat.toLocaleString()} VNĐ</p>
+                <p><strong>Tổng cộng:</strong> ${total.toLocaleString()} VNĐ</p>
+                <p><strong>Phương thức:</strong> ${order.paymentMethod || 'Chưa thanh toán'}</p>
+                <p><strong>Trạng thái:</strong> <span class="status-badge status-${order.status}">${order.statusDisplay}</span></p>
+            </div>
+        </div>
+        <hr style="border-color: rgba(0,0,0,0.1);">
+        <h6 class="text-warning">Chi tiết món ăn</h6>
+        <div class="table-responsive">
+            <table class="table table-light table-striped">
+                <thead>
+                    <tr>
+                        <th>Món ăn</th>
+                        <th>SL</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        order.items.forEach(function(item) {
+            detailHtml += `
+            <tr>
+                <td>${item.name}</td>
+                <td>${item.quantity}</td>
+                <td>${item.price.toLocaleString()} VNĐ</td>
+                <td>${item.total.toLocaleString()} VNĐ</td>
+            </tr>
+            `;
+});
+
+        detailHtml += `
+                </tbody>
+            </table>
+        </div>
+        `;
+
+        document.getElementById('orderDetailContent').innerHTML = detailHtml;
+    }
+
+    function renderOrdersTable(orders) {
+        if (!orders || orders.length === 0) {
+            document.getElementById('ordersTableContainer').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-file-invoice"></i>
+                    <h5>Không có đơn hàng nào</h5>
+                    <p>Chưa có đơn hàng nào trong khoảng thời gian này.</p>
+                    <button class="btn btn-outline-warning btn-sm mt-2" onclick="loadShiftData()">
+                        <i class="fas fa-redo me-1"></i>Tải lại
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        var html = `
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Mã hóa đơn</th> <th>Ngày</th>
+                    <th>Giờ</th>
+                    <th>Bàn</th>
+                    <th>Số món</th>
+                    <th>Tổng tiền</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+        `;
+
+        orders.forEach(function(order) {
+            var statusClass = 'status-' + order.Status;
+            var statusText = getStatusText(order.Status);
+
+            html += `
+                <tr>
+                    <td><strong>${order.OrderId}</strong></td>
+
+                    <td><strong>${order.BillId || ''}</strong></td>
+
+                    <td>${order.Date}</td>
+                    <td>${order.Time}</td>
+                    <td>${order.Table}</td>
+                    <td>${order.ItemCount} món</td>
+                    <td><strong>${order.Total.toLocaleString()} VNĐ</strong></td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <div class="order-actions">
+                            <button class="btn-action btn-view" onclick="viewOrderDetail('${order.OrderId}')" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-action btn-reprint" onclick="reprintOrder('${order.OrderId}')" title="In lại hóa đơn">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('ordersTableContainer').innerHTML = html;
+    }
+
+    function updateSummaryCards(summary) {
+        document.getElementById('totalOrders').textContent = summary.TotalOrders.toLocaleString();
+document.getElementById('totalRevenue').textContent = summary.TotalRevenue.toLocaleString() + ' VNĐ';
+        document.getElementById('avgOrderValue').textContent = Math.round(summary.AvgOrderValue).toLocaleString() + ' VNĐ';
+        document.getElementById('completedOrders').textContent = summary.CompletedOrders.toLocaleString();
+    }
+
+    function updatePagination(totalPgs) {
+        totalPages = totalPgs;
+
+        if (totalPages <= 1) {
+            document.getElementById('paginationContainer').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('paginationContainer').style.display = 'block';
+
+        var html = '';
+
+        if (currentPage > 1) {
+            html += `<button class="page-link" onclick="changePage(${currentPage - 1})">‹</button>`;
+        }
+
+        for (var i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+            var activeClass = i === currentPage ? 'active' : '';
+            html += `<button class="page-link ${activeClass}" onclick="changePage(${i})">${i}</button>`;
+        }
+
+        if (currentPage < totalPages) {
+            html += `<button class="page-link" onclick="changePage(${currentPage + 1})">›</button>`;
+        }
+
+        document.getElementById('pagination').innerHTML = html;
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        loadShiftData();
+    }
+
+    function getStatusText(status) {
+        var statusMap = {
+            'completed': 'Hoàn thành',
+            'pending': 'Đang xử lý',
+            'cancelled': 'Đã hủy'
+        };
+        return statusMap[status] || status;
+    }
+
+    function viewOrderDetail(orderId) {
+        currentOrderId = orderId;
+
+        fetch('@Url.Action("GetOrderDetail", "Cashier")?orderId=' + orderId, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                renderOrderDetail(data.order);
+                var modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+                modal.show();
+            } else {
+                showToast('Không thể tải chi tiết đơn hàng: ' + data.message, 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showToast('Có lỗi xảy ra khi tải chi tiết đơn hàng!', 'error');
+        });
+    }
+
+    function renderOrderDetail(order) {
+        var billId = order.BillId || '';
+        var billIdHtml = billId ? `<p><strong>Mã hóa đơn:</strong> ${billId}</p>` : '';
+
+        var detailHtml = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-warning">Thông tin đơn hàng</h6>
+                    <p><strong>Mã đơn:</strong> ${order.OrderId}</p>
+${billIdHtml} <p><strong>Ngày:</strong> ${order.Date}</p>
+                    <p><strong>Giờ:</strong> ${order.Time}</p>
+                    <p><strong>Bàn:</strong> ${order.Table}</p>
+                    <p><strong>Thu ngân:</strong> ${order.Cashier}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-warning">Thanh toán</h6>
+                    <p><strong>Tạm tính:</strong> ${order.Subtotal.toLocaleString()} VNĐ</p>
+                    <p><strong>Thuế VAT:</strong> ${order.Tax.toLocaleString()} VNĐ</p>
+                    <p><strong>Tổng cộng:</strong> ${order.Total.toLocaleString()} VNĐ</p>
+                    <p><strong>Phương thức:</strong> ${order.PaymentMethod}</p>
+                    <p><strong>Trạng thái:</strong> <span class="status-badge status-${order.Status}">${getStatusText(order.Status)}</span></p>
+                </div>
+            </div>
+            <hr style="border-color: rgba(0,0,0,0.1);">
+            <h6 class="text-warning">Chi tiết món ăn</h6>
+            <div class="table-responsive">
+                <table class="table table-light table-striped">
+                    <thead>
+                        <tr>
+                            <th>Món ăn</th>
+                            <th>SL</th>
+                            <th>Đơn giá</th>
+                            <th>Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        order.Items.forEach(function(item) {
+            detailHtml += `
+                        <tr>
+                            <td>${item.Name}</td>
+                            <td>${item.Quantity}</td>
+                            <td>${item.Price.toLocaleString()} VNĐ</td>
+                            <td>${item.Total.toLocaleString()} VNĐ</td>
+                        </tr>
+            `;
+        });
+
+        detailHtml += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        document.getElementById('orderDetailContent').innerHTML = detailHtml;
+    }
+
+    function reprintOrder(orderId) {
+        reprintInvoice(orderId);
+    }
+
+    function reprintInvoice(orderId = null) {
+        var orderIdToUse = orderId || currentOrderId;
+
+        if (!orderIdToUse) {
+            showToast('Không tìm thấy thông tin đơn hàng!', 'error');
+            return;
+        }
+
+        var printWindow = window.open('@Url.Action("PrintBill", "Cashier")?orderId=' + orderIdToUse, '_blank');
+
+        if (printWindow) {
+            printWindow.focus();
+            showToast('Đã mở trang in hóa đơn!', 'success');
+        } else {
+            showToast('Không thể mở cửa sổ in. Vui lòng kiểm tra popup blocker.', 'error');
+        }
+    }
+
+    function showError(message) {
+        document.getElementById('ordersTableContainer').innerHTML = `
+            <div class="text-center text-danger p-4">
+<i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                <p>${message}</p>
+                <button class="btn btn-outline-warning btn-sm mt-2" onclick="loadShiftData()">
+                    <i class="fas fa-redo me-1"></i>Thử lại
+                </button>
+            </div>
+        `;
+    }
+
+    function showToast(message, type) {
+        var toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} toast-notification`;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideInRight 0.3s ease-out;
+        `;
+
+        toast.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                <span>${message}</span>
+                <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 1.2rem;">&times;</button>
+            </div>
+        `;
+
+        document.body.appendChild(toast);
+
+        setTimeout(function() {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 3000);
+    }
+
+    if (!document.getElementById('toast-styles')) {
+        var style = document.createElement('style');
+        style.id = 'toast-styles';
+        style.textContent = `
+            @@keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            .toast-notification {
+                animation: slideInRight 0.3s ease-out;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    </script>
+}

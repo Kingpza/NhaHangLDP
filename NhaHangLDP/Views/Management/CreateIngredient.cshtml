@@ -1,0 +1,311 @@
+﻿@model NhaHangLDP.Models.Ingredient
+@{
+    ViewBag.Title = "Thêm Nguyên Liệu Mới";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .management-header {
+            background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+            .btn-custom:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(111, 66, 193, 0.4);
+                color: white;
+            }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #6f42c1;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #6f42c1;
+                box-shadow: 0 0 0 0.2rem rgba(111, 66, 193, 0.25);
+            }
+    </style>
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="management-header text-center">
+        <div class="container">
+            <h1><i class="fas fa-plus-circle"></i> Thêm Nguyên Liệu Mới</h1>
+            <p class="mb-0">Thêm nguyên liệu mới vào hệ thống quản lý kho</p>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="row mb-4">
+        <div class="col-12 text-end">
+            <a href="@Url.Action("IngredientList", "Management")" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Quay Lại Danh Sách
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-container">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Có lỗi xảy ra:</strong>
+                        @Html.ValidationSummary(true, "", new { @class = "mb-0 mt-2" })
+                    </div>
+                }
+
+                @using (Html.BeginForm("CreateIngredient", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h5>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                @Html.LabelFor(m => m.Name, "Tên nguyên liệu", new { @class = "form-label" })
+                                @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Ví dụ: Thịt bò, Rau xà lách...", required = "required" })
+                                @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Danh mục</label>
+                                <select class="form-select" name="Category">
+                                    <option value="">-- Chọn danh mục --</option>
+                                    <option value="Thịt">Thịt</option>
+                                    <option value="Rau củ">Rau củ</option>
+                                    <option value="Ngũ cốc">Ngũ cốc</option>
+                                    <option value="Gia vị">Gia vị</option>
+                                    <option value="Đồ uống">Đồ uống</option>
+                                    <option value="Hải sản">Hải sản</option>
+                                    <option value="Sữa và trứng">Sữa và trứng</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                @Html.LabelFor(m => m.Unit, "Đơn vị tính", new { @class = "form-label" })
+                                @Html.DropDownListFor(m => m.Unit, new SelectList(new[] {
+                                    new { Value = "kg", Text = "Kilogram (kg)" },
+                                    new { Value = "gram", Text = "Gram (g)" },
+                                    new { Value = "lít", Text = "Lít (l)" },
+                                    new { Value = "ml", Text = "Mililít (ml)" },
+                                    new { Value = "cái", Text = "Cái" },
+                                    new { Value = "hộp", Text = "Hộp" },
+                                    new { Value = "gói", Text = "Gói" },
+                                    new { Value = "thùng", Text = "Thùng" }
+                                }, "Value", "Text"), "-- Chọn đơn vị --", new { @class = "form-select", required = "required" })
+                                @Html.ValidationMessageFor(m => m.Unit, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nhà cung cấp</label>
+                                <input type="text" class="form-control" name="Supplier" placeholder="Tên nhà cung cấp" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5><i class="fas fa-warehouse me-2"></i>Thông Tin Tồn Kho</h5>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                @Html.LabelFor(m => m.AvailableStock, "Tồn kho hiện tại", new { @class = "form-label" })
+                                @Html.TextBoxFor(m => m.AvailableStock, new { @class = "form-control", type = "number", min = "0", step = "0.1", value = "0" })
+                                @Html.ValidationMessageFor(m => m.AvailableStock, "", new { @class = "text-danger" })
+                                <small class="text-muted">Số lượng có sẵn trong kho</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                @Html.LabelFor(m => m.LowStockThreshold, "Ngưỡng tối thiểu", new { @class = "form-label" })
+                                @Html.TextBoxFor(m => m.LowStockThreshold, new { @class = "form-control", type = "number", min = "0", step = "0.1", required = "required" })
+                                @Html.ValidationMessageFor(m => m.LowStockThreshold, "", new { @class = "text-danger" })
+                                <small class="text-muted">Cảnh báo khi dưới mức này</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                @Html.LabelFor(m => m.EstimatedCost, "Giá ước tính", new { @class = "form-label" })
+                                @Html.TextBoxFor(m => m.EstimatedCost, new { @class = "form-control", type = "number", min = "0", step = "1000", placeholder = "VNĐ/đơn vị" })
+                                @Html.ValidationMessageFor(m => m.EstimatedCost, "", new { @class = "text-danger" })
+                                <small class="text-muted">Giá nhập dự kiến</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Mô tả chi tiết</label>
+                        <textarea class="form-control" name="Description" rows="3" placeholder="Mô tả chi tiết về nguyên liệu, nguồn gốc, cách bảo quản..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                            <i class="fas fa-undo me-2"></i>Đặt Lại
+                        </button>
+                        <button type="submit" class="btn btn-custom">
+                            <i class="fas fa-save me-2"></i>Lưu Nguyên Liệu
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="info-card">
+                <h5><i class="fas fa-info-circle me-2"></i>Hướng Dẫn</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success me-2"></i>Tên nguyên liệu phải rõ ràng, dễ hiểu</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Chọn đúng danh mục để dễ quản lý</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Đơn vị tính phải chính xác</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Ngưỡng tối thiểu giúp cảnh báo hết hàng</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Giá ước tính để tính chi phí</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h5><i class="fas fa-lightbulb me-2"></i>Gợi Ý</h5>
+                <div class="alert alert-info">
+                    <small><i class="fas fa-info-circle me-1"></i>Bạn có thể cập nhật số lượng tồn kho sau khi tạo bằng chức năng nhập kho</small>
+                </div>
+                <div class="alert alert-warning">
+                    <small><i class="fas fa-exclamation-triangle me-1"></i>Hãy kiểm tra kỹ thông tin trước khi lưu</small>
+                </div>
+                <div class="alert alert-success">
+                    <small><i class="fas fa-check-circle me-1"></i>Nguyên liệu mới sẽ xuất hiện trong danh sách ngay lập tức</small>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h5><i class="fas fa-chart-bar me-2"></i>Ví Dụ Thực Tế</h5>
+                <div class="border-start border-primary ps-3">
+                    <strong>Thịt bò</strong><br>
+                    <small class="text-muted">Danh mục: Thịt</small><br>
+                    <small class="text-muted">Đơn vị: kg</small><br>
+                    <small class="text-muted">Tối thiểu: 5kg</small><br>
+                    <small class="text-muted">Giá: 200,000 VNĐ/kg</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function resetForm() {
+            if (confirm('Bạn có chắc muốn đặt lại form? Tất cả dữ liệu sẽ bị mất.')) {
+                document.querySelector('form').reset();
+            }
+        }
+
+        // Form validation
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+
+                        // Additional validations
+                        var availableStock = parseFloat(document.querySelector('input[name="AvailableStock"]').value) || 0;
+                        var lowStockThreshold = parseFloat(document.querySelector('input[name="LowStockThreshold"]').value) || 0;
+
+                        if (lowStockThreshold <= 0) {
+                            event.preventDefault();
+                            alert('Ngưỡng tối thiểu phải lớn hơn 0!');
+                            return;
+                        }
+
+                        if (availableStock < 0) {
+                            event.preventDefault();
+                            alert('Tồn kho không thể âm!');
+                            return;
+                        }
+
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+        // Auto format price input
+        document.addEventListener('DOMContentLoaded', function() {
+            var priceInput = document.querySelector('input[name="EstimatedCost"]');
+            if (priceInput) {
+                priceInput.addEventListener('input', function(e) {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value) {
+                        e.target.value = parseInt(value).toLocaleString('vi-VN');
+                    }
+                });
+
+                // Remove formatting before submit
+                priceInput.closest('form').addEventListener('submit', function() {
+                    priceInput.value = priceInput.value.replace(/\D/g, '');
+                });
+            }
+        });
+
+        // Auto-suggest category based on ingredient name
+        document.querySelector('input[name="Name"]').addEventListener('input', function(e) {
+            const name = e.target.value.toLowerCase();
+            const categorySelect = document.querySelector('select[name="Category"]');
+            
+            if (name.includes('thịt') || name.includes('bò') || name.includes('heo') || name.includes('gà')) {
+                categorySelect.value = 'Thịt';
+            } else if (name.includes('rau') || name.includes('củ') || name.includes('cải') || name.includes('xà lách')) {
+                categorySelect.value = 'Rau củ';
+            } else if (name.includes('cá') || name.includes('tôm') || name.includes('mực')) {
+                categorySelect.value = 'Hải sản';
+            } else if (name.includes('gạo') || name.includes('mì') || name.includes('bột')) {
+                categorySelect.value = 'Ngũ cốc';
+            } else if (name.includes('muối') || name.includes('đường') || name.includes('tiêu') || name.includes('gia vị')) {
+                categorySelect.value = 'Gia vị';
+            }
+        });
+    </script>
+}

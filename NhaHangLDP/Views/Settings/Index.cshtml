@@ -1,0 +1,390 @@
+﻿@model NhaHangLDP.Models.SettingsViewModel
+
+@{
+    ViewBag.Title = "Cài Đặt Hệ Thống";
+  Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="text-dark">
+        <i class="fas fa-cog me-2"></i>Cài Đặt Hệ Thống
+    </h2>
+    <div>
+    <a href="@Url.Action("System")" class="btn btn-outline-info me-2">
+   <i class="fas fa-info-circle me-2"></i>Thông Tin Hệ Thống
+      </a>
+        <a href="@Url.Action("Advanced")" class="btn btn-outline-secondary">
+    <i class="fas fa-cogs me-2"></i>Cài Đặt Nâng Cao
+        </a>
+ </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+  <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+   <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@using (Html.BeginForm("Index", "Settings", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="row">
+        <!-- Thông tin cơ bản -->
+  <div class="col-md-6">
+            <div class="stat-card">
+         <h5 class="mb-3 text-primary">
+   <i class="fas fa-store me-2"></i>Thông Tin Nhà Hàng
+    </h5>
+          
+  <div class="mb-3">
+       @Html.LabelFor(m => m.RestaurantName, new { @class = "form-label" })
+         @Html.TextBoxFor(m => m.RestaurantName, new { @class = "form-control", placeholder = "Nhập tên nhà hàng", required = "required" })
+       @Html.ValidationMessageFor(m => m.RestaurantName, "", new { @class = "text-danger" })
+         </div>
+
+      <div class="mb-3">
+   @Html.LabelFor(m => m.Address, new { @class = "form-label" })
+@Html.TextAreaFor(m => m.Address, new { @class = "form-control", rows = 3, placeholder = "Nhập địa chỉ nhà hàng", required = "required" })
+                  @Html.ValidationMessageFor(m => m.Address, "", new { @class = "text-danger" })
+           </div>
+
+       <div class="row">
+   <div class="col-md-6">
+      <div class="mb-3">
+     @Html.LabelFor(m => m.PhoneNumber, new { @class = "form-label" })
+          @Html.TextBoxFor(m => m.PhoneNumber, new { @class = "form-control", placeholder = "0123456789", required = "required" })
+    @Html.ValidationMessageFor(m => m.PhoneNumber, "", new { @class = "text-danger" })
+           </div>
+</div>
+     <div class="col-md-6">
+         <div class="mb-3">
+      @Html.LabelFor(m => m.Email, new { @class = "form-label" })
+     @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "email@example.com", type = "email" })
+       @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+       </div>
+ </div>
+       </div>
+
+     <div class="row">
+      <div class="col-md-6">
+        <div class="mb-3">
+     @Html.LabelFor(m => m.Website, new { @class = "form-label" })
+    @Html.TextBoxFor(m => m.Website, new { @class = "form-control", placeholder = "https://website.com", type = "url" })
+    @Html.ValidationMessageFor(m => m.Website, "", new { @class = "text-danger" })
+           </div>
+      </div>
+   <div class="col-md-6">
+   <div class="mb-3">
+        @Html.LabelFor(m => m.LogoUrl, new { @class = "form-label" })
+     @Html.TextBoxFor(m => m.LogoUrl, new { @class = "form-control", placeholder = "https://example.com/logo.png", type = "url" })
+         @Html.ValidationMessageFor(m => m.LogoUrl, "", new { @class = "text-danger" })
+    </div>
+   </div>
+            </div>
+       </div>
+      </div>
+
+  <!-- Cài đặt hoạt động -->
+        <div class="col-md-6">
+  <div class="stat-card">
+  <h5 class="mb-3 text-success">
+          <i class="fas fa-clock me-2"></i>Cài Đặt Hoạt Động
+        </h5>
+       
+    <div class="row">
+    <div class="col-md-6">
+          <div class="mb-3">
+@Html.LabelFor(m => m.OpenTime, new { @class = "form-label" })
+         @Html.TextBoxFor(m => m.OpenTime, "{0:hh\\:mm}", new { @class = "form-control", type = "time", required = "required" })
+     @Html.ValidationMessageFor(m => m.OpenTime, "", new { @class = "text-danger" })
+         </div>
+      </div>
+        <div class="col-md-6">
+  <div class="mb-3">
+    @Html.LabelFor(m => m.CloseTime, new { @class = "form-label" })
+          @Html.TextBoxFor(m => m.CloseTime, "{0:hh\\:mm}", new { @class = "form-control", type = "time", required = "required" })
+           @Html.ValidationMessageFor(m => m.CloseTime, "", new { @class = "text-danger" })
+         </div>
+      </div>
+        </div>
+
+        <div class="row">
+       <div class="col-md-6">
+<div class="mb-3">
+  @Html.LabelFor(m => m.DefaultVAT, new { @class = "form-label" })
+       <div class="input-group">
+            @Html.TextBoxFor(m => m.DefaultVAT, new { @class = "form-control", type = "number", min = "0", max = "100", step = "0.1", required = "required" })
+         <span class="input-group-text">%</span>
+          </div>
+     @Html.ValidationMessageFor(m => m.DefaultVAT, "", new { @class = "text-danger" })
+           </div>
+     </div>
+       <div class="col-md-6">
+         <div class="mb-3">
+        @Html.LabelFor(m => m.OrderTimeout, new { @class = "form-label" })
+   <div class="input-group">
+       @Html.TextBoxFor(m => m.OrderTimeout, new { @class = "form-control", type = "number", min = "1", max = "120", required = "required" })
+ <span class="input-group-text">phút</span>
+             </div>
+    @Html.ValidationMessageFor(m => m.OrderTimeout, "", new { @class = "text-danger" })
+  </div>
+     </div>
+    </div>
+
+   <div class="row">
+             <div class="col-md-6">
+     <div class="mb-3">
+  @Html.LabelFor(m => m.Currency, new { @class = "form-label" })
+          @Html.DropDownListFor(m => m.Currency, 
+   new SelectList(new[] { 
+        new { Value = "VNĐ", Text = "Việt Nam Đồng (VNĐ)" },
+      new { Value = "USD", Text = "US Dollar (USD)" },
+              new { Value = "EUR", Text = "Euro (EUR)" }
+   }, "Value", "Text"), 
+      new { @class = "form-select", required = "required" })
+        </div>
+</div>
+        <div class="col-md-6">
+            <div class="mb-3">
+      @Html.LabelFor(m => m.Language, new { @class = "form-label" })
+   @Html.DropDownListFor(m => m.Language,
+      new SelectList(new[] {
+         new { Value = "vi-VN", Text = "Tiếng Việt" },
+    new { Value = "en-US", Text = "English" },
+     new { Value = "ja-JP", Text = "日本語" }
+             }, "Value", "Text"),
+               new { @class = "form-select", required = "required" })
+         </div>
+        </div>
+       </div>
+
+        <div class="mb-3">
+@Html.LabelFor(m => m.MaxTables, new { @class = "form-label" })
+       @Html.TextBoxFor(m => m.MaxTables, new { @class = "form-control", type = "number", min = "1", max = "1000", required = "required" })
+           @Html.ValidationMessageFor(m => m.MaxTables, "", new { @class = "text-danger" })
+         </div>
+         </div>
+        </div>
+    </div>
+
+  <div class="row">
+        <!-- Các tùy chọn nâng cao -->
+        <div class="col-md-6">
+    <div class="stat-card">
+      <h5 class="mb-3 text-warning">
+    <i class="fas fa-toggle-on me-2"></i>Tùy Chọn Nâng Cao
+            </h5>
+   
+         <div class="form-check form-switch mb-3">
+       @Html.CheckBoxFor(m => m.AllowReservation, new { @class = "form-check-input", @id = "allowReservation" })
+         @Html.LabelFor(m => m.AllowReservation, new { @class = "form-check-label", @for = "allowReservation" })
+      </div>
+
+                <div class="form-check form-switch mb-3">
+             @Html.CheckBoxFor(m => m.MaintenanceMode, new { @class = "form-check-input", @id = "maintenanceMode" })
+     @Html.LabelFor(m => m.MaintenanceMode, new { @class = "form-check-label", @for = "maintenanceMode" })
+          </div>
+
+       <div class="mb-3" id="maintenanceMessageGroup" style="display: none;">
+          @Html.LabelFor(m => m.MaintenanceMessage, new { @class = "form-label" })
+         @Html.TextAreaFor(m => m.MaintenanceMessage, new { @class = "form-control", rows = 3, placeholder = "Nhập thông báo bảo trì..." })
+         @Html.ValidationMessageFor(m => m.MaintenanceMessage, "", new { @class = "text-danger" })
+          </div>
+            </div>
+     </div>
+
+        <!-- Preview thông tin -->
+        <div class="col-md-6">
+       <div class="stat-card">
+ <h5 class="mb-3 text-info">
+      <i class="fas fa-eye me-2"></i>Xem Trước Thông Tin
+     </h5>
+                
+                <div class="card border-light">
+         <div class="card-body text-center">
+        <div id="logoPreview" style="display: none;">
+               <img id="logoImage" src="" alt="Logo" style="max-width: 100px; max-height: 60px;" class="mb-2">
+        </div>
+      <h6 id="namePreview" class="card-title">Tên nhà hàng</h6>
+         <p id="addressPreview" class="card-text text-muted"><small>Địa chỉ</small></p>
+              <p class="card-text">
+        <i class="fas fa-phone me-1"></i><span id="phonePreview">Số điện thoại</span><br>
+         <i class="fas fa-envelope me-1"></i><span id="emailPreview">Email</span><br>
+   <i class="fas fa-clock me-1"></i><span id="timePreview">Giờ hoạt động</span>
+   </p>
+      <div class="mt-2">
+      <span class="badge bg-primary">VAT: <span id="vatPreview">0</span>%</span>
+         <span class="badge bg-success" id="currencyPreview">VNĐ</span>
+    </div>
+         </div>
+   </div>
+   </div>
+        </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="text-center mt-4">
+        <button type="button" class="btn btn-outline-warning me-2" onclick="resetToDefaults()">
+            <i class="fas fa-undo me-2"></i>Khôi Phục Mặc Định
+        </button>
+   <button type="submit" class="btn btn-success btn-lg me-2">
+   <i class="fas fa-save me-2"></i>Lưu Cài Đặt
+     </button>
+     <a href="@Url.Action("Dashboard", "Management")" class="btn btn-outline-secondary">
+     <i class="fas fa-times me-2"></i>Hủy Bỏ
+      </a>
+    </div>
+}
+
+@section scripts {
+<script>
+$(document).ready(function() {
+    // Cập nhật preview khi nhập liệu
+ updatePreview();
+    
+    $('#RestaurantName').on('input', function() {
+  $('#namePreview').text($(this).val() || 'Tên nhà hàng');
+    });
+    
+    $('#Address').on('input', function() {
+   $('#addressPreview').text($(this).val() || 'Địa chỉ');
+    });
+    
+    $('#PhoneNumber').on('input', function() {
+        $('#phonePreview').text($(this).val() || 'Số điện thoại');
+    });
+    
+    $('#Email').on('input', function() {
+  $('#emailPreview').text($(this).val() || 'Email');
+    });
+    
+    $('#DefaultVAT').on('input', function() {
+        $('#vatPreview').text($(this).val() || '0');
+    });
+    
+    $('#Currency').on('change', function() {
+      $('#currencyPreview').text($(this).val() || 'VNĐ');
+    });
+    
+    $('#OpenTime, #CloseTime').on('change', function() {
+        var openTime = $('#OpenTime').val() || '00:00';
+      var closeTime = $('#CloseTime').val() || '23:59';
+        $('#timePreview').text(openTime + ' - ' + closeTime);
+    });
+    
+    $('#LogoUrl').on('input', function() {
+        var logoUrl = $(this).val();
+        if (logoUrl) {
+ $('#logoImage').attr('src', logoUrl);
+   $('#logoPreview').show();
+        } else {
+        $('#logoPreview').hide();
+     }
+    });
+    
+    // Hiển thị/ẩn thông báo bảo trì
+    $('#MaintenanceMode').on('change', function() {
+    if ($(this).is(':checked')) {
+            $('#maintenanceMessageGroup').show();
+        } else {
+  $('#maintenanceMessageGroup').hide();
+        }
+    });
+    
+    // Khởi tạo trạng thái maintenance message
+    if ($('#MaintenanceMode').is(':checked')) {
+        $('#maintenanceMessageGroup').show();
+    }
+    
+    function updatePreview() {
+        $('#namePreview').text($('#RestaurantName').val() || 'Tên nhà hàng');
+        $('#addressPreview').text($('#Address').val() || 'Địa chỉ');
+        $('#phonePreview').text($('#PhoneNumber').val() || 'Số điện thoại');
+     $('#emailPreview').text($('#Email').val() || 'Email');
+        $('#vatPreview').text($('#DefaultVAT').val() || '0');
+ $('#currencyPreview').text($('#Currency').val() || 'VNĐ');
+        
+        var openTime = $('#OpenTime').val() || '00:00';
+var closeTime = $('#CloseTime').val() || '23:59';
+        $('#timePreview').text(openTime + ' - ' + closeTime);
+        
+    var logoUrl = $('#LogoUrl').val();
+        if (logoUrl) {
+     $('#logoImage').attr('src', logoUrl);
+      $('#logoPreview').show();
+        }
+    }
+});
+
+function resetToDefaults() {
+    if (confirm('Bạn có chắc muốn khôi phục về cài đặt mặc định? Tất cả thay đổi hiện tại sẽ bị mất.')) {
+        $.ajax({
+      url: '@Url.Action("ResetDefaults", "Settings")',
+          type: 'POST',
+      data: { __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+      success: function(result) {
+     if (result.success) {
+           alert(result.message);
+       location.reload();
+        } else {
+       alert('Lỗi: ' + result.message);
+  }
+       },
+ error: function() {
+      alert('Có lỗi xảy ra khi khôi phục cài đặt mặc định.');
+     }
+        });
+    }
+}
+
+// Auto-hide alerts after 5 seconds
+setTimeout(function() {
+    $('.alert').fadeOut('slow');
+}, 5000);
+</script>
+}
+
+@section styles {
+<style>
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.card-body {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+#logoImage {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.badge {
+    margin: 2px;
+}
+
+.input-group-text {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+.preview-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 15px;
+}
+</style>
+}

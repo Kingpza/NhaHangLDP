@@ -1,0 +1,1679 @@
+﻿@{
+    ViewBag.Title = "Quản Lý Đơn Hàng";
+    Layout = "~/Views/Shared/_CashierLayout.cshtml";
+}
+
+<style>
+    .orders-container {
+        padding: 0;
+    }
+
+    .orders-header {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: 10px 20px;
+        border-radius: 25px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .filter-tab.active {
+            background: rgba(220, 118, 51, 0.1);
+            border-color: #dc7633;
+            color: #dc7633;
+            box-shadow: 0 4px 12px rgba(220, 118, 51, 0.3);
+        }
+
+    .orders-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .order-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+        .order-card:hover {
+            border-color: #dc7633;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(220, 118, 51, 0.3);
+        }
+
+        .order-card::before {
+            content: "Bấm để xem chi tiết";
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 0.7rem;
+            color: #6c757d;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .order-card:hover::before {
+            opacity: 1;
+        }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .order-id {
+        font-weight: bold;
+        color: #dc7633;
+    }
+
+    .order-status {
+        padding: 5px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .status-pending {
+        background: rgba(255, 193, 7, 0.2);
+        color: #e67e22;
+        border: 1px solid #ffc107;
+    }
+
+    .status-preparing {
+        background: rgba(0, 123, 255, 0.2);
+        color: #007bff;
+        border: 1px solid #007bff;
+    }
+
+    .status-ready {
+        background: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+        border: 1px solid #28a745;
+    }
+
+    .status-completed {
+        background: rgba(108, 117, 125, 0.2);
+        color: #6c757d;
+        border: 1px solid #6c757d;
+    }
+
+    .status-paid {
+        background: rgba(32, 201, 151, 0.2);
+        color: #20c997;
+        border: 1px solid #20c997;
+    }
+
+    .order-table {
+        color: #17a2b8;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .order-items {
+        margin-bottom: 15px;
+        color: #495057;
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .order-total {
+        text-align: right;
+        font-weight: bold;
+        color: #dc7633;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+
+    .order-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-order {
+        flex: 1;
+        min-width: 80px;
+        padding: 8px 12px;
+        border-radius: 20px;
+        border: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+
+        .btn-order.btn-primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+
+        .btn-order.btn-success {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+        }
+
+        .btn-order.btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-order.btn-info {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+        }
+
+        .btn-order:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-order:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    /* === SỬA LỖI MODAL BỊ CHE === */
+    .payment-modal, .invoice-modal {
+        display: none;
+        position: fixed;
+        z-index: 1001;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease;
+        overflow-y: auto;
+        /* THÊM 2 DÒNG NÀY: */
+        padding-top: 75px;
+        padding-bottom: 30px;
+    }
+
+    .payment-content, .invoice-content {
+        background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        margin: 0 auto; /* SỬA DÒNG NÀY: Bỏ lề trên/dưới */
+        padding: 0;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: slideIn 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    /* === KẾT THÚC SỬA LỖI 1 === */
+
+
+    .payment-header, .invoice-header {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        padding: 20px;
+        border-radius: 20px 20px 0 0;
+        color: white;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .payment-body, .invoice-body {
+        padding: 25px;
+        color: #495057;
+        overflow-y: auto;
+        flex-grow: 1;
+        max-height: calc(90vh - 200px);
+    }
+
+    .payment-method {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .payment-option {
+        flex: 1;
+        padding: 15px;
+        background: rgba(220, 118, 51, 0.1);
+        border: 2px solid rgba(220, 118, 51, 0.3);
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #495057;
+    }
+
+        .payment-option.active {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .payment-option i {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+    .amount-input {
+        background: #ffffff;
+        border: 2px solid rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 15px;
+        color: #495057;
+        font-size: 1.2rem;
+        text-align: center;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+        .amount-input:focus {
+            outline: none;
+            border-color: #28a745;
+        }
+
+    .payment-summary {
+        background: rgba(248, 249, 250, 0.8);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-line {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        color: #495057;
+    }
+
+        .summary-line.total {
+            font-weight: bold;
+            color: #28a745;
+            border-top: 1px solid rgba(0, 0, 0, 0.2);
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+    /* === SỬA LỖI MODAL BỊ CHE === */
+    .order-detail-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease;
+        overflow-y: auto;
+        /* THÊM 2 DÒNG NÀY: */
+        padding-top: 75px;
+        padding-bottom: 30px;
+    }
+
+    .modal-content {
+        background: linear-gradient(135deg, #ffffff, #f8f9fa);
+        margin: 0 auto; /* SỬA DÒNG NÀY: Bỏ lề trên/dưới */
+        padding: 0;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: slideIn 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    /* === KẾT THÚC SỬA LỖI 2 === */
+
+    .modal-header {
+        background: linear-gradient(135deg, #dc7633, #e67e22);
+        padding: 20px;
+        border-radius: 20px 20px 0 0;
+        color: #fff;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .modal-subtitle {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 5px;
+    }
+
+    .close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        color: #fff;
+        font-size: 2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+        .close:hover {
+            color: #dc3545;
+        }
+
+    .modal-body {
+        padding: 25px;
+        color: #495057;
+        overflow-y: auto;
+        flex-grow: 1;
+        max-height: calc(90vh - 200px);
+    }
+
+    .order-info-section {
+        margin-bottom: 25px;
+    }
+
+    .section-title {
+        color: #dc7633;
+        font-weight: bold;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        border-bottom: 2px solid rgba(220, 118, 51, 0.3);
+        padding-bottom: 5px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        color: #495057;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .dish-item {
+        background: rgba(248, 249, 250, 0.8);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-left: 4px solid #dc7633;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .dish-name {
+        font-weight: bold;
+        color: #dc7633;
+        margin-bottom: 8px;
+    }
+
+    .dish-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .dish-quantity {
+        color: #17a2b8;
+        font-weight: bold;
+    }
+
+    .dish-price {
+        color: #28a745;
+        font-weight: bold;
+    }
+
+    .dish-subtotal {
+        color: #495057;
+        font-weight: bold;
+    }
+
+    .order-summary {
+        background: rgba(220, 118, 51, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        border: 1px solid rgba(220, 118, 51, 0.2);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        color: #495057;
+    }
+
+        .summary-row.total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #dc7633;
+            border-top: 2px solid rgba(220, 118, 51, 0.3);
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+
+    /* Modal Actions - UPDATED */
+    .modal-actions {
+        background: rgba(248, 249, 250, 0.8);
+        padding: 20px;
+        border-radius: 0 0 20px 20px;
+        display: flex;
+        gap: 10px;
+        flex-shrink: 0;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        min-height: 80px;
+    }
+
+        .modal-actions .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            white-space: nowrap;
+        }
+
+    /* Invoice Footer - UPDATED */
+    .invoice-footer {
+        padding: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        background: rgba(248, 249, 250, 0.8);
+        border-radius: 0 0 20px 20px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
+    }
+
+        .invoice-footer .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+    .btn-invoice {
+        background: linear-gradient(135deg, #17a2b8, #20c997);
+        color: white;
+    }
+
+        .btn-invoice:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(23, 162, 184, 0.4);
+        }
+
+    .btn-payment {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+
+        .btn-payment:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+    /* Scrollbar styling */
+    .modal-body::-webkit-scrollbar, .invoice-body::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .modal-body::-webkit-scrollbar-track, .invoice-body::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 3px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb, .invoice-body::-webkit-scrollbar-thumb {
+        background: rgba(220, 118, 51, 0.5);
+        border-radius: 3px;
+    }
+
+        .modal-body::-webkit-scrollbar-thumb:hover, .invoice-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(220, 118, 51, 0.8);
+        }
+
+    /* Text color fixes for light mode */
+    .orders-header h4 {
+        color: #495057 !important;
+    }
+
+    .orders-header small {
+        color: #6c757d !important;
+    }
+
+    .order-card .text-muted {
+        color: #6c757d !important;
+    }
+
+
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+
+
+    /* Responsive */
+
+    .order-actions {
+        flex-direction: column;
+    }
+
+    .btn-order {
+        flex: none;
+        width: 100%;
+    }
+
+    .modal-content, .invoice-content {
+        width: 95%;
+        margin: 1% auto; /* Chuyển về % cho responsive */
+        max-height: 95vh;
+    }
+
+    .modal-actions, .invoice-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+        .modal-actions .btn, .invoice-footer .btn {
+            min-width: auto;
+            width: 100%;
+        }
+
+    .modal-body, .invoice-body {
+        max-height: calc(95vh - 180px);
+    }
+</style>
+
+<div class.orders-container">
+    <div class="orders-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h4 class="text-primary mb-0">
+                    <i class="fas fa-fire me-2"></i>Quản Lý Đơn Hàng Lẩu
+                </h4>
+                <small class="text-muted">Theo dõi và xử lý các đơn hàng lẩu - Bấm vào đơn để xem chi tiết</small>
+            </div>
+            <div class="col-md-6 text-end">
+                <button class="btn btn-success" onclick="createNewOrder()">
+                    <i class="fas fa-plus me-2"></i>Tạo Đơn Mới
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-tabs">
+        <div class="filter-tab active" data-status="all">Tất Cả</div>
+        <div class="filter-tab" data-status="incomplete">Chưa Hoàn Thành</div>
+        <div class="filter-tab" data-status="completed">Hoàn Thành</div>
+        <div class="filter-tab" data-status="paid">Đã Thanh Toán</div>
+    </div>
+
+    <div class="orders-grid" id="ordersGrid">
+    </div>
+</div>
+
+<div id="orderDetailModal" class="order-detail-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title" id="modalOrderId">Chi Tiết Đơn Hàng #DH001</h3>
+                <div class="modal-subtitle" id="modalOrderInfo">Bàn 3 • 14:30 • Chưa Hoàn Thành</div>
+            </div>
+            <span class="close" onclick="closeOrderDetail()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="order-info-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle me-2"></i>Thông Tin Đơn Hàng
+                </div>
+                <div class="info-row">
+                    <span>Mã Đơn Hàng:</span>
+                    <span id="detailOrderId">#DH001</span>
+                </div>
+                <div class="info-row">
+                    <span>Bàn:</span>
+                    <span id="detailTable">Bàn 3</span>
+                </div>
+                <div class="info-row">
+                    <span>Thời Gian Đặt:</span>
+                    <span id="detailTime">14:30</span>
+                </div>
+                <div class="info-row">
+                    <span>Trạng Thái:</span>
+                    <span id="detailStatus" class="status-preparing">Chưa Hoàn Thành</span>
+                </div>
+            </div>
+
+            <div class="order-info-section">
+                <div class="section-title">
+                    <i class="fas fa-utensils me-2"></i>Chi Tiết Món Ăn
+                </div>
+                <div id="detailDishes">
+                </div>
+            </div>
+
+            <div class="order-summary">
+                <div class="section-title" style="border: none; margin-bottom: 10px;">
+                    <i class="fas fa-calculator me-2"></i>Tổng Kết Đơn Hàng
+                </div>
+                <div class="summary-row">
+                    <span>Số Món:</span>
+                    <span id="totalItems">4 món</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tổng Số Lượng:</span>
+                    <span id="totalQuantity">6 phần</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng Tiền:</span>
+                    <span id="totalAmount">380,000 VNĐ</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-actions" id="modalActions">
+        </div>
+    </div>
+</div>
+
+<div id="paymentModal" class="payment-modal">
+    <div class="payment-content">
+        <div class="payment-header">
+            <h3>
+                <i class="fas fa-credit-card me-2"></i>Thanh Toán Đơn Hàng
+            </h3>
+            <div>Đơn hàng: <span id="paymentOrderId">#DH001</span></div>
+            <span class="close" onclick="closePaymentModal()">&times;</span>
+        </div>
+        <div class="payment-body">
+            <div class="payment-method">
+                <div class="payment-option active" data-method="cash">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <div>Tiền Mặt</div>
+                </div>
+                <div class="payment-option" data-method="card">
+                    <i class="fas fa-credit-card"></i>
+                    <div>Thẻ</div>
+                </div>
+                <div class="payment-option" data-method="transfer">
+                    <i class="fas fa-mobile-alt"></i>
+                    <div>Chuyển Khoản</div>
+                </div>
+            </div>
+
+            <div class="payment-summary">
+                <div class="summary-line">
+                    <span>Tổng tiền hàng:</span>
+                    <span id="paymentSubtotal">380,000 VNĐ</span>
+                </div>
+                <div class="summary-line">
+                    <span>VAT (10%):</span>
+                    <span id="paymentVAT">38,000 VNĐ</span>
+                </div>
+                <div class="summary-line total">
+                    <span>Tổng thanh toán:</span>
+                    <span id="paymentTotal">418,000 VNĐ</span>
+                </div>
+            </div>
+
+            <input type="number" class="amount-input" id="receivedAmount" placeholder="Số tiền nhận từ khách" />
+
+            <div class="payment-summary">
+                <div class="summary-line">
+                    <span>Tiền thừa:</span>
+                    <span id="changeAmount">0 VNĐ</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closePaymentModal()">
+                    <i class="fas fa-times me-1"></i>Hủy
+                </button>
+                <button class="btn btn-success" style="flex: 2;" onclick="processPayment()">
+                    <i class="fas fa-check me-1"></i>Xác Nhận Thanh Toán
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="invoiceModal" class="invoice-modal">
+    <div class="invoice-content">
+        <div class="invoice-header">
+            <h3>
+                <i class="fas fa-file-invoice me-2"></i>Hóa Đơn
+            </h3>
+            <div>Đơn hàng: <span id="invoiceOrderId">#DH001</span></div>
+            <span class="close" onclick="closeInvoiceModal()">&times;</span>
+        </div>
+        <div class="invoice-body" id="invoiceContent">
+        </div>
+        <div class="invoice-footer">
+            <button class="btn btn-secondary" onclick="closeInvoiceModal()">
+                <i class="fas fa-times me-1"></i>Đóng
+            </button>
+            <button class="btn btn-success" onclick="exportInvoiceToExcel()">
+                <i class="fas fa-file-excel me-1"></i>Xuất Excel
+            </button>
+            <button class="btn btn-primary" onclick="printInvoice()">
+                <i class="fas fa-print me-1"></i>In Hóa Đơn
+            </button>
+            <button class="btn btn-info" onclick="downloadInvoice()">
+                <i class="fas fa-download me-1"></i>Tải Xuống
+            </button>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+    // Global variables for order management
+    let currentOrderForAction = null;
+    let currentFilterStatus = 'all';
+    let ordersData = []; // Store orders from database
+
+    // CRITICAL: Load orders từ Database thay vì sample data
+    function loadOrdersFromDatabase() {
+        console.log('Loading orders from database...');
+
+        // Show loading state
+        var container = document.getElementById('ordersGrid');
+        if (container) {
+            container.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><p>Đang tải đơn hàng...</p></div>';
+        }
+
+        // Fetch orders from database API
+        fetch('@Url.Action("GetOrdersData", "Cashier")?status=' + encodeURIComponent(currentFilterStatus), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success && data.orders) {
+                ordersData = data.orders;
+                console.log('Loaded', ordersData.length, 'orders from database');
+                renderOrders(ordersData);
+            } else {
+                console.error('Failed to load orders:', data.message);
+                showError('Không thể tải đơn hàng: ' + (data.message || 'Lỗi không xác định'));
+            }
+        })
+        .catch(function(error) {
+            console.error('Error loading orders:', error);
+            showError('Lỗi kết nối khi tải đơn hàng. Vui lòng thử lại.');
+        });
+    }
+
+    function showError(message) {
+        var container = document.getElementById('ordersGrid');
+        if (container) {
+            container.innerHTML = '<div class="text-center text-danger p-4"><i class="fas fa-exclamation-triangle fa-2x mb-3"></i><p>' + message + '</p><button class="btn btn-warning mt-2" onclick="loadOrdersFromDatabase()">Thử lại</button></div>';
+        }
+    }
+
+    function renderOrders(orders) {
+        const grid = document.getElementById('ordersGrid');
+
+        if (orders.length === 0) {
+            grid.innerHTML = '<div class="text-center text-muted p-4">Không có đơn hàng nào</div>';
+            return;
+        }
+
+        grid.innerHTML = orders.map(order => `
+            <div class="order-card" data-status="${order.status}" onclick="showOrderDetail('${order.id}')">
+                <div class="order-header">
+                    <div class="order-id">#${order.id}</div>
+                    <div class="order-status status-${order.paymentStatus === 'paid' ? 'paid' : order.status}">
+                        ${order.paymentStatus === 'paid' ? 'Đã Thanh Toán' : order.statusText}
+                    </div>
+                </div>
+
+                <div class="order-table">
+                    <i class="fas fa-table me-1"></i>Bàn ${order.table}
+                </div>
+
+                <div class="order-items">
+                    ${order.items.map(item => `
+                        <div class="order-item">
+                            <span>${item.quantity}x ${item.name}</span>
+                            <span>${(item.price * item.quantity).toLocaleString()} VNĐ</span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="order-total">
+                    Tổng: ${order.total.toLocaleString()} VNĐ
+                    ${order.paymentStatus === 'paid' ? '<br><small class="text-success">✓ Đã thanh toán</small>' : ''}
+                </div>
+
+                <div class="order-actions" onclick="event.stopPropagation()">
+                    ${getOrderActions(order.status, order.id, order.paymentStatus)}
+                </div>
+
+                <div class="text-muted text-end mt-2">
+                    <small><i class="fas fa-clock me-1"></i>${order.time}</small>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function showOrderDetail(orderId) {
+        console.log('Loading order detail for:', orderId);
+
+        // Show loading in modal
+        currentOrderForAction = { id: orderId };
+
+        // Fetch order detail from database
+        fetch('@Url.Action("GetOrderDetail", "Cashier")?orderId=' + orderId, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success && data.order) {
+                currentOrderForAction = data.order;
+                displayOrderDetail(data.order);
+            } else {
+                showNotification('Không thể tải chi tiết đơn hàng: ' + (data.message || 'Lỗi không xác định'), 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error loading order detail:', error);
+            showNotification('Lỗi kết nối khi tải chi tiết đơn hàng!', 'error');
+        });
+    }
+
+    function displayOrderDetail(order) {
+        // Update modal header
+        document.getElementById('modalOrderId').textContent = `Chi Tiết Đơn Hàng #${order.id}`;
+        document.getElementById('modalOrderInfo').textContent = `Bàn ${order.table} • ${order.time} • ${order.paymentStatus === 'paid' ? 'Đã Thanh Toán' : order.statusText}`;
+
+        // Update order info
+        document.getElementById('detailOrderId').textContent = `#${order.id}`;
+        document.getElementById('detailTable').textContent = `Bàn ${order.table}`;
+        document.getElementById('detailTime').textContent = `${order.time} - ${order.date}`;
+
+        const statusElement = document.getElementById('detailStatus');
+        statusElement.textContent = order.paymentStatus === 'paid' ? 'Đã Thanh Toán' : order.statusText;
+        statusElement.className = `status-${order.paymentStatus === 'paid' ? 'paid' : order.status}`;
+
+        // Update dishes detail
+        const dishesContainer = document.getElementById('detailDishes');
+        dishesContainer.innerHTML = order.items.map(item => `
+            <div class="dish-item">
+                <div class="dish-name">
+                    <i class="fas fa-utensils me-2"></i>${item.name}
+                </div>
+                <div class="dish-details">
+                    <div>
+                        <small>Số lượng:</small><br>
+                        <span class="dish-quantity">${item.quantity} phần</span>
+                    </div>
+                    <div>
+                        <small>Đơn giá:</small><br>
+                        <span class="dish-price">${item.price.toLocaleString()} VNĐ</span>
+                    </div>
+                    <div>
+                        <small>Thành tiền:</small><br>
+                        <span class="dish-subtotal">${item.total.toLocaleString()} VNĐ</span>
+                    </div>
+                </div>
+                ${item.description ? `<div style="margin-top: 10px; font-size: 0.85rem; color: #adb5bd; font-style: italic;">${item.description}</div>` : ''}
+            </div>
+        `).join('');
+
+        // Update summary
+        const totalItems = order.items.length;
+        const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+
+        document.getElementById('totalItems').textContent = `${totalItems} món`;
+        document.getElementById('totalQuantity').textContent = `${totalQuantity} phần`;
+        document.getElementById('totalAmount').textContent = `${order.total.toLocaleString()} VNĐ`;
+
+        // Update modal actions
+        updateModalActions(order);
+
+        // Show modal
+        document.getElementById('orderDetailModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function updateModalActions(order) {
+        const actionsContainer = document.getElementById('modalActions');
+        let actionsHtml = '';
+
+        if (order.status === 'ready' && order.paymentStatus !== 'paid') {
+            actionsHtml = `
+                <button class="btn btn-invoice" onclick="showInvoiceModal('${order.id}')">
+                    <i class="fas fa-file-invoice me-1"></i>Tạo Hóa Đơn
+                </button>
+                <button class="btn btn-payment" onclick="showPaymentModal('${order.id}')">
+                    <i class="fas fa-credit-card me-1"></i>Thanh Toán
+                </button>
+            `;
+        } else if (order.paymentStatus === 'paid') {
+            actionsHtml = `
+                <button class="btn btn-invoice" onclick="showInvoiceModal('${order.id}')">
+                    <i class="fas fa-file-invoice me-1"></i>Xem Hóa Đơn
+                </button>
+                <button class="btn btn-info" onclick="closeOrderDetail()">
+                    <i class="fas fa-times me-1"></i>Đóng
+                </button>
+            `;
+        } else {
+            actionsHtml = `
+                <button class="btn btn-secondary" onclick="closeOrderDetail()" style="width: 100%;">
+                    <i class="fas fa-times me-1"></i>Đóng
+                </button>
+            `;
+        }
+
+        actionsContainer.innerHTML = actionsHtml;
+    }
+
+    function closeOrderDetail() {
+        document.getElementById('orderDetailModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    function showPaymentModal(orderId) {
+        console.log('Opening payment modal for order:', orderId);
+
+        let order = null;
+
+        if (currentOrderForAction && currentOrderForAction.id == orderId) {
+            order = currentOrderForAction;
+        } else {
+            order = ordersData.find(o => o.id == orderId);
+            if (order) {
+                currentOrderForAction = order;
+            }
+        }
+
+        if (!order) {
+            console.error('Order not found:', orderId);
+            showNotification('Không tìm thấy thông tin đơn hàng!', 'error');
+
+            fetch('@Url.Action("GetOrderDetail", "Cashier")?orderId=' + orderId, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success && data.order) {
+                    currentOrderForAction = data.order;
+                    openPaymentModalWithOrder(data.order);
+                } else {
+                    showNotification('Không thể tải thông tin đơn hàng!', 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error loading order detail:', error);
+                showNotification('Lỗi khi tải thông tin đơn hàng!', 'error');
+            });
+            return;
+        }
+
+        openPaymentModalWithOrder(order);
+    }
+
+    function openPaymentModalWithOrder(order) {
+        console.log('Opening payment modal with order:', order);
+
+        document.getElementById('paymentOrderId').textContent = `#${order.id}`;
+
+        let subtotal, vat, total;
+
+        if (order.subtotal && order.vat && order.total) {
+            subtotal = order.subtotal;
+            vat = order.vat;
+            total = order.total;
+        } else {
+            subtotal = order.total;
+            vat = Math.round(subtotal * 0.1);
+            total = subtotal + vat;
+        }
+
+        document.getElementById('paymentSubtotal').textContent = `${subtotal.toLocaleString()} VNĐ`;
+        document.getElementById('paymentVAT').textContent = `${vat.toLocaleString()} VNĐ`;
+        document.getElementById('paymentTotal').textContent = `${total.toLocaleString()} VNĐ`;
+
+        currentOrderForAction.total = total;
+        currentOrderForAction.subtotal = subtotal;
+        currentOrderForAction.vat = vat;
+
+        document.getElementById('receivedAmount').value = '';
+        document.getElementById('changeAmount').textContent = '0 VNĐ';
+
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        document.querySelector('[data-method="cash"]').classList.add('active');
+
+        document.getElementById('paymentModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+
+        showNotification('Mở modal thanh toán thành công!', 'info');
+    }
+
+    function closePaymentModal() {
+        console.log('Closing payment modal');
+        document.getElementById('paymentModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+
+    function showInvoiceModal(orderId) {
+        if (!currentOrderForAction) return;
+
+        const order = currentOrderForAction;
+
+        document.getElementById('invoiceOrderId').textContent = `#${order.id}`;
+
+        const invoiceContent = generateInvoiceContent(order);
+        document.getElementById('invoiceContent').innerHTML = invoiceContent;
+
+        document.getElementById('invoiceModal').style.display = 'block';
+    }
+
+    function generateInvoiceContent(order) {
+        return `
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h3 style="color: #dc7633;">NHÀ HÀNG LẨU NGON</h3>
+                <p style="margin: 5px 0;">123 Đường ABC, Quận 1, TP.HCM</p>
+                <p style="margin: 5px 0;">Hotline: 0123 456 789</p>
+                <hr style="border-color: rgba(0, 0, 0, 0.1); margin: 15px 0;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Hóa đơn số:</span>
+                    <span style="font-weight: bold;">#${order.id}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Bàn:</span>
+                    <span>Bàn ${order.table}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>Thời gian:</span>
+                    <span>${order.time} - ${order.date}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Thu ngân:</span>
+                    <span>${order.waiter}</span>
+                </div>
+            </div>
+
+            <hr style="border-color: rgba(0, 0, 0, 0.1); margin: 15px 0;">
+
+            <div style="margin-bottom: 20px;">
+                <h5 style="color: #dc7633; margin-bottom: 10px;">Chi tiết đơn hàng:</h5>
+                ${order.items.map(item => `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 5px 0; border-bottom: 1px dashed rgba(0, 0, 0, 0.1);">
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold;">${item.name}</div>
+                            <div style="font-size: 0.9rem; color: #6c757d;">
+                                ${item.quantity} x ${item.price.toLocaleString()} VNĐ
+                            </div>
+                        </div>
+                        <div style="font-weight: bold;">
+                            ${item.total.toLocaleString()} VNĐ
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <hr style="border-color: rgba(0, 0, 0, 0.1); margin: 15px 0;">
+
+            <div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>Tạm tính:</span>
+                    <span>${order.subtotal.toLocaleString()} VNĐ</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>VAT (10%):</span>
+                    <span>${order.vat.toLocaleString()} VNĐ</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; color: #28a745; border-top: 1px solid rgba(0, 0, 0, 0.1); padding-top: 8px;">
+                    <span>Tổng cộng:</span>
+                    <span>${order.total.toLocaleString()} VNĐ</span>
+                </div>
+                ${order.paymentStatus === 'paid' ? `
+                    <div style="margin-top: 15px; text-align: center; color: #28a745;">
+                        <i class="fas fa-check-circle"></i> Đã thanh toán bằng ${getPaymentMethodText(order.paymentMethod)}
+                    </div>
+                ` : ''}
+            </div>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #6c757d;">
+                <p>Cảm ơn quý khách đã sử dụng dịch vụ!</p>
+                <p>Hẹn gặp lại quý khách lần sau!</p>
+            </div>
+        `;
+    }
+
+    function closeInvoiceModal() {
+        document.getElementById('invoiceModal').style.display = 'none';
+    }
+
+    function getOrderActions(status, orderId, paymentStatus) {
+        console.log('Getting actions for order:', orderId, 'status:', status, 'paymentStatus:', paymentStatus);
+
+        if (paymentStatus === 'paid') {
+            return `
+                <button class="btn-order btn-info" onclick="viewOrderDetails('${orderId}')">
+                    <i class="fas fa-eye me-1"></i>Chi Tiết
+                </button>
+            `;
+        }
+
+        switch(status) {
+            case 'pending':
+                return `
+                    <button class="btn-order btn-primary" onclick="updateOrderStatus('${orderId}', 'preparing')">
+                        <i class="fas fa-play me-1"></i>Bắt Đầu
+                    </button>
+                    <button class="btn-order btn-danger" onclick="cancelOrder('${orderId}')">
+                        <i class="fas fa-times me-1"></i>Hủy
+                    </button>
+                `;
+            case 'preparing':
+                return `
+                    <button class="btn-order btn-success" onclick="updateOrderStatus('${orderId}', 'ready')">
+                        <i class="fas fa-check me-1"></i>Hoàn Thành
+                    </button>
+                `;
+            case 'ready':
+                console.log('Creating payment button for order:', orderId);
+                return `
+                    <button class="btn-order btn-success" onclick="console.log('Payment button clicked for order: ${orderId}'); showPaymentModal('${orderId}'); return false;">
+                        <i class="fas fa-credit-card me-1"></i>Thanh Toán
+                    </button>
+                `;
+            case 'completed':
+                return `
+                    <button class="btn-order btn-info" onclick="viewOrderDetails('${orderId}')">
+                        <i class="fas fa-eye me-1"></i>Chi Tiết
+                    </button>
+                `;
+            default:
+                return '';
+        }
+    }
+
+    function filterOrders(status) {
+        currentFilterStatus = status;
+        console.log('Filtering orders by status:', status);
+
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`[data-status="${status}"]`).classList.add('active');
+
+        loadOrdersFromDatabase();
+    }
+
+    function updateOrderStatus(orderId, newStatus) {
+        console.log('Updating order status:', orderId, newStatus);
+
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang cập nhật...';
+
+        fetch('@Url.Action("UpdateOrderStatusAPI", "Cashier")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `orderId=${orderId}&status=${newStatus}`
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                showNotification(`Đơn hàng #${orderId} đã được cập nhật!`, 'success');
+                loadOrdersFromDatabase();
+                closeOrderDetail();
+            } else {
+                showNotification('Lỗi: ' + data.message, 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error updating order status:', error);
+            showNotification('Có lỗi xảy ra khi cập nhật trạng thái!', 'error');
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    }
+
+    function getStatusText(status) {
+        const statusMap = {
+            'pending': 'Chờ Xử Lý',
+            'preparing': 'Đang Chuẩn Bị',
+            'ready': 'Sẵn Sàng',
+            'completed': 'Hoàn Thành'
+        };
+        return statusMap[status] || status;
+    }
+
+    function getPaymentMethodText(method) {
+        const methodMap = {
+            'cash': 'tiền mặt',
+            'card': 'thẻ',
+            'transfer': 'chuyển khoản'
+        };
+        return methodMap[method] || method;
+    }
+
+    document.querySelectorAll('.payment-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    document.getElementById('receivedAmount').addEventListener('input', function () {
+        const received = parseFloat(this.value) || 0;
+        if (currentOrderForAction) {
+            const change = Math.max(0, received - currentOrderForAction.total);
+            document.getElementById('changeAmount').textContent = `${change.toLocaleString()} VNĐ`;
+        }
+    });
+
+    function processPayment() {
+        if (!currentOrderForAction) return;
+
+        const selectedMethod = document.querySelector('.payment-option.active').dataset.method;
+        const receivedAmount = parseFloat(document.getElementById('receivedAmount').value) || 0;
+
+        if (selectedMethod === 'cash' && receivedAmount < currentOrderForAction.total) {
+            alert('Số tiền nhận không đủ để thanh toán!');
+            return;
+        }
+
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...';
+
+        fetch('@Url.Action("ProcessPaymentAPI", "Cashier")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `orderId=${currentOrderForAction.id}&paymentMethod=${selectedMethod}&receivedAmount=${receivedAmount}`
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            if (data.success) {
+                showNotification(`Thanh toán đơn hàng #${currentOrderForAction.id} thành công!`, 'success');
+
+                if (data.changeAmount > 0) {
+                    showNotification(`Tiền thừa: ${data.changeAmount.toLocaleString()} VNĐ`, 'info');
+                }
+
+                loadOrdersFromDatabase();
+                closePaymentModal();
+                closeOrderDetail();
+            } else {
+                showNotification('Lỗi thanh toán: ' + data.message, 'error');
+            }
+        })
+        .catch(function(error) {
+            console.error('Error processing payment:', error);
+            showNotification('Có lỗi xảy ra khi thanh toán!', 'error');
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    }
+
+    function printInvoice() {
+        if (!currentOrderForAction) return;
+
+        const invoiceContent = generateInvoiceContent(currentOrderForAction);
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Hóa Đơn #${currentOrderForAction.id}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    .invoice-content { max-width: 400px; margin: 0 auto; }
+                    /* Thêm CSS cho nội dung hóa đơn (nếu cần) */
+                    ${generateInvoicePrintStyles()}
+                </style>
+            </head>
+            <body>
+                <div class="invoice-content">${invoiceContent}</div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+
+        // Thêm một chút delay để đảm bảo nội dung render xong
+        setTimeout(() => {
+            printWindow.print();
+        }, 500);
+    }
+
+    // Thêm hàm này để tạo CSS cho bản in
+    function generateInvoicePrintStyles() {
+        return `
+            h3 { color: #000; }
+            h5 { color: #000; }
+            hr { border-color: #ccc; }
+            div { color: #000; }
+            .dish-item { border-bottom: 1px dashed #ccc !important; }
+            .summary-row.total { color: #000 !important; border-top: 1px solid #ccc !important; }
+        `;
+    }
+
+
+    function downloadInvoice() {
+        if (!currentOrderForAction) return;
+
+        const order = currentOrderForAction;
+        const invoiceText = `
+HÓA ĐƠN THANH TOÁN
+==================
+Nhà hàng: LẨU NGON
+Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM
+Hotline: 0123 456 789
+
+Hóa đơn số: #${order.id}
+Bàn: Bàn ${order.table}
+Thời gian: ${order.time} - ${order.date}
+Thu ngân: ${order.waiter}
+
+CHI TIẾT ĐƠN HÀNG:
+${order.items.map(item =>
+    `${item.name}
+${item.quantity} x ${item.price.toLocaleString()} VNĐ = ${item.total.toLocaleString()} VNĐ`
+).join('\n\n')}
+
+==================
+Tạm tính: ${order.subtotal.toLocaleString()} VNĐ
+VAT (10%): ${order.vat.toLocaleString()} VNĐ
+Tổng cộng: ${order.total.toLocaleString()} VNĐ
+
+Cảm ơn quý khách đã sử dụng dịch vụ!
+        `;
+
+        const blob = new Blob([invoiceText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `HoaDon_${order.id}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function exportInvoiceToExcel() {
+        if (!currentOrderForAction) {
+            showNotification('Không tìm thấy thông tin đơn hàng!', 'error');
+            return;
+        }
+
+        var btn = event.target;
+        var originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang tạo...';
+
+        var order = currentOrderForAction;
+
+        var excelContent = `
+            <table>
+                <tr><td colspan="4" style="font-weight: bold; font-size: 16px;">NHÀ HÀNG LẨU NGON</td></tr>
+                <tr><td colspan="4">123 Đường ABC, Quận 1, TP.HCM</td></tr>
+                <tr><td colspan="4">Hotline: 0123 456 789</td></tr>
+                <tr><td></td></tr>
+                <tr><td colspan="4" style="font-weight: bold; text-align: center;">HÓA ĐƠN THANH TOÁN</td></tr>
+                <tr><td></td></tr>
+                <tr><td>Hóa đơn số:</td><td>#${order.id}</td></tr>
+                <tr><td>Bàn:</td><td>Bàn ${order.table}</td></tr>
+                <tr><td>Thời gian:</td><td>${order.time} - ${order.date}</td></tr>
+                <tr><td>Thu ngân:</td><td>${order.waiter}</td></tr>
+                <tr><td></td></tr>
+                <tr><td colspan="4" style="font-weight: bold;">CHI TIẾT ĐƠN HÀNG:</td></tr>
+                <tr style="font-weight: bold;">
+                    <td>Món ăn</td>
+                    <td>SL</td>
+                    <td>Đơn giá</td>
+                    <td>Thành tiền</td>
+                </tr>
+        `;
+
+        order.items.forEach(function(item) {
+            excelContent += `
+                <tr>
+                    <td>${item.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.price.toLocaleString()} VNĐ</td>
+                    <td>${item.total.toLocaleString()} VNĐ</td>
+                </tr>
+            `;
+        });
+
+        excelContent += `
+                <tr><td></td></tr>
+                <tr><td>Tạm tính:</td><td></td><td></td><td>${order.subtotal.toLocaleString()} VNĐ</td></tr>
+                <tr><td>VAT (10%):</td><td></td><td></td><td>${order.vat.toLocaleString()} VNĐ</td></tr>
+                <tr style="font-weight: bold;"><td>Tổng cộng:</td><td></td><td></td><td>${order.total.toLocaleString()} VNĐ</td></tr>
+                <tr><td></td></tr>
+                <tr><td colspan="4" style="text-align: center;">Cảm ơn quý khách đã sử dụng dịch vụ!</td></tr>
+            </table>
+        `;
+
+        var fileName = `HoaDon_${order.id}_${new Date().getTime()}.xls`;
+        var blob = new Blob([excelContent], {
+            type: 'application/vnd.ms-excel'
+        });
+
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        showNotification('Xuất file Excel thành công!', 'success');
+
+        setTimeout(function() {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }, 1000);
+    }
+
+    function cancelOrder(orderId) {
+        if (confirm('Bạn có chắc muốn hủy đơn hàng này?\nViệc hủy sẽ hoàn lại nguyên liệu vào kho.')) {
+            console.log('Cancelling order:', orderId);
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang hủy...';
+
+            fetch('@Url.Action("CancelOrderAPI", "Cashier")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `orderId=${orderId}`
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    loadOrdersFromDatabase();
+                    closeOrderDetail();
+                } else {
+                    showNotification('Lỗi: ' + data.message, 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error cancelling order:', error);
+                showNotification('Có lỗi xảy ra khi hủy đơn hàng!', 'error');
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+    }
+
+    function viewOrderDetails(orderId) {
+        showOrderDetail(orderId);
+    }
+
+    function createNewOrder() {
+        window.location.href = '@Url.Action("Menu", "Cashier")';
+    }
+
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : type === 'info' ? '#17a2b8' : '#28a745';
+        const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, ${bgColor}, ${bgColor}dd);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            z-index: 9999;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+            animation: slideInRight 0.3s ease;
+        `;
+        notification.innerHTML = `<i class="fas fa-${icon} me-2"></i>${message}`;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }
+        }, 3000);
+    }
+
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            filterOrders(this.dataset.status);
+        });
+    });
+
+    window.onclick = function(event) {
+        const orderModal = document.getElementById('orderDetailModal');
+        const paymentModal = document.getElementById('paymentModal');
+        const invoiceModal = document.getElementById('invoiceModal');
+
+        if (event.target === orderModal) {
+            closeOrderDetail();
+        } else if (event.target === paymentModal) {
+            closePaymentModal();
+        } else if (event.target === invoiceModal) {
+            closeInvoiceModal();
+        }
+    }
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @@keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @@keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    window.addEventListener('load', function() {
+        console.log('Page loaded, initializing orders from database...');
+        loadOrdersFromDatabase();
+    });
+
+    setInterval(function() {
+        console.log('Auto-refreshing orders...');
+        loadOrdersFromDatabase();
+    }, 30000);
+    </script>
+}

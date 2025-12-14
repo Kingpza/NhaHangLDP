@@ -1,0 +1,745 @@
+﻿@{
+    ViewBag.Title = "Thống Kê Đặt Bàn";
+    Layout = "~/Views/Shared/_CashierLayout.cshtml";
+}
+
+<style>
+    .booking-stats-container {
+        padding: 0;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .period-selector {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .period-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .period-tab {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.3);
+        color: #adb5bd;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .period-tab.active,
+    .period-tab:hover {
+        background: rgba(255, 204, 0, 0.2);
+        border-color: #ffcc00;
+        color: #ffcc00;
+        text-decoration: none;
+    }
+
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.total::before { background: linear-gradient(135deg, #17a2b8, #6f42c1); }
+    .stat-card.successful::before { background: linear-gradient(135deg, #28a745, #20c997); }
+    .stat-card.cancelled::before { background: linear-gradient(135deg, #dc3545, #e83e8c); }
+    .stat-card.noshow::before { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 1.3rem;
+        color: #333;
+    }
+
+    .stat-card.total .stat-icon { background: linear-gradient(135deg, #17a2b8, #6f42c1); }
+    .stat-card.successful .stat-icon { background: linear-gradient(135deg, #28a745, #20c997); }
+    .stat-card.cancelled .stat-icon { background: linear-gradient(135deg, #dc3545, #e83e8c); }
+    .stat-card.noshow .stat-icon { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #ffcc00;
+        margin-bottom: 8px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #adb5bd;
+        margin-bottom: 5px;
+    }
+
+    .stat-percentage {
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .chart-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        backdrop-filter: blur(10px);
+        min-height: 400px;
+    }
+
+    .peak-hours-section {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .peak-hours-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .peak-hour-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .peak-hour-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #ffcc00;
+    }
+
+    .peak-hour-time {
+        font-weight: bold;
+        color: #ffcc00;
+        font-size: 1.1rem;
+    }
+
+    .peak-hour-count {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #fff;
+    }
+
+    .peak-hour-bar {
+        width: 100px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        margin: 8px 0;
+        overflow: hidden;
+    }
+
+    .peak-hour-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #ffcc00, #ff9900);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+
+    .utilization-section {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .utilization-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .utilization-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        position: relative;
+    }
+
+    .utilization-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        position: relative;
+        background: conic-gradient(#ffcc00 0deg, #ffcc00 var(--percentage), rgba(255, 255, 255, 0.1) var(--percentage));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .utilization-circle::before {
+        content: '';
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #2c3e50;
+        position: absolute;
+    }
+
+    .utilization-percentage {
+        font-size: 1rem;
+        font-weight: bold;
+        color: #fff;
+        z-index: 1;
+    }
+
+    .utilization-label {
+        font-weight: bold;
+        color: #ffcc00;
+        margin-bottom: 5px;
+    }
+
+    .utilization-detail {
+        color: #adb5bd;
+        font-size: 0.9rem;
+    }
+
+    .export-section {
+        text-align: right;
+        margin-bottom: 15px;
+    }
+
+    .btn-export {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.5);
+        color: #ffcc00;
+        padding: 8px 15px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-export:hover {
+        background: #ffcc00;
+        color: #333;
+        text-decoration: none;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #adb5bd;
+    }
+
+    @@media (max-width: 768px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="booking-stats-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="text-warning mb-1">
+                    <i class="fas fa-calendar-check me-2"></i>Thống Kê Đặt Bàn
+                </h4>
+                <small class="text-muted">Phân tích xu hướng đặt bàn và tỷ lệ sử dụng bàn theo thời gian</small>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="@Url.Action("Dashboard", "Reports")" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="period-selector">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-calendar-alt me-2"></i>Chọn kỳ thống kê
+        </h6>
+        <div class="period-tabs">
+            <button class="period-tab active" data-period="today" onclick="selectPeriod('today')">
+                Hôm nay
+            </button>
+            <button class="period-tab" data-period="week" onclick="selectPeriod('week')">
+                Tuần này
+            </button>
+            <button class="period-tab" data-period="month" onclick="selectPeriod('month')">
+                Tháng này
+            </button>
+            <button class="period-tab" data-period="quarter" onclick="selectPeriod('quarter')">
+                Quý này
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="stats-overview" id="statsOverview">
+        <div class="stat-card total">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-plus"></i>
+            </div>
+            <div class="stat-value" id="totalBookings">-</div>
+            <div class="stat-label">Tổng lượt đặt</div>
+            <div class="stat-percentage" style="color: #17a2b8;" id="totalChange">-</div>
+        </div>
+        <div class="stat-card successful">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value" id="successfulBookings">-</div>
+            <div class="stat-label">Thành công</div>
+            <div class="stat-percentage" style="color: #28a745;" id="successfulRate">-</div>
+        </div>
+        <div class="stat-card cancelled">
+            <div class="stat-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-value" id="cancelledBookings">-</div>
+            <div class="stat-label">Đã hủy</div>
+            <div class="stat-percentage" style="color: #dc3545;" id="cancelledRate">-</div>
+        </div>
+        <div class="stat-card noshow">
+            <div class="stat-icon">
+                <i class="fas fa-user-times"></i>
+            </div>
+            <div class="stat-value" id="noshowBookings">-</div>
+            <div class="stat-label">Không đến</div>
+            <div class="stat-percentage" style="color: #ffc107;" id="noshowRate">-</div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="charts-grid">
+        <!-- Booking Trend Chart -->
+        <div class="chart-container">
+            <div class="export-section">
+                <a href="#" class="btn-export" onclick="exportBookingChart()">
+                    <i class="fas fa-download me-1"></i>Xuất biểu đồ
+                </a>
+            </div>
+            <h6 class="text-warning mb-3">
+                <i class="fas fa-chart-line me-2"></i>Xu hướng đặt bàn
+            </h6>
+            <div id="bookingTrendChart">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                    <p>Đang tải biểu đồ...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Status Chart -->
+        <div class="chart-container">
+            <div class="export-section">
+                <a href="#" class="btn-export" onclick="exportStatusChart()">
+                    <i class="fas fa-download me-1"></i>Xuất biểu đồ
+                </a>
+            </div>
+            <h6 class="text-warning mb-3">
+                <i class="fas fa-chart-pie me-2"></i>Phân bố trạng thái
+            </h6>
+            <div id="bookingStatusChart">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                    <p>Đang tải biểu đồ...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Peak Hours Section -->
+    <div class="peak-hours-section">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-clock me-2"></i>Giờ cao điểm đặt bàn
+        </h6>
+        <div class="peak-hours-list" id="peakHoursList">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Utilization Section -->
+    <div class="utilization-section">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-table me-2"></i>Tỷ lệ sử dụng bàn theo loại
+        </h6>
+        <div class="utilization-grid" id="utilizationGrid">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    var currentPeriod = '@ViewBag.Period';
+    var trendChart = null;
+    var statusChart = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        selectPeriod(currentPeriod);
+    });
+
+    function selectPeriod(period) {
+        // Update active tab
+        document.querySelectorAll('.period-tab').forEach(function(tab) {
+            tab.classList.remove('active');
+        });
+        document.querySelector('[data-period="' + period + '"]').classList.add('active');
+
+        currentPeriod = period;
+        loadBookingStats();
+    }
+
+    function loadBookingStats() {
+        // Show loading
+        showLoading();
+
+        // Make AJAX request
+        fetch('@Url.Action("GetBookingStatsData", "Reports")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'period=' + currentPeriod
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                updateStatsOverview(data.data);
+                renderBookingTrendChart(data.data);
+                renderBookingStatusChart(data.data);
+                renderPeakHours(data.data.PeakHours);
+                renderTableUtilization(data.data.TableUtilization);
+            } else {
+                showError('Lỗi khi tải dữ liệu: ' + data.message);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showError('Có lỗi xảy ra khi tải dữ liệu!');
+        });
+    }
+
+    function showLoading() {
+        document.getElementById('bookingTrendChart').innerHTML = getLoadingHTML();
+        document.getElementById('bookingStatusChart').innerHTML = getLoadingHTML();
+        document.getElementById('peakHoursList').innerHTML = getLoadingHTML();
+        document.getElementById('utilizationGrid').innerHTML = getLoadingHTML();
+    }
+
+    function getLoadingHTML() {
+        return `
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        `;
+    }
+
+    function updateStatsOverview(data) {
+        document.getElementById('totalBookings').textContent = data.TotalBookings.toLocaleString();
+        document.getElementById('successfulBookings').textContent = data.SuccessfulBookings.toLocaleString();
+        document.getElementById('cancelledBookings').textContent = data.CancelledBookings.toLocaleString();
+        document.getElementById('noshowBookings').textContent = data.NoShowBookings.toLocaleString();
+
+        // Calculate rates
+        var successRate = ((data.SuccessfulBookings / data.TotalBookings) * 100).toFixed(1);
+        var cancelRate = ((data.CancelledBookings / data.TotalBookings) * 100).toFixed(1);
+        var noshowRate = ((data.NoShowBookings / data.TotalBookings) * 100).toFixed(1);
+
+        document.getElementById('successfulRate').textContent = successRate + '%';
+        document.getElementById('cancelledRate').textContent = cancelRate + '%';
+        document.getElementById('noshowRate').textContent = noshowRate + '%';
+
+        // Mock changes
+        document.getElementById('totalChange').innerHTML = '<i class="fas fa-arrow-up"></i> +12.3% so với kỳ trước';
+    }
+
+    function renderBookingTrendChart(data) {
+        var ctx = document.createElement('canvas');
+        ctx.height = 300;
+
+        document.getElementById('bookingTrendChart').innerHTML = '';
+        document.getElementById('bookingTrendChart').appendChild(ctx);
+
+        // Generate sample trend data
+        var labels = [];
+        var bookingData = [];
+        var successData = [];
+
+        if (currentPeriod === 'today') {
+            // Hourly data for today
+            for (var i = 8; i <= 22; i++) {
+                labels.push(i.toString().padStart(2, '0') + ':00');
+                bookingData.push(Math.floor(Math.random() * 15) + 2);
+                successData.push(Math.floor(Math.random() * 12) + 2);
+            }
+        } else if (currentPeriod === 'week') {
+            // Daily data for this week
+            var days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+            days.forEach(function(day) {
+                labels.push(day);
+                bookingData.push(Math.floor(Math.random() * 40) + 10);
+                successData.push(Math.floor(Math.random() * 35) + 8);
+            });
+        } else {
+            // Weekly data for month/quarter
+            for (var i = 1; i <= 4; i++) {
+                labels.push('Tuần ' + i);
+                bookingData.push(Math.floor(Math.random() * 120) + 50);
+                successData.push(Math.floor(Math.random() * 100) + 40);
+            }
+        }
+
+        // Destroy existing chart
+        if (trendChart) {
+            trendChart.destroy();
+        }
+
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tổng đặt bàn',
+                    data: bookingData,
+                    borderColor: '#ffcc00',
+                    backgroundColor: 'rgba(255, 204, 0, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4
+                }, {
+                    label: 'Thành công',
+                    data: successData,
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    borderWidth: 3,
+                    fill: false,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#fff'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#adb5bd'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#adb5bd'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderBookingStatusChart(data) {
+        var ctx = document.createElement('canvas');
+        ctx.height = 300;
+
+        document.getElementById('bookingStatusChart').innerHTML = '';
+        document.getElementById('bookingStatusChart').appendChild(ctx);
+
+        // Destroy existing chart
+        if (statusChart) {
+            statusChart.destroy();
+        }
+
+        statusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Thành công', 'Đã hủy', 'Không đến'],
+                datasets: [{
+                    data: [data.SuccessfulBookings, data.CancelledBookings, data.NoShowBookings],
+                    backgroundColor: ['#28a745', '#dc3545', '#ffc107'],
+                    borderWidth: 2,
+                    borderColor: '#2c3e50'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#fff',
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var value = context.parsed;
+                                var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                var percentage = ((value / total) * 100).toFixed(1);
+                                return context.label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderPeakHours(peakHours) {
+        var html = '';
+        var maxBookings = Math.max(...peakHours.map(function(item) { return item.Bookings; }));
+
+        peakHours.forEach(function(item) {
+            var percentage = (item.Bookings / maxBookings) * 100;
+            html += `
+                <div class="peak-hour-item">
+                    <div>
+                        <div class="peak-hour-time">${item.Hour}</div>
+                        <div class="peak-hour-bar">
+                            <div class="peak-hour-fill" style="width: ${percentage}%;"></div>
+                        </div>
+                        <small class="text-muted">${percentage.toFixed(0)}% của cao điểm</small>
+                    </div>
+                    <div class="peak-hour-count">${item.Bookings}</div>
+                </div>
+            `;
+        });
+
+        document.getElementById('peakHoursList').innerHTML = html;
+    }
+
+    function renderTableUtilization(utilization) {
+        var html = '';
+
+        utilization.forEach(function(item) {
+            var percentage = item.Utilization;
+            var strokeDasharray = (percentage / 100) * 360;
+
+            html += `
+                <div class="utilization-item">
+                    <div class="utilization-circle" style="--percentage: ${strokeDasharray}deg;">
+                        <div class="utilization-percentage">${percentage}%</div>
+                    </div>
+                    <div class="utilization-label">${item.TableSize}</div>
+                    <div class="utilization-detail">Tỷ lệ sử dụng</div>
+                </div>
+            `;
+        });
+
+        document.getElementById('utilizationGrid').innerHTML = html;
+    }
+
+    function exportBookingChart() {
+        if (trendChart) {
+            var link = document.createElement('a');
+            link.download = 'booking-trend-chart.png';
+            link.href = trendChart.toBase64Image();
+            link.click();
+        }
+    }
+
+    function exportStatusChart() {
+        if (statusChart) {
+            var link = document.createElement('a');
+            link.download = 'booking-status-chart.png';
+            link.href = statusChart.toBase64Image();
+            link.click();
+        }
+    }
+
+    function showError(message) {
+        var errorHTML = `
+            <div class="text-center text-danger p-4">
+                <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                <p>${message}</p>
+            </div>
+        `;
+
+        document.getElementById('bookingTrendChart').innerHTML = errorHTML;
+        document.getElementById('bookingStatusChart').innerHTML = errorHTML;
+        document.getElementById('peakHoursList').innerHTML = errorHTML;
+        document.getElementById('utilizationGrid').innerHTML = errorHTML;
+    }
+    </script>
+}

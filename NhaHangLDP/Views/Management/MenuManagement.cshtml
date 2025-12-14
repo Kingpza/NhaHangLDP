@@ -1,0 +1,596 @@
+﻿@model NhaHangLDP.Models.MenuManagementViewModel
+@{
+    ViewBag.Title = "Quản Lý Thực Đơn";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .management-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .menu-image, .no-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+            .menu-card:hover {
+                transform: translateY(-5px);
+            }
+
+        .menu-card-image {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .menu-card-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .no-image-large {
+            width: 100%;
+            height: 100%;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #6c757d;
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ffd700;
+            color: #333;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .unavailable-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .menu-card-content {
+            padding: 15px;
+        }
+
+        .menu-card-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .combo-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #ffd700;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .combo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .save-badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .combo-price {
+            margin: 15px 0;
+        }
+
+        .combo-price-new {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .combo-price-old {
+            text-decoration: line-through;
+            color: #6c757d;
+            margin-left: 10px;
+        }
+
+        .combo-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .table-custom {
+            background: white;
+        }
+
+            .table-custom thead th {
+                background: #f8f9fa;
+                border-bottom: 2px solid #dee2e6;
+                font-weight: 600;
+            }
+
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+
+            .btn-custom:hover {
+                background: linear-gradient(135deg, #5a67d8 0%, #667eea 100%);
+                color: white;
+            }
+    </style>
+}
+
+<div class="container-fluid">
+    <div class="management-header text-center">
+        <div class="container">
+            <h1><i class="fas fa-utensils"></i> Quản Lý Thực Đơn</h1>
+            <p class="mb-0">Quản lý món ăn, giá cả và combo</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 text-end">
+            <div class="btn-group">
+                <a href="@Url.Action("CreateMenuItem", "Management")" class="btn btn-custom">
+                    <i class="fas fa-plus me-2"></i>Thêm Món Mới
+                </a>
+                <a href="@Url.Action("CreateCombo", "Management")" class="btn btn-outline-primary">
+                    <i class="fas fa-layer-group me-2"></i>Tạo Combo
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon mx-auto" style="background: rgba(40, 167, 69, 0.2); color: #28a745;">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <h4>@Model.Stats.TotalItems</h4>
+                <p class="mb-1">Tổng Món Ăn</p>
+                <small class="text-success">@Model.Stats.AvailableItems đang bán</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon mx-auto" style="background: rgba(255, 193, 7, 0.2); color: #ffc107;">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h4>@Model.Stats.FeaturedItems</h4>
+                <p class="mb-1">Món Nổi Bật</p>
+                <small class="text-warning">Được khuyến nghị</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon mx-auto" style="background: rgba(0, 123, 255, 0.2); color: #007bff;">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h4>@Model.Stats.TotalCombos</h4>
+                <p class="mb-1">Combo/Set</p>
+                <small class="text-info">Đang khuyến mãi</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <div class="stat-icon mx-auto" style="background: rgba(220, 53, 69, 0.2); color: #dc3545;">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <h4>@Model.Stats.AveragePrice.ToString("N0") VNĐ</h4>
+                <p class="mb-1">Giá Trung Bình</p>
+                <small class="text-muted">@Model.Stats.LowestPrice.ToString("N0") - @Model.Stats.HighestPrice.ToString("N0") VNĐ</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stat-card">
+                <h5 class="mb-3">Tìm kiếm & Lọc</h5>
+
+                @using (Html.BeginForm("MenuManagement", "Management", FormMethod.Get, new { @class = "needs-validation" }))
+                {
+                    <div class="row align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Tìm kiếm</label>
+                            @Html.TextBox("search", Model.SearchTerm, new { @class = "form-control", placeholder = "Tên món ăn..." })
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Danh mục</label>
+                            @Html.DropDownList("category",
+                                new SelectList(new[] {
+                                new { Value = "", Text = "Tất cả danh mục" },
+                                new { Value = "Nước Lẩu", Text = "Nước Lẩu" },
+                                new { Value = "Thịt", Text = "Thịt" },
+                                new { Value = "Hải Sản", Text = "Hải Sản" },
+                                new { Value = "Rau & Nấm", Text = "Rau & Nấm" },
+                                new { Value = "Món Phụ", Text = "Món Phụ" },
+                                new { Value = "Đồ Uống", Text = "Đồ Uống" }
+                                }, "Value", "Text", Model.CategoryFilter),
+                            new { @class = "form-select" })
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Trạng thái</label>
+                            @Html.DropDownList("status", new SelectList(new[] {
+                                new { Value = "", Text = "Tất cả" },
+                                new { Value = "available", Text = "Đang bán" },
+                                new { Value = "unavailable", Text = "Ngừng bán" },
+                                new { Value = "featured", Text = "Nổi bật" }
+                                }, "Value", "Text", Model.StatusFilter), new { @class = "form-select" })
+                        </div>
+
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-1"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5><i class="fas fa-list me-2"></i>Danh Sách Món Ăn</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary" onclick="toggleView('grid')">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary active" onclick="toggleView('table')">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="tableView" class="table-responsive">
+                    <table class="table table-custom table-hover">
+                        <thead>
+                            <tr>
+                                <th>Hình ảnh</th>
+                                <th>Tên Món</th>
+                                <th>Danh Mục</th>
+                                <th>Giá Bán</th>
+                                <th>Thời gian</th>
+                                <th>Trạng Thái</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.MenuItems)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="menu-image">
+                                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                            {
+                                                <img src="@Url.Content("~/images/menu/" + item.ImageUrl)" alt="@item.Name" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                            }
+                                            else
+                                            {
+                                                <img src="@Url.Content("~/images/menu/placeholder.png")" alt="No image" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>@item.Name</strong>
+                                            @if (!string.IsNullOrEmpty(item.Description))
+                                            {
+                                                <br><small class="text-muted">@item.Description</small>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@item.Category</span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">@item.Price.ToString("N0") VNĐ</strong>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">@item.PreparationTime phút</small>
+                                    </td>
+
+                                    <td>
+                                        @if (item.IsAvailable)
+                                        {
+                                            <span class="badge bg-success">Đang bán</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Ngừng bán</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="@Url.Action("EditMenuItem", "Management", new { id = item.Id })"
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+
+                                            <button class="btn @(item.IsAvailable ? "btn-outline-warning" : "btn-outline-secondary") btn-sm"
+                                                    onclick="toggleStatus(@item.Id)">
+                                                <i class="fas @(item.IsAvailable ? "fa-toggle-on" : "fa-toggle-off")"></i>
+                                            </button>
+
+                                            <button class="btn btn-outline-danger btn-sm"
+                                                    onclick="deleteMenuItem(@item.Id, '@item.Name')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="gridView" class="row" style="display: none;">
+                    @foreach (var item in Model.MenuItems)
+                    {
+                        <div class="col-md-4 col-lg-3 mb-3">
+                            <div class="menu-card">
+                                <div class="menu-card-image">
+                                    @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                    {
+                                        <img src="@Url.Content("~/images/menu/" + item.ImageUrl)" alt="@item.Name">
+                                    }
+                                    else
+                                    {
+                                        <div class="no-image-large">
+                                            <img src="@Url.Content("~/images/menu/placeholder.png")" alt="No image" style="width: 100%; height: 100%; object-fit: cover;">
+                                        </div>
+                                    }
+                                </div>
+                                <div class="menu-card-content">
+                                    <h6>@item.Name</h6>
+                                    <p class="text-muted small">@item.Description</p>
+                                    <div class="price">
+                                        <strong class="text-success">@item.Price.ToString("N0") VNĐ</strong>
+                                    </div>
+                                    <div class="menu-card-actions">
+                                        <a href="@Url.Action("EditMenuItem", "Management", new { id = item.Id })"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-warning"
+                                                onclick="toggleStatus(@item.Id)">
+                                            <i class="fas fa-toggle-on"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                onclick="deleteMenuItem(@item.Id, '@item.Name')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.MenuCombos != null && Model.MenuCombos.Any())
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="stat-card">
+                    <h5><i class="fas fa-layer-group me-2"></i>Combo & Set Món</h5>
+                    <div class="row">
+                        @foreach (var combo in Model.MenuCombos)
+                        {
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="combo-card">
+                                    <div class="combo-header">
+                                        <h6>@combo.Name</h6>
+                                        <span class="save-badge">Combo</span>
+                                    </div>
+                                    <p class="text-muted">@combo.Description</p>
+                                    <div class="combo-price">
+                                        <span class="combo-price-new">@combo.ComboPrice.ToString("N0") VNĐ</span>
+                                    </div>
+                                    <div class="combo-actions">
+                                        <a href="@Url.Action("EditCombo", "Management", new { id = combo.Id })" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Sửa
+                                        </a>
+
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteCombo(@combo.Id, '@Html.Raw(HttpUtility.JavaScriptStringEncode(combo.Name))')">
+                                            <i class="fas fa-trash"></i> Xóa
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        // Thêm hàm này để xử lý AntiForgeryToken cho các yêu cầu AJAX
+        function getAntiForgeryToken() {
+            // Hàm này dùng để lấy token nếu bạn có 1 token CÓ TRONG FORM
+            // Nhưng vì form tìm kiếm đã đổi thành GET, chúng ta không cần nó cho các hàm POST/AJAX
+            // Các hàm POST (delete, toggle) không cần token trừ khi action trên controller
+            // được đánh dấu [ValidateAntiForgeryToken]
+        }
+
+        function deleteCombo(id, name) {
+            if (confirm(`Bạn có chắc muốn xóa combo "${name}"? Thao tác này không thể hoàn tác.`)) {
+                // Chúng ta cần thêm AntiForgeryToken vào đây nếu Action "DeleteCombo"
+                // trên Controller có [ValidateAntiForgeryToken]
+                // Giả sử là không có, code vẫn giữ nguyên
+                fetch('@Url.Action("DeleteCombo", "Management")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                        // 'RequestVerificationToken': getAntiForgeryToken() // Thêm dòng này nếu cần
+                    },
+                    body: JSON.stringify({ id: id })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Có lỗi xảy ra: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra khi xóa combo!');
+                });
+            }
+        }
+        function toggleView(viewType) {
+            const tableView = document.getElementById('tableView');
+            const gridView = document.getElementById('gridView');
+            const buttons = document.querySelectorAll('.btn-group .btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            if (viewType === 'grid') {
+                tableView.style.display = 'none';
+                gridView.style.display = 'block'; // Sửa lỗi: đây phải là 'block'
+                buttons[0].classList.add('active');
+            } else {
+                tableView.style.display = 'block';
+                gridView.style.display = 'none';
+                buttons[1].classList.add('active');
+            }
+        }
+
+        function toggleStatus(id) {
+            if (confirm('Bạn có chắc muốn thay đổi trạng thái món ăn này?')) {
+                fetch('@Url.Action("ToggleMenuItemStatus", "Management")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                        // 'RequestVerificationToken': getAntiForgeryToken() // Thêm dòng này nếu cần
+                    },
+                    body: JSON.stringify({ id: id })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Có lỗi xảy ra: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra!');
+                    });
+            }
+        }
+
+        function deleteMenuItem(id, name) {
+            if (confirm(`Bạn có chắc muốn xóa món "${name}"?`)) {
+                fetch('@Url.Action("DeleteMenuItem", "Management")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                        // 'RequestVerificationToken': getAntiForgeryToken() // Thêm dòng này nếu cần
+                    },
+                    body: JSON.stringify({ id: id })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert('Có lỗi xảy ra: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra!');
+                    });
+            }
+        }
+
+        // Kích hoạt view mặc định
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleView('table');
+        });
+    </script>
+}

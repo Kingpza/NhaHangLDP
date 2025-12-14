@@ -1,0 +1,295 @@
+﻿@{
+    ViewBag.Title = "Đăng nhập";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Quản lý nhà hàng</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        @@keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+            .logo-section img {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                object-fit: cover;
+                margin-bottom: 15px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+                animation: pulse 2s infinite;
+            }
+
+        @@keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .logo-section h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            font-size: 1.6rem;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-section p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .form-title {
+            text-align: center;
+            color: #34495e;
+            font-weight: 600;
+            margin-bottom: 25px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: 2px solid #e1e8ed;
+            border-radius: 50px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+            .form-control:focus {
+                border-color: #3498db;
+                box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+                background: #fff;
+                outline: none;
+            }
+
+        .form-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #95a5a6;
+            font-size: 18px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+            .btn-login:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            }
+
+            .btn-login:active {
+                transform: translateY(0);
+            }
+
+        .register-link {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+            .register-link a {
+                color: #3498db;
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.3s ease;
+            }
+
+                .register-link a:hover {
+                    color: #2980b9;
+                    text-decoration: underline;
+                }
+
+        .alert {
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: none;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #51cf66, #69db7c);
+            color: white;
+        }
+
+        .error-text {
+            color: #e74c3c;
+            font-size: 0.875rem;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Logo và tên nhà hàng -->
+        <div class="logo-section">
+            <img src="~/images/logo.jpg" alt="Logo" />
+            <h1>LDP Restaurant</h1>
+            <p>Hệ thống quản lý nhà hàng</p>
+        </div>
+
+        <h2 class="form-title">Đăng nhập</h2>
+
+        <!-- Thông báo -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> @TempData["Success"]
+            </div>
+        }
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                @Html.ValidationSummary(true, "", new { @class = "mb-0" })
+            </div>
+        }
+
+        @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "login-form" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-group">
+                <i class="fas fa-user form-icon"></i>
+                @Html.TextBox("username", "", new { @class = "form-control", placeholder = "Tên đăng nhập", required = "required" })
+                @Html.ValidationMessage("username", "", new { @class = "error-text" })
+            </div>
+
+            <div class="form-group">
+                <i class="fas fa-lock form-icon"></i>
+                @Html.Password("password", "", new { @class = "form-control", placeholder = "Mật khẩu", required = "required" })
+                @Html.ValidationMessage("password", "", new { @class = "error-text" })
+            </div>
+
+            <button type="submit" class="btn-login">
+                <i class="fas fa-sign-in-alt"></i> Đăng nhập
+            </button>
+        }
+
+        <div class="register-link">
+            Chưa có tài khoản?
+            @Html.ActionLink("Đăng ký ngay", "Register", "Account")
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Focus effects
+        $(document).ready(function () {
+            $('.form-control').focus(function () {
+                $(this).siblings('.form-icon').css('color', '#3498db');
+            });
+
+            $('.form-control').blur(function () {
+                $(this).siblings('.form-icon').css('color', '#95a5a6');
+            });
+
+            // Auto focus on first input
+            $('input[name="username"]').focus();
+
+            // Form submission animation
+            $('.login-form').on('submit', function () {
+                $('.btn-login').html('<i class="fas fa-spinner fa-spin"></i> Đang đăng nhập...');
+                $('.btn-login').prop('disabled', true);
+            });
+        });
+    </script>
+</body>
+</html>

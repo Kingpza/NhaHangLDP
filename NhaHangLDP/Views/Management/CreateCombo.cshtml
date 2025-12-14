@@ -1,0 +1,418 @@
+﻿@model NhaHangLDP.Models.MenuCombo
+@{
+    ViewBag.Title = "Tạo Combo Món Ăn";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .management-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+            .btn-custom:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+                color: white;
+            }
+
+        .menu-item-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+            .menu-item-card:hover {
+                border-color: #ff6b6b;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+            }
+
+            .menu-item-card.selected {
+                border-color: #ff6b6b;
+                background: rgba(255, 107, 107, 0.1);
+            }
+
+        .item-checkbox {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transform: scale(1.5);
+        }
+
+        .savings-card {
+            background: linear-gradient(135deg, #54a0ff 0%, #5f27cd 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #ff6b6b;
+                box-shadow: 0 0 0 0.2rem rgba(255, 107, 107, 0.25);
+            }
+
+        .combo-preview {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .selected-items {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .selected-item {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ff6b6b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <div class="management-header text-center">
+        <div class="container">
+            <h1><i class="fas fa-layer-group"></i> Tạo Combo Món Ăn</h1>
+            <p class="mb-0">Tạo combo ưu đãi từ các món ăn có sẵn</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 text-end">
+            <a href="@Url.Action("MenuManagement", "Management")" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Quay Lại Thực Đơn
+            </a>
+        </div>
+    </div>
+
+    @using (Html.BeginForm("CreateCombo", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="form-container">
+                    <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Combo</h5>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                @Html.LabelFor(m => m.Name, "Tên combo", new { @class = "form-label" })
+                                @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Ví dụ: Combo Gia Đình, Set Lẩu Đặc Biệt...", required = "required" })
+                                @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                @Html.LabelFor(m => m.ComboPrice, "Giá combo", new { @class = "form-label" })
+                                <div class="input-group">
+                                    @Html.TextBoxFor(m => m.ComboPrice, new { @class = "form-control price-input", type = "number", min = "0", step = "1000", required = "required", placeholder = "150000" })
+                                    <span class="input-group-text">VNĐ</span>
+                                </div>
+                                @Html.ValidationMessageFor(m => m.ComboPrice, "", new { @class = "text-danger" })
+                            </div>
+                            sickening
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Description, "Mô tả combo", new { @class = "form-label" })
+                        @Html.TextAreaFor(m => m.Description, new { @class = "form-control", rows = "3", placeholder = "Mô tả các món ăn trong combo và ưu đãi đặc biệt..." })
+                    </div>
+                </div>
+
+                <div class="form-container">
+                    <h5><i class="fas fa-utensils me-2"></i>Chọn Món Ăn Cho Combo</h5>
+                    <p class="text-muted">Chọn ít nhất 2 món ăn để tạo combo</p>
+
+                    <div class="row" id="menuItemsList">
+                        @foreach (var item in (List<NhaHangLDP.Models.MenuItem>)ViewBag.AvailableMenuItems)
+                        {
+                            <div class="col-md-6 col-lg-4">
+                                <div class="menu-item-card" onclick="toggleMenuItem(@item.Id, '@item.Name', @item.Price)">
+                                    <input type="checkbox" class="item-checkbox" name="selectedMenuItems" value="@item.Id" id="item_@item.Id">
+
+                                    <div class="mb-2">
+                                        <strong>@item.Name</strong>
+                                        <div class="text-success fw-bold">@item.Price.ToString("N0") VNĐ</div>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(item.Description))
+                                    {
+                                        <p class="text-muted small mb-2">@item.Description</p>
+                                    }
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-secondary">@item.Category</span>
+                                        <small class="text-muted">@item.PreparationTime phút</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo me-2"></i>Đặt Lại
+                    </button>
+                    <button type="submit" class="btn btn-custom">
+                        <i class="fas fa-save me-2"></i>Tạo Combo
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="form-container">
+                    <h5><i class="fas fa-eye me-2"></i>Xem Trước Combo</h5>
+
+                    <div id="comboPreview" class="combo-preview">
+                        <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Chọn món ăn để xem combo</p>
+                    </div>
+
+                    <div id="selectedItemsList" class="selected-items mt-3" style="display: none;">
+                        <h6>Món ăn đã chọn:</h6>
+                        <div id="selectedItems"></div>
+                    </div>
+                </div>
+
+                <div class="savings-card mb-4">
+                    <h5><i class="fas fa-calculator me-2"></i>Tính Toán Tiết Kiệm</h5>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <h4 id="originalTotalDisplay">0 VNĐ</h4>
+                            <small>Tổng giá gốc</small>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <h4 id="comboPriceDisplay">0 VNĐ</h4>
+                            <small>Giá combo</small>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <h3 id="savingsDisplay" class="text-warning">0 VNĐ</h3>
+                            <small>Tiết kiệm được</small>
+                        </div>
+                        <div class="col-12">
+                            <h3 id="savingsPercentDisplay" class="text-warning">0%</h3>
+                            <small>Tỉ lệ tiết kiệm</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-container">
+                    <h5><i class="fas fa-lightbulb me-2"></i>Hướng Dẫn</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>Combo cần ít nhất 2 món ăn</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Giá combo nên thấp hơn tổng giá gốc</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Tên combo phải hấp dẫn và dễ nhớ</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Mô tả rõ ràng về ưu đãi</li>
+                        <li><i class="fas fa-check text-success me-2"></i>Chọn món ăn phù hợp với nhau</li>
+                    </ul>
+                </div>
+                s
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        let selectedItems = [];
+let originalTotal = 0;
+
+        function toggleMenuItem(id, name, price) {
+            const checkbox = document.getElementById('item_' + id);
+            const card = checkbox.closest('.menu-item-card');
+
+            checkbox.checked = !checkbox.checked;
+
+            if (checkbox.checked) {
+                card.classList.add('selected');
+                selectedItems.push({ id: id, name: name, price: price });
+            } else {
+                card.classList.remove('selected');
+                selectedItems = selectedItems.filter(item => item.id !== id);
+            }
+
+            updateComboPreview();
+            updateSavingsCalculation();
+        }
+
+        function updateComboPreview() {
+            const preview = document.getElementById('comboPreview');
+            const selectedList = document.getElementById('selectedItemsList');
+            const itemsContainer = document.getElementById('selectedItems');
+
+            if (selectedItems.length === 0) {
+                preview.innerHTML = '<i class="fas fa-layer-group fa-3x text-muted mb-3"></i><p class="text-muted">Chọn món ăn để xem combo</p>';
+                selectedList.style.display = 'none';
+                return;
+            }
+
+            // Update preview
+            preview.innerHTML = `
+                    <i class="fas fa-layer-group fa-2x text-primary mb-2"></i>
+                    <h6 class="text-primary">Combo ${selectedItems.length} món</h6>
+                    <p class="text-muted small mb-0">${selectedItems.map(item => item.name).join(', ')}</p>
+section        `;
+
+            // Update selected items list
+            itemsContainer.innerHTML = selectedItems.map(item => `
+                    <div class="selected-item">
+                        <span>${item.name}</span>
+                        <span class="text-success fw-bold">${item.price.toLocaleString('vi-VN')} VNĐ</span>
+section              </div>
+                `).join('');
+
+            selectedList.style.display = 'block';
+
+            // Calculate original total
+            originalTotal = selectedItems.reduce((sum, item) => sum + item.price, 0);
+        }
+
+        function updateSavingsCalculation() {
+            const comboPrice = parseFloat(document.querySelector('input[name="ComboPrice"]').value) || 0;
+
+            document.getElementById('originalTotalDisplay').textContent = originalTotal.toLocaleString('vi-VN') + ' VNĐ';
+            document.getElementById('comboPriceDisplay').textContent = comboPrice.toLocaleString('vi-VN') + ' VNĐ';
+
+            const savings = originalTotal - comboPrice;
+            const savingsPercent = originalTotal > 0 ? ((savings / originalTotal) * 100) : 0;
+
+            document.getElementById('savingsDisplay').textContent = savings.toLocaleString('vi-VN') + ' VNĐ';
+            document.getElementById('savingsPercentDisplay').textContent = savingsPercent.toFixed(1) + '%';
+
+            // Change colors based on savings
+const savingsDisplay = document.getElementById('savingsDisplay');
+         const percentDisplay = document.getElementById('savingsPercentDisplay');
+
+            if (savings > 0) {
+                savingsDisplay.className = 'text-success';
+                percentDisplay.className = 'text-success';
+            } else if (savings === 0) {
+                savingsDisplay.className = 'text-warning';
+             percentDisplay.className = 'text-warning';
+            } else {
+                savingsDisplay.className = 'text-danger';
+                percentDisplay.className = 'text-danger';
+            }
+
+                // Auto-suggest combo price (90% of original total)
+         if (originalTotal > 0 && comboPrice === 0) {
+                const suggestedPrice = Math.round(originalTotal * 0.9 / 1000) * 1000; // Round to nearest 1000
+                document.querySelector('input[name="ComboPrice"]').placeholder = suggestedPrice.toLocaleString('vi-VN') + ' VNĐ (Đề xuất)';
+            }
+        }
+
+        function resetForm() {
+            if (confirm('Bạn có chắc muốn đặt lại form? Tất cả dữ liệu sẽ bị mất.')) {
+                document.querySelector('form').reset();
+                selectedItems = [];
+                originalTotal = 0;
+
+                // Reset all checkboxes and cards
+                document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.menu-item-card').forEach(card => card.classList.remove('selected'));
+
+                updateComboPreview();
+                updateSavingsCalculation();
+            }
+        }
+
+        // Initialize events
+        document.addEventListener('DOMContentLoaded', function () {
+            section          // Bind combo price input change
+            const priceInput = document.querySelector('input[name="ComboPrice"]');
+            if (priceInput) {
+                priceInput.addEventListener('input', updateSavingsCalculation);
+            }
+
+            // Initial calculation
+            updateSavingsCalculation();
+        });
+
+        // Form validation
+        (function () {
+            'use strict';
+            window.addEventListener('load', function () {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+
+                        // Check if at least 2 items are selected
+                        if (selectedItems.length < 2) {
+                            event.preventDefault();
+                            alert('Vui lòng chọn ít nhất 2 món ăn cho combo!');
+                            return;
+_Bỏ_
+                        }
+
+                        s                 // Check if combo price is set
+                        const comboPrice = parseFloat(document.querySelector('input[name="ComboPrice"]').value) || 0;
+                        if (comboPrice <= 0) {
+                            event.preventDefault();
+                       event.stopPropagation();
+                            alert('Vui lòng nhập giá combo!');
+                            return;
+                            s
+                        }
+
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+    </script>
+}

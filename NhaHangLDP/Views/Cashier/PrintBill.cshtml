@@ -1,0 +1,213 @@
+﻿@model NhaHangLDP.Models.InvoiceViewModel
+@{
+    Layout = null; // In hóa đơn
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Hóa đơn @Model.OrderId</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 10pt;
+            color: #000;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4; /* Nền xám để thấy rõ khổ giấy */
+        }
+
+        .invoice-box {
+            width: 76mm; /* Khổ giấy in bill K80 là 80mm, trừ lề */
+            padding: 2mm;
+            margin: 10px auto;
+            background: #fff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+            .header h3 {
+                margin: 0;
+                font-size: 14pt;
+                font-weight: bold;
+            }
+
+            .header p {
+                margin: 2px 0;
+                font-size: 9pt;
+            }
+
+        .title {
+            text-align: center;
+            font-size: 12pt;
+            font-weight: bold;
+            margin: 10px 0;
+            border-top: 1px dashed #000;
+            border-bottom: 1px dashed #000;
+            padding: 5px 0;
+        }
+
+        .info {
+            font-size: 9pt;
+            margin-bottom: 10px;
+        }
+
+            .info p {
+                margin: 2px 0;
+            }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+
+            table th, table td {
+                padding: 4px;
+                border-bottom: 1px dashed #ccc;
+            }
+
+            table th {
+                text-align: left;
+                border-top: 1px dashed #000;
+                border-bottom: 1px dashed #000;
+                font-weight: bold;
+            }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .total-section {
+            margin-top: 10px;
+            font-size: 10pt;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+        }
+
+            .total-row.grand-total {
+                font-size: 12pt;
+                font-weight: bold;
+                border-top: 1px solid #000;
+                padding-top: 5px;
+            }
+
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px dashed #000;
+            font-size: 9pt;
+        }
+
+        @@media print {
+            body {
+                background-color: #fff; /* Nền trắng khi in */
+            }
+
+            .invoice-box {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body onload="window.print();">
+
+    <div class="invoice-box">
+        <div class="header">
+            <h3>@Model.RestaurantName</h3>
+            <p>@Model.RestaurantAddress</p>
+            <p>ĐT: @Model.RestaurantPhone</p>
+        </div>
+
+        <div class="title">
+            HÓA ĐƠN THANH TOÁN
+        </div>
+
+        <div class="info">
+            <div class="info-row">
+                <span>Số HĐ: @Model.BillId</span>
+                <span>Ngày: @Model.BillDate.ToString("dd/MM/yy")</span>
+            </div>
+            <div class="info-row">
+                <span>Mã Đơn: @Model.OrderId</span>
+                <span>Giờ: @Model.BillDate.ToString("HH:mm")</span>
+            </div>
+            <p>Thu ngân: @Model.CashierName</p>
+            <p>Bàn: @Model.TableNumber</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Tên món</th>
+                    <th class="text-center">SL</th>
+                    <th class="text-right">Đ.Giá</th>
+                    <th class="text-right">T.Tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td colspan="4">@item.ItemName</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td class="text-center">@item.Quantity</td>
+                        <td class="text-right">@item.Price.ToString("#,##0")</td>
+                        <td class="text-right">@item.Total.ToString("#,##0")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <div class="total-row">
+                <span>Tạm tính:</span>
+                <span class="text-right">@Model.Subtotal.ToString("#,##0") VNĐ</span>
+            </div>
+            <div class="total-row">
+                <span>Thuế VAT (10%):</span>
+                <span class="text-right">@Model.VAT.ToString("#,##0") VNĐ</span>
+            </div>
+
+            <div class="total-row grand-total">
+                <span>TỔNG CỘNG:</span>
+                <span class="text-right">@Model.TotalAmount.ToString("#,##0") VNĐ</span>
+            </div>
+            <div class="total-row">
+                <span>Hình thức:</span>
+                <span class="text-right">@Model.PaymentMethod</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Cảm ơn quý khách!</p>
+            <p>Hẹn gặp lại!</p>
+        </div>
+    </div>
+
+</body>
+</html>

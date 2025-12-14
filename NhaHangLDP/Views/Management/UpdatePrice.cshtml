@@ -1,0 +1,237 @@
+﻿@model NhaHangLDP.Models.PriceUpdateViewModel
+@{
+    ViewBag.Title = "Cập Nhật Giá Món Ăn";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2><i class="fas fa-dollar-sign me-2"></i>Cập Nhật Giá Món Ăn</h2>
+        <p class="text-light">Thay đổi giá bán cho món: <strong>@Model.MenuItemName</strong></p>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="@Url.Action("MenuManagement", "Management")" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay Lại Thực Đơn
+        </a>
+        <a href="@Url.Action("PriceHistory", "Management", new { id = Model.MenuItemId })" class="btn btn-outline-info">
+            <i class="fas fa-history me-2"></i>Lịch Sử Giá
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="stat-card">
+            @using (Html.BeginForm("UpdatePrice", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.MenuItemId)
+                @Html.HiddenFor(m => m.MenuItemName)
+                @Html.HiddenFor(m => m.CurrentPrice)
+
+                <div class="mb-4">
+                    <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Hiện Tại</h5>
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Món ăn:</strong> @Model.MenuItemName
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Giá hiện tại:</strong> @Model.CurrentPrice.ToString("N0") VNĐ
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.NewPrice, new { @class = "form-label" })
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.NewPrice, new { @class = "form-control price-input", type = "number", min = "0", step = "1000", required = "required", onchange = "calculatePriceDifference()" })
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                            @Html.ValidationMessageFor(m => m.NewPrice, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Thay đổi</label>
+                            <div class="input-group">
+                                <input type="text" id="priceDifference" class="form-control" readonly>
+                                <span class="input-group-text" id="percentageChange"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.ChangeReason, new { @class = "form-label" })
+                    @Html.TextAreaFor(m => m.ChangeReason, new { @class = "form-control", rows = "3", placeholder = "Ví dụ: Tăng giá nguyên liệu, điều chỉnh theo thị trường...", required = "required" })
+                    @Html.ValidationMessageFor(m => m.ChangeReason, "", new { @class = "text-danger" })
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.ApplyImmediately, new { @class = "form-check-input", onchange = "toggleEffectiveDate()" })
+                            @Html.LabelFor(m => m.ApplyImmediately, "Áp dụng ngay lập tức", new { @class = "form-check-label" })
+                        </div>
+                    </div>
+                    <div class="col-md-6" id="effectiveDateGroup">
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.EffectiveDate, new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.EffectiveDate, new { @class = "form-control", type = "datetime-local" })
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Lưu ý:</strong> Thay đổi giá sẽ được áp dụng trên tất cả hệ thống bán hàng. Vui lòng kiểm tra kỹ trước khi xác nhận.
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="@Url.Action("MenuManagement", "Management")" class="btn btn-outline-light">
+                        <i class="fas fa-times me-2"></i>Hủy
+                    </a>
+                    <button type="submit" class="btn btn-custom">
+                        <i class="fas fa-save me-2"></i>Cập Nhật Giá
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h5><i class="fas fa-chart-line me-2"></i>Phân Tích Giá</h5>
+            <div class="mb-3">
+                <small class="text-muted">Giá hiện tại:</small>
+                <div class="h6">@Model.CurrentPrice.ToString("N0") VNĐ</div>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted">Giá mới:</small>
+                <div class="h6" id="newPriceDisplay">@Model.CurrentPrice.ToString("N0") VNĐ</div>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted">Chênh lệch:</small>
+                <div class="h6" id="differenceDisplay">0 VNĐ</div>
+            </div>
+            <div class="mb-3">
+                <small class="text-muted">Phần trăm thay đổi:</small>
+                <div class="h6" id="percentageDisplay">0%</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <h5><i class="fas fa-lightbulb me-2"></i>Gợi Ý Giá</h5>
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="applyPriceChange(5)">
+                    +5% (@((Model.CurrentPrice * 1.05m).ToString("N0")) VNĐ)
+                </button>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="applyPriceChange(10)">
+                    +10% (@((Model.CurrentPrice * 1.10m).ToString("N0")) VNĐ)
+                </button>
+                <button type="button" class="btn btn-outline-warning btn-sm" onclick="applyPriceChange(-5)">
+                    -5% (@((Model.CurrentPrice * 0.95m).ToString("N0")) VNĐ)
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="applyPriceChange(-10)">
+                    -10% (@((Model.CurrentPrice * 0.90m).ToString("N0")) VNĐ)
+                </button>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <h5><i class="fas fa-info-circle me-2"></i>Hướng Dẫn</h5>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-check-circle text-success me-2"></i>Xem xét giá thị trường</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i>Tính toán chi phí nguyên liệu</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i>Đảm bảo lợi nhuận hợp lý</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i>Thông báo cho nhân viên</li>
+                <li><i class="fas fa-check-circle text-success me-2"></i>Cập nhật menu hiển thị</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+    const currentPrice = @Model.CurrentPrice;
+
+    function calculatePriceDifference() {
+        const newPrice = parseFloat(document.querySelector('input[name="NewPrice"]').value) || 0;
+        const difference = newPrice - currentPrice;
+        const percentage = currentPrice > 0 ? ((difference / currentPrice) * 100) : 0;
+
+        // Update displays
+        document.getElementById('newPriceDisplay').textContent = newPrice.toLocaleString('vi-VN') + ' VNĐ';
+        document.getElementById('differenceDisplay').textContent = difference.toLocaleString('vi-VN') + ' VNĐ';
+        document.getElementById('percentageDisplay').textContent = percentage.toFixed(1) + '%';
+
+        // Update form fields
+        document.getElementById('priceDifference').value = difference.toLocaleString('vi-VN') + ' VNĐ';
+        document.getElementById('percentageChange').textContent = percentage.toFixed(1) + '%';
+
+        // Color coding
+        const differenceEl = document.getElementById('differenceDisplay');
+        const percentageEl = document.getElementById('percentageDisplay');
+
+        if (difference > 0) {
+            differenceEl.className = 'h6 text-success';
+            percentageEl.className = 'h6 text-success';
+        } else if (difference < 0) {
+            differenceEl.className = 'h6 text-danger';
+            percentageEl.className = 'h6 text-danger';
+        } else {
+            differenceEl.className = 'h6 text-muted';
+            percentageEl.className = 'h6 text-muted';
+        }
+    }
+
+    function applyPriceChange(percentage) {
+        const newPrice = Math.round((currentPrice * (1 + percentage / 100)) / 1000) * 1000;
+        document.querySelector('input[name="NewPrice"]').value = newPrice;
+        calculatePriceDifference();
+    }
+
+    function toggleEffectiveDate() {
+        const applyImmediately = document.querySelector('input[name="ApplyImmediately"]').checked;
+        const effectiveDateGroup = document.getElementById('effectiveDateGroup');
+
+        if (applyImmediately) {
+            effectiveDateGroup.style.display = 'none';
+        } else {
+            effectiveDateGroup.style.display = 'block';
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        calculatePriceDifference();
+        toggleEffectiveDate();
+
+        // Set default effective date to now
+        const now = new Date();
+        const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        document.querySelector('input[name="EffectiveDate"]').value = localDateTime;
+    });
+
+    // Form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+    </script>
+}

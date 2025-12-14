@@ -1,0 +1,319 @@
+﻿@model IEnumerable<NhaHangLDP.Models.DamagedStock>
+@{
+    ViewBag.Title = "Danh Sách Báo Cáo Hàng Hỏng";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .management-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+            .btn-custom:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+                color: white;
+            }
+
+        .damage-reason-badge {
+            border-radius: 15px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .damage-high {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .damage-medium {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .damage-low {
+            background-color: #28a745;
+            color: white;
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="management-header text-center">
+        <div class="container">
+            <h1><i class="fas fa-list-alt"></i> Danh Sách Báo Cáo Hàng Hỏng</h1>
+            <p class="mb-0">Xem lịch sử các báo cáo hàng hỏng đã ghi nhận</p>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="@Url.Action("DamagedStock", "Management")" class="btn btn-custom me-2">
+                <i class="fas fa-plus me-2"></i>Thêm Báo Cáo Mới
+            </a>
+            <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-secondary">
+                <i class="fas fa-warehouse me-2"></i>Quay Lại Kho
+            </a>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Damaged Stock List -->
+    <div class="table-container">
+        @if (Model != null && Model.Any())
+        {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5><i class="fas fa-table me-2"></i>Tổng cộng: @Model.Count() báo cáo</h5>
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="exportToExcel()">
+                        <i class="fas fa-file-excel"></i> Xuất Excel
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="printReport()">
+                        <i class="fas fa-print"></i> In báo cáo
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>STT</th>
+                            <th>Ngày báo cáo</th>
+                            <th>Nguyên liệu</th>
+                            <th>Số lượng hỏng</th>
+                            <th>Lý do</th>
+                            <th>Người báo cáo</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{int stt = 1;}
+                        @foreach (var item in Model.OrderByDescending(x => x.DamageDate))
+                        {
+                            <tr>
+                                <td>@stt</td>
+                                <td>
+                                    <strong>@item.DamageDate.ToString("dd/MM/yyyy")</strong>
+                                    <br>
+                                    <small class="text-muted">@item.DamageDate.ToString("HH:mm")</small>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>@(item.Ingredient?.Name ?? "N/A")</strong>
+                                        <br>
+                                        <small class="text-muted">Đơn vị: @(item.Ingredient?.Unit ?? "N/A")</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-danger">
+                                        @item.Quantity.ToString("N2") @(item.Ingredient?.Unit ?? "")
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="damage-reason-badge @GetDamageReasonClass(item.Reason)">
+                                        @GetShortReason(item.Reason)
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(item.Reason))
+                                    {
+                                        <br><small class="text-muted">@item.Reason</small>
+                                    }
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>@(item.Employee?.FullName ?? "N/A")</strong>
+                                        <br>
+                                        <small class="text-muted">ID: @item.ReportedByEmployeeId</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group-vertical btn-group-sm">
+                                        <button class="btn btn-outline-info btn-sm"
+                                                onclick="viewDetails(@item.Id)"
+                                                title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        @if (item.DamageDate.Date == DateTime.Today)
+                                        {
+                                            <button class="btn btn-outline-warning btn-sm"
+                                                    onclick="editReport(@item.Id)"
+                                                    title="Chỉnh sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm"
+                                                    onclick="deleteReport(@item.Id)"
+                                                    title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                            stt++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">@Model.Count()</h5>
+                            <p class="card-text">Tổng báo cáo</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">@Model.Where(x => x.DamageDate.Date == DateTime.Today).Count()</h5>
+                            <p class="card-text">Hôm nay</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">@Model.Where(x => x.DamageDate >= DateTime.Now.AddDays(-7)).Count()</h5>
+                            <p class="card-text">Tuần này</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">@Model.Sum(x => x.Quantity).ToString("N2")</h5>
+                            <p class="card-text">Tổng số lượng hỏng</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Chưa có báo cáo hàng hỏng nào</h5>
+                <p class="text-muted">Bấm nút "Thêm Báo Cáo Mới" để tạo báo cáo đầu tiên</p>
+                <a href="@Url.Action("DamagedStock", "Management")" class="btn btn-custom">
+                    <i class="fas fa-plus me-2"></i>Thêm Báo Cáo Mới
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function viewDetails(id) {
+     // TODO: Implement view details modal
+  alert('Chức năng xem chi tiết đang được phát triển');
+        }
+
+        function editReport(id) {
+        if (confirm('Bạn có muốn chỉnh sửa báo cáo này?')) {
+   window.location.href = '@Url.Action("EditDamagedStock", "Management")' + '/' + id;
+            }
+     }
+
+        function deleteReport(id) {
+   if (confirm('Bạn có chắc chắn muốn xóa báo cáo này? Hành động này không thể hoàn tác!')) {
+     fetch('@Url.Action("DeleteDamagedStock", "Management")', {
+       method: 'POST',
+         headers: {
+        'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+ },
+    body: JSON.stringify({ id: id })
+                })
+    .then(response => response.json())
+         .then(data => {
+ if (data.success) {
+        alert(data.message);
+  location.reload();
+         } else {
+         alert('Có lỗi xảy ra: ' + data.message);
+          }
+        })
+ .catch(error => {
+         console.error('Error:', error);
+     alert('Có lỗi xảy ra khi xóa báo cáo!');
+       });
+     }
+        }
+
+        function exportToExcel() {
+    alert('Chức năng xuất Excel đang được phát triển');
+        }
+
+        function printReport() {
+  window.print();
+        }
+    </script>
+}
+
+@functions {
+    private string GetDamageReasonClass(string reason)
+    {
+        if (string.IsNullOrEmpty(reason)) return "damage-medium";
+
+        var lowerReason = reason.ToLower();
+        if (lowerReason.Contains("hết hạn") || lowerReason.Contains("nhiễm khuẩn"))
+            return "damage-high";
+        else if (lowerReason.Contains("tai nạn") || lowerReason.Contains("vận chuyển"))
+            return "damage-medium";
+        else
+            return "damage-low";
+    }
+
+    private string GetShortReason(string reason)
+    {
+        if (string.IsNullOrEmpty(reason)) return "N/A";
+
+        if (reason.Length > 20)
+            return reason.Substring(0, 17) + "...";
+
+        return reason;
+    }
+}

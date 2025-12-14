@@ -1,0 +1,234 @@
+﻿@model NhaHangLDP.Models.IngredientHistoryViewModel
+@{
+    ViewBag.Title = $"Lịch Sử - {Model.Ingredient.Name}";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-history me-2"></i>Lịch Sử Nguyên Liệu</h2>
+        <p class="text-light">Theo dõi lịch sử nhập/xuất của <strong>@Model.Ingredient.Name</strong></p>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="@Url.Action("IngredientList", "Management")" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+        <a href="@Url.Action("StockInbound", "Management")" class="btn btn-success ms-2">
+            <i class="fas fa-plus me-2"></i>Nhập Kho
+        </a>
+    </div>
+</div>
+
+<!-- Ingredient Summary -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="stat-card">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <h4 class="mb-1">@Model.Ingredient.AvailableStock.ToString("N2")</h4>
+                    <small class="text-muted">Tồn kho hiện tại (@Model.Ingredient.Unit)</small>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="mb-1">@Model.Ingredient.EstimatedCost.ToString("N0") VNĐ</h4>
+                    <small class="text-muted">Giá ước tính</small>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="mb-1">@Model.InboundHistory.Sum(x => x.Quantity).ToString("N2")</h4>
+                    <small class="text-muted">Tổng nhập (@Model.Ingredient.Unit)</small>
+                </div>
+                <div class="col-md-3">
+                    <h4 class="mb-1">@Model.DamagedHistory.Sum(x => x.Quantity).ToString("N2")</h4>
+                    <small class="text-muted">Tổng hỏng hóc (@Model.Ingredient.Unit)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- History Tabs -->
+<div class="row">
+    <div class="col-12">
+        <div class="stat-card">
+            <ul class="nav nav-tabs" id="historyTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="inbound-tab" data-bs-toggle="tab" data-bs-target="#inbound" type="button" role="tab">
+                        <i class="fas fa-arrow-down me-1"></i>Lịch Sử Nhập Kho (@Model.InboundHistory.Count)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="damaged-tab" data-bs-toggle="tab" data-bs-target="#damaged" type="button" role="tab">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Lịch Sử Hỏng Hóc (@Model.DamagedHistory.Count)
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">
+                        <i class="fas fa-chart-bar me-1"></i>Thống Kê Tổng Hợp
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-3" id="historyTabContent">
+                <!-- Inbound History -->
+                <div class="tab-pane fade show active" id="inbound" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Ngày Nhập</th>
+                                    <th>Số Lượng</th>
+                                    <th>Giá Nhập</th>
+                                    <th>Tổng Tiền</th>
+                                    <th>Nhà Cung Cấp</th>
+                                    <th>Người Nhập</th>
+                                    <th>Ghi Chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.InboundHistory.Any())
+                                {
+                                    foreach (var record in Model.InboundHistory)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@record.StockInbound.InboundDate.ToString("dd/MM/yyyy")</strong><br />
+                                                <small class="text-muted">@record.StockInbound.InboundDate.ToString("HH:mm")</small>
+                                            </td>
+                                            <td><span class="badge bg-success">+@record.Quantity.ToString("N2") @Model.Ingredient.Unit</span></td>
+                                            <td>@record.UnitPrice.ToString("N0") VNĐ</td>
+                                            <td><strong>@(record.Quantity * record.UnitPrice).ToString("N0") VNĐ</strong></td>
+                                            <td>
+                                                @if (record.StockInbound.Supplier != null)
+                                                {
+                                                    <span class="badge bg-info text-dark">@GetSupplierName(record.StockInbound.Supplier)</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Nhập trực tiếp</span>
+                                                }
+                                            </td>
+                                            <td>@(record.StockInbound.Employee?.FullName ?? "N/A")</td>
+                                            <td>@(record.StockInbound.Notes ?? "Không có")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                                            <p>Chưa có lịch sử nhập kho</p>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Damaged History -->
+                <div class="tab-pane fade" id="damaged" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th>Ngày</th>
+                                    <th>Số Lượng</th>
+                                    <th>Giá Trị Thiệt Hại</th>
+                                    <th>Lý Do</th>
+                                    <th>Người Báo Cáo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.DamagedHistory.Any())
+                                {
+                                    foreach (var record in Model.DamagedHistory)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@record.DamageDate.ToString("dd/MM/yyyy")</strong><br />
+                                                <small class="text-muted">@record.DamageDate.ToString("HH:mm")</small>
+                                            </td>
+                                            <td><span class="badge bg-danger">-@record.Quantity.ToString("N2") @Model.Ingredient.Unit</span></td>
+                                            <td><strong class="text-danger">@((record.Quantity * Model.Ingredient.EstimatedCost).ToString("N0")) VNĐ</strong></td>
+                                            <td>@record.Reason</td>
+                                            <td>@(record.Employee?.FullName ?? "N/A")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">
+                                            <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                                            <p>Chưa có báo cáo hỏng hóc</p>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Summary -->
+                <div class="tab-pane fade" id="summary" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-chart-line me-2"></i>Thống Kê Nhập Kho</h5>
+                            <p><strong>@Model.InboundHistory.Count</strong> lần nhập, tổng cộng <strong>@Model.InboundHistory.Sum(x => x.Quantity).ToString("N2")</strong> @Model.Ingredient.Unit.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><i class="fas fa-exclamation-triangle me-2"></i>Thống Kê Hỏng Hóc</h5>
+                            <p><strong>@Model.DamagedHistory.Count</strong> báo cáo, tổng cộng <strong>@Model.DamagedHistory.Sum(x => x.Quantity).ToString("N2")</strong> @Model.Ingredient.Unit.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Làm mới tab thống kê mỗi phút (nếu đang mở)
+        setInterval(() => {
+            if (document.getElementById('summary-tab').classList.contains('active')) {
+                location.reload();
+            }
+        }, 60000);
+    </script>
+}
+
+@functions {
+    public static string GetSupplierName(NhaHangLDP.Models.Supplier supplier)
+    {
+        if (supplier == null)
+            return "Chưa có nhà cung cấp";
+
+        try
+        {
+            var supplierType = supplier.GetType();
+            var nameProperty = supplierType.GetProperty("Name") ??
+                               supplierType.GetProperty("SupplierName") ??
+                               supplierType.GetProperty("CompanyName") ??
+                               supplierType.GetProperty("BusinessName");
+
+            if (nameProperty != null)
+            {
+                var nameValue = nameProperty.GetValue(supplier)?.ToString();
+                if (!string.IsNullOrWhiteSpace(nameValue))
+                    return nameValue;
+            }
+
+            var idProperty = supplierType.GetProperty("Id") ??
+                             supplierType.GetProperty("SupplierId");
+
+            var idValue = idProperty?.GetValue(supplier)?.ToString();
+
+            return idValue != null ? $"Nhà cung cấp {idValue}" : "Nhà cung cấp không xác định";
+        }
+        catch
+        {
+            return "Nhà cung cấp không xác định";
+        }
+    }
+}

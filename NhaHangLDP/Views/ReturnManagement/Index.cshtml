@@ -1,0 +1,149 @@
+﻿@model List<NhaHangLDP.Models.ReturnBill>
+
+@{
+    ViewBag.Title = "Quản Lý Trả Hàng";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-dark">
+        <i class="fas fa-undo-alt me-2"></i>Quản Lý Trả Hàng
+    </h2>
+    <a href="@Url.Action("Create")" class="btn btn-custom">
+        <i class="fas fa-plus me-2"></i>Tạo Phiếu Trả Hàng
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(40, 167, 69, 0.2); color: #28a745;">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <h3 class="mb-1">@Model.Count()</h3>
+            <p class="text-muted mb-0">Tổng Phiếu Trả</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(255, 193, 7, 0.2); color: #ffc107;">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <h3 class="mb-1">@Model.Count(r => r.ReturnDate.Date == DateTime.Today)</h3>
+            <p class="text-muted mb-0">Hôm Nay</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(220, 53, 69, 0.2); color: #dc3545;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="mb-1">@Model.Sum(r => r.ReturnBillDetail.Count(d => d.IsDamaged))</h3>
+            <p class="text-muted mb-0">Hàng Hỏng</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(23, 162, 184, 0.2); color: #17a2b8;">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <h3 class="mb-1">@Model.Sum(r => r.TotalRefundAmount).ToString("N0") ₫</h3>
+            <p class="text-muted mb-0">Tổng Hoàn Trả</p>
+        </div>
+    </div>
+</div>
+
+<!-- Return Bills Table -->
+<div class="table-custom">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>Mã Phiếu</th>
+                <th>Hóa Đơn Gốc</th>
+                <th>Ngày Trả</th>
+                <th>Nhân Viên</th>
+                <th>Số Món</th>
+                <th>Tổng Hoàn Trả</th>
+                <th>Lý Do</th>
+                <th>Thao Tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong class="text-primary">RTN-@item.ReturnBillID.ToString("D6")</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">HD-@item.OriginalBillID.ToString("D6")</span>
+                        </td>
+                        <td>
+                            <i class="fas fa-calendar me-1"></i>
+                            @item.ReturnDate.ToString("dd/MM/yyyy HH:mm")
+                        </td>
+                        <td>
+                            <i class="fas fa-user me-1"></i>
+                            @item.Employee.FullName
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">@item.ReturnBillDetail.Count món</span>
+                        </td>
+                        <td>
+                            <strong class="text-success">@item.TotalRefundAmount.ToString("N0") ₫</strong>
+                        </td>
+                        <td>
+                            <span class="text-muted" title="@item.Reason">
+                                @(item.Reason.Length > 30 ? item.Reason.Substring(0, 30) + "..." : item.Reason)
+                            </span>
+                        </td>
+                        <td>
+                            <a href="@Url.Action("Details", new { id = item.ReturnBillID })"
+                               class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <br>
+                        Chưa có phiếu trả hàng nào
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section scripts {
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function () {
+            $('.alert').fadeOut('slow');
+        }, 5000);
+    </script>
+}

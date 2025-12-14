@@ -1,0 +1,666 @@
+﻿@{
+    ViewBag.Title = "Báo Cáo Chi Tiết Bill";
+    Layout = "~/Views/Shared/_CashierLayout.cshtml";
+}
+
+<style>
+    .bill-details-container {
+        padding: 0;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .filter-section {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.3);
+        color: #fff;
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ffcc00;
+            color: #fff;
+            box-shadow: 0 0 0 0.2rem rgba(255, 204, 0, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+    .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.3);
+        color: #fff;
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+
+    .btn-filter {
+        background: linear-gradient(135deg, #ffcc00, #ff9900);
+        border: none;
+        color: #333;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-filter:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 204, 0, 0.4);
+            color: #333;
+        }
+
+    .bills-table-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        overflow-x: auto;
+    }
+
+    .bills-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+        .bills-table th,
+        .bills-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .bills-table th {
+            background: rgba(255, 204, 0, 0.2);
+            color: #ffcc00;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .bills-table td {
+            color: #fff;
+        }
+
+        .bills-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .status-completed {
+        background: rgba(40, 167, 69, 0.3);
+        color: #28a745;
+    }
+
+    .status-cancelled {
+        background: rgba(220, 53, 69, 0.3);
+        color: #dc3545;
+    }
+
+    .status-refunded {
+        background: rgba(255, 193, 7, 0.3);
+        color: #ffc107;
+    }
+
+    .bill-actions {
+        display: flex;
+        gap: 5px;
+    }
+
+    .btn-action {
+        padding: 4px 8px;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view {
+        background: #17a2b8;
+        color: white;
+    }
+
+        .btn-view:hover {
+            background: #138496;
+        }
+
+    .btn-print {
+        background: #6c757d;
+        color: white;
+    }
+
+        .btn-print:hover {
+            background: #545b62;
+        }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .summary-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+    }
+
+    .summary-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #ffcc00;
+        margin-bottom: 5px;
+    }
+
+    .summary-label {
+        font-size: 0.9rem;
+        color: #adb5bd;
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        justify-content: flex-end;
+    }
+
+    .btn-export {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.5);
+        color: #ffcc00;
+        padding: 8px 15px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+        .btn-export:hover {
+            background: #ffcc00;
+            color: #333;
+            text-decoration: none;
+        }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .pagination {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    .page-link {
+        background: transparent;
+        border: none;
+        color: #ffcc00;
+        padding: 8px 12px;
+        margin: 0 2px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .page-link:hover,
+        .page-link.active {
+            background: #ffcc00;
+            color: #333;
+        }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #adb5bd;
+    }
+</style>
+
+<div class="bill-details-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="text-warning mb-1">
+                    <i class="fas fa-file-invoice me-2"></i>Báo Cáo Chi Tiết Bill
+                </h4>
+                <small class="text-muted">Xem chi tiết từng hóa đơn và thông tin giao dịch</small>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="@Url.Action("Dashboard", "Reports")" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-filter me-2"></i>Bộ lọc
+        </h6>
+        <form id="filterForm">
+            <div class="filter-row">
+                <div>
+                    <label class="form-label text-light">Từ ngày:</label>
+                    <input type="date" class="form-control" id="fromDate" value="@ViewBag.FromDate">
+                </div>
+                <div>
+                    <label class="form-label text-light">Đến ngày:</label>
+                    <input type="date" class="form-control" id="toDate" value="@ViewBag.ToDate">
+                </div>
+                <div>
+                    <label class="form-label text-light">Trạng thái:</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="all">Tất cả</option>
+                        <option value="completed">Hoàn thành</option>
+                        <option value="cancelled">Đã hủy</option>
+                        <option value="refunded">Hoàn tiền</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label text-light">Tìm kiếm:</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Mã bill, bàn...">
+                </div>
+            </div>
+            <div class="text-end">
+                <button type="button" class="btn btn-filter" onclick="filterBills()">
+                    <i class="fas fa-search me-1"></i>Lọc dữ liệu
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards" id="summaryCards">
+        <div class="summary-card">
+            <div class="summary-value" id="totalBills">-</div>
+            <div class="summary-label">Tổng số bill</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="totalRevenue">-</div>
+            <div class="summary-label">Tổng doanh thu</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="avgBillValue">-</div>
+            <div class="summary-label">Giá trị TB/bill</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="completedRate">-</div>
+            <div class="summary-label">Tỷ lệ hoàn thành</div>
+        </div>
+    </div>
+
+    <!-- Bills Table -->
+    <div class="bills-table-container">
+        <div class="export-buttons">
+            <a href="#" class="btn-export" onclick="exportToExcel()">
+                <i class="fas fa-file-excel me-1"></i>Xuất Excel
+            </a>
+            <a href="#" class="btn-export" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf me-1"></i>Xuất PDF
+            </a>
+        </div>
+
+        <div id="billsTableContainer">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        </div>
+
+        <div class="pagination-container" id="paginationContainer" style="display: none;">
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Bill Detail Modal -->
+<div class="modal fade" id="billDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: #2c3e50; color: #fff;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h5 class="modal-title text-warning">
+                    <i class="fas fa-receipt me-2"></i>Chi tiết Bill
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="billDetailContent">
+                <!-- Content will be loaded here -->
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-success" onclick="exportInvoiceToExcel()">
+                    <i class="fas fa-file-excel me-1"></i>Xuất Excel
+                </button>
+                <button type="button" class="btn btn-info" onclick="printInvoice()">
+                    <i class="fas fa-print me-1"></i>In Hóa Đơn
+                </button>
+                <button type="button" class="btn btn-warning" onclick="printBill()">
+                    <i class="fas fa-print me-1"></i>In Bill
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+    var currentPage = 1;
+    var totalPages = 1;
+    var currentBillData = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set default status from ViewBag
+        document.getElementById('statusFilter').value = '@ViewBag.Status';
+
+        // Load initial data
+        filterBills();
+    });
+
+    function filterBills() {
+        var fromDate = document.getElementById('fromDate').value;
+        var toDate = document.getElementById('toDate').value;
+        var status = document.getElementById('statusFilter').value;
+        var search = document.getElementById('searchInput').value;
+
+        // Show loading
+        document.getElementById('billsTableContainer').innerHTML = `
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        `;
+
+        // Make AJAX request
+        fetch('@Url.Action("GetBillDetailsData", "Reports")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'fromDate=' + fromDate + '&toDate=' + toDate + '&status=' + status
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                renderBillsTable(data.data);
+                updateSummaryCards(data.data);
+            } else {
+                showError('Lỗi khi tải dữ liệu: ' + data.message);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showError('Có lỗi xảy ra khi tải dữ liệu!');
+        });
+    }
+
+    function renderBillsTable(bills) {
+        var filteredBills = bills;
+        var search = document.getElementById('searchInput').value.toLowerCase();
+
+        if (search) {
+            filteredBills = bills.filter(function(bill) {
+                return bill.BillId.toLowerCase().includes(search) ||
+                       bill.Table.toLowerCase().includes(search);
+            });
+        }
+
+        // Pagination
+        var itemsPerPage = 20;
+        totalPages = Math.ceil(filteredBills.length / itemsPerPage);
+        var startIndex = (currentPage - 1) * itemsPerPage;
+        var paginatedBills = filteredBills.slice(startIndex, startIndex + itemsPerPage);
+
+        var html = `
+            <table class="bills-table">
+                <thead>
+                    <tr>
+                        <th>Mã Bill</th>
+                        <th>Ngày</th>
+                        <th>Giờ</th>
+                        <th>Bàn</th>
+                        <th>Số món</th>
+                        <th>Tổng tiền</th>
+                        <th>Thanh toán</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        paginatedBills.forEach(function(bill) {
+            var statusClass = 'status-' + bill.Status;
+            var statusText = getStatusText(bill.Status);
+
+            html += `
+                <tr>
+                    <td><strong>${bill.BillId}</strong></td>
+                    <td>${bill.Date}</td>
+                    <td>${bill.Time}</td>
+                    <td>${bill.Table}</td>
+                    <td>${bill.Items.length} món</td>
+                    <td><strong>${bill.Total.toLocaleString()} VNĐ</strong></td>
+                    <td>${bill.PaymentMethod}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <div class="bill-actions">
+                            <button class="btn-action btn-view" onclick="viewBillDetail('${bill.BillId}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-action btn-print" onclick="printBillDirect('${bill.BillId}')">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table>';
+
+        document.getElementById('billsTableContainer').innerHTML = html;
+
+        // Update pagination
+        updatePagination();
+    }
+
+    function updateSummaryCards(bills) {
+        var totalBills = bills.length;
+        var totalRevenue = bills.reduce(function(sum, bill) { return sum + bill.Total; }, 0);
+        var avgBillValue = totalBills > 0 ? totalRevenue / totalBills : 0;
+        var completedBills = bills.filter(function(bill) { return bill.Status === 'completed'; }).length;
+        var completedRate = totalBills > 0 ? (completedBills / totalBills * 100) : 0;
+
+        document.getElementById('totalBills').textContent = totalBills.toLocaleString();
+        document.getElementById('totalRevenue').textContent = totalRevenue.toLocaleString() + ' VNĐ';
+        document.getElementById('avgBillValue').textContent = Math.round(avgBillValue).toLocaleString() + ' VNĐ';
+        document.getElementById('completedRate').textContent = completedRate.toFixed(1) + '%';
+    }
+
+    function updatePagination() {
+        if (totalPages <= 1) {
+            document.getElementById('paginationContainer').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('paginationContainer').style.display = 'block';
+
+        var html = '';
+
+        // Previous button
+        if (currentPage > 1) {
+            html += '<button class="page-link" onclick="changePage(' + (currentPage - 1) + ')">‹</button>';
+        }
+
+        // Page numbers
+        for (var i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+            var activeClass = i === currentPage ? 'active' : '';
+            html += '<button class="page-link ' + activeClass + '" onclick="changePage(' + i + ')">' + i + '</button>';
+        }
+
+        // Next button
+        if (currentPage < totalPages) {
+            html += '<button class="page-link" onclick="changePage(' + (currentPage + 1) + ')">›</button>';
+        }
+
+        document.getElementById('pagination').innerHTML = html;
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        filterBills();
+    }
+
+    function getStatusText(status) {
+        var statusMap = {
+            'completed': 'Hoàn thành',
+            'cancelled': 'Đã hủy',
+            'refunded': 'Hoàn tiền'
+        };
+        return statusMap[status] || status;
+    }
+
+    function viewBillDetail(billId) {
+        // Simulated bill detail - trong thực tế sẽ lấy từ database
+        var detailHtml = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-warning">Thông tin chung</h6>
+                    <p><strong>Mã Bill:</strong> ${billId}</p>
+                    <p><strong>Ngày:</strong> ${new Date().toLocaleDateString('vi-VN')}</p>
+                    <p><strong>Giờ:</strong> ${new Date().toLocaleTimeString('vi-VN')}</p>
+                    <p><strong>Bàn:</strong> Bàn 3</p>
+                    <p><strong>Thu ngân:</strong> Thu Ngân POS</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-warning">Thanh toán</h6>
+                    <p><strong>Tạm tính:</strong> 520,000 VNĐ</p>
+                    <p><strong>Thuế VAT:</strong> 52,000 VNĐ</p>
+                    <p><strong>Tổng cộng:</strong> 572,000 VNĐ</p>
+                    <p><strong>Phương thức:</strong> Tiền mặt</p>
+                </div>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.2);">
+            <h6 class="text-warning">Chi tiết món ăn</h6>
+            <div class="table-responsive">
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th>Món ăn</th>
+                            <th>SL</th>
+                            <th>Đơn giá</th>
+                            <th>Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Lẩu Thái Chua Cay</td>
+                            <td>1</td>
+                            <td>120,000 VNĐ</td>
+                            <td>120,000 VNĐ</td>
+                        </tr>
+                        <tr>
+                            <td>Thịt Bò Mỹ Thái Lát</td>
+                            <td>2</td>
+                            <td>180,000 VNĐ</td>
+                            <td>360,000 VNĐ</td>
+                        </tr>
+                        <tr>
+                            <td>Rau Muống Nhật</td>
+                            <td>2</td>
+                            <td>25,000 VNĐ</td>
+                            <td>50,000 VNĐ</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        document.getElementById('billDetailContent').innerHTML = detailHtml;
+
+        // Show modal
+        var modal = new bootstrap.Modal(document.getElementById('billDetailModal'));
+        modal.show();
+    }
+
+    function printBillDirect(billId) {
+        alert('In bill ' + billId + ' - Chức năng đang phát triển');
+    }
+
+    function printBill() {
+        window.print();
+    }
+
+        function exportToExcel() {
+            // Lấy billId từ modal hiện tại
+            var billId = getCurrentBillId();
+
+            if (!billId) {
+                showToast('Không tìm thấy thông tin hóa đơn!', 'error');
+                return;
+            }
+
+            // Tạo dữ liệu hóa đơn mẫu
+            var invoiceData = createSampleInvoiceData(billId);
+
+            // Tạo file Excel
+            createExcelFile(invoiceData, billId);
+
+            // Hiển thị thông báo thành công
+            showToast('Xuất file Excel thành công!', 'success');
+        }
+        
+    function exportToPDF() {
+        alert('Xuất PDF - Chức năng đang phát triển');
+    }
+
+    function showError(message) {
+        document.getElementById('billsTableContainer').innerHTML = `
+            <div class="text-center text-danger p-4">
+                <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+    </script>
+}

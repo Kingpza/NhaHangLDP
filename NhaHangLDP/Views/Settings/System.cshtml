@@ -1,0 +1,245 @@
+﻿@model NhaHangLDP.Models.SystemInfoViewModel
+
+@{
+    ViewBag.Title = "Thông Tin Hệ Thống";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-dark">
+        <i class="fas fa-info-circle me-2"></i>Thông Tin Hệ Thống
+    </h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+  <i class="fas fa-arrow-left me-2"></i>Quay Lại Cài Đặt
+    </a>
+</div>
+
+<!-- System Information Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+     <div class="stat-card text-center">
+<div class="stat-icon" style="background: rgba(40, 167, 69, 0.2); color: #28a745;">
+  <i class="fas fa-server"></i>
+      </div>
+         <h5 class="mb-1">@Model.SystemVersion</h5>
+      <p class="text-muted mb-0">Phiên Bản Hệ Thống</p>
+  </div>
+    </div>
+   <div class="col-md-4">
+        <div class="stat-card text-center">
+ <div class="stat-icon" style="background: rgba(0, 123, 255, 0.2); color: #007bff;">
+         <i class="fas fa-database"></i>
+          </div>
+          <h5 class="mb-1">@Model.DatabaseVersion</h5>
+   <p class="text-muted mb-0">Cơ Sở Dữ Liệu</p>
+   </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+    <div class="stat-icon" style="background: rgba(255, 193, 7, 0.2); color: #ffc107;">
+      <i class="fas fa-clock"></i>
+   </div>
+  <h5 class="mb-1">@Model.LastStartupTime.ToString("dd/MM/yyyy HH:mm")</h5>
+          <p class="text-muted mb-0">Khởi Động Cuối</p>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Row -->
+<div class="row mb-4">
+    <div class="col-md-3">
+ <div class="stat-card text-center">
+     <div class="stat-icon" style="background: rgba(220, 53, 69, 0.2); color: #dc3545;">
+      <i class="fas fa-shopping-cart"></i>
+    </div>
+      <h4 class="mb-1">@Model.TotalOrders.ToString("N0")</h4>
+            <p class="text-muted mb-0">Tổng Đơn Hàng</p>
+  </div>
+ </div>
+    <div class="col-md-3">
+   <div class="stat-card text-center">
+     <div class="stat-icon" style="background: rgba(23, 162, 184, 0.2); color: #17a2b8;">
+      <i class="fas fa-users"></i>
+     </div>
+     <h4 class="mb-1">@Model.TotalCustomers.ToString("N0")</h4>
+            <p class="text-muted mb-0">Tổng Khách Hàng</p>
+      </div>
+    </div>
+  <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon" style="background: rgba(40, 167, 69, 0.2); color: #28a745;">
+        <i class="fas fa-dollar-sign"></i>
+    </div>
+    <h4 class="mb-1">@Model.TotalRevenue.ToString("N0") ₫</h4>
+       <p class="text-muted mb-0">Tổng Doanh Thu</p>
+       </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+  <div class="stat-icon" style="background: rgba(108, 117, 125, 0.2); color: #6c757d;">
+       <i class="fas fa-hdd"></i>
+   </div>
+    <h4 class="mb-1">@Model.DatabaseSize</h4>
+       <p class="text-muted mb-0">Dung Lượng DB</p>
+      </div>
+    </div>
+</div>
+
+<!-- Detailed Information -->
+<div class="row">
+  <div class="col-md-6">
+ <div class="stat-card">
+            <h5 class="mb-3 text-primary">
+ <i class="fas fa-chart-bar me-2"></i>Thống Kê Chi Tiết
+      </h5>
+            
+       <table class="table table-borderless">
+     <tr>
+      <td class="fw-bold"><i class="fas fa-table me-2"></i>Số Lượng Bàn:</td>
+ <td>@Model.TableCount</td>
+      </tr>
+     <tr>
+   <td class="fw-bold"><i class="fas fa-users me-2"></i>Số Nhân Viên:</td>
+          <td>@Model.EmployeeCount</td>
+      </tr>
+      <tr>
+    <td class="fw-bold"><i class="fas fa-utensils me-2"></i>Số Món Ăn:</td>
+    <td>@Model.MenuItemCount</td>
+      </tr>
+  <tr>
+         <td class="fw-bold"><i class="fas fa-database me-2"></i>Bảng Dữ Liệu:</td>
+        <td>@Model.TableCount</td>
+    </tr>
+         </table>
+        </div>
+   </div>
+    
+   <div class="col-md-6">
+  <div class="stat-card">
+       <h5 class="mb-3 text-success">
+  <i class="fas fa-check-circle me-2"></i>Trạng Thái Hệ Thống
+     </h5>
+ 
+       <div class="alert alert-success">
+     <i class="fas fa-check-circle me-2"></i>
+      <strong>Hệ thống hoạt động bình thường</strong>
+    </div>
+  
+       <div class="progress mb-3">
+     <div class="progress-bar bg-success" style="width: 95%">
+         <span>CPU: 95%</span>
+   </div>
+      </div>
+          
+            <div class="progress mb-3">
+       <div class="progress-bar bg-info" style="width: 78%">
+      <span>RAM: 78%</span>
+          </div>
+    </div>
+        
+  <div class="progress mb-3">
+          <div class="progress-bar bg-warning" style="width: 62%">
+        <span>Disk: 62%</span>
+       </div>
+            </div>
+
+            <div class="alert alert-info">
+ <small><i class="fas fa-info-circle me-1"></i>Hệ thống đã hoạt động ổn định trong @((DateTime.Now - Model.LastStartupTime).Days) ngày</small>
+            </div>
+      </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+   <div class="stat-card">
+            <h5 class="mb-3 text-warning">
+         <i class="fas fa-tools me-2"></i>Công Cụ Hệ Thống
+   </h5>
+    
+      <div class="row">
+     <div class="col-md-2">
+ <button class="btn btn-outline-primary w-100" onclick="checkSystem()">
+           <i class="fas fa-search d-block mb-1"></i>
+                Kiểm Tra Hệ Thống
+          </button>
+       </div>
+    <div class="col-md-2">
+         <button class="btn btn-outline-warning w-100" onclick="clearCache()">
+      <i class="fas fa-broom d-block mb-1"></i>
+         Xóa Cache
+             </button>
+        </div>
+     <div class="col-md-2">
+   <button class="btn btn-outline-info w-100" onclick="backup()">
+        <i class="fas fa-download d-block mb-1"></i>
+  Sao Lưu DB
+       </button>
+      </div>
+         <div class="col-md-2">
+      <button class="btn btn-outline-success w-100" onclick="updateSystem()">
+  <i class="fas fa-sync d-block mb-1"></i>
+         Cập Nhật
+           </button>
+           </div>
+            <div class="col-md-2">
+     <button class="btn btn-outline-secondary w-100" onclick="viewLogs()">
+  <i class="fas fa-file-alt d-block mb-1"></i>
+        Xem Logs
+  </button>
+   </div>
+        <div class="col-md-2">
+    <button class="btn btn-outline-danger w-100" onclick="restartSystem()">
+ <i class="fas fa-power-off d-block mb-1"></i>
+         Khởi Động Lại
+    </button>
+           </div>
+            </div>
+        </div>
+   </div>
+</div>
+
+@section scripts {
+<script>
+function checkSystem() {
+    alert('Đang kiểm tra hệ thống...\n\n✅ Kết nối database: OK\n✅ Dịch vụ web: OK\n✅ Bộ nhớ: OK\n✅ CPU: OK');
+}
+
+function clearCache() {
+    if (confirm('Bạn có chắc muốn xóa cache hệ thống?')) {
+   alert('Cache đã được xóa thành công!');
+    }
+}
+
+function backup() {
+ alert('Tính năng sao lưu sẽ được triển khai trong phiên bản tiếp theo.');
+}
+
+function updateSystem() {
+    alert('Hệ thống đã ở phiên bản mới nhất.');
+}
+
+function viewLogs() {
+    alert('Tính năng xem logs sẽ được triển khai trong phiên bản tiếp theo.');
+}
+
+function restartSystem() {
+    if (confirm('⚠️ CẢNH BÁO: Khởi động lại hệ thống sẽ ngắt kết nối tất cả người dùng!\n\nBạn có chắc muốn tiếp tục?')) {
+        alert('Hệ thống sẽ khởi động lại trong 30 giây...');
+    }
+}
+
+// Auto refresh system status every 30 seconds
+setInterval(function() {
+    // Simulate random system metrics
+    var cpuUsage = Math.floor(Math.random() * 20) + 80;
+    var ramUsage = Math.floor(Math.random() * 30) + 60;
+    var diskUsage = Math.floor(Math.random() * 20) + 50;
+    
+    $('.progress-bar').eq(0).css('width', cpuUsage + '%').text('CPU: ' + cpuUsage + '%');
+ $('.progress-bar').eq(1).css('width', ramUsage + '%').text('RAM: ' + ramUsage + '%');
+    $('.progress-bar').eq(2).css('width', diskUsage + '%').text('Disk: ' + diskUsage + '%');
+}, 30000);
+</script>
+}

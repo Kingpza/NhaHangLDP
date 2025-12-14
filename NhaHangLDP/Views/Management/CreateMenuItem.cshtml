@@ -1,0 +1,467 @@
+﻿@model NhaHangLDP.Models.MenuItemFormViewModel
+@{
+    ViewBag.Title = (Model != null && Model.IsEdit) ? "Sửa Món Ăn" : "Thêm Món Ăn Mới";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .management-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+            object-fit: cover;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+            .btn-save:hover {
+                background: linear-gradient(135deg, #218838 0%, #1c7430 100%);
+                color: white;
+                transform: translateY(-2px);
+            }
+
+        .required-field {
+            color: #dc3545;
+        }
+
+        .alert {
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 2rem 0;
+            color: #856404;
+        }
+
+        .ingredient-table {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+            .ingredient-table th, .ingredient-table td {
+                padding: 0.75rem;
+                vertical-align: middle;
+            }
+
+        .ingredient-table-header {
+            background-color: #f8f9fa;
+        }
+
+        .ingredient-row {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+            .ingredient-row:last-child {
+                border-bottom: none;
+            }
+
+        .btn-remove-ingredient {
+            color: #dc3545;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <div class="management-header text-center">
+        <div class="container">
+            <h1>
+                <i class="fas fa-@((Model != null && Model.IsEdit) ? "edit" : "plus")"></i>
+                @((Model != null && Model.IsEdit) ? "Sửa" : "Thêm") Món Ăn
+            </h1>
+            <p class="mb-0">@((Model != null && Model.IsEdit) ? "Cập nhật thông tin món ăn trong thực đơn" : "Thêm món ăn mới vào thực đơn nhà hàng")</p>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row mb-4">
+        <div class="col-12 text-end">
+            <a href="@Url.Action("MenuManagement", "Management")" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Quay Lại Thực Đơn
+            </a>
+        </div>
+    </div>
+
+    @if (Model == null || Model.MenuItem == null)
+    {
+        <div class="error-message">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>Lỗi Model</h5>
+            <p>Có lỗi xảy ra khi tải dữ liệu. Model hoặc MenuItem bị null.</p>
+            <a href="@Url.Action("CreateMenuItem", "Management")" class="btn btn-warning">
+                <i class="fas fa-refresh me-2"></i>Thử Lại
+            </a>
+        </div>
+    }
+    else
+    {
+        using (Html.BeginForm(Model.IsEdit ? "EditMenuItem" : "CreateMenuItem", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.IsEdit)
+
+            if (Model.IsEdit)
+            {
+                @Html.HiddenFor(m => m.MenuItem.Id)
+            }
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-container">
+                        <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h5>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label">Tên món ăn <span class="required-field">*</span></label>
+                                    @Html.TextBoxFor(m => m.MenuItem.Name, new { @class = "form-control", placeholder = "Nhập tên món ăn...", required = "required" })
+                                    @Html.ValidationMessageFor(m => m.MenuItem.Name, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Danh mục <span class="required-field">*</span></label>
+                                    @Html.DropDownListFor(m => m.MenuItem.Category,
+                                        new SelectList(new[] {
+                                        new { Value = "", Text = "-- Chọn danh mục --" },
+                                        new { Value = "Nước Lẩu", Text = "Nước Lẩu" },
+                                        new { Value = "Thịt", Text = "Thịt" },
+                                        new { Value = "Hải Sản", Text = "Hải Sản" },
+                                        new { Value = "Rau & Nấm", Text = "Rau & Nấm" },
+                                        new { Value = "Món Phụ", Text = "Món Phụ" },
+                                        new { Value = "Đồ Uống", Text = "Đồ Uống" }
+                                    }, "Value", "Text", Model.MenuItem.Category),
+                                        new { @class = "form-select", required = "required" })
+                                    @Html.ValidationMessageFor(m => m.MenuItem.Category, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả món ăn</label>
+                            @Html.TextAreaFor(m => m.MenuItem.Description, new { @class = "form-control", rows = 3, placeholder = "Mô tả chi tiết về món ăn..." })
+                            @Html.ValidationMessageFor(m => m.MenuItem.Description, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Giá bán (VNĐ) <span class="required-field">*</span></label>
+                                    @Html.TextBoxFor(m => m.MenuItem.Price, new { @class = "form-control", type = "number", min = "1000", max = "10000000", step = "1000", placeholder = "50000", required = "required" })
+                                    @Html.ValidationMessageFor(m => m.MenuItem.Price, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Thời gian chuẩn bị (phút) <span class="required-field">*</span></label>
+                                    @Html.TextBoxFor(m => m.MenuItem.PreparationTime, new { @class = "form-control", type = "number", min = "1", max = "120", placeholder = "15", required = "required" })
+                                    @Html.ValidationMessageFor(m => m.MenuItem.PreparationTime, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Hình ảnh món ăn</label>
+                            <input type="file" name="ImageFile" id="ImageFile" class="form-control" accept="image/*" onchange="previewImage(this)">
+                            <small class="form-text text-muted">
+                                Hỗ trợ: JPG, PNG, GIF. Kích thước tối đa: 5MB
+                            </small>
+
+                            @if (Model.IsEdit && !string.IsNullOrEmpty(Model.MenuItem.ImageUrl))
+                            {
+                                <div class="mt-2">
+                                    <label class="form-label">Hình ảnh hiện tại:</label><br>
+                                    <img src="@Url.Content(Model.MenuItem.ImageUrl)" alt="@Model.MenuItem.Name" class="image-preview">
+                                </div>
+                            }
+
+                            <div id="imagePreview" class="mt-2" style="display: none;">
+                                <label class="form-label">Hình ảnh mới:</label><br>
+                                <img id="preview" src="" alt="Preview" class="image-preview">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                @Html.CheckBoxFor(m => m.MenuItem.IsAvailable, new { @class = "form-check-input" })
+                                <label class="form-check-label">Đang bán</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-container">
+                        <h5><i class="fas fa-carrot me-2"></i>Thành Phần Món Ăn</h5>
+
+                        <div id="ingredient-list-container">
+                            <table class="ingredient-table">
+                                <thead class="ingredient-table-header">
+                                    <tr>
+                                        <th>Nguyên Liệu</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ingredient-list">
+                                    @if (Model.SelectedIngredients != null)
+                                    {
+                                        for (int i = 0; i < Model.SelectedIngredients.Count; i++)
+                                        {
+                                            <tr class="ingredient-row">
+                                                <td>
+                                                    @Html.HiddenFor(m => m.SelectedIngredients[i].IngredientId)
+                                                    @Html.HiddenFor(m => m.SelectedIngredients[i].RequiredQuantity, new { @Value = 0 })
+                                                    @Html.HiddenFor(m => m.SelectedIngredients[i].Unit, new { @Value = "" })
+                                                    <strong>@Model.SelectedIngredients[i].IngredientName</strong>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn-remove-ingredient" onclick="removeIngredientRow(this)">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <hr />
+
+                        <div class="row align-items-end" id="add-ingredient-form">
+                            <div class="col-md-10">
+                                <label class="form-label">Chọn Nguyên Liệu</label>
+                                <select id="newIngredientId" class="form-select">
+                                    <option value="">-- Chọn nguyên liệu --</option>
+                                    @if (Model.AvailableIngredients != null)
+                                    {
+                                        foreach (var ing in Model.AvailableIngredients)
+                                        {
+                                            <option value="@ing.Id">@ing.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" id="add-ingredient-btn" class="btn btn-info w-100">
+                                    <i class="fas fa-plus me-1"></i> Thêm
+                                </button>
+                            </div>
+                        </div>
+                        <small id="ingredient-error" class="text-danger d-none">Vui lòng chọn nguyên liệu.</small>
+                    </div>
+
+                    <div class="form-container">
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("MenuManagement", "Management")" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Hủy
+                            </a>
+                            <div>
+                                @if (Model.IsEdit)
+                                {
+                                    <button type="submit" class="btn btn-save">
+                                        <i class="fas fa-save me-2"></i>Cập Nhật
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-save">
+                                        <i class="fas fa-plus me-2"></i>Thêm Món Ăn
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section scripts {
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('preview').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var priceInput = document.querySelector('input[name="MenuItem.Price"]');
+            if (priceInput) {
+                priceInput.addEventListener('blur', function () {
+                    var value = this.value;
+                    if (value) {
+                        var rounded = Math.round(value / 1000) * 1000;
+                        this.value = rounded;
+                    }
+                });
+            }
+        });
+
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    var isValid = true;
+                    var nameField = form.querySelector('input[name="MenuItem.Name"]');
+                    var categoryField = form.querySelector('select[name="MenuItem.Category"]');
+                    var priceField = form.querySelector('input[name="MenuItem.Price"]');
+                    var timeField = form.querySelector('input[name="MenuItem.PreparationTime"]');
+
+                    if (nameField && !nameField.value.trim()) {
+                        isValid = false;
+                        nameField.classList.add('is-invalid');
+                    } else if (nameField) {
+                        nameField.classList.remove('is-invalid');
+                    }
+                    if (categoryField && !categoryField.value) {
+                        isValid = false;
+                        categoryField.classList.add('is-invalid');
+                    } else if (categoryField) {
+                        categoryField.classList.remove('is-invalid');
+                    }
+                    if (priceField && (!priceField.value || parseFloat(priceField.value) <= 0)) {
+                        isValid = false;
+                        priceField.classList.add('is-invalid');
+                    } else if (priceField) {
+                        priceField.classList.remove('is-invalid');
+                    }
+                    if (timeField && (!timeField.value || parseInt(timeField.value) <= 0)) {
+                        isValid = false;
+                        timeField.classList.add('is-invalid');
+                    } else if (timeField) {
+                        timeField.classList.remove('is-invalid');
+                    }
+                    if (!isValid || !form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        var firstInvalid = form.querySelector('.is-invalid, :invalid');
+                        if (firstInvalid) {
+                            firstInvalid.focus();
+                        }
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+
+        var ingredientRowTemplate = `
+                    <tr class="ingredient-row">
+                        <td>
+                            <input type="hidden" name="SelectedIngredients[__index__].IngredientId" value="__id__" />
+                            <input type="hidden" name="SelectedIngredients[__index__].RequiredQuantity" value="0" />
+                            <input type="hidden" name="SelectedIngredients[__index__].Unit" value="" />
+                            <strong>__name__</strong>
+                        </td>
+                        <td>
+                            <button type="button" class="btn-remove-ingredient" onclick="removeIngredientRow(this)">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+        document.getElementById('add-ingredient-btn').addEventListener('click', function () {
+            var ddl = document.getElementById('newIngredientId');
+            var errorMsg = document.getElementById('ingredient-error');
+
+            var selectedId = ddl.value;
+            var selectedName = ddl.options[ddl.selectedIndex].text;
+
+            if (!selectedId) {
+                errorMsg.classList.remove('d-none');
+                return;
+            }
+            errorMsg.classList.add('d-none');
+
+            var newIndex = document.getElementById('ingredient-list').getElementsByTagName('tr').length;
+
+            var newRow = ingredientRowTemplate
+                .replace(/__index__/g, newIndex)
+                .replace('__id__', selectedId)
+                .replace('__name__', selectedName);
+
+            document.getElementById('ingredient-list').insertAdjacentHTML('beforeend', newRow);
+
+            ddl.selectedIndex = 0;
+        });
+
+        function removeIngredientRow(button) {
+            button.closest('tr.ingredient-row').remove();
+            updateIngredientIndices();
+        }
+
+        function updateIngredientIndices() {
+            var rows = document.getElementById('ingredient-list').getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var inputs = rows[i].querySelectorAll('input, select');
+                inputs.forEach(function (input) {
+                    if (input.name) {
+                        input.name = input.name.replace(/\[\d+\]/, '[' + i + ']');
+                    }
+                });
+            }
+        }
+    </script>
+}

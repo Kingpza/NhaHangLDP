@@ -1,0 +1,217 @@
+﻿@model NhaHangLDP.Models.ManagementDashboardViewModel
+@{
+    ViewBag.Title = "Dashboard Quản Lý";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // 1. Dữ liệu Doanh Thu 7 Ngày Qua (từ Model)
+            var revenueData = @Html.Raw(Json.Encode(Model.RevenueLast7Days));
+            var revenueLabels = revenueData.map(d => d.Date);
+            var revenueValues = revenueData.map(d => d.Revenue);
+
+            // Vẽ Biểu Đồ Đường
+            var ctxLine = document.getElementById('revenueChart');
+            if (ctxLine) {
+                new Chart(ctxLine.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: revenueLabels,
+                        datasets: [{
+                            label: 'Doanh Thu (VNĐ)',
+                            data: revenueValues,
+                            borderColor: '#ffc107',
+                            backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString() + ' VNĐ';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 2. Dữ liệu Món Ăn Phổ Biến (từ Model)
+            var popularData = @Html.Raw(Json.Encode(Model.PopularItems));
+            var popularLabels = popularData.map(p => p.ItemName);
+            var popularValues = popularData.map(p => p.Quantity);
+
+            // Mảng màu
+            var popularColors = [
+                '#dc3545',
+                '#fd7e14',
+                '#ffc107',
+                '#28a745',
+                '#17a2b8'
+            ];
+
+            // Vẽ Biểu Đồ Tròn (Doughnut)
+            var ctxDoughnut = document.getElementById('popularItemsChart');
+            if (ctxDoughnut) {
+                new Chart(ctxDoughnut.getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: popularLabels,
+                        datasets: [{
+                            label: 'Số lượng bán',
+                            data: popularValues,
+                            backgroundColor: popularColors,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line me-1"></i>
+                        Doanh Thu 7 Ngày Qua
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div style="height: 350px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-pie me-1"></i>
+                        Món Ăn Phổ Biến
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div style="height: 350px;">
+                        <canvas id="popularItemsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-history me-1"></i>
+                        Đơn Hàng Gần Đây
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Mã ĐH</th>
+                                    <th>Bàn</th>
+                                    <th>Tổng Tiền</th>
+                                    <th>Trạng Thái</th>
+                                    <th>Thời Gian</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.RecentOrders.Any())
+                                {
+                                    foreach (var order in Model.RecentOrders)
+                                    {
+                                        // Tính tổng tiền từ bill (nếu có)
+                                        var bill = order.Bill.FirstOrDefault(b => b.Status == "Paid");
+                                        var totalAmount = bill?.FinalAmount ?? 0;
+
+                                        <tr>
+                                            <td><strong>DH@(order.Id.ToString("D6"))</strong></td>
+                                            <td>@order.RestaurantTable.TableNumber</td>
+                                            <td>@totalAmount.ToString("N0") VNĐ</td>
+                                            <td>
+                                                @if (order.Status == "Completed")
+                                                {
+                                                    <span class="badge bg-success">Hoàn thành</span>
+                                                }
+                                                else if (order.Status == "Pending")
+                                                {
+                                                    <span class="badge bg-warning text-dark">Chờ xử lý</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@order.Status</span>
+                                                }
+                                            </td>
+                                            <td>@order.OrderTime.ToString("dd/MM HH:mm")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center">Chưa có đơn hàng nào</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-rocket me-1"></i>
+                        Thao Tác Nhanh
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("CreateMenuItem", "Management")" class="btn btn-outline-primary w-100 mb-2 text-start">
+                        <i class="fas fa-plus me-2"></i>Thêm Món Mới
+                    </a>
+                    <a href="@Url.Action("TableManagement", "Management")" class="btn btn-outline-info w-100 mb-2 text-start">
+                        <i class="fas fa-table me-2"></i>Quản Lý Bàn
+                    </a>
+                    <a href="@Url.Action("StockInbound", "Management")" class="btn btn-outline-success w-100 mb-2 text-start">
+                        <i class="fas fa-dolly me-2"></i>Quản Lý Kho
+                    </a>
+                    <a href="@Url.Action("EmployeeManagement", "Management")" class="btn btn-outline-danger w-100 mb-2 text-start">
+                        <i class="fas fa-users me-2"></i>Quản Lý Nhân Viên
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

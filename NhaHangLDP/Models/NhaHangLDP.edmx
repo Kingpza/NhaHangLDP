@@ -1,0 +1,2038 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="NhaHangLDPModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="Account">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Username" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="PasswordHash" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="FullName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="Email" Type="nvarchar" MaxLength="100" />
+          <Property Name="PhoneNumber" Type="nvarchar" MaxLength="15" />
+          <Property Name="RoleId" Type="int" Nullable="false" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
+          <Property Name="LastLoginDate" Type="datetime" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+          <Property Name="CreatedBy" Type="nvarchar" MaxLength="50" />
+          <Property Name="UpdatedDate" Type="datetime" />
+          <Property Name="UpdatedBy" Type="nvarchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="AppSetting">
+          <Key>
+            <PropertyRef Name="SettingKey" />
+          </Key>
+          <Property Name="SettingKey" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="SettingValue" Type="nvarchar" MaxLength="1000" Nullable="false" />
+          <Property Name="Description" Type="nvarchar" MaxLength="500" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedDate" Type="datetime" />
+          <Property Name="CreatedBy" Type="nvarchar" MaxLength="100" />
+          <Property Name="UpdatedBy" Type="nvarchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="Bill">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="OrderId" Type="int" Nullable="false" />
+          <Property Name="CashierId" Type="int" Nullable="false" />
+          <Property Name="BillDate" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="TotalAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="DiscountAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="FinalAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="PaymentMethod" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="Status" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Booking">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CustomerName" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="CustomerPhone" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="BookingDateTime" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="NumberOfGuests" Type="int" Nullable="false" />
+          <Property Name="TableId" Type="int" />
+          <Property Name="Status" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Notes" Type="nvarchar(max)" />
+          <Property Name="CreatedDate" Type="datetime2" Precision="7" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CashierShift">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CashierId" Type="int" Nullable="false" />
+          <Property Name="StartTime" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="EndTime" Type="datetime2" Precision="7" />
+          <Property Name="InitialCash" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="FinalCash" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="TotalRevenue" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="Status" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="DamagedStock">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="IngredientId" Type="int" Nullable="false" />
+          <Property Name="Quantity" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="DamageDate" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="Reason" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="ReportedByEmployeeId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Employee">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="RoleId" Type="int" Nullable="false" />
+          <Property Name="FullName" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="UserName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="PasswordHash" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="PhoneNumber" Type="nvarchar" MaxLength="20" />
+          <Property Name="Email" Type="nvarchar" MaxLength="255" />
+          <Property Name="HireDate" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Ingredient">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="Unit" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="AvailableStock" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="EstimatedCost" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="LowStockThreshold" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="Category" Type="nvarchar" MaxLength="100" />
+          <Property Name="Description" Type="nvarchar" MaxLength="500" />
+        </EntityType>
+        <EntityType Name="MenuCombo">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="Description" Type="nvarchar(max)" />
+          <Property Name="ComboPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="TotalItemPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="ImageUrl" Type="nvarchar(max)" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
+          <Property Name="StartDate" Type="datetime2" Precision="7" />
+          <Property Name="EndDate" Type="datetime2" Precision="7" />
+        </EntityType>
+        <EntityType Name="MenuComboItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="MenuComboId" Type="int" Nullable="false" />
+          <Property Name="MenuItemId" Type="int" Nullable="false" />
+          <Property Name="Quantity" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="MenuItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="Description" Type="nvarchar(max)" />
+          <Property Name="Price" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="OriginalPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Category" Type="nvarchar" MaxLength="100" />
+          <Property Name="ImageUrl" Type="nvarchar(max)" />
+          <Property Name="PreparationTime" Type="int" Nullable="false" />
+          <Property Name="IsAvailable" Type="bit" Nullable="false" />
+          <Property Name="IsFeatured" Type="bit" Nullable="false" />
+          <Property Name="IsNew" Type="bit" Nullable="false" />
+          <Property Name="Rating" Type="decimal" Precision="3" Scale="2" Nullable="false" />
+          <Property Name="ReviewCount" Type="int" Nullable="false" />
+          <Property Name="SoldCount" Type="int" Nullable="false" />
+          <Property Name="CreatedDate" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="UpdatedDate" Type="datetime2" Precision="7" />
+          <Property Name="CreatedBy" Type="nvarchar" MaxLength="255" />
+        </EntityType>
+        <EntityType Name="MenuItemIngredient">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="MenuItemId" Type="int" Nullable="false" />
+          <Property Name="IngredientId" Type="int" Nullable="false" />
+          <Property Name="RequiredQuantity" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Unit" Type="nvarchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="Order">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="TableId" Type="int" Nullable="false" />
+          <Property Name="WaiterId" Type="int" Nullable="false" />
+          <Property Name="ShiftId" Type="int" Nullable="false" />
+          <Property Name="OrderTime" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="Status" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="OrderDetail">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="OrderId" Type="int" Nullable="false" />
+          <Property Name="MenuItemId" Type="int" Nullable="false" />
+          <Property Name="Quantity" Type="int" Nullable="false" />
+          <Property Name="PriceAtTime" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Notes" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="PriceHistory">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="MenuItemId" Type="int" Nullable="false" />
+          <Property Name="OldPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="NewPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="ChangeReason" Type="nvarchar(max)" />
+          <Property Name="ChangeDate" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="ChangedByEmployeeId" Type="int" />
+        </EntityType>
+        <EntityType Name="RestaurantTable">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="TableAreaId" Type="int" Nullable="false" />
+          <Property Name="TableNumber" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Capacity" Type="int" Nullable="false" />
+          <Property Name="Status" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ReturnBill">
+          <Key>
+            <PropertyRef Name="ReturnBillID" />
+          </Key>
+          <Property Name="ReturnBillID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="OriginalBillID" Type="int" Nullable="false" />
+          <Property Name="EmployeeID" Type="int" Nullable="false" />
+          <Property Name="ReturnDate" Type="datetime" Nullable="false" />
+          <Property Name="TotalRefundAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Reason" Type="nvarchar" MaxLength="500" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ReturnBillDetail">
+          <Key>
+            <PropertyRef Name="ReturnBillDetailID" />
+          </Key>
+          <Property Name="ReturnBillDetailID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReturnBillID" Type="int" Nullable="false" />
+          <Property Name="MenuItemID" Type="int" Nullable="false" />
+          <Property Name="Quantity" Type="int" Nullable="false" />
+          <Property Name="UnitPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="IsDamaged" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Role">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="RoleName" Type="nvarchar" MaxLength="100" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ShiftSupportStaff">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="EmployeeId" Type="int" Nullable="false" />
+          <Property Name="CashierShiftId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="StockInbound">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="SupplierId" Type="int" />
+          <Property Name="EmployeeId" Type="int" Nullable="false" />
+          <Property Name="InboundDate" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="TotalCost" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Notes" Type="nvarchar(max)" />
+          <Property Name="InboundCode" Type="nvarchar" MaxLength="50" />
+          <Property Name="CreatedBy" Type="nvarchar" MaxLength="100" />
+          <Property Name="Status" Type="nvarchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="StockInboundDetail">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="StockInboundId" Type="int" Nullable="false" />
+          <Property Name="IngredientId" Type="int" Nullable="false" />
+          <Property Name="Quantity" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="UnitPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="ExpiryDate" Type="datetime2" Precision="7" />
+          <Property Name="BatchNumber" Type="nvarchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="Supplier">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="ContactPerson" Type="nvarchar" MaxLength="255" />
+          <Property Name="PhoneNumber" Type="nvarchar" MaxLength="20" />
+          <Property Name="Address" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="TableArea">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
+        </EntityType>
+        <Association Name="FK_Account_Role">
+          <End Role="Role" Type="Self.Role" Multiplicity="1" />
+          <End Role="Account" Type="Self.Account" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Role">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Account">
+              <PropertyRef Name="RoleId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Bill_Employee_Cashier">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="Bill" Type="Self.Bill" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Bill">
+              <PropertyRef Name="CashierId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Bill_Order">
+          <End Role="Order" Type="Self.Order" Multiplicity="1" />
+          <End Role="Bill" Type="Self.Bill" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Order">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Bill">
+              <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Booking_RestaurantTable">
+          <End Role="RestaurantTable" Type="Self.RestaurantTable" Multiplicity="0..1" />
+          <End Role="Booking" Type="Self.Booking" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RestaurantTable">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Booking">
+              <PropertyRef Name="TableId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CashierShift_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="CashierShift" Type="Self.CashierShift" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CashierShift">
+              <PropertyRef Name="CashierId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_DamagedStock_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="DamagedStock" Type="Self.DamagedStock" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="DamagedStock">
+              <PropertyRef Name="ReportedByEmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_DamagedStock_Ingredient">
+          <End Role="Ingredient" Type="Self.Ingredient" Multiplicity="1" />
+          <End Role="DamagedStock" Type="Self.DamagedStock" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ingredient">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="DamagedStock">
+              <PropertyRef Name="IngredientId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Employee_Role">
+          <End Role="Role" Type="Self.Role" Multiplicity="1" />
+          <End Role="Employee" Type="Self.Employee" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Role">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Employee">
+              <PropertyRef Name="RoleId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MenuComboItem_MenuCombo">
+          <End Role="MenuCombo" Type="Self.MenuCombo" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="MenuComboItem" Type="Self.MenuComboItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuCombo">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="MenuComboItem">
+              <PropertyRef Name="MenuComboId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MenuComboItem_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="MenuComboItem" Type="Self.MenuComboItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="MenuComboItem">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MenuItemIngredient_Ingredient">
+          <End Role="Ingredient" Type="Self.Ingredient" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="MenuItemIngredient" Type="Self.MenuItemIngredient" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ingredient">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="MenuItemIngredient">
+              <PropertyRef Name="IngredientId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MenuItemIngredient_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="MenuItemIngredient" Type="Self.MenuItemIngredient" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="MenuItemIngredient">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Order_CashierShift">
+          <End Role="CashierShift" Type="Self.CashierShift" Multiplicity="1" />
+          <End Role="Order" Type="Self.Order" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CashierShift">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Order">
+              <PropertyRef Name="ShiftId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Order_Employee_Waiter">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="Order" Type="Self.Order" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Order">
+              <PropertyRef Name="WaiterId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Order_RestaurantTable">
+          <End Role="RestaurantTable" Type="Self.RestaurantTable" Multiplicity="1" />
+          <End Role="Order" Type="Self.Order" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RestaurantTable">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Order">
+              <PropertyRef Name="TableId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_OrderDetail_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1" />
+          <End Role="OrderDetail" Type="Self.OrderDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="OrderDetail">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_OrderDetail_Order">
+          <End Role="Order" Type="Self.Order" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="OrderDetail" Type="Self.OrderDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Order">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="OrderDetail">
+              <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PriceHistory_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="0..1" />
+          <End Role="PriceHistory" Type="Self.PriceHistory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PriceHistory">
+              <PropertyRef Name="ChangedByEmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PriceHistory_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="PriceHistory" Type="Self.PriceHistory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PriceHistory">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RestaurantTable_TableArea">
+          <End Role="TableArea" Type="Self.TableArea" Multiplicity="1" />
+          <End Role="RestaurantTable" Type="Self.RestaurantTable" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TableArea">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RestaurantTable">
+              <PropertyRef Name="TableAreaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReturnBill_Bill">
+          <End Role="Bill" Type="Self.Bill" Multiplicity="1" />
+          <End Role="ReturnBill" Type="Self.ReturnBill" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Bill">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ReturnBill">
+              <PropertyRef Name="OriginalBillID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReturnBill_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="ReturnBill" Type="Self.ReturnBill" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ReturnBill">
+              <PropertyRef Name="EmployeeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReturnBillDetail_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1" />
+          <End Role="ReturnBillDetail" Type="Self.ReturnBillDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ReturnBillDetail">
+              <PropertyRef Name="MenuItemID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReturnBillDetail_ReturnBill">
+          <End Role="ReturnBill" Type="Self.ReturnBill" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ReturnBillDetail" Type="Self.ReturnBillDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ReturnBill">
+              <PropertyRef Name="ReturnBillID" />
+            </Principal>
+            <Dependent Role="ReturnBillDetail">
+              <PropertyRef Name="ReturnBillID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ShiftSupportStaff_CashierShift">
+          <End Role="CashierShift" Type="Self.CashierShift" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ShiftSupportStaff" Type="Self.ShiftSupportStaff" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CashierShift">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ShiftSupportStaff">
+              <PropertyRef Name="CashierShiftId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ShiftSupportStaff_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="ShiftSupportStaff" Type="Self.ShiftSupportStaff" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ShiftSupportStaff">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StockInbound_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="StockInbound" Type="Self.StockInbound" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockInbound">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StockInbound_Supplier">
+          <End Role="Supplier" Type="Self.Supplier" Multiplicity="0..1" />
+          <End Role="StockInbound" Type="Self.StockInbound" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Supplier">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockInbound">
+              <PropertyRef Name="SupplierId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StockInboundDetail_Ingredient">
+          <End Role="Ingredient" Type="Self.Ingredient" Multiplicity="1" />
+          <End Role="StockInboundDetail" Type="Self.StockInboundDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ingredient">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockInboundDetail">
+              <PropertyRef Name="IngredientId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StockInboundDetail_StockInbound">
+          <End Role="StockInbound" Type="Self.StockInbound" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="StockInboundDetail" Type="Self.StockInboundDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="StockInbound">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockInboundDetail">
+              <PropertyRef Name="StockInboundId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="NhaHangLDPModelStoreContainer">
+          <EntitySet Name="Account" EntityType="Self.Account" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="AppSetting" EntityType="Self.AppSetting" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Bill" EntityType="Self.Bill" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Booking" EntityType="Self.Booking" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CashierShift" EntityType="Self.CashierShift" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="DamagedStock" EntityType="Self.DamagedStock" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Employee" EntityType="Self.Employee" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Ingredient" EntityType="Self.Ingredient" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="MenuCombo" EntityType="Self.MenuCombo" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="MenuComboItem" EntityType="Self.MenuComboItem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="MenuItem" EntityType="Self.MenuItem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="MenuItemIngredient" EntityType="Self.MenuItemIngredient" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Order" EntityType="Self.Order" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="OrderDetail" EntityType="Self.OrderDetail" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PriceHistory" EntityType="Self.PriceHistory" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="RestaurantTable" EntityType="Self.RestaurantTable" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ReturnBill" EntityType="Self.ReturnBill" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ReturnBillDetail" EntityType="Self.ReturnBillDetail" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Role" EntityType="Self.Role" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ShiftSupportStaff" EntityType="Self.ShiftSupportStaff" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="StockInbound" EntityType="Self.StockInbound" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="StockInboundDetail" EntityType="Self.StockInboundDetail" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Supplier" EntityType="Self.Supplier" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TableArea" EntityType="Self.TableArea" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_Account_Role" Association="Self.FK_Account_Role">
+            <End Role="Role" EntitySet="Role" />
+            <End Role="Account" EntitySet="Account" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Bill_Employee_Cashier" Association="Self.FK_Bill_Employee_Cashier">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="Bill" EntitySet="Bill" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Bill_Order" Association="Self.FK_Bill_Order">
+            <End Role="Order" EntitySet="Order" />
+            <End Role="Bill" EntitySet="Bill" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Booking_RestaurantTable" Association="Self.FK_Booking_RestaurantTable">
+            <End Role="RestaurantTable" EntitySet="RestaurantTable" />
+            <End Role="Booking" EntitySet="Booking" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CashierShift_Employee" Association="Self.FK_CashierShift_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="CashierShift" EntitySet="CashierShift" />
+          </AssociationSet>
+          <AssociationSet Name="FK_DamagedStock_Employee" Association="Self.FK_DamagedStock_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="DamagedStock" EntitySet="DamagedStock" />
+          </AssociationSet>
+          <AssociationSet Name="FK_DamagedStock_Ingredient" Association="Self.FK_DamagedStock_Ingredient">
+            <End Role="Ingredient" EntitySet="Ingredient" />
+            <End Role="DamagedStock" EntitySet="DamagedStock" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Employee_Role" Association="Self.FK_Employee_Role">
+            <End Role="Role" EntitySet="Role" />
+            <End Role="Employee" EntitySet="Employee" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MenuComboItem_MenuCombo" Association="Self.FK_MenuComboItem_MenuCombo">
+            <End Role="MenuCombo" EntitySet="MenuCombo" />
+            <End Role="MenuComboItem" EntitySet="MenuComboItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MenuComboItem_MenuItem" Association="Self.FK_MenuComboItem_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="MenuComboItem" EntitySet="MenuComboItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MenuItemIngredient_Ingredient" Association="Self.FK_MenuItemIngredient_Ingredient">
+            <End Role="Ingredient" EntitySet="Ingredient" />
+            <End Role="MenuItemIngredient" EntitySet="MenuItemIngredient" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MenuItemIngredient_MenuItem" Association="Self.FK_MenuItemIngredient_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="MenuItemIngredient" EntitySet="MenuItemIngredient" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Order_CashierShift" Association="Self.FK_Order_CashierShift">
+            <End Role="CashierShift" EntitySet="CashierShift" />
+            <End Role="Order" EntitySet="Order" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Order_Employee_Waiter" Association="Self.FK_Order_Employee_Waiter">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="Order" EntitySet="Order" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Order_RestaurantTable" Association="Self.FK_Order_RestaurantTable">
+            <End Role="RestaurantTable" EntitySet="RestaurantTable" />
+            <End Role="Order" EntitySet="Order" />
+          </AssociationSet>
+          <AssociationSet Name="FK_OrderDetail_MenuItem" Association="Self.FK_OrderDetail_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="OrderDetail" EntitySet="OrderDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_OrderDetail_Order" Association="Self.FK_OrderDetail_Order">
+            <End Role="Order" EntitySet="Order" />
+            <End Role="OrderDetail" EntitySet="OrderDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PriceHistory_Employee" Association="Self.FK_PriceHistory_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="PriceHistory" EntitySet="PriceHistory" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PriceHistory_MenuItem" Association="Self.FK_PriceHistory_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="PriceHistory" EntitySet="PriceHistory" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RestaurantTable_TableArea" Association="Self.FK_RestaurantTable_TableArea">
+            <End Role="TableArea" EntitySet="TableArea" />
+            <End Role="RestaurantTable" EntitySet="RestaurantTable" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReturnBill_Bill" Association="Self.FK_ReturnBill_Bill">
+            <End Role="Bill" EntitySet="Bill" />
+            <End Role="ReturnBill" EntitySet="ReturnBill" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReturnBill_Employee" Association="Self.FK_ReturnBill_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="ReturnBill" EntitySet="ReturnBill" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReturnBillDetail_MenuItem" Association="Self.FK_ReturnBillDetail_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="ReturnBillDetail" EntitySet="ReturnBillDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReturnBillDetail_ReturnBill" Association="Self.FK_ReturnBillDetail_ReturnBill">
+            <End Role="ReturnBill" EntitySet="ReturnBill" />
+            <End Role="ReturnBillDetail" EntitySet="ReturnBillDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ShiftSupportStaff_CashierShift" Association="Self.FK_ShiftSupportStaff_CashierShift">
+            <End Role="CashierShift" EntitySet="CashierShift" />
+            <End Role="ShiftSupportStaff" EntitySet="ShiftSupportStaff" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ShiftSupportStaff_Employee" Association="Self.FK_ShiftSupportStaff_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="ShiftSupportStaff" EntitySet="ShiftSupportStaff" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StockInbound_Employee" Association="Self.FK_StockInbound_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="StockInbound" EntitySet="StockInbound" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StockInbound_Supplier" Association="Self.FK_StockInbound_Supplier">
+            <End Role="Supplier" EntitySet="Supplier" />
+            <End Role="StockInbound" EntitySet="StockInbound" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StockInboundDetail_Ingredient" Association="Self.FK_StockInboundDetail_Ingredient">
+            <End Role="Ingredient" EntitySet="Ingredient" />
+            <End Role="StockInboundDetail" EntitySet="StockInboundDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StockInboundDetail_StockInbound" Association="Self.FK_StockInboundDetail_StockInbound">
+            <End Role="StockInbound" EntitySet="StockInbound" />
+            <End Role="StockInboundDetail" EntitySet="StockInboundDetail" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="NhaHangLDPModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="Account">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Username" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="PasswordHash" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="FullName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Email" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="PhoneNumber" Type="String" MaxLength="15" FixedLength="false" Unicode="true" />
+          <Property Name="RoleId" Type="Int32" Nullable="false" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <Property Name="LastLoginDate" Type="DateTime" Precision="3" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="CreatedBy" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="UpdatedDate" Type="DateTime" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Role" Relationship="Self.FK_Account_Role" FromRole="Account" ToRole="Role" />
+        </EntityType>
+        <EntityType Name="AppSetting">
+          <Key>
+            <PropertyRef Name="SettingKey" />
+          </Key>
+          <Property Name="SettingKey" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="SettingValue" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Description" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedDate" Type="DateTime" Precision="3" />
+          <Property Name="CreatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="Bill">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="OrderId" Type="Int32" Nullable="false" />
+          <Property Name="CashierId" Type="Int32" Nullable="false" />
+          <Property Name="BillDate" Type="DateTime" Nullable="false" Precision="7" />
+          <Property Name="TotalAmount" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="DiscountAmount" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="FinalAmount" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="PaymentMethod" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Status" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Employee" Relationship="Self.FK_Bill_Employee_Cashier" FromRole="Bill" ToRole="Employee" />
+          <NavigationProperty Name="Order" Relationship="Self.FK_Bill_Order" FromRole="Bill" ToRole="Order" />
+          <NavigationProperty Name="ReturnBill" Relationship="Self.FK_ReturnBill_Bill" FromRole="Bill" ToRole="ReturnBill" />
+        </EntityType>
+        <EntityType Name="Booking">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CustomerName" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="CustomerPhone" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="BookingDateTime" Type="DateTime" Nullable="false" Precision="7" />
+          <Property Name="NumberOfGuests" Type="Int32" Nullable="false" />
+          <Property Name="TableId" Type="Int32" />
+          <Property Name="Status" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Notes" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="7" />
+          <NavigationProperty Name="RestaurantTable" Relationship="Self.FK_Booking_RestaurantTable" FromRole="Booking" ToRole="RestaurantTable" />
+        </EntityType>
+        <EntityType Name="CashierShift">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CashierId" Type="Int32" Nullable="false" />
+          <Property Name="StartTime" Type="DateTime" Nullable="false" Precision="7" />
+          <Property Name="EndTime" Type="DateTime" Precision="7" />
+          <Property Name="InitialCash" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="FinalCash" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="TotalRevenue" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="Status" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Employee" Relationship="Self.FK_CashierShift_Employee" FromRole="CashierShift" ToRole="Employee" />
+          <NavigationProperty Name="Order" Relationship="Self.FK_Order_CashierShift" FromRole="CashierShift" ToRole="Order" />
+          <NavigationProperty Name="ShiftSupportStaff" Relationship="Self.FK_ShiftSupportStaff_CashierShift" FromRole="CashierShift" ToRole="ShiftSupportStaff" />
+        </EntityType>
+        <EntityType Name="DamagedStock">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="IngredientId" Type="Int32" Nullable="false" />
+          <Property Name="Quantity" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="DamageDate" Type="DateTime" Nullable="false" Precision="7" />
+          <Property Name="Reason" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="ReportedByEmployeeId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Employee" Relationship="Self.FK_DamagedStock_Employee" FromRole="DamagedStock" ToRole="Employee" />
+          <NavigationProperty Name="Ingredient" Relationship="Self.FK_DamagedStock_Ingredient" FromRole="DamagedStock" ToRole="Ingredient" />
+        </EntityType>
+        <EntityType Name="Employee">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="RoleId" Type="Int32" Nullable="false" />
+          <Property Name="FullName" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="UserName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="PasswordHash" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="PhoneNumber" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Email" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="HireDate" Type="DateTime" Nullable="false" Precision="7" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <NavigationProperty Name="Bill" Relationship="Self.FK_Bill_Employee_Cashier" FromRole="Employee" ToRole="Bill" />
+          <NavigationProperty Name="CashierShift" Relationship="Self.FK_CashierShift_Employee" FromRole="Employee" ToRole="CashierShift" />
+          <NavigationProperty Name="DamagedStock" Relationship="Self.FK_DamagedStock_Employee" FromRole="Employee" ToRole="DamagedStock" />
+          <NavigationProperty Name="Role" Relationship="Self.FK_Employee_Role" FromRole="Employee" ToRole="Role" />
+          <NavigationProperty Name="Order" Relationship="Self.FK_Order_Employee_Waiter" FromRole="Employee" ToRole="Order" />
+          <NavigationProperty Name="PriceHistory" Relationship="Self.FK_PriceHistory_Employee" FromRole="Employee" ToRole="PriceHistory" />
+          <NavigationProperty Name="ReturnBill" Relationship="Self.FK_ReturnBill_Employee" FromRole="Employee" ToRole="ReturnBill" />
+          <NavigationProperty Name="ShiftSupportStaff" Relationship="Self.FK_ShiftSupportStaff_Employee" FromRole="Employee" ToRole="ShiftSupportStaff" />
+          <NavigationProperty Name="StockInbound" Relationship="Self.FK_StockInbound_Employee" FromRole="Employee" ToRole="StockInbound" />
+        </EntityType>
+        <EntityType Name="Ingredient">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Unit" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="AvailableStock" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="EstimatedCost" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="LowStockThreshold" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="Category" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Description" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="DamagedStock" Relationship="Self.FK_DamagedStock_Ingredient" FromRole="Ingredient" ToRole="DamagedStock" />
+          <NavigationProperty Name="MenuItemIngredient" Relationship="Self.FK_MenuItemIngredient_Ingredient" FromRole="Ingredient" ToRole="MenuItemIngredient" />
+          <NavigationProperty Name="StockInboundDetail" Relationship="Self.FK_StockInboundDetail_Ingredient" FromRole="Ingredient" ToRole="StockInboundDetail" />
+        </EntityType>
+        <EntityType Name="MenuCombo">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Description" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="ComboPrice" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="TotalItemPrice" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="ImageUrl" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <Property Name="StartDate" Type="DateTime" Precision="7" />
+          <Property Name="EndDate" Type="DateTime" Precision="7" />
+          <NavigationProperty Name="MenuComboItem" Relationship="Self.FK_MenuComboItem_MenuCombo" FromRole="MenuCombo" ToRole="MenuComboItem" />
+        </EntityType>
+        <EntityType Name="MenuComboItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="MenuComboId" Type="Int32" Nullable="false" />
+          <Property Name="MenuItemId" Type="Int32" Nullable="false" />
+          <Property Name="Quantity" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="MenuCombo" Relationship="Self.FK_MenuComboItem_MenuCombo" FromRole="MenuComboItem" ToRole="MenuCombo" />
+          <NavigationProperty Name="MenuItem" Relationship="Self.FK_MenuComboItem_MenuItem" FromRole="MenuComboItem" ToRole="MenuItem" />
+        </EntityType>
+        <EntityType Name="MenuItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Description" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Price" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="OriginalPrice" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Category" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="ImageUrl" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="PreparationTime" Type="Int32" Nullable="false" />
+          <Property Name="IsAvailable" Type="Boolean" Nullable="false" />
+          <Property Name="IsFeatured" Type="Boolean" Nullable="false" />
+          <Property Name="IsNew" Type="Boolean" Nullable="false" />
+          <Property Name="Rating" Type="Decimal" Precision="3" Scale="2" Nullable="false" />
+          <Property Name="ReviewCount" Type="Int32" Nullable="false" />
+          <Property Name="SoldCount" Type="Int32" Nullable="false" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="7" />
+          <Property Name="UpdatedDate" Type="DateTime" Precision="7" />
+          <Property Name="CreatedBy" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="MenuComboItem" Relationship="Self.FK_MenuComboItem_MenuItem" FromRole="MenuItem" ToRole="MenuComboItem" />
+          <NavigationProperty Name="MenuItemIngredient" Relationship="Self.FK_MenuItemIngredient_MenuItem" FromRole="MenuItem" ToRole="MenuItemIngredient" />
+          <NavigationProperty Name="OrderDetail" Relationship="Self.FK_OrderDetail_MenuItem" FromRole="MenuItem" ToRole="OrderDetail" />
+          <NavigationProperty Name="PriceHistory" Relationship="Self.FK_PriceHistory_MenuItem" FromRole="MenuItem" ToRole="PriceHistory" />
+          <NavigationProperty Name="ReturnBillDetail" Relationship="Self.FK_ReturnBillDetail_MenuItem" FromRole="MenuItem" ToRole="ReturnBillDetail" />
+        </EntityType>
+        <EntityType Name="MenuItemIngredient">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="MenuItemId" Type="Int32" Nullable="false" />
+          <Property Name="IngredientId" Type="Int32" Nullable="false" />
+          <Property Name="RequiredQuantity" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Unit" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Ingredient" Relationship="Self.FK_MenuItemIngredient_Ingredient" FromRole="MenuItemIngredient" ToRole="Ingredient" />
+          <NavigationProperty Name="MenuItem" Relationship="Self.FK_MenuItemIngredient_MenuItem" FromRole="MenuItemIngredient" ToRole="MenuItem" />
+        </EntityType>
+        <EntityType Name="Order">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="TableId" Type="Int32" Nullable="false" />
+          <Property Name="WaiterId" Type="Int32" Nullable="false" />
+          <Property Name="ShiftId" Type="Int32" Nullable="false" />
+          <Property Name="OrderTime" Type="DateTime" Nullable="false" Precision="7" />
+          <Property Name="Status" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Bill" Relationship="Self.FK_Bill_Order" FromRole="Order" ToRole="Bill" />
+          <NavigationProperty Name="CashierShift" Relationship="Self.FK_Order_CashierShift" FromRole="Order" ToRole="CashierShift" />
+          <NavigationProperty Name="Employee" Relationship="Self.FK_Order_Employee_Waiter" FromRole="Order" ToRole="Employee" />
+          <NavigationProperty Name="RestaurantTable" Relationship="Self.FK_Order_RestaurantTable" FromRole="Order" ToRole="RestaurantTable" />
+          <NavigationProperty Name="OrderDetail" Relationship="Self.FK_OrderDetail_Order" FromRole="Order" ToRole="OrderDetail" />
+        </EntityType>
+        <EntityType Name="OrderDetail">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="OrderId" Type="Int32" Nullable="false" />
+          <Property Name="MenuItemId" Type="Int32" Nullable="false" />
+          <Property Name="Quantity" Type="Int32" Nullable="false" />
+          <Property Name="PriceAtTime" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Notes" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="MenuItem" Relationship="Self.FK_OrderDetail_MenuItem" FromRole="OrderDetail" ToRole="MenuItem" />
+          <NavigationProperty Name="Order" Relationship="Self.FK_OrderDetail_Order" FromRole="OrderDetail" ToRole="Order" />
+        </EntityType>
+        <EntityType Name="PriceHistory">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="MenuItemId" Type="Int32" Nullable="false" />
+          <Property Name="OldPrice" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="NewPrice" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="ChangeReason" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="ChangeDate" Type="DateTime" Nullable="false" Precision="7" />
+          <Property Name="ChangedByEmployeeId" Type="Int32" />
+          <NavigationProperty Name="Employee" Relationship="Self.FK_PriceHistory_Employee" FromRole="PriceHistory" ToRole="Employee" />
+          <NavigationProperty Name="MenuItem" Relationship="Self.FK_PriceHistory_MenuItem" FromRole="PriceHistory" ToRole="MenuItem" />
+        </EntityType>
+        <EntityType Name="RestaurantTable">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="TableAreaId" Type="Int32" Nullable="false" />
+          <Property Name="TableNumber" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Capacity" Type="Int32" Nullable="false" />
+          <Property Name="Status" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Booking" Relationship="Self.FK_Booking_RestaurantTable" FromRole="RestaurantTable" ToRole="Booking" />
+          <NavigationProperty Name="Order" Relationship="Self.FK_Order_RestaurantTable" FromRole="RestaurantTable" ToRole="Order" />
+          <NavigationProperty Name="TableArea" Relationship="Self.FK_RestaurantTable_TableArea" FromRole="RestaurantTable" ToRole="TableArea" />
+        </EntityType>
+        <EntityType Name="ReturnBill">
+          <Key>
+            <PropertyRef Name="ReturnBillID" />
+          </Key>
+          <Property Name="ReturnBillID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="OriginalBillID" Type="Int32" Nullable="false" />
+          <Property Name="EmployeeID" Type="Int32" Nullable="false" />
+          <Property Name="ReturnDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="TotalRefundAmount" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Reason" Type="String" MaxLength="500" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Bill" Relationship="Self.FK_ReturnBill_Bill" FromRole="ReturnBill" ToRole="Bill" />
+          <NavigationProperty Name="Employee" Relationship="Self.FK_ReturnBill_Employee" FromRole="ReturnBill" ToRole="Employee" />
+          <NavigationProperty Name="ReturnBillDetail" Relationship="Self.FK_ReturnBillDetail_ReturnBill" FromRole="ReturnBill" ToRole="ReturnBillDetail" />
+        </EntityType>
+        <EntityType Name="ReturnBillDetail">
+          <Key>
+            <PropertyRef Name="ReturnBillDetailID" />
+          </Key>
+          <Property Name="ReturnBillDetailID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReturnBillID" Type="Int32" Nullable="false" />
+          <Property Name="MenuItemID" Type="Int32" Nullable="false" />
+          <Property Name="Quantity" Type="Int32" Nullable="false" />
+          <Property Name="UnitPrice" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="IsDamaged" Type="Boolean" Nullable="false" />
+          <NavigationProperty Name="MenuItem" Relationship="Self.FK_ReturnBillDetail_MenuItem" FromRole="ReturnBillDetail" ToRole="MenuItem" />
+          <NavigationProperty Name="ReturnBill" Relationship="Self.FK_ReturnBillDetail_ReturnBill" FromRole="ReturnBillDetail" ToRole="ReturnBill" />
+        </EntityType>
+        <EntityType Name="Role">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="RoleName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Account" Relationship="Self.FK_Account_Role" FromRole="Role" ToRole="Account" />
+          <NavigationProperty Name="Employee" Relationship="Self.FK_Employee_Role" FromRole="Role" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="ShiftSupportStaff">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="EmployeeId" Type="Int32" Nullable="false" />
+          <Property Name="CashierShiftId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="CashierShift" Relationship="Self.FK_ShiftSupportStaff_CashierShift" FromRole="ShiftSupportStaff" ToRole="CashierShift" />
+          <NavigationProperty Name="Employee" Relationship="Self.FK_ShiftSupportStaff_Employee" FromRole="ShiftSupportStaff" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="StockInbound">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="SupplierId" Type="Int32" />
+          <Property Name="EmployeeId" Type="Int32" Nullable="false" />
+          <Property Name="InboundDate" Type="DateTime" Nullable="false" Precision="7" />
+          <Property Name="TotalCost" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Notes" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="InboundCode" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Status" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Employee" Relationship="Self.FK_StockInbound_Employee" FromRole="StockInbound" ToRole="Employee" />
+          <NavigationProperty Name="Supplier" Relationship="Self.FK_StockInbound_Supplier" FromRole="StockInbound" ToRole="Supplier" />
+          <NavigationProperty Name="StockInboundDetail" Relationship="Self.FK_StockInboundDetail_StockInbound" FromRole="StockInbound" ToRole="StockInboundDetail" />
+        </EntityType>
+        <EntityType Name="StockInboundDetail">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="StockInboundId" Type="Int32" Nullable="false" />
+          <Property Name="IngredientId" Type="Int32" Nullable="false" />
+          <Property Name="Quantity" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="UnitPrice" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="ExpiryDate" Type="DateTime" Precision="7" />
+          <Property Name="BatchNumber" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Ingredient" Relationship="Self.FK_StockInboundDetail_Ingredient" FromRole="StockInboundDetail" ToRole="Ingredient" />
+          <NavigationProperty Name="StockInbound" Relationship="Self.FK_StockInboundDetail_StockInbound" FromRole="StockInboundDetail" ToRole="StockInbound" />
+        </EntityType>
+        <EntityType Name="Supplier">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="ContactPerson" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="PhoneNumber" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Address" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="StockInbound" Relationship="Self.FK_StockInbound_Supplier" FromRole="Supplier" ToRole="StockInbound" />
+        </EntityType>
+        <EntityType Name="TableArea">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="RestaurantTable" Relationship="Self.FK_RestaurantTable_TableArea" FromRole="TableArea" ToRole="RestaurantTable" />
+        </EntityType>
+        <Association Name="FK_Account_Role">
+          <End Role="Role" Type="Self.Role" Multiplicity="1" />
+          <End Role="Account" Type="Self.Account" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Role">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Account">
+              <PropertyRef Name="RoleId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Bill_Employee_Cashier">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="Bill" Type="Self.Bill" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Bill">
+              <PropertyRef Name="CashierId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Bill_Order">
+          <End Role="Order" Type="Self.Order" Multiplicity="1" />
+          <End Role="Bill" Type="Self.Bill" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Order">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Bill">
+              <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReturnBill_Bill">
+          <End Role="Bill" Type="Self.Bill" Multiplicity="1" />
+          <End Role="ReturnBill" Type="Self.ReturnBill" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Bill">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ReturnBill">
+              <PropertyRef Name="OriginalBillID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Booking_RestaurantTable">
+          <End Role="RestaurantTable" Type="Self.RestaurantTable" Multiplicity="0..1" />
+          <End Role="Booking" Type="Self.Booking" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RestaurantTable">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Booking">
+              <PropertyRef Name="TableId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CashierShift_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="CashierShift" Type="Self.CashierShift" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CashierShift">
+              <PropertyRef Name="CashierId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Order_CashierShift">
+          <End Role="CashierShift" Type="Self.CashierShift" Multiplicity="1" />
+          <End Role="Order" Type="Self.Order" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CashierShift">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Order">
+              <PropertyRef Name="ShiftId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ShiftSupportStaff_CashierShift">
+          <End Role="CashierShift" Type="Self.CashierShift" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ShiftSupportStaff" Type="Self.ShiftSupportStaff" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CashierShift">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ShiftSupportStaff">
+              <PropertyRef Name="CashierShiftId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_DamagedStock_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="DamagedStock" Type="Self.DamagedStock" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="DamagedStock">
+              <PropertyRef Name="ReportedByEmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_DamagedStock_Ingredient">
+          <End Role="Ingredient" Type="Self.Ingredient" Multiplicity="1" />
+          <End Role="DamagedStock" Type="Self.DamagedStock" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ingredient">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="DamagedStock">
+              <PropertyRef Name="IngredientId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Employee_Role">
+          <End Role="Role" Type="Self.Role" Multiplicity="1" />
+          <End Role="Employee" Type="Self.Employee" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Role">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Employee">
+              <PropertyRef Name="RoleId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Order_Employee_Waiter">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="Order" Type="Self.Order" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Order">
+              <PropertyRef Name="WaiterId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PriceHistory_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="0..1" />
+          <End Role="PriceHistory" Type="Self.PriceHistory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PriceHistory">
+              <PropertyRef Name="ChangedByEmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReturnBill_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="ReturnBill" Type="Self.ReturnBill" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ReturnBill">
+              <PropertyRef Name="EmployeeID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ShiftSupportStaff_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="ShiftSupportStaff" Type="Self.ShiftSupportStaff" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ShiftSupportStaff">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StockInbound_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="StockInbound" Type="Self.StockInbound" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockInbound">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MenuItemIngredient_Ingredient">
+          <End Role="Ingredient" Type="Self.Ingredient" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="MenuItemIngredient" Type="Self.MenuItemIngredient" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ingredient">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="MenuItemIngredient">
+              <PropertyRef Name="IngredientId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StockInboundDetail_Ingredient">
+          <End Role="Ingredient" Type="Self.Ingredient" Multiplicity="1" />
+          <End Role="StockInboundDetail" Type="Self.StockInboundDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ingredient">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockInboundDetail">
+              <PropertyRef Name="IngredientId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MenuComboItem_MenuCombo">
+          <End Role="MenuCombo" Type="Self.MenuCombo" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="MenuComboItem" Type="Self.MenuComboItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuCombo">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="MenuComboItem">
+              <PropertyRef Name="MenuComboId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MenuComboItem_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="MenuComboItem" Type="Self.MenuComboItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="MenuComboItem">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_MenuItemIngredient_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="MenuItemIngredient" Type="Self.MenuItemIngredient" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="MenuItemIngredient">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_OrderDetail_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1" />
+          <End Role="OrderDetail" Type="Self.OrderDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="OrderDetail">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PriceHistory_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="PriceHistory" Type="Self.PriceHistory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PriceHistory">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReturnBillDetail_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1" />
+          <End Role="ReturnBillDetail" Type="Self.ReturnBillDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ReturnBillDetail">
+              <PropertyRef Name="MenuItemID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Order_RestaurantTable">
+          <End Role="RestaurantTable" Type="Self.RestaurantTable" Multiplicity="1" />
+          <End Role="Order" Type="Self.Order" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="RestaurantTable">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Order">
+              <PropertyRef Name="TableId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_OrderDetail_Order">
+          <End Role="Order" Type="Self.Order" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="OrderDetail" Type="Self.OrderDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Order">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="OrderDetail">
+              <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RestaurantTable_TableArea">
+          <End Role="TableArea" Type="Self.TableArea" Multiplicity="1" />
+          <End Role="RestaurantTable" Type="Self.RestaurantTable" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TableArea">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RestaurantTable">
+              <PropertyRef Name="TableAreaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ReturnBillDetail_ReturnBill">
+          <End Role="ReturnBill" Type="Self.ReturnBill" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ReturnBillDetail" Type="Self.ReturnBillDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ReturnBill">
+              <PropertyRef Name="ReturnBillID" />
+            </Principal>
+            <Dependent Role="ReturnBillDetail">
+              <PropertyRef Name="ReturnBillID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StockInbound_Supplier">
+          <End Role="Supplier" Type="Self.Supplier" Multiplicity="0..1" />
+          <End Role="StockInbound" Type="Self.StockInbound" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Supplier">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockInbound">
+              <PropertyRef Name="SupplierId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_StockInboundDetail_StockInbound">
+          <End Role="StockInbound" Type="Self.StockInbound" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="StockInboundDetail" Type="Self.StockInboundDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="StockInbound">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="StockInboundDetail">
+              <PropertyRef Name="StockInboundId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="NhaHangLDPEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Account" EntityType="Self.Account" />
+          <EntitySet Name="AppSetting" EntityType="Self.AppSetting" />
+          <EntitySet Name="Bill" EntityType="Self.Bill" />
+          <EntitySet Name="Booking" EntityType="Self.Booking" />
+          <EntitySet Name="CashierShift" EntityType="Self.CashierShift" />
+          <EntitySet Name="DamagedStock" EntityType="Self.DamagedStock" />
+          <EntitySet Name="Employee" EntityType="Self.Employee" />
+          <EntitySet Name="Ingredient" EntityType="Self.Ingredient" />
+          <EntitySet Name="MenuCombo" EntityType="Self.MenuCombo" />
+          <EntitySet Name="MenuComboItem" EntityType="Self.MenuComboItem" />
+          <EntitySet Name="MenuItem" EntityType="Self.MenuItem" />
+          <EntitySet Name="MenuItemIngredient" EntityType="Self.MenuItemIngredient" />
+          <EntitySet Name="Order" EntityType="Self.Order" />
+          <EntitySet Name="OrderDetail" EntityType="Self.OrderDetail" />
+          <EntitySet Name="PriceHistory" EntityType="Self.PriceHistory" />
+          <EntitySet Name="RestaurantTable" EntityType="Self.RestaurantTable" />
+          <EntitySet Name="ReturnBill" EntityType="Self.ReturnBill" />
+          <EntitySet Name="ReturnBillDetail" EntityType="Self.ReturnBillDetail" />
+          <EntitySet Name="Role" EntityType="Self.Role" />
+          <EntitySet Name="ShiftSupportStaff" EntityType="Self.ShiftSupportStaff" />
+          <EntitySet Name="StockInbound" EntityType="Self.StockInbound" />
+          <EntitySet Name="StockInboundDetail" EntityType="Self.StockInboundDetail" />
+          <EntitySet Name="Supplier" EntityType="Self.Supplier" />
+          <EntitySet Name="TableArea" EntityType="Self.TableArea" />
+          <AssociationSet Name="FK_Account_Role" Association="Self.FK_Account_Role">
+            <End Role="Role" EntitySet="Role" />
+            <End Role="Account" EntitySet="Account" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Bill_Employee_Cashier" Association="Self.FK_Bill_Employee_Cashier">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="Bill" EntitySet="Bill" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Bill_Order" Association="Self.FK_Bill_Order">
+            <End Role="Order" EntitySet="Order" />
+            <End Role="Bill" EntitySet="Bill" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReturnBill_Bill" Association="Self.FK_ReturnBill_Bill">
+            <End Role="Bill" EntitySet="Bill" />
+            <End Role="ReturnBill" EntitySet="ReturnBill" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Booking_RestaurantTable" Association="Self.FK_Booking_RestaurantTable">
+            <End Role="RestaurantTable" EntitySet="RestaurantTable" />
+            <End Role="Booking" EntitySet="Booking" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CashierShift_Employee" Association="Self.FK_CashierShift_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="CashierShift" EntitySet="CashierShift" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Order_CashierShift" Association="Self.FK_Order_CashierShift">
+            <End Role="CashierShift" EntitySet="CashierShift" />
+            <End Role="Order" EntitySet="Order" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ShiftSupportStaff_CashierShift" Association="Self.FK_ShiftSupportStaff_CashierShift">
+            <End Role="CashierShift" EntitySet="CashierShift" />
+            <End Role="ShiftSupportStaff" EntitySet="ShiftSupportStaff" />
+          </AssociationSet>
+          <AssociationSet Name="FK_DamagedStock_Employee" Association="Self.FK_DamagedStock_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="DamagedStock" EntitySet="DamagedStock" />
+          </AssociationSet>
+          <AssociationSet Name="FK_DamagedStock_Ingredient" Association="Self.FK_DamagedStock_Ingredient">
+            <End Role="Ingredient" EntitySet="Ingredient" />
+            <End Role="DamagedStock" EntitySet="DamagedStock" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Employee_Role" Association="Self.FK_Employee_Role">
+            <End Role="Role" EntitySet="Role" />
+            <End Role="Employee" EntitySet="Employee" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Order_Employee_Waiter" Association="Self.FK_Order_Employee_Waiter">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="Order" EntitySet="Order" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PriceHistory_Employee" Association="Self.FK_PriceHistory_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="PriceHistory" EntitySet="PriceHistory" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReturnBill_Employee" Association="Self.FK_ReturnBill_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="ReturnBill" EntitySet="ReturnBill" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ShiftSupportStaff_Employee" Association="Self.FK_ShiftSupportStaff_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="ShiftSupportStaff" EntitySet="ShiftSupportStaff" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StockInbound_Employee" Association="Self.FK_StockInbound_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="StockInbound" EntitySet="StockInbound" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MenuItemIngredient_Ingredient" Association="Self.FK_MenuItemIngredient_Ingredient">
+            <End Role="Ingredient" EntitySet="Ingredient" />
+            <End Role="MenuItemIngredient" EntitySet="MenuItemIngredient" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StockInboundDetail_Ingredient" Association="Self.FK_StockInboundDetail_Ingredient">
+            <End Role="Ingredient" EntitySet="Ingredient" />
+            <End Role="StockInboundDetail" EntitySet="StockInboundDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MenuComboItem_MenuCombo" Association="Self.FK_MenuComboItem_MenuCombo">
+            <End Role="MenuCombo" EntitySet="MenuCombo" />
+            <End Role="MenuComboItem" EntitySet="MenuComboItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MenuComboItem_MenuItem" Association="Self.FK_MenuComboItem_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="MenuComboItem" EntitySet="MenuComboItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_MenuItemIngredient_MenuItem" Association="Self.FK_MenuItemIngredient_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="MenuItemIngredient" EntitySet="MenuItemIngredient" />
+          </AssociationSet>
+          <AssociationSet Name="FK_OrderDetail_MenuItem" Association="Self.FK_OrderDetail_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="OrderDetail" EntitySet="OrderDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PriceHistory_MenuItem" Association="Self.FK_PriceHistory_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="PriceHistory" EntitySet="PriceHistory" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReturnBillDetail_MenuItem" Association="Self.FK_ReturnBillDetail_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="ReturnBillDetail" EntitySet="ReturnBillDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Order_RestaurantTable" Association="Self.FK_Order_RestaurantTable">
+            <End Role="RestaurantTable" EntitySet="RestaurantTable" />
+            <End Role="Order" EntitySet="Order" />
+          </AssociationSet>
+          <AssociationSet Name="FK_OrderDetail_Order" Association="Self.FK_OrderDetail_Order">
+            <End Role="Order" EntitySet="Order" />
+            <End Role="OrderDetail" EntitySet="OrderDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RestaurantTable_TableArea" Association="Self.FK_RestaurantTable_TableArea">
+            <End Role="TableArea" EntitySet="TableArea" />
+            <End Role="RestaurantTable" EntitySet="RestaurantTable" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ReturnBillDetail_ReturnBill" Association="Self.FK_ReturnBillDetail_ReturnBill">
+            <End Role="ReturnBill" EntitySet="ReturnBill" />
+            <End Role="ReturnBillDetail" EntitySet="ReturnBillDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StockInbound_Supplier" Association="Self.FK_StockInbound_Supplier">
+            <End Role="Supplier" EntitySet="Supplier" />
+            <End Role="StockInbound" EntitySet="StockInbound" />
+          </AssociationSet>
+          <AssociationSet Name="FK_StockInboundDetail_StockInbound" Association="Self.FK_StockInboundDetail_StockInbound">
+            <End Role="StockInbound" EntitySet="StockInbound" />
+            <End Role="StockInboundDetail" EntitySet="StockInboundDetail" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="NhaHangLDPModelStoreContainer" CdmEntityContainer="NhaHangLDPEntities">
+          <EntitySetMapping Name="Account">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Account">
+              <MappingFragment StoreEntitySet="Account">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Username" ColumnName="Username" />
+                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
+                <ScalarProperty Name="FullName" ColumnName="FullName" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="PhoneNumber" ColumnName="PhoneNumber" />
+                <ScalarProperty Name="RoleId" ColumnName="RoleId" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="LastLoginDate" ColumnName="LastLoginDate" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="CreatedBy" ColumnName="CreatedBy" />
+                <ScalarProperty Name="UpdatedDate" ColumnName="UpdatedDate" />
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="AppSetting">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.AppSetting">
+              <MappingFragment StoreEntitySet="AppSetting">
+                <ScalarProperty Name="SettingKey" ColumnName="SettingKey" />
+                <ScalarProperty Name="SettingValue" ColumnName="SettingValue" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="UpdatedDate" ColumnName="UpdatedDate" />
+                <ScalarProperty Name="CreatedBy" ColumnName="CreatedBy" />
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Bill">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Bill">
+              <MappingFragment StoreEntitySet="Bill">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="OrderId" ColumnName="OrderId" />
+                <ScalarProperty Name="CashierId" ColumnName="CashierId" />
+                <ScalarProperty Name="BillDate" ColumnName="BillDate" />
+                <ScalarProperty Name="TotalAmount" ColumnName="TotalAmount" />
+                <ScalarProperty Name="DiscountAmount" ColumnName="DiscountAmount" />
+                <ScalarProperty Name="FinalAmount" ColumnName="FinalAmount" />
+                <ScalarProperty Name="PaymentMethod" ColumnName="PaymentMethod" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Booking">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Booking">
+              <MappingFragment StoreEntitySet="Booking">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="CustomerName" ColumnName="CustomerName" />
+                <ScalarProperty Name="CustomerPhone" ColumnName="CustomerPhone" />
+                <ScalarProperty Name="BookingDateTime" ColumnName="BookingDateTime" />
+                <ScalarProperty Name="NumberOfGuests" ColumnName="NumberOfGuests" />
+                <ScalarProperty Name="TableId" ColumnName="TableId" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="Notes" ColumnName="Notes" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CashierShift">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.CashierShift">
+              <MappingFragment StoreEntitySet="CashierShift">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="CashierId" ColumnName="CashierId" />
+                <ScalarProperty Name="StartTime" ColumnName="StartTime" />
+                <ScalarProperty Name="EndTime" ColumnName="EndTime" />
+                <ScalarProperty Name="InitialCash" ColumnName="InitialCash" />
+                <ScalarProperty Name="FinalCash" ColumnName="FinalCash" />
+                <ScalarProperty Name="TotalRevenue" ColumnName="TotalRevenue" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="DamagedStock">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.DamagedStock">
+              <MappingFragment StoreEntitySet="DamagedStock">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="IngredientId" ColumnName="IngredientId" />
+                <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+                <ScalarProperty Name="DamageDate" ColumnName="DamageDate" />
+                <ScalarProperty Name="Reason" ColumnName="Reason" />
+                <ScalarProperty Name="ReportedByEmployeeId" ColumnName="ReportedByEmployeeId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Employee">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Employee">
+              <MappingFragment StoreEntitySet="Employee">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="RoleId" ColumnName="RoleId" />
+                <ScalarProperty Name="FullName" ColumnName="FullName" />
+                <ScalarProperty Name="UserName" ColumnName="UserName" />
+                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
+                <ScalarProperty Name="PhoneNumber" ColumnName="PhoneNumber" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="HireDate" ColumnName="HireDate" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Ingredient">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Ingredient">
+              <MappingFragment StoreEntitySet="Ingredient">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Unit" ColumnName="Unit" />
+                <ScalarProperty Name="AvailableStock" ColumnName="AvailableStock" />
+                <ScalarProperty Name="EstimatedCost" ColumnName="EstimatedCost" />
+                <ScalarProperty Name="LowStockThreshold" ColumnName="LowStockThreshold" />
+                <ScalarProperty Name="Category" ColumnName="Category" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="MenuCombo">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.MenuCombo">
+              <MappingFragment StoreEntitySet="MenuCombo">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="ComboPrice" ColumnName="ComboPrice" />
+                <ScalarProperty Name="TotalItemPrice" ColumnName="TotalItemPrice" />
+                <ScalarProperty Name="ImageUrl" ColumnName="ImageUrl" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="StartDate" ColumnName="StartDate" />
+                <ScalarProperty Name="EndDate" ColumnName="EndDate" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="MenuComboItem">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.MenuComboItem">
+              <MappingFragment StoreEntitySet="MenuComboItem">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="MenuComboId" ColumnName="MenuComboId" />
+                <ScalarProperty Name="MenuItemId" ColumnName="MenuItemId" />
+                <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="MenuItem">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.MenuItem">
+              <MappingFragment StoreEntitySet="MenuItem">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Price" ColumnName="Price" />
+                <ScalarProperty Name="OriginalPrice" ColumnName="OriginalPrice" />
+                <ScalarProperty Name="Category" ColumnName="Category" />
+                <ScalarProperty Name="ImageUrl" ColumnName="ImageUrl" />
+                <ScalarProperty Name="PreparationTime" ColumnName="PreparationTime" />
+                <ScalarProperty Name="IsAvailable" ColumnName="IsAvailable" />
+                <ScalarProperty Name="IsFeatured" ColumnName="IsFeatured" />
+                <ScalarProperty Name="IsNew" ColumnName="IsNew" />
+                <ScalarProperty Name="Rating" ColumnName="Rating" />
+                <ScalarProperty Name="ReviewCount" ColumnName="ReviewCount" />
+                <ScalarProperty Name="SoldCount" ColumnName="SoldCount" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="UpdatedDate" ColumnName="UpdatedDate" />
+                <ScalarProperty Name="CreatedBy" ColumnName="CreatedBy" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="MenuItemIngredient">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.MenuItemIngredient">
+              <MappingFragment StoreEntitySet="MenuItemIngredient">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="MenuItemId" ColumnName="MenuItemId" />
+                <ScalarProperty Name="IngredientId" ColumnName="IngredientId" />
+                <ScalarProperty Name="RequiredQuantity" ColumnName="RequiredQuantity" />
+                <ScalarProperty Name="Unit" ColumnName="Unit" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Order">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Order">
+              <MappingFragment StoreEntitySet="Order">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="TableId" ColumnName="TableId" />
+                <ScalarProperty Name="WaiterId" ColumnName="WaiterId" />
+                <ScalarProperty Name="ShiftId" ColumnName="ShiftId" />
+                <ScalarProperty Name="OrderTime" ColumnName="OrderTime" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="OrderDetail">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.OrderDetail">
+              <MappingFragment StoreEntitySet="OrderDetail">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="OrderId" ColumnName="OrderId" />
+                <ScalarProperty Name="MenuItemId" ColumnName="MenuItemId" />
+                <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+                <ScalarProperty Name="PriceAtTime" ColumnName="PriceAtTime" />
+                <ScalarProperty Name="Notes" ColumnName="Notes" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="PriceHistory">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.PriceHistory">
+              <MappingFragment StoreEntitySet="PriceHistory">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="MenuItemId" ColumnName="MenuItemId" />
+                <ScalarProperty Name="OldPrice" ColumnName="OldPrice" />
+                <ScalarProperty Name="NewPrice" ColumnName="NewPrice" />
+                <ScalarProperty Name="ChangeReason" ColumnName="ChangeReason" />
+                <ScalarProperty Name="ChangeDate" ColumnName="ChangeDate" />
+                <ScalarProperty Name="ChangedByEmployeeId" ColumnName="ChangedByEmployeeId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RestaurantTable">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.RestaurantTable">
+              <MappingFragment StoreEntitySet="RestaurantTable">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="TableAreaId" ColumnName="TableAreaId" />
+                <ScalarProperty Name="TableNumber" ColumnName="TableNumber" />
+                <ScalarProperty Name="Capacity" ColumnName="Capacity" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ReturnBill">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.ReturnBill">
+              <MappingFragment StoreEntitySet="ReturnBill">
+                <ScalarProperty Name="ReturnBillID" ColumnName="ReturnBillID" />
+                <ScalarProperty Name="OriginalBillID" ColumnName="OriginalBillID" />
+                <ScalarProperty Name="EmployeeID" ColumnName="EmployeeID" />
+                <ScalarProperty Name="ReturnDate" ColumnName="ReturnDate" />
+                <ScalarProperty Name="TotalRefundAmount" ColumnName="TotalRefundAmount" />
+                <ScalarProperty Name="Reason" ColumnName="Reason" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ReturnBillDetail">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.ReturnBillDetail">
+              <MappingFragment StoreEntitySet="ReturnBillDetail">
+                <ScalarProperty Name="ReturnBillDetailID" ColumnName="ReturnBillDetailID" />
+                <ScalarProperty Name="ReturnBillID" ColumnName="ReturnBillID" />
+                <ScalarProperty Name="MenuItemID" ColumnName="MenuItemID" />
+                <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+                <ScalarProperty Name="UnitPrice" ColumnName="UnitPrice" />
+                <ScalarProperty Name="IsDamaged" ColumnName="IsDamaged" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Role">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Role">
+              <MappingFragment StoreEntitySet="Role">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="RoleName" ColumnName="RoleName" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ShiftSupportStaff">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.ShiftSupportStaff">
+              <MappingFragment StoreEntitySet="ShiftSupportStaff">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="EmployeeId" ColumnName="EmployeeId" />
+                <ScalarProperty Name="CashierShiftId" ColumnName="CashierShiftId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="StockInbound">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.StockInbound">
+              <MappingFragment StoreEntitySet="StockInbound">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="SupplierId" ColumnName="SupplierId" />
+                <ScalarProperty Name="EmployeeId" ColumnName="EmployeeId" />
+                <ScalarProperty Name="InboundDate" ColumnName="InboundDate" />
+                <ScalarProperty Name="TotalCost" ColumnName="TotalCost" />
+                <ScalarProperty Name="Notes" ColumnName="Notes" />
+                <ScalarProperty Name="InboundCode" ColumnName="InboundCode" />
+                <ScalarProperty Name="CreatedBy" ColumnName="CreatedBy" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="StockInboundDetail">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.StockInboundDetail">
+              <MappingFragment StoreEntitySet="StockInboundDetail">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="StockInboundId" ColumnName="StockInboundId" />
+                <ScalarProperty Name="IngredientId" ColumnName="IngredientId" />
+                <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+                <ScalarProperty Name="UnitPrice" ColumnName="UnitPrice" />
+                <ScalarProperty Name="ExpiryDate" ColumnName="ExpiryDate" />
+                <ScalarProperty Name="BatchNumber" ColumnName="BatchNumber" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Supplier">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Supplier">
+              <MappingFragment StoreEntitySet="Supplier">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="ContactPerson" ColumnName="ContactPerson" />
+                <ScalarProperty Name="PhoneNumber" ColumnName="PhoneNumber" />
+                <ScalarProperty Name="Address" ColumnName="Address" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TableArea">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.TableArea">
+              <MappingFragment StoreEntitySet="TableArea">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="false" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

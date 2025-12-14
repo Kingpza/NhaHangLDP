@@ -1,0 +1,1077 @@
+﻿@model NhaHangLDP.Models.ShiftDetailsViewModel
+@{
+    ViewBag.Title = "Thống Kê Hiệu Suất Bán Hàng - Quản Lý Nhà Hàng";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@{
+    decimal totalRevenue = ViewBag.TotalRevenue ?? 0m;
+    int totalOrders = ViewBag.TotalOrders ?? 0;
+    decimal avgOrderValue = ViewBag.AverageOrderValue ?? 0m;
+    int activeCashiers = ViewBag.ActiveCashiers ?? 0;
+    
+    decimal revenueChange = ViewBag.RevenueGrowth ?? 0m;
+    decimal ordersChange = ViewBag.OrdersGrowth ?? 0m;
+    decimal avgChange = ViewBag.AvgValueGrowth ?? 0m;
+    decimal cashiersChange = ViewBag.CashiersGrowth ?? 0m;
+
+    var activeShifts = ViewBag.ActiveShifts as List<NhaHangLDP.Models.CashierShift> ?? new List<NhaHangLDP.Models.CashierShift>();
+}
+
+<style>
+    .sales-analytics-container {
+        padding: 0;
+    }
+
+    .page-header {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .period-selector {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .period-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .period-tab {
+        padding: 10px 20px;
+        background: #f8f9fa;
+        border: 2px solid #dee2e6;
+        color: #495057;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+        .period-tab.active,
+        .period-tab:hover {
+            background: #667eea;
+            border-color: #667eea;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+    .analytics-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .analytics-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: left; /* Đổi về trái cho đẹp hơn */
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .analytics-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        color: #fff;
+    }
+
+    .analytics-card.total-revenue .analytics-icon {
+        background: linear-gradient(135deg, #28a745, #20c997);
+    }
+
+    .analytics-card.total-orders .analytics-icon {
+        background: linear-gradient(135deg, #17a2b8, #6f42c1);
+    }
+
+    .analytics-card.avg-order .analytics-icon {
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+    }
+
+    .analytics-card.active-cashiers .analytics-icon {
+        background: linear-gradient(135deg, #dc3545, #e83e8c);
+    }
+
+    .analytics-value {
+        font-size: 1.7rem;
+        font-weight: bold;
+        color: #212529;
+        margin-bottom: 5px;
+        line-height: 1.2;
+    }
+
+    .analytics-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .analytics-change {
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-top: auto; /* Đẩy xuống dưới */
+    }
+
+    .positive { color: #28a745; }
+    .negative { color: #dc3545; }
+
+    .active-shifts-monitor {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .section-title {
+        color: #495057;
+        font-weight: bold;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .btn-export,
+    .btn-action {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        color: #495057;
+        padding: 8px 15px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 10px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 0.85rem;
+    }
+
+        .btn-export:hover,
+        .btn-action:hover {
+            background: #e9ecef;
+            color: #212529;
+            text-decoration: none;
+        }
+
+    .btn-cashier {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        color: #fff;
+        padding: 8px 15px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .btn-cashier:hover {
+            background: linear-gradient(135deg, #5a6bcf, #623c83);
+            color: #fff;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+    .shifts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+    }
+
+    .shift-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        position: relative;
+        border-left: 4px solid #28a745;
+    }
+
+    .shift-cashier {
+        font-weight: bold;
+        color: #212529;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .shift-status {
+        width: 8px;
+        height: 8px;
+        background: #28a745;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .shift-info {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+    }
+
+    .shift-metrics {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .shift-metric {
+        text-align: center;
+    }
+
+    .metric-value {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #212529;
+    }
+
+    .metric-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+    }
+
+    .shift-actions {
+        margin-top: 10px;
+        display: flex;
+        gap: 5px;
+    }
+
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr; /* 2/3 cho biểu đồ, 1/3 cho danh sách */
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .chart-section {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        min-height: 400px;
+    }
+
+    .cashier-performance {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .cashier-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .cashier-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        position: relative;
+    }
+        
+    .cashier-info { flex: 1; }
+    .cashier-name {
+        font-weight: bold;
+        color: #212529;
+        margin-bottom: 3px;
+    }
+    .cashier-stats {
+        color: #6c757d;
+        font-size: 0.8rem;
+        display: flex;
+        gap: 10px;
+    }
+    .cashier-performance-value { text-align: right; }
+    .performance-amount {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 2px;
+    }
+    .performance-orders {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .comparison-section {
+        background: #ffffff;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .comparison-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .comparison-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .comparison-period {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+
+    .comparison-value {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #212529;
+        margin-bottom: 5px;
+    }
+
+    .comparison-change {
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #adb5bd;
+    }
+    
+    /* Responsive cho thiết bị nhỏ */
+    @@media (max-width: 992px) {
+        .analytics-grid {
+            grid-template-columns: 1fr; /* Xếp chồng biểu đồ và danh sách */
+        }
+    }
+    @@media (max-width: 768px) {
+        .analytics-overview {
+            grid-template-columns: 1fr 1fr; /* 2 cột trên di động */
+        }
+        .shifts-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="sales-analytics-container">
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="text-dark mb-1">
+                    <i class="fas fa-chart-line me-2"></i>Thống Kê Hiệu Suất Bán Hàng
+                </h4>
+                <small class="text-muted">
+                    Theo dõi hiệu suất bán hàng theo ca làm việc và thu ngân với liên kết thời gian thực
+                </small>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="@Url.Action("Dashboard", "Cashier")" class="btn-cashier me-2">
+                    <i class="fas fa-cash-register me-1"></i>Thu Ngân
+                </a>
+                <a href="@Url.Action("Dashboard", "ReportsManagement")" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="alertContainer" class="mb-4">
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>LỖI:</strong> @ViewBag.Error
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    </div>
+
+    <div class="period-selector">
+        <h6 class="text-dark mb-3">
+            <i class="fas fa-calendar-alt me-2"></i>Chọn kỳ phân tích
+        </h6>
+        <div class="period-tabs">
+            <button class="period-tab active" data-period="today" onclick="selectPeriod('today')">
+                Hôm nay
+            </button>
+            <button class="period-tab" data-period="week" onclick="selectPeriod('week')">
+                Tuần này
+            </button>
+            <button class="period-tab" data-period="month" onclick="selectPeriod('month')">
+                Tháng này
+            </button>
+            <button class="period-tab" data-period="year" onclick="selectPeriod('year')">
+                Năm này
+            </button>
+        </div>
+        <div class="mt-2">
+            <small class="text-muted" id="dateRange">@ViewBag.DateRange</small>
+        </div>
+    </div>
+
+    <div class="analytics-overview" id="analyticsOverview">
+        <div class="analytics-card total-revenue">
+            <div class="analytics-icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="analytics-label">Tổng doanh thu</div>
+            <div class="analytics-value" id="totalRevenue">@totalRevenue.ToString("N0") VNĐ</div>
+            <div class="analytics-change @(revenueChange >= 0 ? "positive" : "negative")" id="revenueChange">
+                <i class="fas @(revenueChange >= 0 ? "fa-arrow-up" : "fa-arrow-down")"></i>
+                @(revenueChange.ToString("F1"))%
+            </div>
+        </div>
+        <div class="analytics-card total-orders">
+            <div class="analytics-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="analytics-label">Tổng đơn hàng</div>
+            <div class="analytics-value" id="totalOrders">@totalOrders</div>
+            <div class="analytics-change @(ordersChange >= 0 ? "positive" : "negative")" id="ordersChange">
+                <i class="fas @(ordersChange >= 0 ? "fa-arrow-up" : "fa-arrow-down")"></i>
+                @(ordersChange.ToString("F1"))%
+            </div>
+        </div>
+        <div class="analytics-card avg-order">
+            <div class="analytics-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="analytics-label">Giá trị đơn TB</div>
+            <div class="analytics-value" id="avgOrderValue">@avgOrderValue.ToString("N0") VNĐ</div>
+            <div class="analytics-change @(avgChange >= 0 ? "positive" : "negative")" id="avgChange">
+                <i class="fas @(avgChange >= 0 ? "fa-arrow-up" : "fa-arrow-down")"></i>
+                @(avgChange.ToString("F1"))%
+            </div>
+        </div>
+        <div class="analytics-card active-cashiers">
+            <div class="analytics-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="analytics-label">Ca đang hoạt động</div>
+            <div class="analytics-value" id="activeCashiers">@activeCashiers</div>
+            <div class="analytics-change @(cashiersChange >= 0 ? "positive" : "negative")" id="cashiersChange">
+                <i class="fas @(cashiersChange >= 0 ? "fa-arrow-up" : "fa-arrow-down")"></i>
+                @(cashiersChange.ToString("F1"))%
+            </div>
+        </div>
+    </div>
+
+    <div class="active-shifts-monitor">
+        <div class="section-header">
+            <h6 class="section-title">
+                <i class="fas fa-clock me-2"></i>Theo dõi ca làm việc trực tiếp
+            </h6>
+            <div>
+                <button class="btn-action" onclick="refreshShifts()">
+                    <i class="fas fa-sync-alt me-1"></i>Làm mới
+                </button>
+                <a href="@Url.Action("TableArea", "Cashier")" class="btn-action">
+                    <i class="fas fa-table me-1"></i>Quản lý bàn
+                </a>
+                <a href="@Url.Action("Orders", "Cashier")" class="btn-cashier">
+                    <i class="fas fa-list me-1"></i>Đơn hàng
+                </a>
+            </div>
+        </div>
+        <div class="shifts-grid" id="activeShifts">
+            @{
+                // ⭐️ SỬA LỖI 1: Dùng biến an toàn 'activeShifts'
+                if (activeShifts.Any())
+                {
+                    foreach (var shift in activeShifts)
+                    {
+                        <div class="shift-card">
+                            <div class="shift-cashier">
+                                <span>@(shift.Employee?.FullName ?? "Thu Ngân")</span>
+                                <span class="shift-status"></span>
+                            </div>
+                            <div class="shift-info">
+                                <i class="fas fa-clock me-1"></i>Bắt đầu: @shift.StartTime.ToString("HH:mm")
+                                <br>
+                                <i class="fas fa-hourglass-half me-1"></i>Thời gian:
+                                @{
+                                    var duration = DateTime.Now - shift.StartTime;
+                                }
+                                @($"{(int)duration.TotalHours}h {duration.Minutes}m")
+                            </div>
+                            <div class="shift-metrics">
+                                <div class="shift-metric">
+                                    <div class="metric-value">@(shift.Order?.Count ?? 0)</div>
+                                    <div class="metric-label">Đơn hàng</div>
+                                </div>
+                                <div class="shift-metric">
+                                    <div class="metric-value">
+                                        @{
+                                            decimal shiftRevenue = 0;
+                                            try
+                                            {
+                                                if (shift.Order != null)
+                                                {
+                                                    shiftRevenue = shift.Order
+                                                        .SelectMany(o => o.Bill ?? new List<NhaHangLDP.Models.Bill>())
+                                                        .Where(b => b.Status == "Paid")
+                                                        .Sum(b => (decimal?)b.FinalAmount) ?? 0;
+                                                }
+                                            }
+                                            catch { shiftRevenue = 0; }
+                                        }
+                                        @((shiftRevenue / 1000000).ToString("0.0"))M
+                                    </div>
+                                    <div class="metric-label">Doanh thu</div>
+                                </div>
+                            </div>
+                            <div class="shift-actions">
+                                <button class="btn-action" onclick="sendAlert(@shift.Id, 'reminder', 'Kiểm tra đơn hàng mới')">
+                                    <i class="fas fa-bell me-1"></i>Nhắc nhở
+                                </button>
+                                <button class="btn-action" onclick="viewShiftDetails(@shift.Id)">
+                                    <i class="fas fa-eye me-1"></i>Chi tiết
+                                </button>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center text-muted p-4">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <p>Không có ca làm việc nào đang hoạt động</p>
+                        <a href="@Url.Action("OpenShift", "Cashier")" class="btn-cashier">
+                            <i class="fas fa-plus me-1"></i>Mở ca mới
+                        </a>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="analytics-grid">
+        <div class="chart-section">
+            <div class="section-header">
+                <h6 class="section-title">
+                    <i class="fas fa-chart-area me-2"></i>Xu hướng doanh thu
+                </h6>
+                <button class="btn-export" onclick="exportChart()">
+                    <i class="fas fa-download me-1"></i>Xuất biểu đồ
+                </button>
+            </div>
+            <div id="revenueChart" style="height: 350px;">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                    <p>Đang tải biểu đồ...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cashier-performance">
+            <div class="section-header">
+                <h6 class="section-title">
+                    <i class="fas fa-medal me-2"></i>Bảng xếp hạng thu ngân
+                </h6>
+                <button class="btn-export" onclick="exportCashierData()">
+                    <i class="fas fa-download me-1"></i>Xuất Excel
+                </button>
+            </div>
+            <div class="cashier-list" id="cashierList">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                    <p>Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="comparison-section">
+        <div class="section-header">
+            <h6 class="section-title">
+                <i class="fas fa-chart-bar me-2"></i>So sánh với kỳ trước
+            </h6>
+            <button class="btn-export" onclick="exportComparison()">
+                <i class="fas fa-file-export me-1"></i>Xuất báo cáo
+            </button>
+        </div>
+        <div class="comparison-grid" id="comparisonData">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu so sánh...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var currentPeriod = 'today';
+        var revenueChart = null;
+        var refreshInterval = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Đặt tab 'Hôm nay' là active
+            selectPeriod('today');
+            // Bắt đầu tự động làm mới ca
+            startAutoRefresh(); 
+        });
+
+        function selectPeriod(period) {
+            console.log('📅 Selecting period:', period);
+
+            // Cập nhật tab active
+            document.querySelectorAll('.period-tab').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            document.querySelector('[data-period="' + period + '"]').classList.add('active');
+
+            currentPeriod = period;
+            // Gọi hàm tải dữ liệu API
+            loadSalesAnalytics();
+        }
+
+        // Hàm chính tải dữ liệu qua API
+        function loadSalesAnalytics() {
+            console.log('📊 Loading sales analytics for period:', currentPeriod);
+            showLoading(); // Hiển thị spinner "Đang tải..."
+
+            // Gọi đến action API 'GetSalesAnalyticsData'
+            fetch('@Url.Action("GetSalesAnalyticsData", "ReportsManagement")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: 'period=' + encodeURIComponent(currentPeriod)
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Lỗi HTTP: ' + response.status); // Ném lỗi nếu 404 hoặc 500
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                console.log('✅ Sales analytics data received:', data);
+
+                if (data.success) {
+                    // Cập nhật các thẻ thống kê
+                    updateAnalyticsOverview(data.data);
+                    // Cập nhật bảng xếp hạng thu ngân
+                    updateCashierPerformance(data.data.cashiers);
+                    // Vẽ biểu đồ doanh thu
+                    updateRevenueChart(data.data);
+                    // Cập nhật bảng so sánh
+                    updateComparison(data.data.comparison);
+                    // Cập nhật các ca đang hoạt động
+                    refreshShifts(); 
+                } else {
+                    showError('Lỗi từ server: ' + (data.message || 'Không xác định'));
+                }
+            })
+            .catch(function(error) {
+                console.error('🚨 Error loading sales analytics:', error);
+                showError('Lỗi kết nối hoặc phân tích dữ liệu: ' + error.message);
+            });
+        }
+
+        // Cập nhật 4 thẻ thống kê
+        function updateAnalyticsOverview(data) {
+            document.getElementById('totalRevenue').textContent = formatCurrency(data.totalRevenue);
+            document.getElementById('totalOrders').textContent = data.totalOrders.toLocaleString();
+            document.getElementById('avgOrderValue').textContent = formatCurrency(data.avgOrderValue);
+            document.getElementById('activeCashiers').textContent = data.activeCashiers;
+            document.getElementById('dateRange').textContent = data.dateRange;
+
+            updateChangeIndicator('revenueChange', data.revenueGrowth);
+            updateChangeIndicator('ordersChange', data.ordersGrowth);
+            updateChangeIndicator('avgChange', data.avgValueGrowth);
+            updateChangeIndicator('cashiersChange', data.cashiersGrowth);
+        }
+
+        function updateChangeIndicator(elementId, value) {
+            var element = document.getElementById(elementId);
+            var isPositive = value >= 0;
+            var icon = isPositive ? 'fa-arrow-up' : 'fa-arrow-down';
+            
+            element.className = 'analytics-change ' + (isPositive ? 'positive' : 'negative');
+            element.innerHTML = `<i class="fas ${icon} me-1"></i> ${value.toFixed(1)}%`;
+        }
+
+        // Làm mới danh sách ca
+        function refreshShifts() {
+            fetch('@Url.Action("GetActiveShifts", "ReportsManagement")', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateActiveShifts(data.shifts); // Dùng 'data.shifts'
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing shifts:', error);
+            });
+        }
+
+        // Cập nhật HTML cho danh sách ca
+        function updateActiveShifts(shifts) {
+            var html = '';
+            if (shifts.length === 0) {
+                html = `
+                    <div class="text-center text-muted p-4">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <p>Không có ca làm việc nào đang hoạt động</p>
+                        <a href="@Url.Action("OpenShift", "Cashier")" class="btn-cashier">
+                            <i class="fas fa-plus me-1"></i>Mở ca mới
+                        </a>
+                    </div>
+                `;
+            } else {
+                shifts.forEach(function(shift) {
+                    var revenueM = (shift.Revenue / 1000000).toFixed(1);
+                    var borderColor = '#28a745'; // Mặc định là màu xanh
+
+                    html += `
+                        <div class="shift-card" style="border-left-color: ${borderColor};">
+                            <div class="shift-cashier">
+                                <span>${shift.CashierName}</span>
+                                <span class="shift-status"></span>
+                            </div>
+                            <div class="shift-info text-muted">
+                                <i class="fas fa-clock me-1"></i>Bắt đầu: ${shift.StartTime}
+                                <br>
+                                <i class="fas fa-hourglass-half me-1"></i>Thời gian: ${shift.Duration}
+                                <br>
+                                <i class="fas fa-receipt me-1"></i>Đơn cuối: ${shift.LastOrderTime}
+                            </div>
+                            <div class="shift-metrics">
+                                <div class="shift-metric">
+                                    <div class="metric-value">${shift.OrdersCount}</div>
+                                    <div class="metric-label">Đơn hàng</div>
+                                </div>
+                                <div class="shift-metric">
+                                    <div class="metric-value">${revenueM}M</div>
+                                    <div class="metric-label">Doanh thu</div>
+                                </div>
+                            </div>
+                            <div class="shift-actions">
+                                <button class="btn-action" onclick="sendAlert(${shift.ShiftId}, 'reminder', 'Kiểm tra đơn hàng mới')">
+                                    <i class="fas fa-bell me-1"></i>Nhắc nhở
+                                </button>
+                                <button class="btn-action" onclick="viewShiftDetails(${shift.ShiftId})">
+                                    <i class="fas fa-eye me-1"></i>Chi tiết
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('activeShifts').innerHTML = html;
+        }
+
+        // Cập nhật bảng xếp hạng thu ngân
+        function updateCashierPerformance(cashiers) {
+            var html = '';
+            if (!cashiers || cashiers.length === 0) {
+                html = '<div class="text-center text-muted p-4"><i class="fas fa-users fa-2x mb-3"></i><p>Chưa có dữ liệu thu ngân</p></div>';
+            } else {
+                cashiers.forEach(function(cashier, index) {
+                    var rankClass = '';
+                    if (index === 0) rankClass = 'rank-1';
+                    else if (index === 1) rankClass = 'rank-2';
+                    else if (index === 2) rankClass = 'rank-3';
+
+                    var performanceColor = '#28a745';
+                    var target = cashier.target || 1;
+                    if (cashier.revenue < target * 0.8) performanceColor = '#dc3545';
+                    else if (cashier.revenue < target) performanceColor = '#ffc107';
+
+                    html += `
+                        <div class="cashier-item ${rankClass}">
+                            <div class="cashier-info">
+                                <div class="cashier-name">#${index + 1} ${cashier.name}</div>
+                                <div class="cashier-stats">
+                                    <span><i class="fas fa-shopping-cart me-1"></i>${cashier.orders} đơn</span>
+                                    <span><i class="fas fa-clock me-1"></i>${cashier.hours}h</span>
+                                    <span><i class="fas fa-exchange-alt me-1"></i>${cashier.shifts} ca</span>
+                                </div>
+                            </div>
+                            <div class="cashier-performance-value">
+                                <div class="performance-amount" style="color: ${performanceColor};">
+                                    ${formatCurrency(cashier.revenue)}
+                                </div>
+                                <div class="performance-orders">
+                                    Target: ${formatCurrency(cashier.target)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('cashierList').innerHTML = html;
+        }
+
+        // Vẽ biểu đồ
+        function updateRevenueChart(data) {
+            var ctxContainer = document.getElementById('revenueChart');
+            ctxContainer.innerHTML = '';
+            var ctx = document.createElement('canvas');
+            ctxContainer.appendChild(ctx);
+
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+
+            var labels = data.chartData.labels || [];
+            var revenues = data.chartData.revenues || [];
+            var orders = data.chartData.orders || [];
+
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: revenues,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Số đơn hàng',
+                        data: orders,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#495057'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.dataset.yAxisID === 'y') {
+                                        label += formatCurrency(context.parsed.y);
+                                    } else {
+                                        label += context.parsed.y;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#adb5bd',
+                                callback: function(value) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#adb5bd'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#adb5bd'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Cập nhật bảng so sánh
+        function updateComparison(comparison) {
+            var html = '';
+            if (comparison && comparison.length > 0) {
+                comparison.forEach(function(item) {
+                    var changeClass = item.change >= 0 ? 'positive' : 'negative';
+                    var changeIcon = item.change >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+
+                    html += `
+                        <div class="comparison-item">
+                            <div class="comparison-period">${item.period}</div>
+                            <div class="comparison-value">${formatCurrency(item.value)}</div>
+                            <div class="comparison-change ${changeClass}">
+                                <i class="fas ${changeIcon} me-1"></i>
+                                ${Math.abs(item.change).toFixed(1)}%
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                html = '<div class="text-center text-muted p-4"><i class="fas fa-chart-line fa-2x mb-3"></i><p>Chưa có dữ liệu so sánh</p></div>';
+            }
+            document.getElementById('comparisonData').innerHTML = html;
+        }
+
+        // Hiển thị "Đang tải..."
+        function showLoading() {
+            const loadingHtml = '<div class="loading"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><p>Đang tải dữ liệu...</p></div>';
+            document.getElementById('cashierList').innerHTML = loadingHtml;
+            document.getElementById('revenueChart').innerHTML = loadingHtml;
+            document.getElementById('comparisonData').innerHTML = loadingHtml;
+        }
+
+        // Hiển thị lỗi
+        function showError(message) {
+            var errorHtml = `
+                <div class="text-center text-danger p-4">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <p>${message}</p>
+                    <button class="btn-action" onclick="loadSalesAnalytics()">
+                        <i class="fas fa-redo me-1"></i>Thử lại
+                    </button>
+                </div>
+            `;
+            document.getElementById('cashierList').innerHTML = errorHtml;
+            document.getElementById('revenueChart').innerHTML = errorHtml;
+            document.getElementById('comparisonData').innerHTML = errorHtml;
+        }
+
+        function formatCurrency(amount) {
+            return Math.round(amount).toLocaleString('vi-VN') + ' VNĐ';
+        }
+
+        function startAutoRefresh() {
+            refreshInterval = setInterval(function() {
+                refreshShifts();
+            }, 30000); // 30 giây
+        }
+
+        // Các hàm tương tác
+        function sendAlert(shiftId, alertType, message) {
+            fetch('@Url.Action("SendCashierAlert", "ReportsManagement")', { // Sửa tên action
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `shiftId=${shiftId}&alertType=${alertType}&message=${encodeURIComponent(message)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ ' + data.message);
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error sending alert:', error);
+                alert('Lỗi khi gửi thông báo!');
+            });
+        }
+
+        function viewShiftDetails(shiftId) {
+            window.open('@Url.Action("ShiftDetails", "Cashier")?shiftId=' + shiftId, '_blank');
+        }
+
+        function exportChart() {
+            if (revenueChart) {
+                var link = document.createElement('a');
+                link.download = `sales-analytics-chart-${currentPeriod}-${new Date().toISOString().split('T')[0]}.png`;
+                link.href = revenueChart.toBase64Image();
+                link.click();
+            } else {
+                alert('Biểu đồ chưa được tải');
+            }
+        }
+
+        function exportCashierData() {
+            window.open('@Url.Action("ExportCashierPerformance", "ReportsManagement")?period=' + currentPeriod, '_blank');
+        }
+
+        function exportComparison() {
+            window.open('@Url.Action("ExportRevenueComparison", "ReportsManagement")?period=' + currentPeriod, '_blank');
+        }
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
+    </script>
+}

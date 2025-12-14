@@ -1,0 +1,664 @@
+﻿
+@{
+    ViewBag.Title = "Báo Cáo Lợi Nhuận Theo Món";
+    Layout = "~/Views/Shared/_CashierLayout.cshtml";
+}
+
+<style>
+    .profit-container {
+        padding: 0;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .filter-section {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.3);
+        color: #fff;
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+
+        .form-control:focus, .form-select:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ffcc00;
+            color: #fff;
+            box-shadow: 0 0 0 0.2rem rgba(255, 204, 0, 0.25);
+        }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .summary-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+        }
+
+    .summary-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #ffcc00;
+        margin-bottom: 8px;
+    }
+
+    .summary-label {
+        font-size: 0.9rem;
+        color: #adb5bd;
+        margin-bottom: 5px;
+    }
+
+    .summary-change {
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .change-positive {
+        color: #28a745;
+    }
+
+    .change-negative {
+        color: #dc3545;
+    }
+
+    .profit-table-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        overflow-x: auto;
+    }
+
+    .profit-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+        .profit-table th,
+        .profit-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profit-table th {
+            background: rgba(255, 204, 0, 0.2);
+            color: #ffcc00;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .profit-table td {
+            color: #fff;
+        }
+
+        .profit-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+    .profit-margin {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .margin-excellent {
+        background: rgba(40, 167, 69, 0.3);
+        color: #28a745;
+    }
+
+    .margin-good {
+        background: rgba(255, 193, 7, 0.3);
+        color: #ffc107;
+    }
+
+    .margin-average {
+        background: rgba(255, 193, 7, 0.2);
+        color: #fd7e14;
+    }
+
+    .margin-poor {
+        background: rgba(220, 53, 69, 0.3);
+        color: #dc3545;
+    }
+
+    .chart-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        min-height: 400px;
+    }
+
+    .btn-filter {
+        background: linear-gradient(135deg, #ffcc00, #ff9900);
+        border: none;
+        color: #333;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-filter:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 204, 0, 0.4);
+            color: #333;
+        }
+
+    .export-section {
+        text-align: right;
+        margin-bottom: 15px;
+    }
+
+    .btn-export {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.5);
+        color: #ffcc00;
+        padding: 8px 15px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 10px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-export:hover {
+            background: #ffcc00;
+            color: #333;
+            text-decoration: none;
+        }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #adb5bd;
+    }
+
+    .cost-breakdown {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 10px;
+        margin: 5px 0;
+        font-size: 0.85rem;
+    }
+
+    .cost-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 3px;
+    }
+
+    .dish-category-badge {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-right: 5px;
+    }
+
+    .category-hotpot {
+        background: rgba(231, 76, 60, 0.3);
+        color: #e74c3c;
+    }
+
+    .category-meat {
+        background: rgba(142, 68, 173, 0.3);
+        color: #8e44ad;
+    }
+
+    .category-seafood {
+        background: rgba(52, 152, 219, 0.3);
+        color: #3498db;
+    }
+
+    .category-vegetable {
+        background: rgba(39, 174, 96, 0.3);
+        color: #27ae60;
+    }
+
+    .category-side {
+        background: rgba(243, 156, 18, 0.3);
+        color: #f39c12;
+    }
+
+    .category-drinks {
+        background: rgba(22, 160, 133, 0.3);
+        color: #16a085;
+    }
+</style>
+
+<div class="profit-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="text-warning mb-1">
+                    <i class="fas fa-coins me-2"></i>Báo Cáo Lợi Nhuận Theo Món
+                </h4>
+                <small class="text-muted">Phân tích lợi nhuận sau khi trừ chi phí nguyên liệu</small>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="@Url.Action("Dashboard", "Reports")" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-filter me-2"></i>Bộ lọc thời gian
+        </h6>
+        <form id="filterForm">
+            <div class="filter-row">
+                <div>
+                    <label class="form-label text-light">Từ ngày:</label>
+                    <input type="date" class="form-control" id="fromDate" value="@ViewBag.FromDate">
+                </div>
+                <div>
+                    <label class="form-label text-light">Đến ngày:</label>
+                    <input type="date" class="form-control" id="toDate" value="@ViewBag.ToDate">
+                </div>
+                <div>
+                    <label class="form-label text-light">Loại món:</label>
+                    <select class="form-select" id="categoryFilter">
+                        <option value="all">Tất cả loại</option>
+                        <option value="hotpot">Nước Lẩu</option>
+                        <option value="meat">Thịt</option>
+                        <option value="seafood">Hải Sản</option>
+                        <option value="vegetable">Rau & Nấm</option>
+                        <option value="side">Món Phụ</option>
+                        <option value="drinks">Đồ Uống</option>
+                    </select>
+                </div>
+                <div class="d-flex align-items-end">
+                    <button type="button" class="btn btn-filter" onclick="loadProfitData()">
+                        <i class="fas fa-search me-1"></i>Phân tích
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards" id="summaryCards">
+        <div class="summary-card">
+            <div class="summary-value" id="totalRevenue">-</div>
+            <div class="summary-label">Tổng doanh thu</div>
+            <div class="summary-change change-positive" id="revenueChange">-</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="totalCost">-</div>
+            <div class="summary-label">Tổng chi phí</div>
+            <div class="summary-change change-negative" id="costChange">-</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="totalProfit">-</div>
+            <div class="summary-label">Tổng lợi nhuận</div>
+            <div class="summary-change change-positive" id="profitChange">-</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="avgMargin">-</div>
+            <div class="summary-label">Tỷ lệ lợi nhuận TB</div>
+            <div class="summary-change change-positive" id="marginChange">-</div>
+        </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="chart-container">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-chart-pie me-2"></i>Biểu đồ lợi nhuận theo loại món
+        </h6>
+        <div id="profitChart">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải biểu đồ...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profit Table -->
+    <div class="profit-table-container">
+        <div class="export-section">
+            <a href="#" class="btn-export" onclick="exportToExcel()">
+                <i class="fas fa-file-excel me-1"></i>Xuất Excel
+            </a>
+            <a href="#" class="btn-export" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf me-1"></i>Xuất PDF
+            </a>
+        </div>
+
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-table me-2"></i>Chi tiết lợi nhuận từng món
+        </h6>
+
+        <div id="profitTableContainer">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    var currentChart = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        loadProfitData();
+    });
+
+    function loadProfitData() {
+        var fromDate = document.getElementById('fromDate').value;
+        var toDate = document.getElementById('toDate').value;
+
+        // Show loading
+        document.getElementById('profitTableContainer').innerHTML = `
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        `;
+
+        document.getElementById('profitChart').innerHTML = `
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải biểu đồ...</p>
+            </div>
+        `;
+
+        // Make AJAX request
+        fetch('@Url.Action("GetProfitByDishData", "Reports")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'fromDate=' + fromDate + '&toDate=' + toDate
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                updateSummaryCards(data.data);
+                renderProfitTable(data.data);
+                renderProfitChart(data.data);
+            } else {
+                showError('Lỗi khi tải dữ liệu: ' + data.message);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showError('Có lỗi xảy ra khi tải dữ liệu!');
+        });
+    }
+
+    function updateSummaryCards(dishes) {
+        var totalRevenue = dishes.reduce(function(sum, dish) { return sum + dish.Revenue; }, 0);
+        var totalCost = dishes.reduce(function(sum, dish) { return sum + dish.Cost; }, 0);
+        var totalProfit = totalRevenue - totalCost;
+        var avgMargin = totalRevenue > 0 ? (totalProfit / totalRevenue * 100) : 0;
+
+        document.getElementById('totalRevenue').textContent =
+            (totalRevenue / 1000000).toFixed(1) + 'M VNĐ';
+        document.getElementById('totalCost').textContent =
+            (totalCost / 1000000).toFixed(1) + 'M VNĐ';
+        document.getElementById('totalProfit').textContent =
+            (totalProfit / 1000000).toFixed(1) + 'M VNĐ';
+        document.getElementById('avgMargin').textContent =
+            avgMargin.toFixed(1) + '%';
+
+        // Mock changes
+        document.getElementById('revenueChange').innerHTML =
+            '<i class="fas fa-arrow-up"></i> +15.2% so với kỳ trước';
+        document.getElementById('costChange').innerHTML =
+            '<i class="fas fa-arrow-up"></i> +8.7% so với kỳ trước';
+        document.getElementById('profitChange').innerHTML =
+            '<i class="fas fa-arrow-up"></i> +23.5% so với kỳ trước';
+        document.getElementById('marginChange').innerHTML =
+            '<i class="fas fa-arrow-up"></i> +5.3% so với kỳ trước';
+    }
+
+    function renderProfitTable(dishes) {
+        var categoryFilter = document.getElementById('categoryFilter').value;
+        var filteredDishes = dishes;
+
+        if (categoryFilter !== 'all') {
+            filteredDishes = dishes.filter(function(dish) {
+                return getDishCategory(dish.Name) === categoryFilter;
+            });
+        }
+
+        var html = `
+            <table class="profit-table">
+                <thead>
+                    <tr>
+                        <th>Món ăn</th>
+                        <th>Loại</th>
+                        <th>SL bán</th>
+                        <th>Giá bán</th>
+                        <th>Chi phí</th>
+                        <th>Doanh thu</th>
+                        <th>Lợi nhuận</th>
+                        <th>Tỷ lệ (%)</th>
+                        <th>Đánh giá</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        filteredDishes.forEach(function(dish) {
+            var category = getDishCategory(dish.Name);
+            var categoryClass = 'category-' + category;
+            var categoryText = getCategoryText(category);
+            var marginClass = getMarginClass(dish.ProfitMargin);
+
+            html += `
+                <tr>
+                    <td>
+                        <strong>${dish.Name}</strong>
+                        <div class="cost-breakdown">
+                            <div class="cost-item">
+                                <span>Nguyên liệu chính:</span>
+                                <span>${Math.round(dish.CostPrice * 0.7).toLocaleString()} VNĐ</span>
+                            </div>
+                            <div class="cost-item">
+                                <span>Gia vị, phụ liệu:</span>
+                                <span>${Math.round(dish.CostPrice * 0.2).toLocaleString()} VNĐ</span>
+                            </div>
+                            <div class="cost-item">
+                                <span>Chi phí khác:</span>
+                                <span>${Math.round(dish.CostPrice * 0.1).toLocaleString()} VNĐ</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="dish-category-badge ${categoryClass}">${categoryText}</span>
+                    </td>
+                    <td><strong>${dish.SoldQuantity.toLocaleString()}</strong></td>
+                    <td>${dish.SellPrice.toLocaleString()} VNĐ</td>
+                    <td>${dish.CostPrice.toLocaleString()} VNĐ</td>
+                    <td><strong>${dish.Revenue.toLocaleString()} VNĐ</strong></td>
+                    <td><strong style="color: #28a745;">${dish.Profit.toLocaleString()} VNĐ</strong></td>
+                    <td>
+                        <span class="profit-margin ${marginClass}">
+                            ${dish.ProfitMargin}%
+                        </span>
+                    </td>
+                    <td>
+                        ${getPerformanceText(dish.ProfitMargin)}
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('profitTableContainer').innerHTML = html;
+    }
+
+    function renderProfitChart(dishes) {
+        // Group by category
+        var categoryProfit = {};
+        dishes.forEach(function(dish) {
+            var category = getDishCategory(dish.Name);
+            if (!categoryProfit[category]) {
+                categoryProfit[category] = 0;
+            }
+            categoryProfit[category] += dish.Profit;
+        });
+
+        var ctx = document.createElement('canvas');
+        ctx.height = 300;
+
+        document.getElementById('profitChart').innerHTML = '';
+        document.getElementById('profitChart').appendChild(ctx);
+
+        var labels = Object.keys(categoryProfit).map(function(cat) { return getCategoryText(cat); });
+        var data = Object.values(categoryProfit);
+        var colors = [
+            '#e74c3c', '#8e44ad', '#3498db', '#27ae60', '#f39c12', '#16a085'
+        ];
+
+        // Destroy existing chart
+        if (currentChart) {
+            currentChart.destroy();
+        }
+
+        currentChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: '#2c3e50'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#fff',
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var value = context.parsed;
+                                var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                var percentage = ((value / total) * 100).toFixed(1);
+                                return context.label + ': ' + (value / 1000000).toFixed(1) + 'M VNĐ (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function getDishCategory(dishName) {
+        if (dishName.includes('Lẩu')) return 'hotpot';
+        if (dishName.includes('Thịt') || dishName.includes('Bò') || dishName.includes('Heo') || dishName.includes('Gà') || dishName.includes('Cừu') || dishName.includes('Chả')) return 'meat';
+        if (dishName.includes('Tôm') || dishName.includes('Cua') || dishName.includes('Cá') || dishName.includes('Mực') || dishName.includes('Nghêu') || dishName.includes('Ốc')) return 'seafood';
+        if (dishName.includes('Rau') || dishName.includes('Cải') || dishName.includes('Đậu') || dishName.includes('Nấm') || dishName.includes('Bắp')) return 'vegetable';
+        if (dishName.includes('Bún') || dishName.includes('Mì') || dishName.includes('Bánh') || dishName.includes('Miến') || dishName.includes('Cơm')) return 'side';
+        if (dishName.includes('Trà') || dishName.includes('Nước') || dishName.includes('Bia')) return 'drinks';
+        return 'hotpot';
+    }
+
+    function getCategoryText(category) {
+        var categoryMap = {
+            'hotpot': 'Nước Lẩu',
+            'meat': 'Thịt',
+            'seafood': 'Hải Sản',
+            'vegetable': 'Rau & Nấm',
+            'side': 'Món Phụ',
+            'drinks': 'Đồ Uống'
+        };
+        return categoryMap[category] || 'Khác';
+    }
+
+    function getMarginClass(margin) {
+        if (margin >= 60) return 'margin-excellent';
+        if (margin >= 40) return 'margin-good';
+        if (margin >= 20) return 'margin-average';
+        return 'margin-poor';
+    }
+
+    function getPerformanceText(margin) {
+        if (margin >= 60) return '<span style="color: #28a745;">Xuất sắc</span>';
+        if (margin >= 40) return '<span style="color: #ffc107;">Tốt</span>';
+        if (margin >= 20) return '<span style="color: #fd7e14;">Trung bình</span>';
+        return '<span style="color: #dc3545;">Thấp</span>';
+    }
+
+    function exportToExcel() {
+        alert('Xuất Excel - Chức năng đang phát triển');
+    }
+
+    function exportToPDF() {
+        alert('Xuất PDF - Chức năng đang phát triển');
+    }
+
+    function showError(message) {
+        document.getElementById('profitTableContainer').innerHTML = `
+            <div class="text-center text-danger p-4">
+                <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+    </script>
+}

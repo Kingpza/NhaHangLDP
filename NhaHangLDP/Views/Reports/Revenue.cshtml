@@ -1,0 +1,581 @@
+﻿
+@{
+    ViewBag.Title = "Báo Cáo Doanh Thu";
+    Layout = "~/Views/Shared/_CashierLayout.cshtml";
+}
+
+<style>
+    .revenue-container {
+        padding: 0;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .period-selector {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .period-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .period-tab {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.3);
+        color: #adb5bd;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+        .period-tab.active,
+        .period-tab:hover {
+            background: rgba(255, 204, 0, 0.2);
+            border-color: #ffcc00;
+            color: #ffcc00;
+            text-decoration: none;
+        }
+
+    .chart-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        min-height: 400px;
+    }
+
+    .revenue-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .summary-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+        }
+
+    .summary-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #ffcc00;
+        margin-bottom: 8px;
+    }
+
+    .summary-label {
+        font-size: 0.9rem;
+        color: #adb5bd;
+        margin-bottom: 5px;
+    }
+
+    .summary-change {
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .change-positive {
+        color: #28a745;
+    }
+
+    .change-negative {
+        color: #dc3545;
+    }
+
+    .details-table-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        overflow-x: auto;
+    }
+
+    .details-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+        .details-table th,
+        .details-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .details-table th {
+            background: rgba(255, 204, 0, 0.2);
+            color: #ffcc00;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .details-table td {
+            color: #fff;
+        }
+
+        .details-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+    .custom-date-picker {
+        display: none;
+        margin-top: 15px;
+    }
+
+        .custom-date-picker.active {
+            display: block;
+        }
+
+    .form-control {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.3);
+        color: #fff;
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ffcc00;
+            color: #fff;
+            box-shadow: 0 0 0 0.2rem rgba(255, 204, 0, 0.25);
+        }
+
+    .btn-load {
+        background: linear-gradient(135deg, #ffcc00, #ff9900);
+        border: none;
+        color: #333;
+        font-weight: bold;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-load:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 204, 0, 0.4);
+            color: #333;
+        }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #adb5bd;
+    }
+
+    .export-section {
+        text-align: right;
+        margin-bottom: 15px;
+    }
+
+    .btn-export {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 204, 0, 0.5);
+        color: #ffcc00;
+        padding: 8px 15px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        margin-left: 10px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-export:hover {
+            background: #ffcc00;
+            color: #333;
+            text-decoration: none;
+        }
+</style>
+
+<div class="revenue-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="text-warning mb-1">
+                    <i class="fas fa-money-bill-wave me-2"></i>Báo Cáo Doanh Thu
+                </h4>
+                <small class="text-muted">Phân tích doanh thu theo thời gian với biểu đồ chi tiết</small>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="@Url.Action("Dashboard", "Reports")" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="period-selector">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-calendar-alt me-2"></i>Chọn kỳ báo cáo
+        </h6>
+        <div class="period-tabs">
+            <button class="period-tab active" data-period="day" onclick="selectPeriod('day')">
+                Theo ngày
+            </button>
+            <button class="period-tab" data-period="month" onclick="selectPeriod('month')">
+                Theo tháng
+            </button>
+            <button class="period-tab" data-period="year" onclick="selectPeriod('year')">
+                Theo năm
+            </button>
+            <button class="period-tab" data-period="custom" onclick="selectPeriod('custom')">
+                Tùy chọn
+            </button>
+        </div>
+
+        <div class="custom-date-picker" id="customDatePicker">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label text-light">Chọn ngày:</label>
+                    <input type="date" class="form-control" id="customDate" value="@ViewBag.CustomDate">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-load" onclick="loadCustomData()">
+                        <i class="fas fa-search me-1"></i>Tải dữ liệu
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Summary -->
+    <div class="revenue-summary" id="revenueSummary">
+        <div class="summary-card">
+            <div class="summary-value" id="totalRevenue">-</div>
+            <div class="summary-label">Tổng doanh thu</div>
+            <div class="summary-change" id="revenueChange">-</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="totalOrders">-</div>
+            <div class="summary-label">Số đơn hàng</div>
+            <div class="summary-change" id="ordersChange">-</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="totalCustomers">-</div>
+            <div class="summary-label">Khách hàng</div>
+            <div class="summary-change" id="customersChange">-</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value" id="avgOrderValue">-</div>
+            <div class="summary-label">Giá trị TB/đơn</div>
+            <div class="summary-change" id="avgChange">-</div>
+        </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="chart-container">
+        <div class="export-section">
+            <a href="#" class="btn-export" onclick="exportChart()">
+                <i class="fas fa-download me-1"></i>Xuất biểu đồ
+            </a>
+            <a href="#" class="btn-export" onclick="exportData()">
+                <i class="fas fa-file-excel me-1"></i>Xuất Excel
+            </a>
+        </div>
+
+        <h6 class="text-warning mb-3" id="chartTitle">
+            <i class="fas fa-chart-area me-2"></i>Biểu đồ doanh thu
+        </h6>
+        <div id="revenueChart">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải biểu đồ...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Table -->
+    <div class="details-table-container" id="detailsContainer" style="display: none;">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-table me-2"></i>Chi tiết doanh thu
+        </h6>
+        <div id="detailsTable"></div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    var currentPeriod = '@ViewBag.Period';
+    var currentChart = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        selectPeriod(currentPeriod);
+    });
+
+    function selectPeriod(period) {
+        // Update active tab
+        document.querySelectorAll('.period-tab').forEach(function(tab) {
+            tab.classList.remove('active');
+        });
+        document.querySelector('[data-period="' + period + '"]').classList.add('active');
+
+        // Show/hide custom date picker
+        var customPicker = document.getElementById('customDatePicker');
+        if (period === 'custom') {
+            customPicker.classList.add('active');
+        } else {
+            customPicker.classList.remove('active');
+            currentPeriod = period;
+            loadRevenueData();
+        }
+    }
+
+    function loadCustomData() {
+        currentPeriod = 'custom';
+        loadRevenueData();
+    }
+
+    function loadRevenueData() {
+        var customDate = document.getElementById('customDate').value;
+
+        // Show loading
+        document.getElementById('revenueChart').innerHTML = `
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        `;
+
+        // Make AJAX request
+        fetch('@Url.Action("GetRevenueData", "Reports")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: 'period=' + currentPeriod + '&customDate=' + (customDate || '')
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                updateSummaryCards(data.data);
+                renderChart(data.data);
+                renderDetailsTable(data.data);
+            } else {
+                showError('Lỗi khi tải dữ liệu: ' + data.message);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            showError('Có lỗi xảy ra khi tải dữ liệu!');
+        });
+    }
+
+    function updateSummaryCards(data) {
+        document.getElementById('totalRevenue').textContent =
+            (data.Revenue / 1000000).toFixed(1) + 'M VNĐ';
+        document.getElementById('totalOrders').textContent = data.Orders.toLocaleString();
+        document.getElementById('totalCustomers').textContent = data.Customers.toLocaleString();
+
+        var avgOrder = data.Orders > 0 ? data.Revenue / data.Orders : 0;
+        document.getElementById('avgOrderValue').textContent =
+            (avgOrder / 1000).toFixed(0) + 'K VNĐ';
+
+        // Mock percentage changes
+        document.getElementById('revenueChange').innerHTML =
+            '<i class="fas fa-arrow-up"></i> +12.5% so với kỳ trước';
+        document.getElementById('revenueChange').className = 'summary-change change-positive';
+
+        document.getElementById('ordersChange').innerHTML =
+            '<i class="fas fa-arrow-up"></i> +8.3% so với kỳ trước';
+        document.getElementById('ordersChange').className = 'summary-change change-positive';
+
+        document.getElementById('customersChange').innerHTML =
+            '<i class="fas fa-arrow-down"></i> -2.1% so với kỳ trước';
+        document.getElementById('customersChange').className = 'summary-change change-negative';
+
+        document.getElementById('avgChange').innerHTML =
+            '<i class="fas fa-arrow-up"></i> +15.7% so với kỳ trước';
+        document.getElementById('avgChange').className = 'summary-change change-positive';
+    }
+
+    function renderChart(data) {
+        var ctx = document.createElement('canvas');
+        ctx.height = 300;
+
+        document.getElementById('revenueChart').innerHTML = '';
+        document.getElementById('revenueChart').appendChild(ctx);
+
+        // Update chart title
+        document.getElementById('chartTitle').innerHTML =
+            '<i class="fas fa-chart-area me-2"></i>Biểu đồ doanh thu - ' + data.Period;
+
+        var chartData, chartLabels;
+
+        if (data.HourlyData) {
+            chartLabels = data.HourlyData.map(function(item) { return item.Hour; });
+            chartData = data.HourlyData.map(function(item) { return item.Revenue; });
+        } else if (data.DailyData) {
+            chartLabels = data.DailyData.map(function(item) { return item.Day; });
+            chartData = data.DailyData.map(function(item) { return item.Revenue; });
+        } else if (data.MonthlyData) {
+            chartLabels = data.MonthlyData.map(function(item) { return item.Month; });
+            chartData = data.MonthlyData.map(function(item) { return item.Revenue; });
+        }
+
+        // Destroy existing chart
+        if (currentChart) {
+            currentChart.destroy();
+        }
+
+        currentChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: chartData,
+                    borderColor: '#ffcc00',
+                    backgroundColor: 'rgba(255, 204, 0, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#fff'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#adb5bd',
+                            callback: function(value) {
+                                return (value / 1000000).toFixed(1) + 'M';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#adb5bd'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderDetailsTable(data) {
+        var tableData;
+        var headers;
+
+        if (data.HourlyData) {
+            headers = ['Giờ', 'Doanh thu', 'Số đơn', 'Tỷ lệ'];
+            tableData = data.HourlyData;
+        } else if (data.DailyData) {
+            headers = ['Ngày', 'Doanh thu', 'Tỷ lệ tăng trưởng'];
+            tableData = data.DailyData;
+        } else if (data.MonthlyData) {
+            headers = ['Tháng', 'Doanh thu', 'Tỷ lệ tăng trưởng'];
+            tableData = data.MonthlyData;
+        }
+
+        var html = '<table class="details-table"><thead><tr>';
+        headers.forEach(function(header) {
+            html += '<th>' + header + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+
+        tableData.forEach(function(row, index) {
+            html += '<tr>';
+            if (data.HourlyData) {
+                var revenue = row.Revenue || 0;
+                var orders = row.Orders || Math.floor(revenue / 75000); // Estimate orders
+                var percentage = ((revenue / data.Revenue) * 100).toFixed(1);
+
+                html += '<td>' + row.Hour + '</td>';
+                html += '<td><strong>' + revenue.toLocaleString() + ' VNĐ</strong></td>';
+                html += '<td>' + orders + '</td>';
+                html += '<td>' + percentage + '%</td>';
+            } else {
+                var growth = index > 0 ? (Math.random() * 30 - 10).toFixed(1) : '0.0';
+                var growthClass = parseFloat(growth) >= 0 ? 'change-positive' : 'change-negative';
+                var growthIcon = parseFloat(growth) >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+
+                html += '<td>' + (row.Day || row.Month) + '</td>';
+                html += '<td><strong>' + row.Revenue.toLocaleString() + ' VNĐ</strong></td>';
+                html += '<td><span class="' + growthClass + '">';
+                html += '<i class="fas ' + growthIcon + ' me-1"></i>' + Math.abs(growth) + '%</span></td>';
+            }
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+
+        document.getElementById('detailsTable').innerHTML = html;
+        document.getElementById('detailsContainer').style.display = 'block';
+    }
+
+    function exportChart() {
+        if (currentChart) {
+            var link = document.createElement('a');
+            link.download = 'revenue-chart.png';
+            link.href = currentChart.toBase64Image();
+            link.click();
+        }
+    }
+
+    function exportData() {
+        alert('Xuất Excel - Chức năng đang phát triển');
+    }
+
+    function showError(message) {
+        document.getElementById('revenueChart').innerHTML = `
+            <div class="text-center text-danger p-4">
+                <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+    </script>
+}

@@ -1,0 +1,618 @@
+﻿@{
+    ViewBag.Title = "Thống Kê Đặt Bàn";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<style>
+    .booking-analytics-container {
+        padding: 0;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .period-selector {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .period-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .period-tab {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(0, 0, 0, 0.3);
+        color: #adb5bd;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+        .period-tab.active,
+        .period-tab:hover {
+            background: rgba(0, 0, 0, 0.2);
+            border-color: #000;
+            color: #000;
+            text-decoration: none;
+        }
+
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.total::before { background: linear-gradient(135deg, #17a2b8, #6f42c1); }
+    .stat-card.successful::before { background: linear-gradient(135deg, #28a745, #20c997); }
+    .stat-card.cancelled::before { background: linear-gradient(135deg, #dc3545, #e83e8c); }
+    .stat-card.pending::before { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 1.3rem;
+        color: #333;
+    }
+
+    .stat-card.total .stat-icon { background: linear-gradient(135deg, #17a2b8, #6f42c1); }
+    .stat-card.successful .stat-icon { background: linear-gradient(135deg, #28a745, #20c997); }
+    .stat-card.cancelled .stat-icon { background: linear-gradient(135deg, #dc3545, #e83e8c); }
+    .stat-card.pending .stat-icon { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 8px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #adb5bd;
+        margin-bottom: 5px;
+    }
+
+    .stat-percentage {
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .simple-chart {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .chart-bar {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 5px;
+    }
+
+    .chart-label {
+        min-width: 80px;
+        font-size: 0.9rem;
+        color: #adb5bd;
+    }
+
+    .chart-progress {
+        flex: 1;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        margin: 0 10px;
+        overflow: hidden;
+    }
+
+    .chart-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #ffc107, #fd7e14);
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+
+    .chart-value {
+        min-width: 40px;
+        font-weight: bold;
+        color: #fff;
+        text-align: right;
+    }
+
+    .bookings-info {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .info-item {
+        text-align: center;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+
+    .info-title {
+        font-size: 0.9rem;
+        color: #adb5bd;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #fff;
+    }
+
+    .custom-date-range {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+
+    .error-message {
+        background: rgba(220, 53, 69, 0.1);
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        color: #dc3545;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+
+    .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+
+    .status-active { background-color: #28a745; }
+    .status-pending { background-color: #ffc107; }
+    .status-cancelled { background-color: #dc3545; }
+
+    @@media (max-width: 768px) {
+        .stats-overview {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+    }
+</style>
+
+<div class="booking-analytics-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="text-warning mb-1">
+                    <i class="fas fa-calendar-check me-2"></i>Thống Kê Đặt Bàn Theo Thời Gian
+                </h4>
+                <small class="text-muted">
+                    Phân tích xu hướng đặt bàn và tỷ lệ sử dụng bàn - 
+                    Cập nhật: @(ViewBag.LastUpdated != null ? ((DateTime)ViewBag.LastUpdated).ToString("dd/MM/yyyy HH:mm") : DateTime.Now.ToString("dd/MM/yyyy HH:mm"))
+                </small>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="@Url.Action("Dashboard", "ReportsManagement")" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(ViewBag.Error as string))
+    {
+        <div class="error-message">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @ViewBag.Error
+        </div>
+    }
+
+    <!-- Period Selector -->
+    <div class="period-selector">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-calendar-alt me-2"></i>Chọn kỳ thống kê
+        </h6>
+        <div class="period-tabs">
+            <button class="period-tab @(ViewBag.Period as string == "today" ? "active" : "")" 
+                    data-period="today" onclick="selectPeriod('today')">
+                Hôm nay
+            </button>
+            <button class="period-tab @(ViewBag.Period as string == "week" ? "active" : "")" 
+                    data-period="week" onclick="selectPeriod('week')">
+                Tuần này
+            </button>
+            <button class="period-tab @(ViewBag.Period as string == "month" ? "active" : "")" 
+                    data-period="month" onclick="selectPeriod('month')">
+                Tháng này
+            </button>
+            <button class="period-tab @(ViewBag.Period as string == "quarter" ? "active" : "")" 
+                    data-period="quarter" onclick="selectPeriod('quarter')">
+                Quý này
+            </button>
+        </div>
+
+        <div class="custom-date-range">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label text-light">Từ ngày:</label>
+                    <input type="date" class="form-control" id="fromDate" 
+                           value="@(ViewBag.FromDate != null ? ((DateTime)ViewBag.FromDate).ToString("yyyy-MM-dd") : DateTime.Today.AddDays(-30).ToString("yyyy-MM-dd"))">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-light">Đến ngày:</label>
+                    <input type="date" class="form-control" id="toDate" 
+                           value="@(ViewBag.ToDate != null ? ((DateTime)ViewBag.ToDate).ToString("yyyy-MM-dd") : DateTime.Today.ToString("yyyy-MM-dd"))">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-warning w-100" onclick="applyCustomRange()">
+                        <i class="fas fa-search me-1"></i>Áp dụng
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-info w-100" onclick="exportBookingData()">
+                        <i class="fas fa-file-excel me-1"></i>Xuất Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Overview with Real Data -->
+    <div class="stats-overview">
+        <div class="stat-card total">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-plus"></i>
+            </div>
+            <div class="stat-value">@(ViewBag.TotalBookings ?? 0)</div>
+            <div class="stat-label">Tổng lượt đặt</div>
+            <div class="stat-percentage" style="color: #17a2b8;">
+                @{
+                    var totalBookings = (int)(ViewBag.TotalBookings ?? 0);
+                    var period = ViewBag.Period as string ?? "today";
+                }
+                @(totalBookings > 0 ? "Có dữ liệu" : "Chưa có đặt bàn") @period
+            </div>
+        </div>
+        <div class="stat-card successful">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">@(ViewBag.SuccessfulBookings ?? 0)</div>
+            <div class="stat-label">Thành công</div>
+            <div class="stat-percentage" style="color: #28a745;">
+                @{
+                    var successfulBookings = (int)(ViewBag.SuccessfulBookings ?? 0);
+                    var successRate = totalBookings > 0 ? Math.Round((decimal)successfulBookings / totalBookings * 100, 1) : 0;
+                }
+                @successRate% tỷ lệ thành công
+            </div>
+        </div>
+        <div class="stat-card cancelled">
+            <div class="stat-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-value">@(ViewBag.CancelledBookings ?? 0)</div>
+            <div class="stat-label">Đã hủy</div>
+            <div class="stat-percentage" style="color: #dc3545;">
+                @{
+                    var cancelledBookings = (int)(ViewBag.CancelledBookings ?? 0);
+                    var cancelRate = totalBookings > 0 ? Math.Round((decimal)cancelledBookings / totalBookings * 100, 1) : 0;
+                }
+                @cancelRate% tỷ lệ hủy
+            </div>
+        </div>
+        <div class="stat-card pending">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-value">@(ViewBag.PendingBookings ?? 0)</div>
+            <div class="stat-label">Chờ xác nhận</div>
+            <div class="stat-percentage" style="color: #ffc107;">
+                @{
+                    var pendingBookings = (int)(ViewBag.PendingBookings ?? 0);
+                    var pendingRate = totalBookings > 0 ? Math.Round((decimal)pendingBookings / totalBookings * 100, 1) : 0;
+                }
+                @pendingRate% đang chờ
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue and Table Stats with Real Data -->
+    <div class="stats-overview">
+        <div class="stat-card" style="background: rgba(40, 167, 69, 0.2);">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-value" style="color: #28a745;">@((ViewBag.BookingRevenue ?? 0).ToString("N0")) VNĐ</div>
+            <div class="stat-label">Doanh thu từ đặt bàn</div>
+            <div class="stat-percentage" style="color: #28a745;">
+                @{
+                    var avgPartySize = (decimal)(ViewBag.AveragePartySize ?? 0);
+                }
+                @avgPartySize.ToString("F1") khách/bàn trung bình
+            </div>
+        </div>
+        <div class="stat-card" style="background: rgba(0, 123, 255, 0.2);">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #007bff, #6f42c1);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value" style="color: #007bff;">@((ViewBag.WalkInRevenue ?? 0).ToString("N0")) VNĐ</div>
+            <div class="stat-label">Doanh thu khách vãng lai</div>
+            <div class="stat-percentage" style="color: #007bff;">
+                @((ViewBag.AverageBookingValue ?? 0).ToString("N0")) VNĐ/đặt bàn TB
+            </div>
+        </div>
+        <div class="stat-card" style="background: rgba(255, 193, 7, 0.2);">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+                <i class="fas fa-table"></i>
+            </div>
+            <div class="stat-value" style="color: #ffc107;">@((ViewBag.TableUtilizationRate ?? 0).ToString("F1"))%</div>
+            <div class="stat-label">Tỷ lệ sử dụng bàn</div>
+            <div class="stat-percentage" style="color: #ffc107;">
+                @(ViewBag.OccupiedTables ?? 0)/@(ViewBag.TotalTables ?? 0) bàn đang sử dụng
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Information Section -->
+    <div class="bookings-info">
+        <h6 class="text-warning mb-3">
+            <i class="fas fa-info-circle me-2"></i>Thông tin chi tiết đặt bàn
+        </h6>
+        
+        @if (totalBookings == 0)
+        {
+            <div class="text-center py-4">
+                <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Chưa có đặt bàn nào</h5>
+                <p class="text-muted">
+                    @if (ViewBag.Period as string == "today")
+                    {
+                        <span>Chưa có đặt bàn nào hôm nay. Hãy kiểm tra lại dữ liệu hoặc thử chọn khoảng thời gian khác.</span>
+                    }
+                    else
+                    {
+                        <span>Không có đặt bàn nào trong khoảng thời gian đã chọn.</span>
+                    }
+                </p>
+                <div class="mt-3">
+                    <a href="@Url.Action("BookingManagement", "Management")" class="btn btn-warning btn-sm me-2">
+                        <i class="fas fa-plus me-1"></i>Tạo đặt bàn mới
+                    </a>
+                    <button class="btn btn-outline-info btn-sm" onclick="selectPeriod('week')">
+                        <i class="fas fa-calendar-week me-1"></i>Xem tuần này
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-title">Thời gian được chọn</div>
+                    <div class="info-value">
+                        @if (ViewBag.Period as string == "custom" && ViewBag.FromDate != null && ViewBag.ToDate != null)
+                        {
+                            <span>@(((DateTime)ViewBag.FromDate).ToString("dd/MM")) - @(((DateTime)ViewBag.ToDate).ToString("dd/MM/yyyy"))</span>
+                        }
+                        else if (ViewBag.Period as string == "today")
+                        {
+                            <span>@DateTime.Today.ToString("dd/MM/yyyy")</span>
+                        }
+                        else
+                        {
+                            <span>@(ViewBag.Period as string == "week" ? "Tuần này" : ViewBag.Period as string == "month" ? "Tháng này" : "Quý này")</span>
+                        }
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-title">Tổng doanh thu</div>
+                    <div class="info-value text-success">
+                        @(((decimal)(ViewBag.BookingRevenue ?? 0) + (decimal)(ViewBag.WalkInRevenue ?? 0)).ToString("N0")) VNĐ
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-title">Trạng thái bàn</div>
+                    <div class="info-value">
+                        <span class="status-indicator status-active"></span>@(ViewBag.OccupiedTables ?? 0) bàn đang dùng
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-title">Hiệu quả đặt bàn</div>
+                    <div class="info-value text-info">
+                        @{
+                            var efficiency = totalBookings > 0 && successfulBookings > 0 ? 
+                                Math.Round((decimal)successfulBookings / totalBookings * 100, 0) : 0;
+                        }
+                        @efficiency% hiệu quả
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <div class="row">
+                    <div class="col-md-4">
+                        <button class="btn btn-success btn-sm w-100" onclick="loadBookingDetails('confirmed')">
+                            <i class="fas fa-check-circle me-1"></i>Xem đặt bàn đã xác nhận (@(ViewBag.SuccessfulBookings ?? 0))
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-warning btn-sm w-100" onclick="loadBookingDetails('pending')">
+                            <i class="fas fa-clock me-1"></i>Xem đặt bàn chờ xác nhận (@(ViewBag.PendingBookings ?? 0))
+                        </button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-danger btn-sm w-100" onclick="loadBookingDetails('cancelled')">
+                            <i class="fas fa-times-circle me-1"></i>Xem đặt bàn đã hủy (@(ViewBag.CancelledBookings ?? 0))
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Auto Refresh Indicator -->
+    <div class="text-center mt-3">
+        <small class="text-muted">
+            <i class="fas fa-sync-alt me-1"></i>
+            Dữ liệu được cập nhật tự động từ database
+            <span class="text-info">| Làm mới trang để xem dữ liệu mới nhất</span>
+        </small>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var currentPeriod = '@(ViewBag.Period ?? "today")';
+
+        function selectPeriod(period) {
+            // Show loading
+            showNotification('Đang tải dữ liệu...', 'info');
+            
+            // Update URL and reload
+            window.location.href = '@Url.Action("BookingAnalytics", "ReportsManagement")?period=' + period;
+        }
+
+        function applyCustomRange() {
+            var fromDate = document.getElementById('fromDate').value;
+            var toDate = document.getElementById('toDate').value;
+
+            if (!fromDate || !toDate) {
+                alert('Vui lòng chọn đầy đủ khoảng thời gian!');
+                return;
+            }
+
+            if (new Date(fromDate) > new Date(toDate)) {
+                alert('Ngày bắt đầu không thể lớn hơn ngày kết thúc!');
+                return;
+            }
+
+            // Show loading
+            showNotification('Đang tải dữ liệu tùy chỉnh...', 'info');
+
+            var url = '@Url.Action("BookingAnalytics", "ReportsManagement")?period=custom&fromDate=' + 
+                      encodeURIComponent(fromDate) + '&toDate=' + encodeURIComponent(toDate);
+            window.location.href = url;
+        }
+
+        function exportBookingData() {
+            // Call export API
+            fetch('@Url.Action("ExportBookingAnalytics", "ReportsManagement")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: 'period=' + currentPeriod + '&format=excel'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Xuất file Excel thành công!', 'success');
+                } else {
+                    showNotification('Lỗi: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Có lỗi xảy ra khi xuất file!', 'error');
+            });
+        }
+
+        function loadBookingDetails(status) {
+            // Navigate to booking management with filter
+            var url = '@Url.Action("BookingManagement", "Management")' + '?status=' + status + '&period=' + currentPeriod;
+            window.open(url, '_blank');
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            var notification = document.createElement('div');
+            var bgClass = type === 'success' ? 'alert-success' : type === 'error' ? 'alert-danger' : 'alert-info';
+            notification.className = 'alert ' + bgClass + ' position-fixed';
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            
+            var icon = type === 'success' ? 'check' : type === 'error' ? 'times' : 'info-circle';
+            notification.innerHTML = '<i class="fas fa-' + icon + ' me-2"></i>' + message;
+
+            document.body.appendChild(notification);
+
+            setTimeout(function() {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Auto refresh every 5 minutes if on today view
+        @if (ViewBag.Period as string == "today")
+        {
+            <text>
+            setInterval(function() {
+                if (confirm('Dữ liệu có thể đã thay đổi. Bạn có muốn làm mới trang để xem dữ liệu mới nhất?')) {
+                    location.reload();
+                }
+            }, 300000); // 5 minutes
+            </text>
+        }
+
+        // Show current data status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            var totalBookings = @(ViewBag.TotalBookings ?? 0);
+            if (totalBookings === 0) {
+                console.log('No booking data found for current period: ' + currentPeriod);
+            } else {
+                console.log('Loaded ' + totalBookings + ' bookings for period: ' + currentPeriod);
+            }
+        });
+    </script>
+}

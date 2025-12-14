@@ -1,0 +1,366 @@
+﻿@model NhaHangLDP.Models.Employee
+
+@{
+    ViewBag.Title = "Chỉnh Sửa Nhân Viên";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+    <style>
+        .management-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+            .form-section:last-child {
+                border-bottom: none;
+                margin-bottom: 0;
+            }
+
+        .section-title {
+            color: #495057;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+            .section-title i {
+                margin-right: 0.5rem;
+                color: #667eea;
+            }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+            .form-control:focus, .form-select:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+            .btn-save:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            }
+
+        .btn-cancel {
+            background: #6c757d;
+            border: none;
+            border-radius: 25px;
+            padding: 0.75rem 2rem;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+            .btn-cancel:hover {
+                background: #5a6268;
+                transform: translateY(-2px);
+            }
+
+        .form-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .required {
+            color: #dc3545;
+        }
+
+        .input-group-text {
+            border-color: #e9ecef;
+        }
+
+        .btn-outline-secondary {
+            border-color: #e9ecef;
+        }
+
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+        .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <div class="management-header text-center">
+        <div class="container">
+            <h1><i class="fas fa-user-edit"></i> Chỉnh sửa nhân viên</h1>
+            <p class="mb-0">Cập nhật thông tin nhân viên trong hệ thống</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="form-container">
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Có lỗi xảy ra:</strong>
+
+                        @Html.ValidationSummary(false, "", new { @class = "mb-0 mt-2" })
+
+                    </div>
+                }
+
+                @using (Html.BeginForm("EditEmployee", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(model => model.Id)
+                    @Html.HiddenFor(model => model.HireDate)
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-user"></i> Thông tin cá nhân
+                                </h4>
+
+                                <div class="mb-3">
+                                    @Html.LabelFor(model => model.FullName, "Họ và Tên", new { @class = "form-label" })
+                                    <span class="required">*</span>
+                                    @Html.TextBoxFor(model => model.FullName, new { @class = "form-control", placeholder = "Nhập họ và tên đầy đủ", required = "required" })
+                                    @Html.ValidationMessageFor(model => model.FullName, "", new { @class = "text-danger" })
+                                </div>
+
+                                <div class="mb-3">
+                                    @Html.LabelFor(model => model.Email, "Email", new { @class = "form-label" })
+                                    @Html.TextBoxFor(model => model.Email, new { @class = "form-control", type = "email", placeholder = "employee@example.com" })
+                                    @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+                                </div>
+
+                                <div class="mb-3">
+                                    @Html.LabelFor(model => model.PhoneNumber, "Số Điện Thoại", new { @class = "form-label" })
+                                    @Html.TextBoxFor(model => model.PhoneNumber, new { @class = "form-control", placeholder = "0123456789" })
+                                    @Html.ValidationMessageFor(model => model.PhoneNumber, "", new { @class = "text-danger" })
+                                </div>
+
+                                <div class="mb-3">
+                                    @Html.LabelFor(model => model.RoleId, "Vai Trò", new { @class = "form-label" })
+                                    <span class="required">*</span>
+                                    @Html.DropDownListFor(model => model.RoleId, (SelectList)ViewBag.RoleId, "-- Chọn Vai Trò --", new { @class = "form-select", required = "required" })
+                                    @Html.ValidationMessageFor(model => model.RoleId, "", new { @class = "text-danger" })
+                                </div>
+
+                                <div class="mb-3">
+                                    @Html.LabelFor(model => model.IsActive, "Trạng Thái", new { @class = "form-label" })
+                                    <div class="form-check form-switch">
+                                        @Html.CheckBoxFor(model => model.IsActive, new { @class = "form-check-input", @id = "statusSwitch" })
+                                        <label class="form-check-label" for="statusSwitch" id="statusLabel">
+                                            @if (Model.IsActive)
+                                            {<span class="text-success">Hoạt Động</span> }
+                                            else
+                                            { <span class="text-danger">Tạm Khóa</span>}
+                                        </label>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <h4 class="section-title">
+                                    <i class="fas fa-lock"></i> Thông tin tài khoản
+                                </h4>
+
+                                <div class="mb-3">
+                                    @Html.LabelFor(model => model.UserName, "Tên Đăng Nhập", new { @class = "form-label" })
+                                    <span class="required">*</span>
+                                    @Html.TextBoxFor(model => model.UserName, new { @class = "form-control", placeholder = "Tên đăng nhập (không dấu, không khoảng trống)", required = "required" })
+                                    @Html.ValidationMessageFor(model => model.UserName, "", new { @class = "text-danger" })
+                                    <div class="form-text">Chỉ sử dụng chữ cái, số và dấu gạch dưới</div>
+                                </div>
+
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Đổi mật khẩu</strong><br>
+                                    Chỉ nhập mật khẩu mới nếu muốn thay đổi. Để trống nếu giữ nguyên mật khẩu cũ.
+                                </div>
+
+                                <div class="mb-3">
+                                    @Html.Label("NewPassword", "Mật Khẩu Mới", new { @class = "form-label" })
+                                    <div class="input-group">
+                                        @Html.Password("NewPassword", "", new { @class = "form-control", id = "newPassword", placeholder = "Nhập mật khẩu mới (tối thiểu 6 ký tự)", minlength = "6" })
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    @Html.Label("ConfirmPassword", "Xác Nhận Mật Khẩu Mới", new { @class = "form-label" })
+                                    <div class="input-group">
+                                        @Html.Password("ConfirmPassword", "", new { @class = "form-control", id = "confirmPassword", placeholder = "Nhập lại mật khẩu mới", minlength = "6" })
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text" id="passwordMatchText"></div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Lưu ý:</strong> Thay đổi thông tin sẽ cập nhật tài khoản đăng nhập tương ứng.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <a href="@Url.Action("EmployeeManagement")" class="btn btn-cancel me-2">
+                            <i class="fas fa-times"></i> Hủy
+                        </a>
+                        <button type="submit" class="btn btn-save" id="submitBtn">
+                            <i class="fas fa-save"></i> Cập Nhật
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Form validation
+        (function () {
+            'use strict';
+            window.addEventListener('load', function () {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+        // Status switch handling
+        $('#statusSwitch').change(function () {
+            const label = $('#statusLabel');
+            if (this.checked) {
+                label.html('<span class="text-success">Hoạt Động</span>');
+            } else {
+                label.html('<span class="text-danger">Tạm Khóa</span>');
+            }
+        });
+
+        // Toggle password visibility
+        $('#toggleNewPassword').click(function () {
+            const password = $('#newPassword');
+            const type = password.attr('type') === 'password' ? 'text' : 'password';
+            password.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        $('#toggleConfirmPassword').click(function () {
+            const confirmPassword = $('#confirmPassword');
+            const type = confirmPassword.attr('type') === 'password' ? 'text' : 'password';
+            confirmPassword.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+
+        // Password confirmation validation
+        function validatePasswords() {
+            const newPassword = $('#newPassword').val();
+            const confirmPassword = $('#confirmPassword').val();
+            const matchText = $('#passwordMatchText');
+            const submitBtn = $('#submitBtn');
+
+            // If both password fields are empty, it's OK (no password change)
+            if (newPassword === '' && confirmPassword === '') {
+                matchText.text('').removeClass('text-success text-danger');
+                submitBtn.prop('disabled', false);
+                return;
+            }
+
+            // If only one field is filled
+            if ((newPassword === '') !== (confirmPassword === '')) {
+                matchText.text('Cần nhập đầy đủ mật khẩu mới và xác nhận').addClass('text-danger').removeClass('text-success');
+                submitBtn.prop('disabled', true);
+                return;
+            }
+
+            // Check password length
+            if (newPassword.length < 6) {
+                matchText.text('Mật khẩu phải có ít nhất 6 ký tự').addClass('text-danger').removeClass('text-success');
+                submitBtn.prop('disabled', true);
+                return;
+            }
+
+            // Check if passwords match
+            if (newPassword === confirmPassword) {
+                matchText.text('✓ Mật khẩu khớp').addClass('text-success').removeClass('text-danger');
+                submitBtn.prop('disabled', false);
+            } else {
+                matchText.text('✗ Mật khẩu không khớp').addClass('text-danger').removeClass('text-success');
+                submitBtn.prop('disabled', true);
+            }
+        }
+
+        $('#newPassword, #confirmPassword').on('input', validatePasswords);
+
+        // Username validation
+        $('#UserName').on('input', function () {
+            var value = $(this).val();
+            // Remove spaces and special characters except underscore
+            var cleanValue = value.replace(/[^a-zA-Z0-9_]/g, '');
+            $(this).val(cleanValue);
+        });
+
+        // Initial validation on page load
+        $(document).ready(function () {
+            validatePasswords();
+        });
+    </script>
+}

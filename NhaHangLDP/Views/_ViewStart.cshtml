@@ -1,0 +1,16 @@
+﻿@{
+    string controller = ViewContext.RouteData.Values["controller"].ToString();
+
+    if (controller == "Cashier")
+    {
+        Layout = "~/Views/Shared/_CashierLayout.cshtml";
+    }
+    else if (controller == "Management")
+    {
+        Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    }
+    else
+    {
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+}

@@ -1,0 +1,148 @@
+﻿@{
+    ViewBag.Title = "Truy cập bị từ chối";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .access-denied-container {
+        text-align: center;
+        padding: 60px 20px;
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .error-icon {
+        font-size: 120px;
+        color: #e74c3c;
+        margin-bottom: 30px;
+        animation: shake 1s ease-in-out;
+    }
+
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+
+    .error-title {
+        font-size: 2.5rem;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+
+    .error-message {
+        font-size: 1.2rem;
+        color: #7f8c8d;
+        margin-bottom: 40px;
+        line-height: 1.6;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .btn-custom {
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        color: white;
+        border: none;
+    }
+
+    .btn-primary-custom:hover {
+        background: linear-gradient(135deg, #2980b9, #1f4e79);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom {
+        background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary-custom:hover {
+        background: linear-gradient(135deg, #7f8c8d, #566b73);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .info-box {
+        background: #f8f9fa;
+        border-left: 4px solid #3498db;
+        padding: 20px;
+        margin: 40px auto;
+        max-width: 600px;
+        border-radius: 5px;
+    }
+
+    .info-box h5 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+    }
+
+    .info-box ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .info-box li {
+        margin-bottom: 8px;
+        color: #5a6c7d;
+    }
+</style>
+
+<div class="access-denied-container">
+    <div class="error-icon">
+        <i class="fas fa-ban"></i>
+    </div>
+    
+    <h1 class="error-title">Truy Cập Bị Từ Chối</h1>
+    
+    <p class="error-message">
+        Xin lỗi, bạn không có quyền truy cập vào trang này.<br>
+        Vui lòng liên hệ quản trị viên hoặc đăng nhập với tài khoản có quyền phù hợp.
+    </p>
+
+    <div class="action-buttons">
+        <a href="@Url.Action("Login", "Account")" class="btn-custom btn-primary-custom">
+            <i class="fas fa-sign-in-alt"></i>
+            Đăng Nhập Lại
+        </a>
+        
+        <a href="@Url.Action("Index", "Home")" class="btn-custom btn-secondary-custom">
+            <i class="fas fa-home"></i>
+            Về Trang Chủ
+        </a>
+    </div>
+
+    <div class="info-box">
+        <h5><i class="fas fa-info-circle"></i> Thông Tin Quyền Truy Cập</h5>
+        <ul>
+            <li><strong>Quản lý (Management):</strong> Chỉ dành cho Admin và Manager</li>
+            <li><strong>Báo cáo (Reports):</strong> Chỉ dành cho Admin và Manager</li>
+            <li><strong>Thu ngân (Cashier):</strong> Dành cho Cashier và các quyền cao hơn</li>
+            <li><strong>Cài đặt (Settings):</strong> Chỉ dành cho Admin</li>
+        </ul>
+    </div>
+</div>

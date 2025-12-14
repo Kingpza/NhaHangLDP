@@ -1,0 +1,356 @@
+﻿@model NhaHangLDP.Models.ReportsDashboardViewModel
+@{
+    ViewBag.Title = "Báo Cáo Quản Lý";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<style>
+    .management-reports-dashboard {
+        padding: 0;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(10px);
+        text-align: center;
+    }
+
+    .reports-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .report-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        backdrop-filter: blur(10px);
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    }
+
+    .report-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 1.8rem;
+        color: #333;
+    }
+
+    .report-card.booking-analytics .report-icon {
+        background: linear-gradient(135deg, #17a2b8, #6f42c1);
+    }
+
+    .report-card.sales-analytics .report-icon {
+        background: linear-gradient(135deg, #000, #fd7e14);
+    }
+
+    .report-card.revenue-analytics .report-icon {
+        background: linear-gradient(135deg, #28a745, #20c997);
+    }
+
+    .report-card.profit-analysis .report-icon {
+        background: linear-gradient(135deg, #dc3545, #e83e8c);
+    }
+
+    /* NEW: Shift report styling */
+    .report-card.shift-report .report-icon {
+        background: linear-gradient(135deg, #17a2b8, #20c997);
+    }
+
+    .report-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+      margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .report-desc {
+        color: #adb5bd;
+        line-height: 1.5;
+        text-align: center;
+        font-size: 0.95rem;
+        flex: 1;
+    }
+
+    .report-features {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .feature-item {
+     font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+
+    .feature-item i {
+        margin-right: 8px;
+        width: 12px;
+    }
+
+    .quick-stats {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        margin-bottom: 20px;
+    }
+
+    .stat-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+
+    .stat-box {
+        text-align: center;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #adb5bd;
+    }
+
+    .quick-actions {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .action-btn {
+        background: rgba(0, 0, 0, 0.2);
+        border: 2px solid rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+        padding: 10px 20px;
+        margin: 5px;
+        cursor: pointer;
+     transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: 500;
+    }
+
+    .action-btn:hover {
+        background: #000;
+        color: #fff;
+        border-color: #000;
+        text-decoration: none;
+    }
+</style>
+
+<div class="management-reports-dashboard">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2 class="text-dark mb-2">
+            <i class="fas fa-chart-line me-3"></i>Báo Cáo Quản Lý Nhà Hàng
+        </h2>
+        <p class="text-light mb-0">Phân tích dữ liệu kinh doanh chi tiết và theo dõi hiệu suất tổng thể</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h5 class="text-dark mb-3">
+            <i class="fas fa-bolt me-2"></i>Truy cập nhanh
+        </h5>
+        <a href="@Url.Action("BookingAnalytics", "ReportsManagement")" class="action-btn">
+            <i class="fas fa-calendar-check me-1"></i>Đặt bàn hôm nay
+        </a>
+        <a href="@Url.Action("RevenueAnalytics", "ReportsManagement", new { period = "month" })" class="action-btn">
+            <i class="fas fa-money-bill-wave me-1"></i>Doanh thu tháng
+        </a>
+        <a href="@Url.Action("DetailedShiftReport", "ReportsManagement")" class="action-btn">
+            <i class="fas fa-clock me-1"></i>Báo cáo ca
+        </a>
+        <a href="@Url.Action("DishProfitAnalysis", "ReportsManagement")" class="action-btn">
+            <i class="fas fa-coins me-1"></i>Lợi nhuận món
+        </a>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+        <h5 class="text-dark mb-3">
+            <i class="fas fa-tachometer-alt me-2"></i>Tổng quan hôm nay
+        </h5>
+        <div class="stat-row">
+            <div class="stat-box">
+                <div class="stat-number">@(Model?.TodayOrders ?? 0)</div>
+                <div class="stat-label">Đơn hàng</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">@(Model?.TodayRevenueFormatted ?? "0")</div>
+                <div class="stat-label">Doanh thu (VNĐ)</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">@(Model?.TableUtilization ?? 0)%</div>
+                <div class="stat-label">Tỷ lệ bàn (@(Model?.OccupiedTables ?? 0)/@(Model?.TotalTables ?? 0))</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">@(Model?.AvgOrderValue ?? 0)@((Model?.AvgOrderValue ?? 0) >= 1000 ? "K" : "")</div>
+                <div class="stat-label">Đơn TB (VNĐ)</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">@(Model?.ProfitMargin ?? 0)%</div>
+                <div class="stat-label">Tỷ lệ lợi nhuận</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="reports-grid">
+        <!-- Booking Analytics -->
+        <div class="report-card booking-analytics" onclick="navigateToReport('@Url.Action("BookingAnalytics", "ReportsManagement")')">
+            <div class="report-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="report-title">Thống Kê Đặt Bàn</div>
+            <div class="report-desc">
+                Phân tích xu hướng đặt bàn theo thời gian, giờ cao điểm và tỷ lệ sử dụng bàn chi tiết
+            </div>
+            <div class="report-features">
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Giờ cao điểm theo ngày
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Tỷ lệ sử dụng bàn
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Phân tích xu hướng
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Analytics -->
+        <div class="report-card sales-analytics" onclick="navigateToReport('@Url.Action("SalesAnalytics", "ReportsManagement")')">
+            <div class="report-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="report-title">Thống Kê Hiệu Suất Bán Hàng</div>
+            <div class="report-desc">
+                Theo dõi hiệu suất bán hàng theo nhân viên, ca làm việc và đánh giá KPI chi tiết
+            </div>
+            <div class="report-features">
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>KPI nhân viên
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Hiệu suất theo ca
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Target analysis
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Analytics -->
+        <div class="report-card revenue-analytics" onclick="navigateToReport('@Url.Action("RevenueAnalytics", "ReportsManagement")')">
+            <div class="report-icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="report-title">Thống Kê Doanh Thu</div>
+            <div class="report-desc">
+                Phân tích doanh thu theo ngày/tháng/năm với biểu đồ chi tiết và so sánh kỳ trước
+            </div>
+            <div class="report-features">
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Multi-period analysis
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>So sánh kỳ trước
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Dự báo xu hướng
+                </div>
+            </div>
+        </div>
+
+        <!-- Dish Profit Analysis -->
+        <div class="report-card profit-analysis" onclick="navigateToReport('@Url.Action("DishProfitAnalysis", "ReportsManagement")')">
+            <div class="report-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="report-title">Lợi Nhuận Theo Món</div>
+            <div class="report-desc">
+                Tính toán lợi nhuận sau khi trừ chi phí nguyên liệu, xác định món ăn có lãi cao nhất
+            </div>
+            <div class="report-features">
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Chi phí nguyên liệu
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Tỷ lệ lợi nhuận
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Profit margin analysis
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Detailed Shift Report - THAY THẾ cho Xếp Hạng Món Ăn và Phân Tích Hóa Đơn -->
+        <div class="report-card shift-report" onclick="navigateToReport('@Url.Action("DetailedShiftReport", "ReportsManagement")')">
+            <div class="report-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="report-title">Báo Cáo Chi Tiết Ca</div>
+            <div class="report-desc">
+                Xem chi tiết doanh thu, đơn hàng và hoạt động của từng ca làm việc với thống kê nhân viên
+            </div>
+            <div class="report-features">
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Doanh thu theo ca
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Hiệu suất nhân viên
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check"></i>Chi tiết đơn hàng
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>function navigateToReport(url) {
+        window.location.href = url;
+    }
+
+    // Add interactive effects
+    document.querySelectorAll('.report-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });</script>
+}

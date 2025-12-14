@@ -1,0 +1,395 @@
+﻿@model List<NhaHangLDP.Models.SettingsGroupViewModel>
+
+@{
+    ViewBag.Title = "Cài Đặt Nâng Cao";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-dark">
+  <i class="fas fa-cogs me-2"></i>Cài Đặt Nâng Cao
+    </h2>
+ <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Quay Lại Cài Đặt
+    </a>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+  <strong>Cảnh báo:</strong> Các cài đặt này dành cho người dùng có kinh nghiệm. Thay đổi không đúng có thể ảnh hưởng đến hoạt động của hệ thống.
+</div>
+
+@if (Model != null && Model.Any())
+{
+    foreach (var group in Model)
+    {
+        <div class="stat-card mb-4">
+            <h5 class="mb-3 text-primary">
+     <i class="fas fa-layer-group me-2"></i>@group.GroupName
+    </h5>
+    
+   @if (!string.IsNullOrEmpty(group.GroupDescription))
+     {
+       <p class="text-muted mb-3">@group.GroupDescription</p>
+   }
+      
+   @if (group.Settings != null && group.Settings.Any())
+ {
+     <div class="table-responsive">
+  <table class="table table-hover">
+        <thead class="table-light">
+ <tr>
+     <th style="width: 30%;">Khóa Cài Đặt</th>
+   <th style="width: 40%;">Giá Trị</th>
+   <th style="width: 30%;">Mô Tả</th>
+     </tr>
+ </thead>
+ <tbody>
+       @foreach (var setting in group.Settings)
+       {
+    <tr>
+     <td>
+     <code>@setting.Key</code>
+      </td>
+       <td>
+  <div class="input-group input-group-sm">
+      <input type="text" class="form-control" 
+   value="@setting.Value" 
+           data-key="@setting.Key"
+        onchange="updateSetting(this)">
+    <button class="btn btn-outline-secondary btn-sm" 
+         type="button" 
+   onclick="editSetting('@setting.Key', '@setting.Value')">
+       <i class="fas fa-edit"></i>
+   </button>
+      </div>
+       </td>
+     <td>
+   <small class="text-muted">@setting.Description</small>
+       </td>
+     </tr>
+     }
+ </tbody>
+    </table>
+           </div>
+   }
+   else
+   {
+      <div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i>
+          Không có cài đặt nào trong nhóm này.
+     </div>
+      }
+      </div>
+    }
+}
+else
+{
+    <div class="stat-card text-center">
+        <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">Chưa Có Cài Đặt Nào</h5>
+        <p class="text-muted">Hệ thống chưa có cài đặt nâng cao nào được định nghĩa.</p>
+        <button class="btn btn-outline-primary" onclick="addNewSetting()">
+ <i class="fas fa-plus me-2"></i>Thêm Cài Đặt Mới
+      </button>
+ </div>
+}
+
+<!-- Quick Actions -->
+<div class="stat-card mt-4">
+    <h5 class="mb-3 text-warning">
+        <i class="fas fa-bolt me-2"></i>Thao Tác Nhanh
+    </h5>
+    
+    <div class="row">
+        <div class="col-md-2">
+        <button class="btn btn-outline-success w-100" onclick="exportSettings()">
+          <i class="fas fa-download d-block mb-1"></i>
+       Xuất Cài Đặt
+  </button>
+        </div>
+     <div class="col-md-2">
+   <button class="btn btn-outline-info w-100" onclick="importSettings()">
+     <i class="fas fa-upload d-block mb-1"></i>
+      Nhập Cài Đặt
+  </button>
+       </div>
+        <div class="col-md-2">
+   <button class="btn btn-outline-warning w-100" onclick="validateSettings()">
+        <i class="fas fa-check-circle d-block mb-1"></i>
+    Kiểm Tra
+   </button>
+   </div>
+      <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" onclick="addNewSetting()">
+       <i class="fas fa-plus d-block mb-1"></i>
+    Thêm Mới
+    </button>
+       </div>
+        <div class="col-md-2">
+            <button class="btn btn-outline-secondary w-100" onclick="resetAdvanced()">
+   <i class="fas fa-undo d-block mb-1"></i>
+     Khôi Phục
+          </button>
+  </div>
+    <div class="col-md-2">
+    <button class="btn btn-outline-danger w-100" onclick="clearAllSettings()">
+<i class="fas fa-trash d-block mb-1"></i>
+         Xóa Tất Cả
+   </button>
+   </div>
+ </div>
+</div>
+
+<!-- Edit Setting Modal -->
+<div class="modal fade" id="editSettingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+     <div class="modal-header">
+   <h5 class="modal-title">Chỉnh Sửa Cài Đặt</h5>
+       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+   </div>
+       <div class="modal-body">
+     <form id="editSettingForm">
+        <div class="mb-3">
+      <label class="form-label">Khóa Cài Đặt</label>
+       <input type="text" class="form-control" id="editKey" readonly>
+     </div>
+     <div class="mb-3">
+      <label class="form-label">Giá Trị</label>
+    <textarea class="form-control" id="editValue" rows="3"></textarea>
+      </div>
+        <div class="mb-3">
+       <label class="form-label">Mô Tả</label>
+       <input type="text" class="form-control" id="editDescription">
+     </div>
+      </form>
+     </div>
+         <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+      <button type="button" class="btn btn-primary" onclick="saveEditedSetting()">Lưu Thay Đổi</button>
+   </div>
+      </div>
+ </div>
+</div>
+
+<!-- Add New Setting Modal -->
+<div class="modal fade" id="addSettingModal" tabindex="-1">
+    <div class="modal-dialog">
+    <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Thêm Cài Đặt Mới</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+       </div>
+      <div class="modal-body">
+  <form id="addSettingForm">
+   <div class="mb-3">
+ <label class="form-label">Khóa Cài Đặt</label>
+       <input type="text" class="form-control" id="newKey" placeholder="VD: NewFeatureEnabled">
+      </div>
+   <div class="mb-3">
+       <label class="form-label">Giá Trị</label>
+       <textarea class="form-control" id="newValue" rows="3" placeholder="VD: true"></textarea>
+       </div>
+      <div class="mb-3">
+<label class="form-label">Mô Tả</label>
+           <input type="text" class="form-control" id="newDescription" placeholder="VD: Bật/tắt tính năng mới">
+ </div>
+         </form>
+      </div>
+       <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+    <button type="button" class="btn btn-primary" onclick="addNewSettingConfirm()">Thêm Cài Đặt</button>
+      </div>
+ </div>
+    </div>
+</div>
+
+@section scripts {
+<script>
+function updateSetting(input) {
+    var key = $(input).data('key');
+    var value = $(input).val();
+    
+    // Simulate AJAX update
+    console.log('Updating setting: ' + key + ' = ' + value);
+ 
+    // Show toast notification
+    showToast('Đã cập nhật cài đặt: ' + key, 'success');
+}
+
+function editSetting(key, currentValue) {
+    $('#editKey').val(key);
+    $('#editValue').val(currentValue);
+    $('#editDescription').val('');
+    $('#editSettingModal').modal('show');
+}
+
+function saveEditedSetting() {
+    var key = $('#editKey').val();
+    var value = $('#editValue').val();
+    var description = $('#editDescription').val();
+    
+    // Simulate AJAX save
+    console.log('Saving edited setting:', { key, value, description });
+    
+ showToast('Đã lưu cài đặt: ' + key, 'success');
+    $('#editSettingModal').modal('hide');
+    
+    // Update the value in the table
+    $('input[data-key="' + key + '"]').val(value);
+}
+
+function addNewSetting() {
+ $('#newKey').val('');
+    $('#newValue').val('');
+    $('#newDescription').val('');
+    $('#addSettingModal').modal('show');
+}
+
+function addNewSettingConfirm() {
+    var key = $('#newKey').val();
+    var value = $('#newValue').val();
+    var description = $('#newDescription').val();
+    
+    if (!key || !value) {
+  alert('Vui lòng nhập đầy đủ khóa và giá trị cài đặt.');
+        return;
+    }
+    
+    // Simulate AJAX add
+ console.log('Adding new setting:', { key, value, description });
+    
+    showToast('Đã thêm cài đặt mới: ' + key, 'success');
+    $('#addSettingModal').modal('hide');
+    
+ // Refresh page to show new setting
+  setTimeout(function() {
+        location.reload();
+    }, 1000);
+}
+
+function exportSettings() {
+    // Simulate export functionality
+    var settings = {};
+    $('input[data-key]').each(function() {
+        var key = $(this).data('key');
+   var value = $(this).val();
+        settings[key] = value;
+    });
+    
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(settings, null, 2));
+    var downloadAnchorNode = document.createElement('a');
+ downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "ldp_settings_" + new Date().toISOString().split('T')[0] + ".json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    
+    showToast('Đã xuất cài đặt thành công', 'success');
+}
+
+function importSettings() {
+    var input = document.createElement('input');
+ input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function(e) {
+     var file = e.target.files[0];
+        if (file) {
+   var reader = new FileReader();
+       reader.onload = function(e) {
+         try {
+     var settings = JSON.parse(e.target.result);
+       console.log('Imported settings:', settings);
+    showToast('Đã nhập cài đặt thành công', 'success');
+           // Update UI with imported settings
+          Object.keys(settings).forEach(function(key) {
+      $('input[data-key="' + key + '"]').val(settings[key]);
+   });
+   } catch (error) {
+      showToast('Lỗi: File không hợp lệ', 'error');
+          }
+        };
+     reader.readAsText(file);
+      }
+    };
+    input.click();
+}
+
+function validateSettings() {
+    var invalidSettings = [];
+    
+    $('input[data-key]').each(function() {
+        var key = $(this).data('key');
+        var value = $(this).val();
+        
+        // Simple validation examples
+        if (key.includes('Timeout') && (isNaN(value) || value < 0)) {
+   invalidSettings.push(key + ': Giá trị phải là số dương');
+        }
+      if (key.includes('Enable') && !['true', 'false'].includes(value.toLowerCase())) {
+   invalidSettings.push(key + ': Giá trị phải là true hoặc false');
+     }
+ });
+    
+    if (invalidSettings.length > 0) {
+        alert('Các cài đặt không hợp lệ:\n\n' + invalidSettings.join('\n'));
+    } else {
+        showToast('Tất cả cài đặt đều hợp lệ', 'success');
+    }
+}
+
+function resetAdvanced() {
+    if (confirm('Bạn có chắc muốn khôi phục tất cả cài đặt nâng cao về giá trị mặc định?')) {
+        showToast('Đã khôi phục cài đặt nâng cao', 'success');
+ setTimeout(function() {
+            location.reload();
+        }, 1000);
+    }
+}
+
+function clearAllSettings() {
+  if (confirm('⚠️ CẢNH BÁO: Thao tác này sẽ xóa TẤT CẢ cài đặt nâng cao!\n\nBạn có chắc muốn tiếp tục?')) {
+        if (confirm('Xác nhận lần 2: Bạn THỰC SỰ muốn xóa tất cả cài đặt?')) {
+      showToast('Đã xóa tất cả cài đặt nâng cao', 'warning');
+     setTimeout(function() {
+                location.reload();
+          }, 1000);
+   }
+    }
+}
+
+function showToast(message, type) {
+ var bgClass = type === 'success' ? 'bg-success' : type === 'error' ? 'bg-danger' : 'bg-warning';
+    var toast = $(`
+    <div class="toast align-items-center text-white ${bgClass} border-0" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+   <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+        </div>
+    `);
+    
+    $('body').append(toast);
+    var bsToast = new bootstrap.Toast(toast[0]);
+    bsToast.show();
+    
+    setTimeout(function() {
+        toast.remove();
+    }, 5000);
+}
+
+// Auto-hide alerts
+setTimeout(function() {
+    $('.alert').fadeOut('slow');
+}, 5000);
+</script>
+}

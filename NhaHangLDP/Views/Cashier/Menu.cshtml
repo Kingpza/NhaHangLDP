@@ -1,0 +1,1115 @@
+﻿@{
+    ViewBag.Title = "Thực Đơn Lẩu - Order Món";
+    Layout = "~/Views/Shared/_CashierLayout.cshtml";
+}
+
+<style>
+    .menu-container {
+        padding: 0;
+        height: calc(100vh - 110px);
+        overflow: hidden;
+    }
+
+    .menu-layout {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        height: 100%;
+        gap: 0;
+    }
+
+    .menu-section {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px 0 0 15px;
+        padding: 20px;
+        overflow-y: auto;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    /* FIXED: Order section với layout chính xác */
+    .order-section {
+        background: rgba(248, 249, 250, 0.9);
+        border-radius: 0 15px 15px 0;
+        padding: 20px;
+        border-left: 2px solid rgba(220, 118, 51, 0.3);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: calc(100vh - 110px);
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .menu-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid rgba(220, 118, 51, 0.3);
+    }
+
+    .menu-categories {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .category-btn {
+        padding: 10px 20px;
+        border-radius: 25px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 2px solid rgba(220, 118, 51, 0.3);
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+        .category-btn.active,
+        .category-btn:hover {
+            background: rgba(220, 118, 51, 0.1);
+            border-color: #dc7633;
+            color: #dc7633;
+        }
+
+    .menu-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+    }
+
+    .menu-item {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+        .menu-item:hover {
+            border-color: #dc7633;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 118, 51, 0.3);
+        }
+
+    /* UPDATED: Thay đổi từ div placeholder thành img thật */
+    .menu-item-image {
+        width: 100%;
+        height: 120px;
+        border-radius: 8px;
+        object-fit: cover;
+        margin-bottom: 10px;
+        border: 2px solid rgba(220, 118, 51, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .menu-item:hover .menu-item-image {
+        border-color: #dc7633;
+        transform: scale(1.02);
+    }
+
+    /* Placeholder cho ảnh chưa có */
+    .menu-item-placeholder {
+        width: 100%;
+        height: 120px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 2rem;
+        border: 2px solid rgba(220, 118, 51, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .menu-item-name {
+        font-weight: bold;
+        color: #dc7633;
+        margin-bottom: 5px;
+        font-size: 1.1rem;
+    }
+
+    .menu-item-desc {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+
+    .menu-item-price {
+        font-weight: bold;
+        color: #495057;
+        font-size: 1.1rem;
+    }
+
+    /* FIXED: Order header với kích thước cố định */
+    .order-header {
+        flex-shrink: 0;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid rgba(220, 118, 51, 0.3);
+    }
+
+    /* FIXED: Table selector với kích thước cố định */
+    .table-selector {
+        flex-shrink: 0;
+        margin-bottom: 15px;
+    }
+
+        .table-selector label {
+            color: #dc7633 !important;
+            font-weight: bold !important;
+            font-size: 1rem !important;
+            margin-bottom: 8px !important;
+            display: block;
+        }
+
+        .table-selector select {
+            background: #ffffff !important;
+            border: 2px solid #dc7633 !important;
+            color: #495057 !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            padding: 12px 15px !important;
+            border-radius: 8px !important;
+            width: 100% !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+
+            .table-selector select:focus {
+                outline: none !important;
+                border-color: #e67e22 !important;
+                box-shadow: 0 0 0 3px rgba(220, 118, 51, 0.25) !important;
+                background: #f8f9fa !important;
+            }
+
+            .table-selector select option {
+                background: #ffffff !important;
+                color: #495057 !important;
+                font-weight: 600 !important;
+                padding: 10px !important;
+            }
+
+                .table-selector select option:checked {
+                    background: #dc7633 !important;
+                    color: #ffffff !important;
+                }
+
+    /* CRITICAL FIX: Order items container với tính toán chính xác */
+    .order-items-container {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        /* Tính toán chính xác: 100% - (header + table + note + summary + actions + margins) */
+        max-height: calc(100vh - 110px - 80px - 80px - 120px - 120px - 80px);
+    }
+
+    /* CRITICAL FIX: Order items với scroll */
+    .order-items {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        min-height: 100px;
+        max-height: 100%;
+        padding-right: 5px;
+        margin-bottom: 10px;
+    }
+
+        /* Tùy chỉnh scrollbar */
+        .order-items::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .order-items::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+
+        .order-items::-webkit-scrollbar-thumb {
+            background: rgba(220, 118, 51, 0.5);
+            border-radius: 3px;
+        }
+
+            .order-items::-webkit-scrollbar-thumb:hover {
+                background: rgba(220, 118, 51, 0.8);
+            }
+
+    .order-item {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 60px;
+        flex-shrink: 0;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .order-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .order-item-name {
+        font-weight: bold;
+        color: #dc7633;
+        margin-bottom: 3px;
+        font-size: 0.95rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .order-item-price {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0 8px;
+        flex-shrink: 0;
+    }
+
+    .quantity-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        border: none;
+        background: #dc7633;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .quantity-display {
+        min-width: 25px;
+        text-align: center;
+        font-weight: bold;
+        color: #495057;
+        font-size: 0.9rem;
+    }
+
+    .remove-item {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 6px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    /* FIXED: Customer note với kích thước cố định */
+    .customer-note {
+        flex-shrink: 0;
+        margin-bottom: 10px;
+    }
+
+        .customer-note label {
+            color: #dc7633 !important;
+            font-weight: bold !important;
+            margin-bottom: 6px !important;
+            display: block;
+            font-size: 0.9rem !important;
+        }
+
+        .customer-note textarea {
+            width: 100%;
+            background: #ffffff !important;
+            border: 2px solid rgba(220, 118, 51, 0.3) !important;
+            border-radius: 8px;
+            padding: 8px 10px;
+            color: #495057 !important;
+            resize: none;
+            font-weight: 500;
+            height: 50px;
+            font-size: 0.85rem;
+        }
+
+            .customer-note textarea:focus {
+                outline: none !important;
+                border-color: #dc7633 !important;
+                box-shadow: 0 0 0 2px rgba(220, 118, 51, 0.25) !important;
+                background: #f8f9fa !important;
+            }
+
+            .customer-note textarea::placeholder {
+                color: rgba(108, 117, 125, 0.7) !important;
+                font-weight: 400;
+            }
+
+    /* FIXED: Order summary với kích thước cố định */
+    .order-summary {
+        flex-shrink: 0;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 0.9rem;
+        color: #495057;
+    }
+
+    .summary-total {
+        font-weight: bold;
+        font-size: 1.1rem;
+        color: #dc7633;
+        border-top: 1px solid rgba(220, 118, 51, 0.3);
+        padding-top: 8px;
+        margin-top: 8px;
+    }
+
+    /* CRITICAL FIX: Order actions luôn ở cuối */
+    .order-actions {
+        flex-shrink: 0;
+        display: flex;
+        gap: 8px;
+        margin-top: auto;
+        padding-top: 5px;
+    }
+
+    .btn-custom {
+        flex: 1;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: none;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-order {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+
+        .btn-order:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+        }
+
+    .btn-clear {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+    }
+
+        .btn-clear:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+        }
+
+    .empty-order {
+        text-align: center;
+        color: #6c757d;
+        padding: 30px 15px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Hot pot special styling */
+    .hotpot-icon {
+        background: linear-gradient(45deg, #e74c3c, #c0392b) !important;
+    }
+
+    .meat-icon {
+        background: linear-gradient(45deg, #8e44ad, #9b59b6) !important;
+    }
+
+    .seafood-icon {
+        background: linear-gradient(45deg, #3498db, #2980b9) !important;
+    }
+
+    .vegetable-icon {
+        background: linear-gradient(45deg, #27ae60, #2ecc71) !important;
+    }
+
+    .side-icon {
+        background: linear-gradient(45deg, #f39c12, #e67e22) !important;
+    }
+
+    .drink-icon {
+        background: linear-gradient(45deg, #16a085, #1abc9c) !important;
+    }
+
+    /* Text color fixes for light mode */
+    .menu-header h4 {
+        color: #dc7633 !important;
+    }
+
+    .menu-header small {
+        color: #6c757d !important;
+    }
+
+    .order-header h5 {
+        color: #dc7633 !important;
+    }
+</style>
+
+<!-- Mobile responsive CSS -->
+<style media="screen and (max-width: 768px)">
+    .menu-layout {
+        grid-template-columns: 1fr !important;
+        grid-template-rows: 60% 40% !important;
+        height: 100vh !important;
+    }
+
+    .order-section {
+        border-radius: 15px 15px 0 0 !important;
+        border-left: none !important;
+        border-top: 2px solid rgba(220, 118, 51, 0.3) !important;
+        padding: 15px !important;
+    }
+
+    .menu-section {
+        border-radius: 15px 15px 0 0 !important;
+        padding: 15px !important;
+    }
+
+    .order-items-container {
+        max-height: calc(40vh - 200px) !important;
+    }
+</style>
+
+<div class="menu-container">
+    <div class="menu-layout">
+        <!-- Menu Section -->
+        <div class="menu-section">
+            <div class="menu-header">
+                <div>
+                    <h4 class="text-warning mb-1">
+                        <i class="fas fa-fire me-2"></i>Thực Đơn Lẩu
+                    </h4>
+                    <small class="text-muted">Chọn món cho bàn @(ViewBag.TableId ?? "...")</small>
+                </div>
+                <a href="@Url.Action("Orders", "Cashier")" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+
+            <div class="menu-categories">
+                <button class="category-btn active" onclick="filterCategory('all')">Tất Cả</button>
+                <button class="category-btn" onclick="filterCategory('hotpot')">Nước Lẩu</button>
+                <button class="category-btn" onclick="filterCategory('meat')">Thịt</button>
+                <button class="category-btn" onclick="filterCategory('seafood')">Hải Sản</button>
+                <button class="category-btn" onclick="filterCategory('vegetable')">Rau & Nấm</button>
+                <button class="category-btn" onclick="filterCategory('side')">Món Phụ</button>
+                <button class="category-btn" onclick="filterCategory('drinks')">Đồ Uống</button>
+            </div>
+
+            <div class="menu-items" id="menuItems">
+                <!-- Menu items will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Order Section - FIXED LAYOUT -->
+        <div class="order-section">
+            <!-- Header -->
+            <div class="order-header">
+                <h5 class="text-warning mb-0">
+                    <i class="fas fa-shopping-cart me-2"></i>Đơn Hàng
+                </h5>
+            </div>
+
+            <!-- Table Selector -->
+            <div class="table-selector">
+      <label class="form-label">
+                    <i class="fas fa-table me-2"></i>Chọn Bàn:
+    </label>
+      <select class="form-select" id="tableSelect">
+  <option value="">-- Chọn bàn --</option>
+              <!-- Tables will be loaded from database -->
+ </select>
+    </div>
+
+            <!-- Order Items Container - CRITICAL FIX -->
+            <div class="order-items-container">
+                <div class="order-items" id="orderItems">
+                    <div class="empty-order">
+                        <i class="fas fa-fire fa-2x mb-2" style="color: rgba(231, 76, 60, 0.5);"></i>
+                        <p style="margin: 0; font-size: 0.9rem;">Chưa có món nào được chọn</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Note -->
+            <div class="customer-note">
+                <label class="form-label">
+                    <i class="fas fa-sticky-note me-1"></i>Ghi chú:
+                </label>
+                <textarea id="customerNote" placeholder="Ghi chú đặc biệt (độ cay, không hành...)"></textarea>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary" id="orderSummary" style="display: none;">
+                <div class="summary-row">
+                    <span>Tạm tính:</span>
+                    <span id="subtotal">0 VNĐ</span>
+                </div>
+                <div class="summary-row">
+                    <span>Thuế VAT (10%):</span>
+                    <span id="taxAmount">0 VNĐ</span>
+                </div>
+                <div class="summary-row summary-total">
+                    <span>Tổng cộng:</span>
+                    <span id="totalAmount">0 VNĐ</span>
+                </div>
+            </div>
+
+            <!-- Order Actions - ALWAYS VISIBLE -->
+            <div class="order-actions">
+                <button class="btn-custom btn-clear" onclick="clearOrder()">
+                    <i class="fas fa-trash me-1"></i>Xóa
+                </button>
+                <button class="btn-custom btn-order" onclick="submitOrder()">
+                    <i class="fas fa-check me-1"></i>Đặt Món
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+    // Global variables
+    var currentOrder = [];
+    var currentCategory = 'all';
+
+ // MENU LẨU - Load từ Database thay vì hardcoded data
+  var menuData = [];
+    var tablesData = []; // CRITICAL: Store tables from database
+
+    // CRITICAL: Load tables từ Database
+ function loadTablesFromDatabase() {
+     console.log('Loading tables from database...');
+
+        fetch('@Url.Action("GetTablesData", "Cashier")', {
+         method: 'GET',
+     headers: {
+                'Content-Type': 'application/json',
+ 'X-Requested-With': 'XMLHttpRequest'
+            }
+      })
+        .then(function(response) {
+            return response.json();
+        })
+   .then(function(data) {
+       if (data.success && data.tables) {
+                tablesData = data.tables;
+                console.log('Loaded', tablesData.length, 'tables from database');
+         renderTableOptions();
+          } else {
+                console.error('Failed to load tables:', data.message);
+   showToast('Không thể tải danh sách bàn: ' + (data.message || 'Lỗi không xác định'), 'error');
+      }
+    })
+.catch(function(error) {
+     console.error('Error loading tables:', error);
+    showToast('Lỗi kết nối khi tải danh sách bàn!', 'error');
+        });
+    }
+
+    // CRITICAL: Render table options từ database
+    function renderTableOptions() {
+        var select = document.getElementById('tableSelect');
+        if (!select) {
+   console.error('Table select not found');
+        return;
+        }
+
+        // Keep first option
+select.innerHTML = '<option value="">-- Chọn bàn --</option>';
+
+        // Group tables by area
+        var tablesByArea = {};
+  tablesData.forEach(function(table) {
+            if (!tablesByArea[table.areaName]) {
+ tablesByArea[table.areaName] = [];
+            }
+            tablesByArea[table.areaName].push(table);
+        });
+
+        // Add options grouped by area
+        for (var areaName in tablesByArea) {
+            var optgroup = document.createElement('optgroup');
+            optgroup.label = areaName;
+
+       tablesByArea[areaName].forEach(function(table) {
+     var option = document.createElement('option');
+            option.value = table.id;
+         option.textContent = 'Bàn ' + table.tableNumber;
+        
+       // Add status info
+          option.textContent += ' - ' + table.statusText;
+
+// Disable occupied tables
+         if (table.status === 'occupied') {
+         option.textContent += ' (Đang sử dụng)';
+   } else if (table.status === 'reserved') {
+         option.textContent += ' (Đã đặt)';
+    }
+
+  optgroup.appendChild(option);
+   });
+
+            select.appendChild(optgroup);
+        }
+
+ console.log('Table options rendered successfully');
+    }
+
+    // CRITICAL: Load menu từ API Database thay vì hardcoded
+    function loadMenuFromDatabase() {
+ console.log('Loading menu from database...');
+
+        // Show loading state
+        var container = document.getElementById('menuItems');
+        if (container) {
+     container.innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><p>Đang tải menu...</p></div>';
+    }
+
+   // Fetch menu from database
+        fetch('@Url.Action("GetMenuItems", "Cashier")', {
+            method: 'GET',
+     headers: {
+      'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest'
+   }
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+       if (data.success && data.items) {
+                // Convert database items to client format
+    menuData = data.items.map(function(item) {
+        return {
+      id: item.id,
+      name: item.name,
+    category: item.category.toLowerCase().replace(/\s+/g, ''),
+                price: item.price,
+                 description: item.description || '',
+             image: item.imageUrl,
+                 preparationTime: item.preparationTime,
+         isAvailable: item.isAvailable
+             };
+             });
+
+         console.log('Loaded', menuData.length, 'menu items from database');
+       renderMenuItems();
+     } else {
+    console.error('Failed to load menu:', data.message);
+        showError('Không thể tải menu: ' + (data.message || 'Lỗi không xác định'));
+ }
+    })
+        .catch(function(error) {
+  console.error('Error loading menu:', error);
+   showError('Lỗi kết nối khi tải menu. Vui lòng thử lại.');
+        });
+    }
+
+    function showError(message) {
+        var container = document.getElementById('menuItems');
+      if (container) {
+            container.innerHTML = '<div class="text-center text-danger p-4"><i class="fas fa-exclamation-triangle fa-2x mb-3"></i><p>' + message + '</p><button class="btn btn-warning mt-2" onclick="loadMenuFromDatabase()">Thử lại</button></div>';
+   }
+    }
+
+    // Initialize when page loads - UPDATED
+    window.addEventListener('load', function() {
+ console.log('Page loaded, initializing menu...');
+
+   // Set table if provided
+ var tableId = @(ViewBag.TableId ?? "null");
+ 
+    // Load tables from database
+   loadTablesFromDatabase();
+
+      // Load menu from database instead of using hardcoded data
+      loadMenuFromDatabase();
+     renderOrderItems();
+
+   // Set table selection after tables are loaded
+    if (tableId) {
+ setTimeout(function() {
+   var select = document.getElementById('tableSelect');
+   if (select) {
+          select.value = tableId;
+  }
+       }, 500);
+        }
+    });
+
+    function getIconClass(category) {
+var iconClasses = {
+       'nướclẩu': 'hotpot-icon',
+            'hotpot': 'hotpot-icon',
+            'meat': 'meat-icon',
+      'thịt': 'meat-icon',
+          'seafood': 'seafood-icon',
+       'hảisản': 'seafood-icon',
+     'vegetable': 'vegetable-icon',
+     'rau&nấm': 'vegetable-icon',
+    'rau': 'vegetable-icon',
+            'side': 'side-icon',
+     'sideorders': 'side-icon',
+       'drinks': 'drink-icon',
+            'đồuống': 'drink-icon'
+        };
+        return iconClasses[category] || 'hotpot-icon';
+    }
+
+    function getIcon(category) {
+        var icons = {
+            'nướclẩu': 'fas fa-fire',
+            'hotpot': 'fas fa-fire',
+   'meat': 'fas fa-drumstick-bite',
+         'thịt': 'fas fa-drumstick-bite',
+       'seafood': 'fas fa-fish',
+            'hảisản': 'fas fa-fish',
+    'vegetable': 'fas fa-leaf',
+            'rau&nấm': 'fas fa-leaf',
+            'rau': 'fas fa-leaf',
+            'side': 'fas fa-bowl-rice',
+       'sideorders': 'fas fa-bowl-rice',
+     'drinks': 'fas fa-glass-whiskey',
+     'đồuống': 'fas fa-glass-whiskey'
+        };
+        return icons[category] || 'fas fa-utensils';
+}
+
+    function renderMenuItems() {
+        var container = document.getElementById('menuItems');
+        if (!container) {
+  console.error('Menu container not found');
+            return;
+        }
+
+    var items = currentCategory === 'all'
+            ? menuData.filter(function(item) { return item.isAvailable; })
+: menuData.filter(function(item) {
+         return item.isAvailable && matchesCategory(item.category, currentCategory);
+            });
+
+  console.log('Rendering', items.length, 'items for category:', currentCategory);
+
+        if (items.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted p-4"><i class="fas fa-utensils fa-2x mb-3"></i><p>Không có món ăn nào trong danh mục này</p></div>';
+      return;
+    }
+
+        var html = '';
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+      var iconClass = getIconClass(item.category);
+            var icon = getIcon(item.category);
+
+html += '<div class="menu-item" onclick="addToOrder(' + item.id + ')">';
+
+    // Display image or placeholder with correct paths
+    if (item.image) {
+    // Use relative path from root
+     var imagePath = '../images/menu/' + item.image;
+            html += '  <img src="' + imagePath + '" alt="' + item.name + '" class="menu-item-image" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';" />';
+     html += '  <div class="menu-item-placeholder ' + iconClass + '" style="display: none;">';
+     html += '    <i class="' + icon + '"></i>';
+       html += '  </div>';
+            } else {
+            html += '  <div class="menu-item-placeholder ' + iconClass + '">';
+    html += '    <i class="' + icon + '"></i>';
+    html += '  </div>';
+  }
+
+    html += '  <div class="menu-item-name">' + item.name + '</div>';
+     html += '  <div class="menu-item-desc">' + item.description + '</div>';
+          html += '  <div class="menu-item-price">' + item.price.toLocaleString() + ' VNĐ</div>';
+        html += '</div>';
+        }
+
+        container.innerHTML = html;
+        console.log('Menu rendered successfully');
+    }
+
+    // Helper function to match categories (handling Vietnamese and English)
+  function matchesCategory(itemCategory, filterCategory) {
+        var categoryMap = {
+ 'hotpot': ['nướclẩu', 'hotpot'],
+     'meat': ['thịt', 'meat'],
+   'seafood': ['hảisản', 'seafood'],
+     'vegetable': ['rau&nấm', 'rau', 'vegetable'],
+            'side': ['sideorders', 'side', 'phụ'],
+        'drinks': ['đồuống', 'drinks']
+        };
+
+        if (categoryMap[filterCategory]) {
+    return categoryMap[filterCategory].some(function(cat) {
+        return itemCategory.toLowerCase().includes(cat.toLowerCase());
+            });
+        }
+
+        return itemCategory.toLowerCase() === filterCategory.toLowerCase();
+    }
+
+    function filterCategory(category) {
+        console.log('Filtering category:', category);
+
+        // Update active button
+    var buttons = document.querySelectorAll('.category-btn');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove('active');
+        }
+   event.target.classList.add('active');
+
+        currentCategory = category;
+        renderMenuItems();
+    }
+
+    function addToOrder(itemId) {
+      console.log('Adding item to order:', itemId);
+
+        var menuItem = null;
+        for (var i = 0; i < menuData.length; i++) {
+    if (menuData[i].id === itemId) {
+    menuItem = menuData[i];
+break;
+       }
+  }
+
+        if (!menuItem) {
+   console.error('Menu item not found:', itemId);
+ return;
+        }
+
+        var existingItem = null;
+    for (var i = 0; i < currentOrder.length; i++) {
+    if (currentOrder[i].id === itemId) {
+     existingItem = currentOrder[i];
+      break;
+   }
+        }
+
+        if (existingItem) {
+  existingItem.quantity++;
+      } else {
+          currentOrder.push({
+      id: itemId,
+    name: menuItem.name,
+      price: menuItem.price,
+                quantity: 1
+     });
+        }
+
+ renderOrderItems();
+        updateOrderSummary();
+        showToast('Đã thêm ' + menuItem.name + ' vào đơn hàng');
+    }
+
+    function renderOrderItems() {
+        var container = document.getElementById('orderItems');
+        if (!container) return;
+
+        if (currentOrder.length === 0) {
+          container.innerHTML = '<div class="empty-order"><i class="fas fa-fire fa-2x mb-2" style="color: rgba(231, 76, 60, 0.5);"></i><p style="margin: 0; font-size: 0.9rem;">Chưa có món nào được chọn</p></div>';
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < currentOrder.length; i++) {
+  var item = currentOrder[i];
+      html += '<div class="order-item">';
+  html += '  <div class="order-item-info">';
+    html += '    <div class="order-item-name">' + item.name + '</div>';
+            html += '    <div class="order-item-price">' + item.price.toLocaleString() + ' VNĐ</div>';
+            html += '  </div>';
+       html += '  <div class="quantity-controls">';
+  html += '  <button class="quantity-btn" onclick="changeQuantity(' + item.id + ', -1)">-</button>';
+      html += '    <span class="quantity-display">' + item.quantity + '</span>';
+      html += '    <button class="quantity-btn" onclick="changeQuantity(' + item.id + ', 1)">+</button>';
+ html += '  </div>';
+     html += '  <button class="remove-item" onclick="removeFromOrder(' + item.id + ')"><i class="fas fa-trash"></i></button>';
+      html += '</div>';
+        }
+
+        container.innerHTML = html;
+    }
+
+    function changeQuantity(itemId, change) {
+      for (var i = 0; i < currentOrder.length; i++) {
+      if (currentOrder[i].id === itemId) {
+          currentOrder[i].quantity += change;
+       if (currentOrder[i].quantity <= 0) {
+      removeFromOrder(itemId);
+      } else {
+    renderOrderItems();
+  updateOrderSummary();
+        }
+         break;
+       }
+        }
+    }
+
+    function removeFromOrder(itemId) {
+        for (var i = 0; i < currentOrder.length; i++) {
+      if (currentOrder[i].id === itemId) {
+  currentOrder.splice(i, 1);
+         break;
+      }
+    }
+        renderOrderItems();
+        updateOrderSummary();
+    }
+
+    function updateOrderSummary() {
+        var summaryContainer = document.getElementById('orderSummary');
+   if (!summaryContainer) return;
+
+        if (currentOrder.length === 0) {
+            summaryContainer.style.display = 'none';
+   return;
+        }
+
+        summaryContainer.style.display = 'block';
+
+        var subtotal = 0;
+        for (var i = 0; i < currentOrder.length; i++) {
+            var item = currentOrder[i];
+       subtotal += item.price * item.quantity;
+        }
+
+     var tax = Math.round(subtotal * 0.1);
+        var total = subtotal + tax;
+
+        document.getElementById('subtotal').textContent = subtotal.toLocaleString() + ' VNĐ';
+document.getElementById('taxAmount').textContent = tax.toLocaleString() + ' VNĐ';
+      document.getElementById('totalAmount').textContent = total.toLocaleString() + ' VNĐ';
+    }
+
+ function clearOrder() {
+if (currentOrder.length === 0) return;
+
+      if (confirm('Bạn có chắc muốn xóa toàn bộ đơn hàng?')) {
+ currentOrder = [];
+            renderOrderItems();
+         updateOrderSummary();
+     showToast('Đã xóa đơn hàng');
+ }
+    }
+
+    function submitOrder() {
+var tableId = document.getElementById('tableSelect').value;
+        var customerNote = document.getElementById('customerNote').value;
+
+        // Validation
+        if (!tableId) {
+       showToast('Vui lòng chọn số bàn!', 'error');
+            return;
+        }
+
+      if (currentOrder.length === 0) {
+            showToast('Vui lòng chọn ít nhất một món!', 'error');
+            return;
+        }
+
+   // Show loading
+    var submitBtn = document.querySelector('.btn-order');
+      var originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...';
+
+        // Prepare form data
+    var formData = new FormData();
+        formData.append('tableId', tableId);
+        formData.append('orderItems', JSON.stringify(currentOrder));
+        formData.append('customerNote', customerNote || '');
+
+        // Submit order
+        fetch('@Url.Action("CreateOrder", "Cashier")', {
+         method: 'POST',
+         body: formData
+        })
+     .then(function(response) { return response.json(); })
+      .then(function(data) {
+     if (data.success) {
+    showToast('Đơn hàng đã được tạo thành công!', 'success');
+       // Reset form
+          currentOrder = [];
+     renderOrderItems();
+       updateOrderSummary();
+         document.getElementById('customerNote').value = '';
+         // Redirect after delay
+       setTimeout(function() {
+  window.location.href = '@Url.Action("Orders", "Cashier")';
+     }, 1500);
+  } else {
+                showToast('Lỗi: ' + data.message, 'error');
+    }
+        })
+        .catch(function(error) {
+          console.error('Error:', error);
+ showToast('Có lỗi xảy ra khi tạo đơn hàng!', 'error');
+        })
+        .finally(function() {
+         submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        });
+    }
+
+    function showToast(message, type) {
+        type = type || 'info';
+        var toast = document.createElement('div');
+        toast.style.cssText = 'position: fixed; top: 80px; right: 20px; padding: 15px 20px; border-radius: 8px; color: white; font-weight: bold; z-index: 9999; opacity: 0; transition: opacity 0.3s ease; max-width: 300px;';
+
+        var colors = {
+            'success': '#28a745',
+    'error': '#dc3545',
+ 'warning': '#ffc107',
+            'info': '#17a2b8'
+        };
+        toast.style.backgroundColor = colors[type] || colors.info;
+        toast.textContent = message;
+
+        document.body.appendChild(toast);
+
+        setTimeout(function() { toast.style.opacity = '1'; }, 100);
+
+        setTimeout(function() {
+ toast.style.opacity = '0';
+            setTimeout(function() {
+          if (toast.parentNode) {
+       document.body.removeChild(toast);
+         }
+      }, 300);
+        }, 3000);
+    }
+    </script>
+}

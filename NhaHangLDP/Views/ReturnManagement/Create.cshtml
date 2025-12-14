@@ -1,0 +1,283 @@
+﻿@model NhaHangLDP.Models.ReturnManagementViewModel
+
+@{
+    ViewBag.Title = "Tạo Phiếu Trả Hàng";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-dark">
+        <i class="fas fa-plus-circle me-2"></i>Tạo Phiếu Trả Hàng
+    </h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Quay Lại
+    </a>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@using (Html.BeginForm("Create", "ReturnManagement", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-search me-2"></i>Bước 1: Tìm Hóa Đơn
+                </h5>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.BillID, new { @class = "form-label" })
+                    <div class="input-group">
+                        @Html.TextBoxFor(m => m.BillID, new { @class = "form-control", placeholder = "Nhập mã hóa đơn", type = "number" })
+                        <button type="button" id="btnSearchBill" class="btn btn-outline-primary">
+                            <i class="fas fa-search"></i> Tìm
+                        </button>
+                    </div>
+                    @Html.ValidationMessageFor(m => m.BillID, "", new { @class = "text-danger" })
+                </div>
+
+                <div id="billSearchResult" style="display: none;">
+                    <div class="alert alert-info">
+                        <div id="billInfo"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="stat-card">
+                <h5 class="mb-3">
+                    <i class="fas fa-user me-2"></i>Bước 2: Thông Tin Xử Lý
+                </h5>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.EmployeeID, new { @class = "form-label" })
+                    @Html.DropDownListFor(m => m.EmployeeID, (IEnumerable<SelectListItem>)ViewBag.Employees, "-- Chọn nhân viên --", new { @class = "form-select", required = "required" })
+                    @Html.ValidationMessageFor(m => m.EmployeeID, "", new { @class = "text-danger" })
+                    <div class="invalid-feedback">Vui lòng chọn nhân viên xử lý.</div>
+                </div>
+
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Reason, new { @class = "form-label" })
+                    @Html.TextAreaFor(m => m.Reason, new { @class = "form-control", rows = 3, placeholder = "Nhập lý do trả hàng...", required = "required" })
+                    @Html.ValidationMessageFor(m => m.Reason, "", new { @class = "text-danger" })
+                    <div class="invalid-feedback">Vui lòng nhập lý do trả hàng.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="returnItemsSection" style="display: none;">
+        <div class="stat-card">
+            <h5 class="mb-3">
+                <i class="fas fa-list me-2"></i>Bước 3: Chọn Món Trả Hàng
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table table-hover" id="returnItemsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Món Ăn</th>
+                            <th>SL Gốc</th>
+                            <th>Đơn Giá</th>
+                            <th>SL Trả</th>
+                            <th>Hàng Hỏng</th>
+                            <th>Thành Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody id="returnItemsBody">
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-warning">
+                            <th colspan="5" class="text-end">Tổng Hoàn Trả:</th>
+                            <th>
+                                <span id="totalRefundAmount">0 ₫</span>
+                                @Html.HiddenFor(m => m.TotalRefundAmount)
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+                <p class="text-danger" id="noReturnItemsError" style="display: none;">
+                    <i class="fas fa-exclamation-triangle me-1"></i>Vui lòng chọn ít nhất một món để trả hàng và nhập số lượng trả > 0.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="submitSection" style="display: none;">
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg me-3">
+                <i class="fas fa-save me-2"></i>Tạo Phiếu Trả Hàng
+            </button>
+            <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-times me-2"></i>Hủy Bỏ
+            </a>
+        </div>
+    </div>
+}
+
+@section scripts {
+    <script>
+        $(document).ready(function() {
+
+            // Hàm định dạng tiền tệ Việt Nam
+            function formatCurrency(amount) {
+                if (typeof amount !== 'number') {
+                    amount = parseFloat(amount) || 0;
+                }
+                return amount.toLocaleString('vi-VN') + ' ₫';
+            }
+
+            // --- BƯỚC 1: TÌM HÓA ĐƠN (Nút "Tìm" - btnSearchBill) ---
+            $('#btnSearchBill').click(function() {
+var billId = $('#BillID').val();
+
+                if (!billId || billId <= 0) {
+                    alert('Vui lòng nhập Mã hóa đơn hợp lệ (số nguyên dương)!');
+                    $('#billSearchResult, #returnItemsSection, #submitSection').hide();
+                    return;
+                }
+
+                $.ajax({
+                    url: '@Url.Action("FindBill", "ReturnManagement")',
+                    type: 'POST',
+                    data: { billId: billId },
+                    success: function(response) {
+                        if (response.Success) {
+                            // Thành công: HIỂN THỊ CÁC BƯỚC TIẾP THEO
+                            displayBillInfo(response.Bill);
+                            loadReturnItems(response.OrderDetails);
+                            // Dòng lệnh quan trọng: HIỂN THỊ nút Tạo Phiếu Trả Hàng
+                            $('#returnItemsSection, #submitSection').show();
+                            $('#noReturnItemsError').hide();
+                            calculateTotals();
+                        } else {
+                            // Thất bại: ẨN tất cả các bước tiếp theo và thông báo lỗi
+                            alert(response.Message);
+                            $('#billSearchResult, #returnItemsSection, #submitSection').hide();
+                            $('#returnItemsBody').empty();
+                            $('#BillID').focus();
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra khi tìm kiếm hóa đơn! Vui lòng thử lại.');
+                        $('#billSearchResult, #returnItemsSection, #submitSection').hide();
+                    }
+                });
+            });
+
+            // Hiển thị thông tin hóa đơn
+            function displayBillInfo(bill) {
+                // Chuyển đổi BillDate từ chuỗi JSON (ASP.NET MVC) sang đối tượng Date
+                var billDate = new Date(bill.BillDate);
+                var formattedDate = billDate.toLocaleDateString('vi-VN');
+
+                var billInfo = `
+                    <strong>Hóa đơn #${bill.Id}</strong><br>
+                    <i class="fas fa-calendar me-1"></i> Ngày: ${formattedDate}<br>
+                    <i class="fas fa-money-bill me-1"></i> Tổng tiền: ${formatCurrency(bill.FinalAmount)}<br>
+                    <i class="fas fa-credit-card me-1"></i> Thanh toán: ${bill.PaymentMethod}
+                `;
+
+                $('#billInfo').html(billInfo);
+                $('#billSearchResult').show();
+            }
+
+            // Tải danh sách món ăn từ hóa đơn
+            function loadReturnItems(orderDetails) {
+                var tbody = $('#returnItemsBody');
+                tbody.empty();
+
+                orderDetails.forEach(function(item, index) {
+                    var row = `
+                        <tr>
+                            <td>
+<strong>${item.MenuItemName}</strong>
+                                <input type="hidden" name="ReturnItems[${index}].MenuItemID" value="${item.MenuItemID}" />
+                                <input type="hidden" name="ReturnItems[${index}].MenuItemName" value="${item.MenuItemName}" />
+                                <input type="hidden" name="ReturnItems[${index}].MaxQuantity" value="${item.Quantity}" />
+                                <input type="hidden" name="ReturnItems[${index}].UnitPrice" value="${item.PriceAtTime}" />
+                                <input type="hidden" name="ReturnItems[${index}].BillID" value="${$('#BillID').val()}" /> </td>
+                            <td><span class="badge bg-secondary">${item.Quantity}</span></td>
+                            <td>${formatCurrency(item.PriceAtTime)}</td>
+                            <td>
+                                <input type="number" name="ReturnItems[${index}].ReturnQuantity"
+                                    class="form-control return-quantity" min="0" max="${item.Quantity}"
+                                    value="0" data-price="${item.PriceAtTime}" data-index="${index}" style="width: 80px;" />
+                            </td>
+                            <td>
+                                <div class="form-check d-flex justify-content-center">
+                                    <input type="checkbox" id="IsDamaged_${index}" name="ReturnItems[${index}].IsDamaged" class="form-check-input is-damaged" value="true" />
+                                    <input type="hidden" name="ReturnItems[${index}].IsDamaged" value="false" />
+                                </div>
+                            </td>
+                            <td class="item-total text-end">${formatCurrency(0)}</td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+
+                // Gán lại sự kiện sau khi các hàng mới được thêm
+                $('.return-quantity').off('input').on('input', calculateTotals);
+            }
+
+            // --- TÍNH TOÁN TỔNG TIỀN HOÀN TRẢ ---
+            function calculateTotals() {
+                var totalRefund = 0;
+
+                $('.return-quantity').each(function() {
+                    var inputElement = $(this);
+                    var maxQuantity = parseInt(inputElement.attr('max'));
+                    var price = parseFloat(inputElement.data('price')) || 0;
+                    var quantity = parseInt(inputElement.val()) || 0;
+
+                    // Validate: Đảm bảo số lượng trả nằm trong khoảng [0, SL gốc]
+                    if (quantity > maxQuantity) {
+                        quantity = maxQuantity;
+                        inputElement.val(maxQuantity);
+                    } else if (quantity < 0) {
+                         quantity = 0;
+                        inputElement.val(0);
+                    }
+var itemTotal = quantity * price;
+                    inputElement.closest('tr').find('.item-total').text(formatCurrency(itemTotal));
+                    totalRefund += itemTotal;
+                });
+
+                $('#totalRefundAmount').text(formatCurrency(totalRefund));
+                $('#TotalRefundAmount').val(totalRefund);
+            }
+
+            // --- VALIDATION KHI NHẤN NÚT "Tạo Phiếu Trả Hàng" (submit) ---
+            $('form').on('submit', function(e) {
+                // Kiểm tra có món trả hàng nào được chọn không
+                var hasReturnItems = false;
+                $('.return-quantity').each(function() {
+                    if (parseInt($(this).val()) > 0) {
+                        hasReturnItems = true;
+                        return false;
+                    }
+                });
+
+                if (!hasReturnItems) {
+                    e.preventDefault();
+                    $('#noReturnItemsError').show();
+                    // Cuộn đến vị trí lỗi
+                    $('html, body').animate({
+                        scrollTop: $('#returnItemsSection').offset().top
+                    }, 500);
+                } else {
+                     $('#noReturnItemsError').hide();
+                }
+            });
+        });
+    </script>
+}
