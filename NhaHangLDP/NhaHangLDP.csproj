@@ -323,7 +323,6 @@
     <Content Include="Scripts\bootstrap.esm.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
-    <Content Include="DOCS_Revenue_Difference_Explanation.md" />
     <EntityDeploy Include="Models\NhaHangLDP.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
       <LastGenOutput>NhaHangLDP.Designer.cs</LastGenOutput>
