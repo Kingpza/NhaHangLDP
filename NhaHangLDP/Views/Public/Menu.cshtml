@@ -35,3 +35,44 @@
         </div>
     }
 </div>
+
+<!-- Chatbot UI -->
+<button class="chatbot-toggle" aria-label="Mở chatbot">
+    <i class="fas fa-comments"></i>
+    <span class="chatbot-badge" style="display: none;">1</span>
+</button>
+
+<div class="chatbot-container">
+    <div class="chatbot-header">
+        <div class="chatbot-header-info">
+            <div class="chatbot-avatar">
+                🤖
+            </div>
+            <div class="chatbot-title">
+                <h4>Trợ Lý LDP</h4>
+                <div class="chatbot-status">
+                    <span class="status-dot"></span>
+                    <span>Đang hoạt động</span>
+                </div>
+            </div>
+        </div>
+        <button class="chatbot-close" aria-label="Đóng chatbot">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="chatbot-messages">
+        <!-- Messages sẽ được thêm vào đây bởi JavaScript -->
+    </div>
+
+    <div class="chatbot-input">
+        <input type="text" id="chatbot-input" placeholder="Nhập tin nhắn..." autocomplete="off">
+        <button class="chatbot-send" aria-label="Gửi tin nhắn">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/Scripts/chatbot.js"></script>
+}
