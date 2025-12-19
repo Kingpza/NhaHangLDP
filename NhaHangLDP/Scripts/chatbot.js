@@ -152,7 +152,7 @@ $(document).ready(function () {
             .replace(/\n/g, '<br>'); // Line breaks
     }
 
-    // Add user message với animation
+    // Add user message với animation (No Avatar)
     function addUserMessage(text) {
         const time = getCurrentTime();
         const html = `
@@ -161,9 +161,6 @@ $(document).ready(function () {
                     <div class="message-bubble">${escapeHtml(text)}</div>
                     <div class="message-time">${time}</div>
                 </div>
-                <div class="message-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
             </div>
         `;
         $('.chatbot-messages').append(html);
@@ -171,15 +168,12 @@ $(document).ready(function () {
         scrollToBottom();
     }
 
-    // Add bot message với rich formatting
+    // Add bot message với rich formatting (No Avatar)
     function addBotMessage(text) {
         const time = getCurrentTime();
         const formattedText = formatBotResponse(text);
         const html = `
             <div class="message bot" style="opacity: 0;">
-                <div class="message-avatar">
-                    <i class="fas fa-robot"></i>
-                </div>
                 <div class="message-content">
                     <div class="message-bubble">${formattedText}</div>
                     <div class="message-time">${time}</div>
@@ -191,13 +185,10 @@ $(document).ready(function () {
         scrollToBottom();
     }
 
-    // Typing indicator với animation
+    // Typing indicator với animation (No Avatar)
     function showTypingIndicator() {
         const html = `
             <div class="message bot typing-message" style="opacity: 0;">
-                <div class="message-avatar">
-                    <i class="fas fa-robot"></i>
-                </div>
                 <div class="message-content">
                     <div class="typing-indicator">
                         <div class="typing-dot"></div>
@@ -227,26 +218,33 @@ $(document).ready(function () {
         const container = $('<div class="suggestions" style="opacity: 0;"></div>');
 
         suggestions.forEach((item, index) => {
-            const imageUrl = item.imageUrl ? `/images/menu/${item.imageUrl}` : '/images/menu/default-food.jpg';
-            const price = formatPrice(item.price || 0);
-            const description = item.description 
-                ? `<div class="suggestion-description">${escapeHtml(truncateText(item.description, 80))}</div>`
+            // Xử lý đường dẫn hình ảnh
+            let imageUrl = '/images/menu/default-food.jpg';
+            if (item.imageUrl && item.imageUrl.trim() !== '') {
+                imageUrl = '/images/menu/' + item.imageUrl;
+            } else if (item.ImageUrl && item.ImageUrl.trim() !== '') {
+                imageUrl = '/images/menu/' + item.ImageUrl;
+            }
+
+            const price = formatPrice(item.price || item.Price || 0);
+            const description = item.description || item.Description || '';
+            const descriptionHtml = description 
+                ? `<div class="suggestion-description">${escapeHtml(truncateText(description, 80))}</div>`
                 : '';
             
-            const linkUrl = item.isCombo ? '#' : `/Public/Detail/${item.id}`;
-            const target = item.isCombo ? '' : 'target="_blank"';
+            const linkUrl = `/Public/Detail/${item.id || item.Id}`;
 
             const card = $(`
-                <a href="${linkUrl}" ${target} class="suggestion-card" data-id="${item.id}" style="opacity: 0; transform: translateY(20px);">
+                <a href="${linkUrl}" target="_blank" class="suggestion-card" data-id="${item.id || item.Id}" style="opacity: 0; transform: translateY(20px);">
                     <img src="${imageUrl}" 
-                         alt="${escapeHtml(item.name)}" 
+                         alt="${escapeHtml(item.name || item.Name)}" 
                          class="suggestion-image" 
                          loading="lazy"
                          onerror="this.src='/images/menu/default-food.jpg'">
                     <div class="suggestion-info">
-                        <div class="suggestion-name">${escapeHtml(item.name)}</div>
+                        <div class="suggestion-name">${escapeHtml(item.name || item.Name)}</div>
                         <div class="suggestion-price">${price}</div>
-                        ${description}
+                        ${descriptionHtml}
                     </div>
                 </a>
             `);
