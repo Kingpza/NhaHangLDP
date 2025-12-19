@@ -1108,15 +1108,16 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var menuItem = db.MenuItem.Find(id);
-                if (menuItem != null)
+                if (menuItem == null)
                 {
-                    menuItem.IsAvailable = !menuItem.IsAvailable;
-                    menuItem.UpdatedDate = DateTime.Now;
-
-                    db.SaveChanges();
-                    return Json(new { success = true, isAvailable = menuItem.IsAvailable });
+                    return Json(new { success = false, message = "Không tìm thấy món ăn" });
                 }
-                return Json(new { success = false, message = "Không tìm thấy món ăn" });
+
+                menuItem.IsAvailable = !menuItem.IsAvailable;
+                menuItem.UpdatedDate = DateTime.Now;
+
+                db.SaveChanges();
+                return Json(new { success = true, isAvailable = menuItem.IsAvailable });
             }
             catch (Exception ex)
             {
@@ -1588,23 +1589,32 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var inboundList = db.StockInbound
+                var inboundListRaw = db.StockInbound
                     .Include("Employee")
                     .Include("Supplier")
-                    .Include("StockInboundDetails")
+                    .Include("StockInboundDetail")
+                    .Include("StockInboundDetail.Ingredient")
                     .OrderByDescending(s => s.InboundDate)
-                    .Select(s => new StockInboundListItem
-                    {
-                        Id = s.Id,
-                        InboundCode = "IN" + s.Id.ToString().PadLeft(6, '0'),
-                        InboundDate = s.InboundDate,
-                        EmployeeName = s.Employee.FullName,
-                        SupplierName = s.Supplier != null ? GetSupplierName(s.Supplier) : "Không có",
-                        TotalCost = s.TotalCost,
-                        Status = "Hoàn thành",
-                        ItemCount = s.StockInboundDetail.Count
-                    })
                     .ToList();
+
+                var inboundList = inboundListRaw.Select(s => new StockInboundListItem
+                {
+                    Id = s.Id,
+                    InboundCode = "IN" + s.Id.ToString().PadLeft(6, '0'),
+                    InboundDate = s.InboundDate,
+                    EmployeeName = s.Employee != null ? s.Employee.FullName : "N/A",
+                    SupplierName = s.Supplier != null ? GetSupplierName(s.Supplier) : "Không có" ,
+                    TotalCost = s.TotalCost,
+                    Status = "Hoàn thành",
+                    ItemCount = s.StockInboundDetail != null ? s.StockInboundDetail.Count : 0,
+                    Details = s.StockInboundDetail != null ? s.StockInboundDetail.Select(d => new StockInboundDetailItem
+                    {
+                        IngredientName = d.Ingredient != null ? d.Ingredient.Name : "N/A",
+                        Quantity = d.Quantity,
+                        Unit = d.Ingredient != null ? d.Ingredient.Unit : "",
+                        UnitPrice = d.UnitPrice
+                    }).ToList() : new List<StockInboundDetailItem>()
+                }).ToList();
 
                 var viewModel = new StockInboundListViewModel
                 {
@@ -1631,9 +1641,31 @@ namespace NhaHangLDP.Controllers
 
             try
             {
+                // Lấy dữ liệu xuất kho từ DamagedStock (vì xuất kho thực tế là hàng hỏng/hết hạn)
+                var outboundListRaw = db.DamagedStock
+                    .Include("Ingredient")
+                    .Include("Employee")
+                    .OrderByDescending(d => d.DamageDate)
+                    .ToList();
+
+                var outboundList = outboundListRaw.Select(d => new StockOutboundListItem
+                {
+                    Id = d.Id,
+                    OutboundCode = "OUT" + d.Id.ToString().PadLeft(6, '0'),
+                    OutboundDate = d.DamageDate,
+                    EmployeeName = d.Employee != null ? d.Employee.FullName : "N/A",
+                    Purpose = d.Reason ?? "Xuất kho",
+                    TotalCost = d.Quantity * (d.Ingredient != null ? d.Ingredient.EstimatedCost : 0),
+                    Status = "Hoàn thành",
+                    ItemCount = 1,
+                    IngredientName = d.Ingredient != null ? d.Ingredient.Name : "N/A",
+                    Quantity = d.Quantity,
+                    Unit = d.Ingredient != null ? d.Ingredient.Unit : ""
+                }).ToList();
+
                 var viewModel = new StockOutboundListViewModel
                 {
-                    OutboundList = new List<StockOutboundListItem>()
+                    OutboundList = outboundList
                 };
 
                 return View(viewModel);
@@ -2385,6 +2417,108 @@ namespace NhaHangLDP.Controllers
         }
 
         #region Ingredient Detail and History
+
+        // Thêm action xem chi tiết phiếu nhập kho
+        public ActionResult StockInboundDetail(int id)
+        {
+            if (Session["UserRole"] == null ||
+                (Session["UserRole"].ToString().ToLower() != "admin" &&
+                Session["UserRole"].ToString().ToLower() != "manager"))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var inbound = db.StockInbound
+                    .Include("Employee")
+                    .Include("Supplier")
+                    .Include("StockInboundDetail")
+                    .Include("StockInboundDetail.Ingredient")
+                    .FirstOrDefault(s => s.Id == id);
+
+                if (inbound == null)
+                {
+                    TempData["Error"] = "Không tìm thấy phiếu nhập kho.";
+                    return RedirectToAction("StockInboundList");
+                }
+
+                var viewModel = new StockInboundViewPageModel
+                {
+                    Id = inbound.Id,
+                    InboundCode = "IN" + inbound.Id.ToString().PadLeft(6, '0'),
+                    InboundDate = inbound.InboundDate,
+                    EmployeeName = inbound.Employee?.FullName ?? "N/A",
+                    SupplierName = inbound.Supplier != null ? GetSupplierName(inbound.Supplier) : "Không có",
+                    Notes = inbound.Notes,
+                    Status = inbound.Status ?? "Hoàn thành",
+                    TotalCost = inbound.TotalCost,
+                    Details = inbound.StockInboundDetail?.Select(d => new StockInboundDetailItem
+                    {
+                        IngredientName = d.Ingredient?.Name ?? "N/A",
+                        Quantity = d.Quantity,
+                        Unit = d.Ingredient?.Unit ?? "",
+                        UnitPrice = d.UnitPrice,
+                        ExpiryDate = d.ExpiryDate,
+                        BatchNumber = d.BatchNumber
+                    }).ToList() ?? new List<StockInboundDetailItem>()
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Có lỗi xảy ra: " + ex.Message;
+                return RedirectToAction("StockInboundList");
+            }
+        }
+
+        // Thêm action xem chi tiết phiếu xuất kho
+        public ActionResult StockOutboundDetail(int id)
+        {
+            if (Session["UserRole"] == null ||
+                (Session["UserRole"].ToString().ToLower() != "admin" &&
+                Session["UserRole"].ToString().ToLower() != "manager"))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            try
+            {
+                var outbound = db.DamagedStock
+                    .Include("Ingredient")
+                    .Include("Employee")
+                    .FirstOrDefault(d => d.Id == id);
+
+                if (outbound == null)
+                {
+                    TempData["Error"] = "Không tìm thấy phiếu xuất kho.";
+                    return RedirectToAction("StockOutboundList");
+                }
+
+                var viewModel = new StockOutboundViewPageModel
+                {
+                    Id = outbound.Id,
+                    OutboundCode = "OUT" + outbound.Id.ToString().PadLeft(6, '0'),
+                    OutboundDate = outbound.DamageDate,
+                    EmployeeName = outbound.Employee?.FullName ?? "N/A",
+                    Reason = outbound.Reason ?? "Xuất kho",
+                    Status = "Hoàn thành",
+                    IngredientName = outbound.Ingredient?.Name ?? "N/A",
+                    Quantity = outbound.Quantity,
+                    Unit = outbound.Ingredient?.Unit ?? "",
+                    UnitPrice = outbound.Ingredient?.EstimatedCost ?? 0,
+                    TotalCost = outbound.Quantity * (outbound.Ingredient?.EstimatedCost ?? 0)
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Có lỗi xảy ra: " + ex.Message;
+                return RedirectToAction("StockOutboundList");
+            }
+        }
 
         public ActionResult EditIngredient(int id)
         {

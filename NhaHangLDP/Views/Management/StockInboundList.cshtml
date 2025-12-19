@@ -6,240 +6,334 @@
 
 @section styles {
     <style>
-        .management-header {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            border-radius: 10px;
-        }
-
-        .table-container {
-            background: white;
+        .filter-card {
+            background: var(--bg-white);
             border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
         }
 
-        .btn-custom {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            border: none;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 25px;
+        .data-card {
+            background: var(--bg-white);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .data-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-card .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .inbound-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 25px;
             transition: all 0.3s ease;
         }
 
-        .btn-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
-            color: white;
+        .inbound-item:last-child {
+            border-bottom: none;
         }
 
-        .badge-status {
-            padding: 0.5rem 1rem;
-            border-radius: 15px;
+        .inbound-item:hover {
+            background: var(--bg-light);
+        }
+
+        .inbound-code {
+            font-weight: 700;
+            color: #22c55e;
+            font-size: 15px;
+        }
+
+        .inbound-date {
+            color: var(--text-gray);
+            font-size: 13px;
+        }
+
+        .inbound-meta {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .inbound-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .inbound-meta-item i {
+            color: var(--primary-blue);
+            width: 16px;
+        }
+
+        .inbound-details {
+            background: var(--bg-light);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .inbound-details h6 {
+            font-size: 13px;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 13px;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-item .name {
+            color: var(--primary-dark);
             font-weight: 500;
         }
 
-        .badge-completed {
-            background-color: #d4edda;
-            color: #155724;
+        .detail-item .info {
+            color: var(--text-gray);
         }
 
-        .badge-draft {
-            background-color: #fff3cd;
-            color: #856404;
+        .detail-item .price {
+            color: #22c55e;
+            font-weight: 600;
         }
 
-        .search-filters {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 2rem;
+        .total-cost {
+            font-size: 18px;
+            font-weight: 700;
+            color: #22c55e;
         }
 
-        .table-hover tbody tr:hover {
-            background-color: #f8f9fa;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: var(--text-gray);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state i {
+            font-size: 60px;
+            color: var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .empty-state h5 {
+            color: var(--text-gray);
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: var(--text-gray);
+            margin-bottom: 20px;
         }
     </style>
 }
 
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="management-header text-center">
-        <div class="container">
-            <h1><i class="fas fa-list-alt"></i> Danh Sách Phiếu Nhập Kho</h1>
-            <p class="mb-0">Quản lý và theo dõi các phiếu nhập kho</p>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-truck-loading me-2"></i>Danh Sách Phiếu Nhập Kho</h1>
+            <p>Quản lý và theo dõi các phiếu nhập kho</p>
+        </div>
+        <div>
+            <a href="@Url.Action("StockInbound", "Management")" class="btn btn-light me-2">
+                <i class="fas fa-plus-circle me-2"></i>Tạo Phiếu Nhập Mới
+            </a>
+            <a href="@Url.Action("StockOutboundList", "Management")" class="btn btn-outline-light me-2">
+                <i class="fas fa-arrow-up me-2"></i>Phiếu Xuất Kho
+            </a>
+            <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-light">
+                <i class="fas fa-warehouse me-2"></i>Quay Lại Kho
+            </a>
         </div>
     </div>
+</div>
 
-    <!-- Navigation Buttons -->
-    <div class="row mb-4">
-        <div class="col-12 d-flex justify-content-between">
-            <div>
-                <a href="@Url.Action("StockInbound", "Management")" class="btn btn-custom">
-                    <i class="fas fa-plus-circle me-2"></i>Tạo Phiếu Nhập Mới
-                </a>
+<!-- Success/Error Messages -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-triangle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                <i class="fas fa-file-alt"></i>
             </div>
-            <div>
-                <a href="@Url.Action("StockOutboundList", "Management")" class="btn btn-outline-primary me-2">
-                    <i class="fas fa-sign-out-alt me-2"></i>Phiếu Xuất Kho
-                </a>
-                <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-secondary">
-                    <i class="fas fa-warehouse me-2"></i>Quay Lại Kho
-                </a>
-            </div>
+            <h4>@Model.InboundList.Count</h4>
+            <p class="mb-0">Tổng số phiếu</p>
         </div>
     </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: rgba(59, 130, 246, 0.1); color: var(--primary-blue);">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <h4>@Model.InboundList.Sum(x => x.TotalCost).ToString("N0")</h4>
+            <p class="mb-0">Tổng giá trị (VNĐ)</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <h4>@Model.InboundList.Sum(x => x.ItemCount)</h4>
+            <p class="mb-0">Tổng nguyên liệu</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card text-center">
+            <div class="stat-icon mx-auto" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <h4>@Model.InboundList.Count(x => x.InboundDate.Date == DateTime.Now.Date)</h4>
+            <p class="mb-0">Phiếu hôm nay</p>
+        </div>
+    </div>
+</div>
 
-    <!-- Success/Error Messages -->
-    @if (TempData["Success"] != null)
+<!-- Data List -->
+<div class="data-card">
+    <div class="card-header">
+        <h5><i class="fas fa-list me-2"></i>Danh Sách Phiếu Nhập (@Model.InboundList.Count)</h5>
+        <button class="btn btn-outline-success btn-sm" onclick="exportToExcel()">
+            <i class="fas fa-file-excel me-1"></i>Xuất Excel
+        </button>
+    </div>
+
+    @if (Model.InboundList.Any())
     {
-        <div class="alert alert-success alert-dismissible fade show">
-            <i class="fas fa-check-circle"></i> @TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="inbound-list">
+            @foreach (var item in Model.InboundList)
+            {
+                <div class="inbound-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <span class="inbound-code">@item.InboundCode</span>
+                                <span class="badge badge-success">@item.Status</span>
+                            </div>
+                            <div class="inbound-date">
+                                <i class="fas fa-clock me-1"></i>@item.InboundDate.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                            <div class="inbound-meta">
+                                <div class="inbound-meta-item">
+                                    <i class="fas fa-user"></i>
+                                    <span>@item.EmployeeName</span>
+                                </div>
+                                <div class="inbound-meta-item">
+                                    <i class="fas fa-truck"></i>
+                                    <span>@item.SupplierName</span>
+                                </div>
+                                <div class="inbound-meta-item">
+                                    <i class="fas fa-box"></i>
+                                    <span>@item.ItemCount nguyên liệu</span>
+                                </div>
+                            </div>
+
+                            @if (item.Details != null && item.Details.Any())
+                            {
+                                <div class="inbound-details">
+                                    <h6><i class="fas fa-list-ul me-1"></i>Chi tiết nguyên liệu:</h6>
+                                    @foreach (var detail in item.Details)
+                                    {
+                                        <div class="detail-item">
+                                            <span class="name">@detail.IngredientName</span>
+                                            <span class="info">@detail.Quantity.ToString("N1") @detail.Unit × @detail.UnitPrice.ToString("N0") VNĐ</span>
+                                            <span class="price">@((detail.Quantity * detail.UnitPrice).ToString("N0")) VNĐ</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                        <div class="text-end ms-4">
+                            <div class="total-cost mb-3">@item.TotalCost.ToString("N0") VNĐ</div>
+                            <div class="d-flex gap-2">
+                                <a href="@Url.Action("StockInboundDetail", "Management", new { id = item.Id })" class="action-btn" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="@Url.Action("StockInboundDetail", "Management", new { id = item.Id })" class="action-btn" title="In phiếu" target="_blank">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     }
-
-    @if (TempData["Error"] != null)
+    else
     {
-        <div class="alert alert-danger alert-dismissible fade show">
-            <i class="fas fa-exclamation-triangle"></i> @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h5>Chưa có phiếu nhập kho nào</h5>
+            <p>Tạo phiếu nhập kho đầu tiên để bắt đầu quản lý</p>
+            <a href="@Url.Action("StockInbound", "Management")" class="btn btn-primary-custom">
+                <i class="fas fa-plus-circle me-2"></i>Tạo Phiếu Nhập Mới
+            </a>
         </div>
     }
-
-    <!-- Data Table -->
-    <div class="table-container">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5><i class="fas fa-table me-2"></i>Danh Sách Phiếu Nhập (@Model.InboundList.Count)</h5>
-            <div>
-                <button class="btn btn-outline-success btn-sm" onclick="exportToExcel()">
-                    <i class="fas fa-file-excel me-1"></i>Xuất Excel
-                </button>
-            </div>
-        </div>
-
-        @if (Model.InboundList.Any())
-        {
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Mã Phiếu</th>
-                            <th>Ngày Nhập</th>
-                            <th>Nhân Viên</th>
-                            <th>Nhà Cung Cấp</th>
-                            <th>Số Lượng Items</th>
-                            <th>Tổng Chi Phí</th>
-                            <th>Trạng Thái</th>
-                            <th>Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.InboundList)
-                        {
-                            <tr>
-                                <td>
-                                    <strong class="text-primary">@item.InboundCode</strong>
-                                </td>
-                                <td>@item.InboundDate.ToString("dd/MM/yyyy HH:mm")</td>
-                                <td>@item.EmployeeName</td>
-                                <td>@(item.SupplierName ?? "Không có")</td>
-                                <td>
-                                    <span class="badge bg-info">@item.ItemCount items</span>
-                                </td>
-                                <td>
-                                    <strong class="text-success">@item.TotalCost.ToString("N0") VNĐ</strong>
-                                </td>
-                                <td>
-                                    <span class="badge badge-completed">@item.Status</span>
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-primary" onclick="viewDetails(@item.Id)"
-                                                title="Xem chi tiết">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn btn-outline-success" onclick="printInbound(@item.Id)"
-                                                title="In phiếu">
-                                            <i class="fas fa-print"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Summary Statistics -->
-            <div class="row mt-4">
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h5 class="text-primary">@Model.InboundList.Count</h5>
-                            <small class="text-muted">Tổng số phiếu</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h5 class="text-success">@Model.InboundList.Sum(x => x.TotalCost).ToString("N0") VNĐ</h5>
-                            <small class="text-muted">Tổng giá trị nhập</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h5 class="text-info">@(Model.InboundList.Any() ? Model.InboundList.Average(x => x.TotalCost).ToString("N0") : "0") VNĐ</h5>
-                            <small class="text-muted">Giá trị TB/phiếu</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card text-center">
-                        <div class="card-body">
-                            <h5 class="text-warning">@Model.InboundList.Count(x => x.InboundDate.Date == DateTime.Now.Date)</h5>
-                            <small class="text-muted">Phiếu hôm nay</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="text-center py-5">
-                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                <h5 class="text-muted">Chưa có phiếu nhập kho nào</h5>
-                <p class="text-muted mb-3">Tạo phiếu nhập kho đầu tiên để bắt đầu quản lý</p>
-                <a href="@Url.Action("StockInbound", "Management")" class="btn btn-custom">
-                    <i class="fas fa-plus-circle me-2"></i>Tạo Phiếu Nhập Mới
-                </a>
-            </div>
-        }
-    </div>
 </div>
 
 @section scripts {
     <script>
-        function viewDetails(id) {
-            // Implement view details modal or redirect
-            alert('Xem chi tiết phiếu nhập #' + id);
-        }
-
-        function printInbound(id) {
-            // Implement print functionality
-            alert('In phiếu nhập #' + id);
-        }
-
         function exportToExcel() {
-            // Implement Excel export
             alert('Xuất Excel (chức năng đang phát triển)');
         }
     </script>

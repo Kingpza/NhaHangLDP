@@ -3,253 +3,259 @@
     ViewBag.Title = "Danh Sách Nguyên Liệu";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
 }
-<style>
-    .table-responsive {
-        position: relative;
-    }
 
-        .table-responsive::before,
-        .table-responsive::after {
-            pointer-events: none !important;
+@section styles {
+    <style>
+        .search-filter-card {
+            background: var(--bg-white);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
         }
 
-    .table .btn {
-        position: relative;
-        z-index: 10;
-        pointer-events: auto !important;
-    }
+        .table-card {
+            background: var(--bg-white);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
 
-    .table .btn-sm {
-        padding: 0.4rem 0.55rem;
-        min-width: 36px;
-    }
-</style>
+        .table-card .card-body {
+            padding: 0;
+        }
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h2><i class="fas fa-list me-2"></i>Danh Sách Nguyên Liệu</h2>
-        <p class="text-light">Quản lý tất cả nguyên liệu trong kho</p>
-    </div>
-    <div class="col-md-6 text-end">
-        <a href="@Url.Action("CreateIngredient", "Management")" class="btn btn-custom">
-            <i class="fas fa-plus me-2"></i>Thêm Nguyên Liệu Mới
-        </a>
-        <a href="@Url.Action("StockInbound", "Management")" class="btn btn-success ms-2">
-            <i class="fas fa-arrow-down me-2"></i>Nhập Kho
-        </a>
-        <a href="@Url.Action("StockOutbound", "Management")" class="btn btn-warning ms-2">
-            <i class="fas fa-arrow-up me-2"></i>Xuất Kho
-        </a>
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-light);
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-item h5 {
+            margin: 0;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .summary-item small {
+            color: var(--text-gray);
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-list me-2"></i>Danh Sách Nguyên Liệu</h1>
+            <p>Quản lý tất cả nguyên liệu trong kho</p>
+        </div>
+        <div>
+            <a href="@Url.Action("CreateIngredient", "Management")" class="btn btn-light me-2">
+                <i class="fas fa-plus me-2"></i>Thêm Nguyên Liệu
+            </a>
+            <a href="@Url.Action("StockInbound", "Management")" class="btn btn-outline-light me-2">
+                <i class="fas fa-arrow-down me-2"></i>Nhập Kho
+            </a>
+            <a href="@Url.Action("StockOutbound", "Management")" class="btn btn-outline-light">
+                <i class="fas fa-arrow-up me-2"></i>Xuất Kho
+            </a>
+        </div>
     </div>
 </div>
 
 <!-- Search and Filter -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="stat-card">
-            <div class="row align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label">Tìm kiếm</label>
-                    <input type="text" class="form-control" id="searchInput" placeholder="Tên nguyên liệu...">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Nhà cung cấp</label>
-                    <select class="form-select" id="supplierFilter">
-                        <option value="">Tất cả nhà cung cấp</option>
-                        @foreach (var supplier in Model.Select(x => x.LatestSupplier).Where(x => !string.IsNullOrEmpty(x)).Distinct())
-                        {
-                            <option value="@supplier">@supplier</option>
-                        }
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Trạng thái kho</label>
-                    <select class="form-select" id="stockFilter">
-                        <option value="">Tất cả</option>
-                        <option value="sufficient">Đủ hàng</option>
-                        <option value="low">Sắp hết</option>
-                        <option value="out">Hết hàng</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-outline-light w-100" onclick="clearFilters()">
-                        <i class="fas fa-times me-1"></i>Xóa bộ lọc
-                    </button>
-                </div>
-            </div>
+<div class="search-filter-card">
+    <div class="row align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Tìm kiếm</label>
+            <input type="text" class="form-control" id="searchInput" placeholder="Tên nguyên liệu...">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Nhà cung cấp</label>
+            <select class="form-select" id="supplierFilter">
+                <option value="">Tất cả nhà cung cấp</option>
+                @foreach (var supplier in Model.Select(x => x.LatestSupplier).Where(x => !string.IsNullOrEmpty(x)).Distinct())
+                {
+                    <option value="@supplier">@supplier</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Trạng thái kho</label>
+            <select class="form-select" id="stockFilter">
+                <option value="">Tất cả</option>
+                <option value="sufficient">Đủ hàng</option>
+                <option value="low">Sắp hết</option>
+                <option value="out">Hết hàng</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                <i class="fas fa-times me-1"></i>Xóa bộ lọc
+            </button>
         </div>
     </div>
 </div>
 
 @if (Model == null || !Model.Any())
 {
-    <div class="row">
-        <div class="col-12">
-            <div class="stat-card text-center p-5">
-                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-                <h4>Chưa có nguyên liệu nào</h4>
-                <p class="text-muted">Bạn cần thêm nguyên liệu để bắt đầu quản lý kho</p>
-                <div class="mt-4">
-                    <a href="@Url.Action("CreateIngredient", "Management")" class="btn btn-custom me-2">
-                        <i class="fas fa-plus me-2"></i>Thêm Nguyên Liệu Đầu Tiên
-                    </a>
-                    <button class="btn btn-success" onclick="createSampleData()">
-                        <i class="fas fa-magic me-2"></i>Tạo Dữ Liệu Mẫu
-                    </button>
-                </div>
-            </div>
+    <div class="stat-card text-center py-5">
+        <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">Chưa có nguyên liệu nào</h4>
+        <p class="text-muted">Bạn cần thêm nguyên liệu để bắt đầu quản lý kho</p>
+        <div class="mt-4">
+            <a href="@Url.Action("CreateIngredient", "Management")" class="btn btn-primary-custom me-2">
+                <i class="fas fa-plus me-2"></i>Thêm Nguyên Liệu Đầu Tiên
+            </a>
+            <button class="btn btn-outline-custom" onclick="createSampleData()">
+                <i class="fas fa-magic me-2"></i>Tạo Dữ Liệu Mẫu
+            </button>
         </div>
     </div>
 }
 else
 {
-    <!-- Ingredients Table -->
-    <div class="row">
-        <div class="col-12">
-            <div class="stat-card">
-                <div class="table-responsive">
-                    <table class="table table-custom" id="ingredientsTable">
-                        <thead>
-                            <tr>
-                                <th>Tên Nguyên Liệu</th>
-                                <th>Đơn Vị</th>
-                                <th>Tồn Kho</th>
-                                <th>Tối Thiểu</th>
-                                <th>Giá Ước Tính</th>
-                                <th>Nhà Cung Cấp</th>
-                                <th>Trạng Thái</th>
-                                <th>Thao Tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var ingredient in Model)
-                            {
-                                var stockStatus = "sufficient";
-                                var badgeClass = "bg-success";
-                                var statusText = "Đủ hàng";
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-custom table-hover mb-0" id="ingredientsTable">
+                <thead>
+                    <tr>
+                        <th>Tên Nguyên Liệu</th>
+                        <th>Đơn Vị</th>
+                        <th>Tồn Kho</th>
+                        <th>Tối Thiểu</th>
+                        <th>Giá Ước Tính</th>
+                        <th>Nhà Cung Cấp</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ingredient in Model)
+                    {
+                        var stockStatus = "sufficient";
+                        var badgeClass = "badge-success";
+                        var statusText = "Đủ hàng";
 
-                                if (ingredient.AvailableStock <= 0)
+                        if (ingredient.AvailableStock <= 0)
+                        {
+                            stockStatus = "out";
+                            badgeClass = "badge-danger";
+                            statusText = "Hết hàng";
+                        }
+                        else if (ingredient.LowStockThreshold.HasValue && ingredient.AvailableStock <= ingredient.LowStockThreshold.Value)
+                        {
+                            stockStatus = "low";
+                            badgeClass = "badge-warning";
+                            statusText = "Sắp hết";
+                        }
+
+                        <tr data-supplier="@(ingredient.LatestSupplier ?? "")" data-stock="@stockStatus" data-name="@ingredient.Name.ToLower()">
+                            <td>
+                                <strong style="color: var(--primary-dark);">@ingredient.Name</strong>
+                                @if (ingredient.AvailableStock <= 0)
                                 {
-                                    stockStatus = "out";
-                                    badgeClass = "bg-danger";
-                                    statusText = "Hết hàng";
+                                    <i class="fas fa-exclamation-triangle text-danger ms-1" title="Hết hàng"></i>
                                 }
                                 else if (ingredient.LowStockThreshold.HasValue && ingredient.AvailableStock <= ingredient.LowStockThreshold.Value)
                                 {
-                                    stockStatus = "low";
-                                    badgeClass = "bg-warning text-dark";
-                                    statusText = "Sắp hết";
+                                    <i class="fas fa-exclamation-triangle text-warning ms-1" title="Sắp hết hàng"></i>
                                 }
-
-                                <tr data-supplier="@(ingredient.LatestSupplier ?? "")" data-stock="@stockStatus" data-name="@ingredient.Name.ToLower()">
-                                    <td>
-                                        <strong>@ingredient.Name</strong>
-                                        @if (ingredient.AvailableStock <= 0)
+                            </td>
+                            <td>
+                                <span class="badge badge-info">@ingredient.Unit</span>
+                            </td>
+                            <td>
+                                <strong class="@(ingredient.AvailableStock <= 0 ? "text-danger" : ingredient.LowStockThreshold.HasValue && ingredient.AvailableStock <= ingredient.LowStockThreshold.Value ? "text-warning" : "")">
+                                    @ingredient.AvailableStock.ToString("N2")
+                                </strong>
+                            </td>
+                            <td>
+                                @if (ingredient.LowStockThreshold.HasValue)
+                                {
+                                    @ingredient.LowStockThreshold.Value.ToString("N2")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">N/A</span>
+                                }
+                            </td>
+                            <td>
+                                <strong style="color: #16a34a;">@ingredient.EstimatedCost.ToString("N0") VNĐ</strong>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(ingredient.LatestSupplier))
+                                {
+                                    <div>
+                                        <span class="badge badge-info">@ingredient.LatestSupplier</span>
+                                        @if (ingredient.LastInboundDate.HasValue)
                                         {
-                                            <i class="fas fa-exclamation-triangle text-danger ms-1" title="Hết hàng"></i>
+                                            <br><small class="text-muted">Nhập: @ingredient.LastInboundDate.Value.ToString("dd/MM/yyyy")</small>
                                         }
-                                        else if (ingredient.LowStockThreshold.HasValue && ingredient.AvailableStock <= ingredient.LowStockThreshold.Value)
-                                        {
-                                            <i class="fas fa-exclamation-triangle text-warning ms-1" title="Sắp hết hàng"></i>
-                                        }
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-secondary">@ingredient.Unit</span>
-                                    </td>
-                                    <td>
-                                        <strong class="@(ingredient.AvailableStock <= 0 ? "text-danger" : ingredient.LowStockThreshold.HasValue && ingredient.AvailableStock <= ingredient.LowStockThreshold.Value ? "text-warning" : "")">
-                                            @ingredient.AvailableStock.ToString("N2")
-                                        </strong>
-                                    </td>
-                                    <td>
-                                        @if (ingredient.LowStockThreshold.HasValue)
-                                        {
-                                            @ingredient.LowStockThreshold.Value.ToString("N2")
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">N/A</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <strong>@ingredient.EstimatedCost.ToString("N0") VNĐ</strong>
-                                    </td>
-                                    <td>
-                                        @if (!string.IsNullOrEmpty(ingredient.LatestSupplier))
-                                        {
-                                            <div>
-                                                <span class="badge bg-info text-dark">@ingredient.LatestSupplier</span>
-                                                @if (ingredient.LastInboundDate.HasValue)
-                                                {
-                                                    <br><small class="text-muted">Nhập: @ingredient.LastInboundDate.Value.ToString("dd/MM/yyyy")</small>
-                                                }
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">Chưa có</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <span class="badge @badgeClass">@statusText</span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <button class="btn btn-outline-info btn-sm"
-                                                    onclick="viewIngredientDetail(@ingredient.Id, '@ingredient.Name')"
-                                                    title="Xem chi tiết">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-outline-primary btn-sm"
-                                                    onclick="viewHistory(@ingredient.Id, '@ingredient.Name')"
-                                                    title="Xem lịch sử">
-                                                <i class="fas fa-history"></i>
-                                            </button>
-                                            <button class="btn btn-outline-danger btn-sm"
-                                                    onclick="deleteIngredient(@ingredient.Id, '@ingredient.Name')"
-                                                    title="Xóa nguyên liệu">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                @if (Model.Any())
-                {
-                    <!-- Summary Statistics -->
-                    <div class="row mt-4 pt-4 border-top">
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h5 class="mb-1">@Model.Count</h5>
-                                <small class="text-muted">Tổng nguyên liệu</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h5 class="mb-1 text-warning">@Model.Count(x => x.LowStockThreshold.HasValue && x.AvailableStock <= x.LowStockThreshold.Value && x.AvailableStock > 0)</h5>
-                                <small class="text-muted">Sắp hết hàng</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h5 class="mb-1 text-danger">@Model.Count(x => x.AvailableStock <= 0)</h5>
-                                <small class="text-muted">Hết hàng</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <h5 class="mb-1 text-info">@Model.Sum(x => x.AvailableStock * x.EstimatedCost).ToString("N0") VNĐ</h5>
-                                <small class="text-muted">Tổng giá trị kho</small>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @badgeClass">@statusText</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-info"
+                                            onclick="viewIngredientDetail(@ingredient.Id, '@ingredient.Name')"
+                                            title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-outline-primary"
+                                            onclick="viewHistory(@ingredient.Id, '@ingredient.Name')"
+                                            title="Xem lịch sử">
+                                        <i class="fas fa-history"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger"
+                                            onclick="deleteIngredient(@ingredient.Id, '@ingredient.Name')"
+                                            title="Xóa nguyên liệu">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
+
+        @if (Model.Any())
+        {
+            <div class="summary-stats">
+                <div class="summary-item">
+                    <h5>@Model.Count</h5>
+                    <small>Tổng nguyên liệu</small>
+                </div>
+                <div class="summary-item">
+                    <h5 style="color: #f59e0b;">@Model.Count(x => x.LowStockThreshold.HasValue && x.AvailableStock <= x.LowStockThreshold.Value && x.AvailableStock > 0)</h5>
+                    <small>Sắp hết hàng</small>
+                </div>
+                <div class="summary-item">
+                    <h5 style="color: #ef4444;">@Model.Count(x => x.AvailableStock <= 0)</h5>
+                    <small>Hết hàng</small>
+                </div>
+                <div class="summary-item">
+                    <h5 style="color: var(--primary-blue);">@Model.Sum(x => x.AvailableStock * x.EstimatedCost).ToString("N0") VNĐ</h5>
+                    <small>Tổng giá trị kho</small>
+                </div>
+            </div>
+        }
     </div>
 }
 
@@ -298,7 +304,7 @@ else
                     if (data.success) {
                         document.getElementById('ingredientDetailContent').innerHTML = renderIngredientDetail(data);
                     } else {
-document.getElementById('ingredientDetailContent').innerHTML = `<div class="text-center text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>${data.message}</p></div>`;
+                        document.getElementById('ingredientDetailContent').innerHTML = `<div class="text-center text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>${data.message}</p></div>`;
                     }
                 })
                 .catch(() => {
@@ -314,7 +320,7 @@ document.getElementById('ingredientDetailContent').innerHTML = `<div class="text
                         <h6 class="fw-bold mb-3">Thông Tin Cơ Bản</h6>
                         <table class="table table-borderless table-sm">
                             <tr><td><strong>Tên:</strong></td><td>${i.name}</td></tr>
-                            <tr><td><strong>Đơn vị:</strong></td><td><span class="badge bg-secondary">${i.unit}</span></td></tr>
+                            <tr><td><strong>Đơn vị:</strong></td><td><span class="badge badge-info">${i.unit}</span></td></tr>
                             <tr><td><strong>Nhà cung cấp:</strong></td><td>${i.latestSupplier || '<span class="text-muted">Chưa có</span>'}</td></tr>
                             <tr><td><strong>Giá ước tính:</strong></td><td><strong>${parseInt(i.estimatedCost).toLocaleString('vi-VN')} VNĐ</strong></td></tr>
                         </table>
@@ -325,7 +331,7 @@ document.getElementById('ingredientDetailContent').innerHTML = `<div class="text
                             <tr><td><strong>Tồn kho:</strong></td><td>${parseFloat(i.availableStock).toLocaleString('vi-VN')} ${i.unit}</td></tr>
                             <tr><td><strong>Tối thiểu:</strong></td><td>${i.lowStockThreshold ? parseFloat(i.lowStockThreshold).toLocaleString('vi-VN') + ' ' + i.unit : '<span class="text-muted">Chưa đặt</span>'}</td></tr>
                             <tr><td><strong>Trạng thái:</strong></td><td>${i.statusBadge}</td></tr>
-                            <tr><td><strong>Giá trị tồn:</strong></td><td><strong class="text-info">${parseInt(i.totalValue).toLocaleString('vi-VN')} VNĐ</strong></td></tr>
+                            <tr><td><strong>Giá trị tồn:</strong></td><td><strong style="color: var(--primary-blue);">${parseInt(i.totalValue).toLocaleString('vi-VN')} VNĐ</strong></td></tr>
                         </table>
                     </div>
                 </div>`;
@@ -345,7 +351,7 @@ document.getElementById('ingredientDetailContent').innerHTML = `<div class="text
             })
                 .then(res => res.json())
                 .then(data => {
-if (data.success) {
+                    if (data.success) {
                         alert(data.message || "Đã xóa thành công!");
                         location.reload();
                     } else {
@@ -366,29 +372,5 @@ if (data.success) {
                     .catch(() => alert('Lỗi tạo dữ liệu mẫu.'));
             }
         }
-
-        setInterval(() => {
-            if (!document.querySelector('.modal.show')) {
-                const currentUrl = window.location.href;
-                const hasFilter =
-                    document.getElementById('searchInput').value ||
-                    document.getElementById('supplierFilter').value ||
-                    document.getElementById('stockFilter').value;
-
-                if (!hasFilter) {
-                    fetch(currentUrl)
-                        .then(r => r.text())
-                        .then(html => {
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(html, 'text/html');
-                            const newTable = doc.querySelector('#ingredientsTable tbody');
-                            if (newTable) {
-                                document.querySelector('#ingredientsTable tbody').innerHTML = newTable.innerHTML;
-                            }
-                        })
-                        .catch(() => {});
-                }
-            }
-        }, 30000);
     </script>
 }

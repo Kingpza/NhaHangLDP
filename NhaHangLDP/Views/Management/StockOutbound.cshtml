@@ -4,26 +4,112 @@
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
 }
 
-<div class="row mb-4">
-    <div class="col-md-6">
-        <h2><i class="fas fa-arrow-up me-2"></i>Xuất Kho Nguyên Liệu</h2>
-        <p class="text-light">Xuất nguyên liệu cho các bộ phận sử dụng</p>
-    </div>
-    <div class="col-md-6 text-end">
-        <a href="@Url.Action("StockOutboundList", "Management")" class="btn btn-outline-light me-2">
-            <i class="fas fa-list me-2"></i>Danh Sách Phiếu Xuất
-        </a>
-        <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-secondary">
-            <i class="fas fa-warehouse me-2"></i>Quay Lại Kho
-        </a>
+@section styles {
+    <style>
+        .form-card {
+            background: var(--bg-white);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .form-card h5 {
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-card {
+            background: var(--bg-white);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .info-card h5 {
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .info-card.tips {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+        }
+
+        .info-card.tips h5 {
+            color: white;
+        }
+
+        .info-card.tips ul {
+            margin: 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .info-card.tips li {
+            padding: 5px 0;
+            font-size: 13px;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .stock-status-good {
+            color: #22c55e;
+        }
+
+        .stock-status-warning {
+            color: #f59e0b;
+        }
+
+        .stock-status-danger {
+            color: #ef4444;
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-arrow-up me-2"></i>Xuất Kho Nguyên Liệu</h1>
+            <p>Xuất nguyên liệu cho các bộ phận sử dụng</p>
+        </div>
+        <div>
+            <a href="@Url.Action("StockOutboundList", "Management")" class="btn btn-light me-2">
+                <i class="fas fa-list me-2"></i>Danh Sách Phiếu Xuất
+            </a>
+            <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-light">
+                <i class="fas fa-warehouse me-2"></i>Quay Lại Kho
+            </a>
+        </div>
     </div>
 </div>
 
-<!-- Stock Outbound Form -->
 <div class="row">
     <div class="col-lg-8">
-        <div class="stat-card">
-            <h5 class="mb-4"><i class="fas fa-edit me-2"></i>Thông Tin Xuất Kho</h5>
+        <div class="form-card">
+            <h5><i class="fas fa-edit me-2"></i>Thông Tin Xuất Kho</h5>
 
             @using (Html.BeginForm("ProcessStockOutbound", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
             {
@@ -50,9 +136,7 @@
                                     }
                                 }
                             </select>
-                            <div class="invalid-feedback">
-                                Vui lòng chọn nguyên liệu cần xuất.
-                            </div>
+                            <div class="invalid-feedback">Vui lòng chọn nguyên liệu cần xuất.</div>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -63,9 +147,7 @@
                                        step="0.1" min="0.1" placeholder="0.0" required>
                                 <span class="input-group-text" id="unitDisplay">Đơn vị</span>
                             </div>
-                            <div class="invalid-feedback">
-                                Vui lòng nhập số lượng hợp lệ.
-                            </div>
+                            <div class="invalid-feedback">Vui lòng nhập số lượng hợp lệ.</div>
                         </div>
                     </div>
                 </div>
@@ -104,9 +186,7 @@
                                 <option value="Kiểm kê">Kiểm kê</option>
                                 <option value="Khác">Khác</option>
                             </select>
-                            <div class="invalid-feedback">
-                                Vui lòng chọn lý do xuất kho.
-                            </div>
+                            <div class="invalid-feedback">Vui lòng chọn lý do xuất kho.</div>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -126,7 +206,7 @@
                     <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
                         <i class="fas fa-undo me-2"></i>Đặt Lại
                     </button>
-                    <button type="submit" class="btn btn-warning">
+                    <button type="submit" class="btn btn-submit">
                         <i class="fas fa-check me-2"></i>Xác Nhận Xuất Kho
                     </button>
                 </div>
@@ -134,31 +214,30 @@
         </div>
     </div>
 
-    <!-- Sidebar -->
     <div class="col-lg-4">
-        <div class="stat-card">
-            <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Thông Tin Chi Tiết</h5>
+        <div class="info-card">
+            <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Chi Tiết</h5>
             <div id="ingredientInfo">
-                <div class="text-center text-muted">
+                <div class="text-center text-muted py-3">
                     <i class="fas fa-box fa-2x mb-2"></i>
-                    <p>Chọn nguyên liệu để xem thông tin</p>
+                    <p class="mb-0">Chọn nguyên liệu để xem thông tin</p>
                 </div>
             </div>
         </div>
 
-        <div class="stat-card">
-            <h5 class="mb-3"><i class="fas fa-exclamation-triangle me-2"></i>Cảnh Báo</h5>
+        <div class="info-card">
+            <h5><i class="fas fa-exclamation-triangle me-2" style="color: #f59e0b;"></i>Cảnh Báo</h5>
             <div id="warningInfo">
-                <div class="text-center text-success">
+                <div class="text-center py-3" style="color: #22c55e;">
                     <i class="fas fa-check-circle fa-2x mb-2"></i>
-                    <p>Chưa có cảnh báo</p>
+                    <p class="mb-0">Chưa có cảnh báo</p>
                 </div>
             </div>
         </div>
 
-        <div class="stat-card bg-info text-white">
-            <h5 class="mb-3"><i class="fas fa-lightbulb me-2"></i>Lưu Ý</h5>
-            <ul class="list-unstyled">
+        <div class="info-card tips">
+            <h5><i class="fas fa-lightbulb me-2"></i>Lưu Ý</h5>
+            <ul>
                 <li><i class="fas fa-check me-2"></i>Kiểm tra tồn kho trước khi xuất</li>
                 <li><i class="fas fa-check me-2"></i>Ghi rõ lý do xuất kho</li>
                 <li><i class="fas fa-check me-2"></i>Cập nhật ngay sau xuất kho</li>
@@ -201,12 +280,9 @@
 
                     unitDisplay.textContent = unit;
                     currentStock.value = current.toLocaleString('vi-VN') + ' ' + unit;
-
-                    // Set max quantity to current stock
                     quantityInput.max = current;
                     quantityInput.placeholder = `Tối đa: ${current}`;
 
-                    // Update ingredient info
                     ingredientInfo.innerHTML = `
                         <div class="mb-2">
                             <small class="text-muted">Tên nguyên liệu:</small>
@@ -214,15 +290,15 @@
                         </div>
                         <div class="mb-2">
                             <small class="text-muted">Tồn kho hiện tại:</small>
-                            <div><strong class="${current <= minimum ? 'text-warning' : 'text-success'}">${current.toLocaleString('vi-VN')} ${unit}</strong></div>
+                            <div><strong class="${current <= minimum ? 'stock-status-warning' : 'stock-status-good'}">${current.toLocaleString('vi-VN')} ${unit}</strong></div>
                         </div>
                         <div class="mb-2">
                             <small class="text-muted">Ngưỡng tối thiểu:</small>
                             <div>${minimum.toLocaleString('vi-VN')} ${unit}</div>
                         </div>
-                        <div class="mb-2">
+                        <div class="mb-0">
                             <small class="text-muted">Giá ước tính:</small>
-                            <div><strong>${cost.toLocaleString('vi-VN')} VNĐ/${unit}</strong></div>
+                            <div><strong style="color: #16a34a;">${cost.toLocaleString('vi-VN')} VNĐ/${unit}</strong></div>
                         </div>
                     `;
 
@@ -237,16 +313,16 @@
                     estimatedValue.value = '';
 
                     ingredientInfo.innerHTML = `
-                        <div class="text-center text-muted">
+                        <div class="text-center text-muted py-3">
                             <i class="fas fa-box fa-2x mb-2"></i>
-                            <p>Chọn nguyên liệu để xem thông tin</p>
+                            <p class="mb-0">Chọn nguyên liệu để xem thông tin</p>
                         </div>
                     `;
 
                     warningInfo.innerHTML = `
-                        <div class="text-center text-success">
+                        <div class="text-center py-3" style="color: #22c55e;">
                             <i class="fas fa-check-circle fa-2x mb-2"></i>
-                            <p>Chưa có cảnh báo</p>
+                            <p class="mb-0">Chưa có cảnh báo</p>
                         </div>
                     `;
                 }
@@ -266,14 +342,13 @@
                 remainingStock.value = remaining.toLocaleString('vi-VN') + ' ' + unit;
                 estimatedValue.value = totalValue.toLocaleString('vi-VN') + ' VNĐ';
 
-                // Update status and styling
                 let status = '';
                 let statusClass = '';
                 let warnings = [];
 
                 if (quantity > current) {
                     status = 'Không đủ hàng';
-                    statusClass = 'text-danger';
+                    statusClass = 'stock-status-danger';
                     quantityInput.classList.add('is-invalid');
                     warnings.push({
                         type: 'danger',
@@ -282,7 +357,7 @@
                     });
                 } else if (remaining < minimum) {
                     status = 'Dưới mức tối thiểu';
-                    statusClass = 'text-warning';
+                    statusClass = 'stock-status-warning';
                     quantityInput.classList.remove('is-invalid');
                     warnings.push({
                         type: 'warning',
@@ -291,7 +366,7 @@
                     });
                 } else {
                     status = 'Đủ hàng';
-                    statusClass = 'text-success';
+                    statusClass = 'stock-status-good';
                     quantityInput.classList.remove('is-invalid');
                 }
 
@@ -299,30 +374,27 @@
                 stockStatus.className = 'form-control ' + statusClass;
                 remainingStock.className = 'form-control ' + statusClass;
 
-                // Update warnings
                 if (warnings.length > 0) {
                     warningInfo.innerHTML = warnings.map(warning =>
-                        `<div class="alert alert-${warning.type} py-2">
+                        `<div class="alert alert-${warning.type} py-2 mb-0">
                             <i class="${warning.icon} me-2"></i>
                             <small>${warning.message}</small>
                         </div>`
                     ).join('');
                 } else {
                     warningInfo.innerHTML = `
-                        <div class="text-center text-success">
+                        <div class="text-center py-3" style="color: #22c55e;">
                             <i class="fas fa-check-circle fa-2x mb-2"></i>
-                            <p>Đủ hàng để xuất</p>
+                            <p class="mb-0">Đủ hàng để xuất</p>
                         </div>
                     `;
                 }
             }
 
-            // Reset form
+            // Reset form - KHÔNG CÓ CONFIRM
             window.resetForm = function () {
-                if (confirm('Bạn có chắc muốn đặt lại form? Tất cả dữ liệu sẽ bị mất.')) {
-                    document.querySelector('form').reset();
-                    updateIngredientInfo({ value: '' });
-                }
+                document.querySelector('form').reset();
+                updateIngredientInfo({ value: '' });
             }
 
             // Form validation
@@ -337,7 +409,6 @@
                                 event.stopPropagation();
                             }
 
-                            // Additional validation for stock
                             const option = ingredientSelect.options[ingredientSelect.selectedIndex];
                             if (option.value) {
                                 const current = parseFloat(option.dataset.current) || 0;

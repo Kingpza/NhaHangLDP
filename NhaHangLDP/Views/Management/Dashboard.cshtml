@@ -1,7 +1,375 @@
 ﻿@model NhaHangLDP.Models.ManagementDashboardViewModel
 @{
-    ViewBag.Title = "Dashboard Quản Lý";
+    ViewBag.Title = "Tổng Quan";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        /* Welcome Section */
+        .welcome-section {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .welcome-text h2 {
+            color: #1e3a5f;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .welcome-text h2 .wave {
+            display: inline-block;
+            animation: wave 2s infinite;
+            transform-origin: 70% 70%;
+        }
+
+        @@keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(20deg); }
+            75% { transform: rotate(-15deg); }
+        }
+
+        .welcome-text p {
+            color: #64748b;
+            font-size: 15px;
+            margin: 0;
+        }
+
+        .welcome-date {
+            background: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .welcome-date i {
+            color: #3b82f6;
+            font-size: 18px;
+        }
+
+        .welcome-date span {
+            color: #333;
+            font-size: 14px;
+        }
+
+        /* Chart Card */
+        .chart-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .chart-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 20px 25px;
+        }
+
+        .chart-card .card-header h6 {
+            margin: 0;
+            font-weight: 600;
+            color: #1e3a5f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .chart-card .card-header h6 i {
+            color: #3b82f6;
+            font-size: 18px;
+        }
+
+        .chart-card .card-body {
+            padding: 25px;
+        }
+
+        /* Revenue Chart specific */
+        .revenue-chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Popular Items Chart */
+        .popular-chart-container {
+            position: relative;
+            height: 280px;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* Orders Table */
+        .orders-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+
+        .orders-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .orders-card .card-header h6 {
+            margin: 0;
+            font-weight: 600;
+            color: #1e3a5f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .orders-card .card-header h6 i {
+            color: #3b82f6;
+        }
+
+        .orders-table {
+            margin: 0;
+        }
+
+        .orders-table thead th {
+            background: #f8f9fa;
+            border: none;
+            padding: 15px 20px;
+            font-weight: 600;
+            color: #64748b;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .orders-table tbody td {
+            padding: 18px 20px;
+            vertical-align: middle;
+            border-color: #f0f0f0;
+            font-size: 14px;
+        }
+
+        .orders-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .order-id {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .table-badge {
+            background: #dbeafe;
+            color: #2563eb;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-badge.success {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-badge.warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.pending {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .status-badge i {
+            font-size: 8px;
+        }
+
+        .time-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #64748b;
+        }
+
+        .time-info i {
+            color: #94a3b8;
+        }
+
+        /* Quick Actions */
+        .quick-actions-card {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .quick-actions-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 20px 25px;
+        }
+
+        .quick-actions-card .card-header h6 {
+            margin: 0;
+            font-weight: 600;
+            color: #1e3a5f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .quick-actions-card .card-header h6 i {
+            color: #f59e0b;
+        }
+
+        .quick-actions-card .card-body {
+            padding: 20px;
+        }
+
+        .quick-action-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            margin-bottom: 10px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .quick-action-item:hover {
+            background: #f8fafc;
+            border-color: #3b82f6;
+            transform: translateX(5px);
+        }
+
+        .quick-action-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .action-icon.add {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .action-icon.table {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .action-icon.warehouse {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .action-icon.users {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .action-text h6 {
+            margin: 0 0 3px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+
+        .action-text small {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .action-arrow {
+            margin-left: auto;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .quick-action-item:hover .action-arrow {
+            color: #3b82f6;
+        }
+
+        /* View All Button */
+        .btn-view-all {
+            background: transparent;
+            border: 2px solid #3b82f6;
+            color: #3b82f6;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-view-all:hover {
+            background: #3b82f6;
+            color: #fff;
+        }
+    </style>
 }
 
 @section scripts {
@@ -13,32 +381,76 @@
             var revenueLabels = revenueData.map(d => d.Date);
             var revenueValues = revenueData.map(d => d.Revenue);
 
-            // Vẽ Biểu Đồ Đường
+            // Vẽ Biểu Đồ Đường với gradient
             var ctxLine = document.getElementById('revenueChart');
             if (ctxLine) {
-                new Chart(ctxLine.getContext('2d'), {
+                var ctx = ctxLine.getContext('2d');
+                var gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+                gradient.addColorStop(1, 'rgba(59, 130, 246, 0.01)');
+
+                new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: revenueLabels,
                         datasets: [{
                             label: 'Doanh Thu (VNĐ)',
                             data: revenueValues,
-                            borderColor: '#ffc107',
-                            backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                            borderColor: '#3b82f6',
+                            backgroundColor: gradient,
                             fill: true,
-                            tension: 0.3
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: '#1e3a5f',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                padding: 12,
+                                borderRadius: 8,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.parsed.y.toLocaleString('vi-VN') + ' VNĐ';
+                                    }
+                                }
+                            }
+                        },
                         scales: {
                             y: {
                                 beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)',
+                                    drawBorder: false
+                                },
                                 ticks: {
+                                    color: '#64748b',
+                                    font: { size: 11 },
                                     callback: function(value) {
-                                        return value.toLocaleString() + ' VNĐ';
+                                        return value.toLocaleString('vi-VN') + ' VNĐ';
                                     }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#64748b',
+                                    font: { size: 11 }
                                 }
                             }
                         }
@@ -51,13 +463,13 @@
             var popularLabels = popularData.map(p => p.ItemName);
             var popularValues = popularData.map(p => p.Quantity);
 
-            // Mảng màu
+            // Màu sắc cho chart
             var popularColors = [
-                '#dc3545',
-                '#fd7e14',
-                '#ffc107',
-                '#28a745',
-                '#17a2b8'
+                '#3b82f6',  // Blue
+                '#22c55e',  // Green
+                '#f59e0b',  // Amber
+                '#ef4444',  // Red
+                '#8b5cf6'   // Purple
             ];
 
             // Vẽ Biểu Đồ Tròn (Doughnut)
@@ -71,146 +483,219 @@
                             label: 'Số lượng bán',
                             data: popularValues,
                             backgroundColor: popularColors,
-                            hoverOffset: 4
+                            borderWidth: 0,
+                            hoverOffset: 10
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        cutout: '65%',
                         plugins: {
                             legend: {
-                                position: 'bottom',
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: '#1e3a5f',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                padding: 12,
+                                borderRadius: 8
                             }
                         }
                     }
                 });
+
+                // Tạo legend tùy chỉnh
+                var legendContainer = document.getElementById('chartLegend');
+                if (legendContainer) {
+                    popularLabels.forEach(function(label, index) {
+                        var legendItem = document.createElement('div');
+                        legendItem.className = 'legend-item';
+                        legendItem.innerHTML = '<span class="legend-dot" style="background-color: ' + popularColors[index] + '"></span>' + label;
+                        legendContainer.appendChild(legendItem);
+                    });
+                }
             }
         });
     </script>
 }
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-chart-line me-1"></i>
-                        Doanh Thu 7 Ngày Qua
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div style="height: 350px;">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Welcome Section -->
+<div class="welcome-section">
+    <div class="welcome-text">
+        <h2>Xin chào, @(Session["FullName"] ?? Session["Username"] ?? "Admin")! <span class="wave">👋</span></h2>
+        <p>Đây là tổng quan hoạt động của nhà hàng hôm nay.</p>
+    </div>
+    <div class="welcome-date">
+        <i class="far fa-calendar-alt"></i>
+        <span id="welcomeDate"></span>
+    </div>
+</div>
 
-        <div class="col-lg-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-chart-pie me-1"></i>
-                        Món Ăn Phổ Biến
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div style="height: 350px;">
-                        <canvas id="popularItemsChart"></canvas>
-                    </div>
+<script>
+    // Hiển thị ngày hiện tại
+    var now = new Date();
+    var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('welcomeDate').textContent = now.toLocaleDateString('vi-VN', options);
+</script>
+
+<div class="row">
+    <!-- Revenue Chart -->
+    <div class="col-lg-8">
+        <div class="chart-card">
+            <div class="card-header">
+                <h6><i class="fas fa-chart-line"></i> Doanh Thu 7 Ngày Qua</h6>
+            </div>
+            <div class="card-body">
+                <div class="revenue-chart-container">
+                    <canvas id="revenueChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-history me-1"></i>
-                        Đơn Hàng Gần Đây
-                    </h6>
+    <!-- Popular Items Chart -->
+    <div class="col-lg-4">
+        <div class="chart-card">
+            <div class="card-header">
+                <h6><i class="fas fa-fire"></i> Món Ăn Phổ Biến</h6>
+            </div>
+            <div class="card-body">
+                <div class="popular-chart-container">
+                    <canvas id="popularItemsChart"></canvas>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Mã ĐH</th>
-                                    <th>Bàn</th>
-                                    <th>Tổng Tiền</th>
-                                    <th>Trạng Thái</th>
-                                    <th>Thời Gian</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.RecentOrders.Any())
-                                {
-                                    foreach (var order in Model.RecentOrders)
-                                    {
-                                        // Tính tổng tiền từ bill (nếu có)
-                                        var bill = order.Bill.FirstOrDefault(b => b.Status == "Paid");
-                                        var totalAmount = bill?.FinalAmount ?? 0;
-
-                                        <tr>
-                                            <td><strong>DH@(order.Id.ToString("D6"))</strong></td>
-                                            <td>@order.RestaurantTable.TableNumber</td>
-                                            <td>@totalAmount.ToString("N0") VNĐ</td>
-                                            <td>
-                                                @if (order.Status == "Completed")
-                                                {
-                                                    <span class="badge bg-success">Hoàn thành</span>
-                                                }
-                                                else if (order.Status == "Pending")
-                                                {
-                                                    <span class="badge bg-warning text-dark">Chờ xử lý</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-secondary">@order.Status</span>
-                                                }
-                                            </td>
-                                            <td>@order.OrderTime.ToString("dd/MM HH:mm")</td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="5" class="text-center">Chưa có đơn hàng nào</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <div class="chart-legend" id="chartLegend"></div>
             </div>
         </div>
+    </div>
+</div>
 
-        <div class="col-lg-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-rocket me-1"></i>
-                        Thao Tác Nhanh
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <a href="@Url.Action("CreateMenuItem", "Management")" class="btn btn-outline-primary w-100 mb-2 text-start">
-                        <i class="fas fa-plus me-2"></i>Thêm Món Mới
-                    </a>
-                    <a href="@Url.Action("TableManagement", "Management")" class="btn btn-outline-info w-100 mb-2 text-start">
-                        <i class="fas fa-table me-2"></i>Quản Lý Bàn
-                    </a>
-                    <a href="@Url.Action("StockInbound", "Management")" class="btn btn-outline-success w-100 mb-2 text-start">
-                        <i class="fas fa-dolly me-2"></i>Quản Lý Kho
-                    </a>
-                    <a href="@Url.Action("EmployeeManagement", "Management")" class="btn btn-outline-danger w-100 mb-2 text-start">
-                        <i class="fas fa-users me-2"></i>Quản Lý Nhân Viên
-                    </a>
-                </div>
+<div class="row">
+    <!-- Recent Orders -->
+    <div class="col-lg-8">
+        <div class="orders-card">
+            <div class="card-header">
+                <h6><i class="fas fa-receipt"></i> Đơn Hàng Gần Đây</h6>
+                <a href="@Url.Action("Reports", "Management")" class="btn-view-all">
+                    Xem tất cả <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table orders-table">
+                    <thead>
+                        <tr>
+                            <th>MÃ ĐH</th>
+                            <th>BÀN</th>
+                            <th>TỔNG TIỀN</th>
+                            <th>TRẠNG THÁI</th>
+                            <th>THỜI GIAN</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+                        {
+                            foreach (var order in Model.RecentOrders.Take(5))
+                            {
+                                var bill = order.Bill.FirstOrDefault(b => b.Status == "Paid");
+                                var totalAmount = bill?.FinalAmount ?? 0;
+
+                                <tr>
+                                    <td><span class="order-id">DH@(order.Id.ToString("D6"))</span></td>
+                                    <td><span class="table-badge">@order.RestaurantTable.TableNumber</span></td>
+                                    <td><strong>@totalAmount.ToString("N0") VNĐ</strong></td>
+                                    <td>
+                                        @if (order.Status == "Completed")
+                                        {
+                                            <span class="status-badge success"><i class="fas fa-circle"></i> Hoàn thành</span>
+                                        }
+                                        else if (order.Status == "Pending")
+                                        {
+                                            <span class="status-badge warning"><i class="fas fa-circle"></i> Chờ xử lý</span>
+                                        }
+                                        else if (order.Status == "Processing")
+                                        {
+                                            <span class="status-badge pending"><i class="fas fa-circle"></i> Đang xử lý</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge">@order.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="time-info">
+                                            <i class="far fa-clock"></i>
+                                            @order.OrderTime.ToString("dd/MM HH:mm")
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">Chưa có đơn hàng nào</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="quick-actions-card">
+            <div class="card-header">
+                <h6><i class="fas fa-bolt"></i> Thao Tác Nhanh</h6>
+            </div>
+            <div class="card-body">
+                <a href="@Url.Action("CreateMenuItem", "Management")" class="quick-action-item">
+                    <div class="action-icon add">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div class="action-text">
+                        <h6>Thêm Món Mới</h6>
+                        <small>Thêm món vào thực đơn</small>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
+
+                <a href="@Url.Action("TableManagement", "Management")" class="quick-action-item">
+                    <div class="action-icon table">
+                        <i class="fas fa-chair"></i>
+                    </div>
+                    <div class="action-text">
+                        <h6>Quản Lý Bàn</h6>
+                        <small>Xem và quản lý bàn</small>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
+
+                <a href="@Url.Action("StockInbound", "Management")" class="quick-action-item">
+                    <div class="action-icon warehouse">
+                        <i class="fas fa-warehouse"></i>
+                    </div>
+                    <div class="action-text">
+                        <h6>Quản Lý Kho</h6>
+                        <small>Nhập và xuất kho hàng</small>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
+
+                <a href="@Url.Action("EmployeeManagement", "Management")" class="quick-action-item">
+                    <div class="action-icon users">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="action-text">
+                        <h6>Quản Lý Nhân Viên</h6>
+                        <small>Thông tin nhân viên</small>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
             </div>
         </div>
     </div>

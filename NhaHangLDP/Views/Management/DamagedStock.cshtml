@@ -6,309 +6,317 @@
 
 @section styles {
     <style>
-        .management-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            border-radius: 10px;
+        .form-card {
+            background: var(--bg-white);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
         }
 
-        .form-container {
-            background: white;
-            border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .form-card h5 {
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .info-card {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid #667eea;
+            background: var(--bg-white);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
         }
 
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+        .info-card h5 {
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-bottom: 15px;
+            font-size: 15px;
         }
 
-        .btn-custom {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .info-card.tips {
+            background: var(--bg-light);
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .info-card.tips ul {
+            margin: 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .info-card.tips li {
+            padding: 5px 0;
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .info-card.tips li i {
+            color: #22c55e;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #1d4ed8 100%);
             border: none;
             color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-        }
-
-            .btn-custom:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-                color: white;
-            }
-
-        .form-control, .form-select {
+            padding: 12px 30px;
             border-radius: 10px;
-            border: 2px solid #e9ecef;
-            padding: 0.75rem;
-            transition: all 0.3s ease;
+            font-weight: 600;
         }
 
-            .form-control:focus, .form-select:focus {
-                border-color: #667eea;
-                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-            }
+        .btn-submit:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-draft {
+            background: transparent;
+            border: 2px solid #f59e0b;
+            color: #f59e0b;
+            padding: 10px 25px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .btn-draft:hover {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .damage-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ef4444;
+        }
+
+        .sample-data-card {
+            background: var(--bg-light);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px dashed var(--border-color);
+        }
     </style>
 }
 
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="management-header text-center">
-        <div class="container">
-            <h1><i class="fas fa-exclamation-triangle"></i> Báo Cáo Hàng Hỏng</h1>
-            <p class="mb-0">Báo cáo nguyên liệu bị hỏng hoặc hết hạn</p>
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-exclamation-triangle me-2"></i>Báo Cáo Hàng Hỏng</h1>
+            <p>Báo cáo nguyên liệu bị hỏng hoặc hết hạn</p>
         </div>
-    </div>
-
-    <!-- Navigation Buttons -->
-    <div class="row mb-4">
-        <div class="col-12 text-end">
-            <a href="@Url.Action("DamagedStockList", "Management")" class="btn btn-outline-primary me-2">
+        <div>
+            <a href="@Url.Action("DamagedStockList", "Management")" class="btn btn-light me-2">
                 <i class="fas fa-list me-2"></i>Danh Sách Báo Cáo
             </a>
-            <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-secondary">
+            <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-light">
                 <i class="fas fa-warehouse me-2"></i>Quay Lại Kho
             </a>
         </div>
     </div>
+</div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="form-container">
-                @if (!ViewData.ModelState.IsValid)
-                {
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Có lỗi xảy ra:</strong>
-                        @Html.ValidationSummary(true, "", new { @class = "mb-0 mt-2" })
-                    </div>
-                }
+<div class="row">
+    <div class="col-lg-8">
+        <div class="form-card">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Có lỗi xảy ra:</strong>
+                    @Html.ValidationSummary(true, "", new { @class = "mb-0 mt-2" })
+                </div>
+            }
 
-                @using (Html.BeginForm("DamagedStock", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
-                {
-                    @Html.AntiForgeryToken()
+            @using (Html.BeginForm("DamagedStock", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+            {
+                @Html.AntiForgeryToken()
 
-                    <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Báo Cáo</h5>
+                <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Báo Cáo</h5>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Mã báo cáo</label>
-                                <input type="text" class="form-control" value="@DateTime.Now.ToString("yyyyMMddHHmmss")" readonly>
-                                <small class="text-muted">Tự động tạo</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                @Html.LabelFor(m => m.DamageDate, "Ngày báo cáo", new { @class = "form-label" })
-                                @Html.TextBoxFor(m => m.DamageDate, new { @class = "form-control", type = "datetime-local", required = "required" })
-                                @Html.ValidationMessageFor(m => m.DamageDate, "", new { @class = "text-danger" })
-                            </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Mã báo cáo</label>
+                            <input type="text" class="form-control" value="@DateTime.Now.ToString("yyyyMMddHHmmss")" readonly>
+                            <small class="text-muted">Tự động tạo</small>
                         </div>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                @Html.LabelFor(m => m.IngredientId, "Nguyên liệu bị hỏng", new { @class = "form-label" })
-                                @Html.DropDownListFor(m => m.IngredientId,
-                           new SelectList(ViewBag.Ingredients as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "Name"),
-                                    "-- Chọn nguyên liệu --",
-                         new { @class = "form-select", required = "required", onchange = "updateIngredientInfo()" })
-                                @Html.ValidationMessageFor(m => m.IngredientId, "", new { @class = "text-danger" })
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                @Html.LabelFor(m => m.Quantity, "Số lượng hỏng", new { @class = "form-label" })
-                                <div class="input-group">
-                                    @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", type = "number", step = "0.1", min = "0.1", required = "required", onchange = "calculateDamageValue()" })
-                                    <span class="input-group-text" id="unitDisplay">-</span>
-                                </div>
-                                @Html.ValidationMessageFor(m => m.Quantity, "", new { @class = "text-danger" })
-                            </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.DamageDate, "Ngày báo cáo", new { @class = "form-label" })
+                            @Html.TextBoxFor(m => m.DamageDate, new { @class = "form-control", type = "datetime-local", required = "required" })
+                            @Html.ValidationMessageFor(m => m.DamageDate, "", new { @class = "text-danger small" })
                         </div>
                     </div>
+                </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                @Html.LabelFor(m => m.Reason, "Lý do hỏng", new { @class = "form-label" })
-                                @Html.DropDownListFor(m => m.Reason, new SelectList(new[] {
-                                  new { Value = "Hết hạn sử dụng", Text = "Hết hạn sử dụng" },
-                                    new { Value = "Hỏng trong quá trình vận chuyển", Text = "Hỏng trong vận chuyển" },
-                                          new { Value = "Hỏng do bảo quản không đúng cách", Text = "Bảo quản sai cách" },
-                                         new { Value = "Chất lượng không đạt tiêu chuẩn", Text = "Chất lượng kém" },
-                                   new { Value = "Bị nhiễm khuẩn", Text = "Bị nhiễm khuẩn" },
-                                         new { Value = "Tai nạn làm đổ/vỡ", Text = "Tai nạn" },
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.IngredientId, "Nguyên liệu bị hỏng", new { @class = "form-label" })
+                            @Html.DropDownListFor(m => m.IngredientId,
+                                new SelectList(ViewBag.Ingredients as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "Name"),
+                                "-- Chọn nguyên liệu --",
+                                new { @class = "form-select", required = "required", onchange = "updateIngredientInfo()" })
+                            @Html.ValidationMessageFor(m => m.IngredientId, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.Quantity, "Số lượng hỏng", new { @class = "form-label" })
+                            <div class="input-group">
+                                @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", type = "number", step = "0.1", min = "0.1", required = "required", onchange = "calculateDamageValue()" })
+                                <span class="input-group-text" id="unitDisplay">-</span>
+                            </div>
+                            @Html.ValidationMessageFor(m => m.Quantity, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.Reason, "Lý do hỏng", new { @class = "form-label" })
+                            @Html.DropDownListFor(m => m.Reason, new SelectList(new[] {
+                                new { Value = "Hết hạn sử dụng", Text = "Hết hạn sử dụng" },
+                                new { Value = "Hỏng trong quá trình vận chuyển", Text = "Hỏng trong vận chuyển" },
+                                new { Value = "Hỏng do bảo quản không đúng cách", Text = "Bảo quản sai cách" },
+                                new { Value = "Chất lượng không đạt tiêu chuẩn", Text = "Chất lượng kém" },
+                                new { Value = "Bị nhiễm khuẩn", Text = "Bị nhiễm khuẩn" },
+                                new { Value = "Tai nạn làm đổ/vỡ", Text = "Tai nạn" },
                                 new { Value = "Khác", Text = "Lý do khác" }
-                                  }, "Value", "Text"), "-- Chọn lý do --", new { @class = "form-select", required = "required", onchange = "toggleOtherReason()" })
-                                @Html.ValidationMessageFor(m => m.Reason, "", new { @class = "text-danger" })
+                            }, "Value", "Text"), "-- Chọn lý do --", new { @class = "form-select", required = "required", onchange = "toggleOtherReason()" })
+                            @Html.ValidationMessageFor(m => m.Reason, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.ReportedByEmployeeId, "Người báo cáo", new { @class = "form-label" })
+                            @Html.DropDownListFor(m => m.ReportedByEmployeeId,
+                                new SelectList(ViewBag.Employees as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "FullName", Session["UserId"]),
+                                "-- Chọn nhân viên --",
+                                new { @class = "form-select", required = "required" })
+                            @Html.ValidationMessageFor(m => m.ReportedByEmployeeId, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3" id="otherReasonGroup" style="display: none;">
+                    <label class="form-label">Lý do khác (chi tiết)</label>
+                    <textarea class="form-control" id="otherReasonDetail" name="DetailedReason" rows="3" placeholder="Mô tả chi tiết lý do hàng bị hỏng..."></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <h6><i class="fas fa-camera me-2"></i>Bằng Chứng (Tùy chọn)</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Hình ảnh minh chứng</label>
+                                <input type="file" class="form-control" name="EvidenceImages" accept="image/*" multiple onchange="previewImages(this)">
+                                <small class="text-muted">Có thể chọn nhiều ảnh</small>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                @Html.LabelFor(m => m.ReportedByEmployeeId, "Người báo cáo", new { @class = "form-label" })
-                                @Html.DropDownListFor(m => m.ReportedByEmployeeId,
-                       new SelectList(ViewBag.Employees as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "FullName", Session["UserId"]),
-                            "-- Chọn nhân viên --",
-                              new { @class = "form-select", required = "required" })
-                                @Html.ValidationMessageFor(m => m.ReportedByEmployeeId, "", new { @class = "text-danger" })
+                                <label class="form-label">Mô tả chi tiết</label>
+                                <textarea class="form-control" name="DetailedDescription" rows="4" placeholder="Mô tả chi tiết tình trạng hàng hỏng..."></textarea>
                             </div>
                         </div>
                     </div>
+                    <div id="imagePreview" class="row mt-3" style="display: none;"></div>
+                </div>
 
-                    <div class="mb-3" id="otherReasonGroup" style="display: none;">
-                        <label class="form-label">Lý do khác (chi tiết)</label>
-                        <textarea class="form-control" id="otherReasonDetail" name="DetailedReason" rows="3" placeholder="Mô tả chi tiết lý do hàng bị hỏng..."></textarea>
-                    </div>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Lưu ý:</strong> Sau khi xác nhận, số lượng hàng hỏng sẽ được trừ khỏi tồn kho và ghi nhận vào báo cáo thiệt hại.
+                </div>
 
-                    <!-- Evidence Section -->
-                    <div class="mb-4">
-                        <h6><i class="fas fa-camera me-2"></i>Bằng Chứng (Tùy chọn)</h6>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Hình ảnh minh chứng</label>
-                                    <input type="file" class="form-control" name="EvidenceImages" accept="image/*" multiple onchange="previewImages(this)">
-                                    <small class="text-muted">Có thể chọn nhiều ảnh</small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Mô tả chi tiết</label>
-                                    <textarea class="form-control" name="DetailedDescription" rows="4" placeholder="Mô tả chi tiết tình trạng hàng hỏng..."></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="imagePreview" class="row mt-3" style="display: none;">
-                            <!-- Preview images will appear here -->
-                        </div>
-                    </div>
-
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Lưu ý:</strong> Sau khi xác nhận, số lượng hàng hỏng sẽ được trừ khỏi tồn kho và ghi nhận vào báo cáo thiệt hại.
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
-                            <i class="fas fa-undo me-2"></i>Đặt Lại
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                        <i class="fas fa-undo me-2"></i>Đặt Lại
+                    </button>
+                    <div>
+                        <button type="submit" name="submitType" value="draft" class="btn btn-draft me-2">
+                            <i class="fas fa-save me-2"></i>Lưu Nháp
                         </button>
-                        <div>
-                            <button type="submit" name="submitType" value="draft" class="btn btn-outline-warning">
-                                <i class="fas fa-save me-2"></i>Lưu Nháp
-                            </button>
-                            <button type="submit" name="submitType" value="submit" class="btn btn-custom">
-                                <i class="fas fa-paper-plane me-2"></i>Gửi Báo Cáo
-                            </button>
-                        </div>
+                        <button type="submit" name="submitType" value="submit" class="btn btn-submit">
+                            <i class="fas fa-paper-plane me-2"></i>Gửi Báo Cáo
+                        </button>
                     </div>
-                }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="info-card">
+            <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Nguyên Liệu</h5>
+            <div id="ingredientInfo">
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-box fa-2x mb-2"></i>
+                    <p class="mb-0">Chọn nguyên liệu để xem thông tin</p>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="info-card">
-                <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Nguyên Liệu</h5>
-                <div id="ingredientInfo">
-                    <div class="text-center text-muted">
-                        <i class="fas fa-box fa-2x mb-2"></i>
-                        <p>Chọn nguyên liệu để xem thông tin</p>
-                    </div>
+        <div class="info-card">
+            <h5><i class="fas fa-calculator me-2"></i>Tính Toán Thiệt Hại</h5>
+            <div class="mb-2">
+                <small class="text-muted">Số lượng hỏng:</small>
+                <div id="damagedQuantityDisplay">0</div>
+            </div>
+            <div class="mb-2">
+                <small class="text-muted">Giá nhập (ước tính):</small>
+                <div id="unitPriceDisplay">0 VNĐ</div>
+            </div>
+            <div class="mb-2">
+                <small class="text-muted">Tổng thiệt hại:</small>
+                <div id="totalDamageDisplay" class="damage-value">0 VNĐ</div>
+            </div>
+            <div class="mb-0">
+                <small class="text-muted">% so với tồn kho:</small>
+                <div id="damagePercentage">0%</div>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <h5><i class="fas fa-exclamation-triangle me-2" style="color: #f59e0b;"></i>Hậu Quả</h5>
+            <div id="consequenceAnalysis">
+                <div class="text-center text-muted py-2">
+                    <p class="mb-0 small">Chưa có dữ liệu để phân tích</p>
                 </div>
             </div>
+        </div>
 
-            <div class="info-card">
-                <h5><i class="fas fa-calculator me-2"></i>Tính Toán Thiệt Hại</h5>
-                <div class="mb-2">
-                    <small class="text-muted">Số lượng hỏng:</small>
-                    <div id="damagedQuantityDisplay">0</div>
-                </div>
-                <div class="mb-2">
-                    <small class="text-muted">Giá nhập (ước tính):</small>
-                    <div id="unitPriceDisplay">0 VNĐ</div>
-                </div>
-                <div class="mb-2">
-                    <small class="text-muted">Tổng thiệt hại:</small>
-                    <div id="totalDamageDisplay" class="text-danger h6">0 VNĐ</div>
-                </div>
-                <div class="mb-2">
-                    <small class="text-muted">% so với tồn kho:</small>
-                    <div id="damagePercentage">0%</div>
-                </div>
+        <div class="info-card tips">
+            <h5><i class="fas fa-lightbulb me-2"></i>Gợi Ý Phòng Ngừa</h5>
+            <ul>
+                <li><i class="fas fa-check-circle me-2"></i>Kiểm tra hạn sử dụng thường xuyên</li>
+                <li><i class="fas fa-check-circle me-2"></i>Bảo quản đúng điều kiện</li>
+                <li><i class="fas fa-check-circle me-2"></i>Tuân thủ quy trình FIFO</li>
+                <li><i class="fas fa-check-circle me-2"></i>Đào tạo nhân viên xử lý</li>
+            </ul>
+        </div>
+
+        <div class="sample-data-card">
+            <h6 class="mb-3"><i class="fas fa-database me-2"></i>Dữ Liệu Mẫu</h6>
+            <p class="small text-muted mb-3">Tạo dữ liệu mẫu để test hệ thống</p>
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="createSampleEmployees()">
+                    <i class="fas fa-users me-1"></i>Tạo Nhân Viên Mẫu
+                </button>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="createSampleIngredients()">
+                    <i class="fas fa-box me-1"></i>Tạo Nguyên Liệu Mẫu
+                </button>
             </div>
-
-            <div class="info-card">
-                <h5><i class="fas fa-exclamation-triangle me-2"></i>Hậu Quả</h5>
-                <div id="consequenceAnalysis">
-                    <div class="text-center text-muted">
-                        <p>Chưa có dữ liệu để phân tích</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="info-card">
-                <h5><i class="fas fa-lightbulb me-2"></i>Gợi Ý Phòng Ngừa</h5>
-                <div id="preventionSuggestions">
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check-circle text-success me-2"></i>Kiểm tra hạn sử dụng thường xuyên</li>
-                        <li><i class="fas fa-check-circle text-success me-2"></i>Bảo quản đúng điều kiện</li>
-                        <li><i class="fas fa-check-circle text-success me-2"></i>Tuân thủ quy trình FIFO</li>
-                        <li><i class="fas fa-check-circle text-success me-2"></i>Đào tạo nhân viên xử lý</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Sample Data Card -->
-            <div class="info-card">
-                <h5><i class="fas fa-database me-2"></i>Dữ Liệu Mẫu</h5>
-                <p class="small text-muted">Tạo dữ liệu mẫu để test hệ thống</p>
-                <div class="d-grid gap-2">
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="createSampleEmployees()">
-                        <i class="fas fa-users me-1"></i>Tạo Nhân Viên Mẫu
-                    </button>
-                    <button type="button" class="btn btn-outline-success btn-sm" onclick="createSampleIngredients()">
-                        <i class="fas fa-box me-1"></i>Tạo Nguyên Liệu Mẫu
-                    </button>
-                </div>
-                <hr class="my-2">
-                <div class="alert alert-info py-2 px-3 mb-0">
-                    <small>
-                        <i class="fas fa-info-circle me-1"></i>
-                        <strong>Lưu ý:</strong> Chỉ tạo khi hệ thống chưa có dữ liệu
-                    </small>
-                </div>
-            </div>
-
-            <!-- Quick Instructions Card -->
-            <div class="info-card bg-light">
-                <h5><i class="fas fa-question-circle me-2"></i>Hướng Dẫn</h5>
-                <ol class="small mb-0">
-                    <li>Nhấn <strong>"Tạo Nhân Viên Mẫu"</strong> trước</li>
-                    <li>Sau đó nhấn <strong>"Tạo Nguyên Liệu Mẫu"</strong></li>
-                    <li>Reload trang để thấy dữ liệu mới</li>
-                    <li>Bây giờ có thể tạo báo cáo hàng hỏng</li>
-                </ol>
+            <div class="alert alert-info py-2 px-3 mt-3 mb-0">
+                <small><i class="fas fa-info-circle me-1"></i>Chỉ tạo khi hệ thống chưa có dữ liệu</small>
             </div>
         </div>
     </div>
@@ -316,194 +324,173 @@
 
 @section scripts {
     <script>
-        // Sample ingredient data (should come from server)
-  const ingredientData = {};
-
         function updateIngredientInfo() {
-  const select = document.querySelector('select[name="IngredientId"]');
-          const selectedOption = select.options[select.selectedIndex];
-   const infoContainer = document.getElementById('ingredientInfo');
+            const select = document.querySelector('select[name="IngredientId"]');
+            const selectedOption = select.options[select.selectedIndex];
+            const infoContainer = document.getElementById('ingredientInfo');
             const unitDisplay = document.getElementById('unitDisplay');
 
-        if (selectedOption.value) {
-        const ingredientName = selectedOption.text;
-       unitDisplay.textContent = 'kg'; // Default unit
+            if (selectedOption.value) {
+                const ingredientName = selectedOption.text;
+                unitDisplay.textContent = 'kg';
 
-              infoContainer.innerHTML = `
-      <div class="mb-2">
-            <small class="text-muted">Tên nguyên liệu:</small>
-   <div><strong>${ingredientName}</strong></div>
-       </div>
-     <div class="mb-2">
-         <small class="text-muted">Tồn kho hiện tại:</small>
-             <div>Đang tải...</div>
-          </div>
-          <div class="mb-2">
-                  <small class="text-muted">Giá nhập (ước tính):</small>
-           <div>Đang tính toán...</div>
- </div>
-      `;
+                infoContainer.innerHTML = `
+                    <div class="mb-2">
+                        <small class="text-muted">Tên nguyên liệu:</small>
+                        <div><strong>${ingredientName}</strong></div>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Tồn kho hiện tại:</small>
+                        <div>Đang tải...</div>
+                    </div>
+                    <div class="mb-0">
+                        <small class="text-muted">Giá nhập (ước tính):</small>
+                        <div>Đang tính toán...</div>
+                    </div>
+                `;
 
-    calculateDamageValue();
+                calculateDamageValue();
             } else {
-          unitDisplay.textContent = '-';
- infoContainer.innerHTML = `
-     <div class="text-center text-muted">
-  <i class="fas fa-box fa-2x mb-2"></i>
-     <p>Chọn nguyên liệu để xem thông tin</p>
-       </div>
-         `;
-    }
+                unitDisplay.textContent = '-';
+                infoContainer.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-box fa-2x mb-2"></i>
+                        <p class="mb-0">Chọn nguyên liệu để xem thông tin</p>
+                    </div>
+                `;
+            }
         }
 
-     function calculateDamageValue() {
-        const quantity = parseFloat(document.querySelector('input[name="Quantity"]').value) || 0;
-            const estimatedPrice = 50000; // Default price
-
+        function calculateDamageValue() {
+            const quantity = parseFloat(document.querySelector('input[name="Quantity"]').value) || 0;
+            const estimatedPrice = 50000;
             const damageValue = quantity * estimatedPrice;
 
-     // Update displays
-  document.getElementById('damagedQuantityDisplay').textContent = quantity.toLocaleString('vi-VN') + ' kg';
-    document.getElementById('unitPriceDisplay').textContent = estimatedPrice.toLocaleString('vi-VN') + ' VNĐ';
+            document.getElementById('damagedQuantityDisplay').textContent = quantity.toLocaleString('vi-VN') + ' kg';
+            document.getElementById('unitPriceDisplay').textContent = estimatedPrice.toLocaleString('vi-VN') + ' VNĐ';
             document.getElementById('totalDamageDisplay').textContent = damageValue.toLocaleString('vi-VN') + ' VNĐ';
 
-         // Update consequence analysis
             updateConsequenceAnalysis(quantity);
-     }
+        }
 
         function updateConsequenceAnalysis(quantity) {
             const analysisContainer = document.getElementById('consequenceAnalysis');
 
             if (quantity > 0) {
-       let alertType = 'success';
- let message = 'Thiệt hại trong mức chấp nhận được';
+                let alertType = 'success';
+                let message = 'Thiệt hại trong mức chấp nhận được';
 
-       if (quantity > 10) {
-alertType = 'warning';
- message = 'Thiệt hại đáng kể, cần xem xét';
-     }
+                if (quantity > 10) {
+                    alertType = 'warning';
+                    message = 'Thiệt hại đáng kể, cần xem xét';
+                }
 
-              if (quantity > 50) {
-        alertType = 'danger';
-            message = 'Thiệt hại lớn, cần báo cáo ngay';
-   }
+                if (quantity > 50) {
+                    alertType = 'danger';
+                    message = 'Thiệt hại lớn, cần báo cáo ngay';
+                }
 
-         analysisContainer.innerHTML = `
-              <div class="alert alert-${alertType} py-2 mb-0">
- <small>${message}</small>
-             </div>
-     `;
+                analysisContainer.innerHTML = `
+                    <div class="alert alert-${alertType} py-2 mb-0">
+                        <small>${message}</small>
+                    </div>
+                `;
             } else {
-    analysisContainer.innerHTML = `
-           <div class="text-center text-muted">
-            <p>Chưa có dữ liệu để phân tích</p>
-         </div>
- `;
-     }
+                analysisContainer.innerHTML = `
+                    <div class="text-center text-muted py-2">
+                        <p class="mb-0 small">Chưa có dữ liệu để phân tích</p>
+                    </div>
+                `;
+            }
         }
 
-  function toggleOtherReason() {
-    const reasonSelect = document.querySelector('select[name="Reason"]');
+        function toggleOtherReason() {
+            const reasonSelect = document.querySelector('select[name="Reason"]');
             const otherReasonGroup = document.getElementById('otherReasonGroup');
 
-          if (reasonSelect.value === 'Khác') {
-        otherReasonGroup.style.display = 'block';
-      document.getElementById('otherReasonDetail').required = true;
-         } else {
-       otherReasonGroup.style.display = 'none';
+            if (reasonSelect.value === 'Khác') {
+                otherReasonGroup.style.display = 'block';
+                document.getElementById('otherReasonDetail').required = true;
+            } else {
+                otherReasonGroup.style.display = 'none';
                 document.getElementById('otherReasonDetail').required = false;
-       }
+            }
         }
 
         function previewImages(input) {
-   const previewContainer = document.getElementById('imagePreview');
+            const previewContainer = document.getElementById('imagePreview');
             previewContainer.innerHTML = '';
 
-    if (input.files && input.files.length > 0) {
- previewContainer.style.display = 'block';
+            if (input.files && input.files.length > 0) {
+                previewContainer.style.display = 'flex';
 
-  Array.from(input.files).forEach((file, index) => {
-        if (file.type.startsWith('image/')) {
- const reader = new FileReader();
-  reader.onload = function(e) {
-     const col = document.createElement('div');
-            col.className = 'col-md-4 mb-2';
-col.innerHTML = `
-    <img src="${e.target.result}" class="img-thumbnail" style="height: 100px; object-fit: cover;">
-          <small class="d-block text-muted">${file.name}</small>
-       `;
- previewContainer.appendChild(col);
-            };
-         reader.readAsDataURL(file);
-       }
-         });
-     } else {
-previewContainer.style.display = 'none';
-      }
+                Array.from(input.files).forEach((file, index) => {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const col = document.createElement('div');
+                            col.className = 'col-md-4 mb-2';
+                            col.innerHTML = `
+                                <img src="${e.target.result}" class="img-thumbnail" style="height: 80px; object-fit: cover; width: 100%;">
+                                <small class="d-block text-muted text-truncate">${file.name}</small>
+                            `;
+                            previewContainer.appendChild(col);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            } else {
+                previewContainer.style.display = 'none';
+            }
         }
 
         function resetForm() {
-   if (confirm('Bạn có chắc muốn đặt lại form? Tất cả dữ liệu sẽ bị mất.')) {
-       document.querySelector('form').reset();
-           document.getElementById('imagePreview').style.display = 'none';
-     document.getElementById('otherReasonGroup').style.display = 'none';
-           updateIngredientInfo();
-   }
+            document.querySelector('form').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('otherReasonGroup').style.display = 'none';
+            updateIngredientInfo();
         }
 
-// Initialize
-   document.addEventListener('DOMContentLoaded', function() {
-      // Set current datetime
-  const now = new Date();
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
             const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-  document.querySelector('input[name="DamageDate"]').value = localDateTime;
+            document.querySelector('input[name="DamageDate"]').value = localDateTime;
 
-            // Set default employee if logged in
             const userIdFromSession = '@Session["UserId"]';
- if (userIdFromSession) {
-        const employeeSelect = document.querySelector('select[name="ReportedByEmployeeId"]');
-       if (employeeSelect) {
- employeeSelect.value = userIdFromSession;
-         }
-       }
-   });
+            if (userIdFromSession) {
+                const employeeSelect = document.querySelector('select[name="ReportedByEmployeeId"]');
+                if (employeeSelect) {
+                    employeeSelect.value = userIdFromSession;
+                }
+            }
+        });
 
-        // Form validation
         (function() {
-       'use strict';
+            'use strict';
             window.addEventListener('load', function() {
-  var forms = document.getElementsByClassName('needs-validation');
-    var validation = Array.prototype.filter.call(forms, function(form) {
-          form.addEventListener('submit', function(event) {
-   if (form.checkValidity() === false) {
-    event.preventDefault();
-     event.stopPropagation();
-    }
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
 
-      // Additional validation for damage quantity
-       const quantity = parseFloat(document.querySelector('input[name="Quantity"]').value) || 0;
-        if (quantity <= 0) {
- event.preventDefault();
-           alert('Số lượng hỏng phải lớn hơn 0!');
-    return;
-             }
+                        const quantity = parseFloat(document.querySelector('input[name="Quantity"]').value) || 0;
+                        if (quantity <= 0) {
+                            event.preventDefault();
+                            alert('Số lượng hỏng phải lớn hơn 0!');
+                            return;
+                        }
 
-              form.classList.add('was-validated');
-      }, false);
-      });
-       }, false);
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
         })();
 
-        // Create sample employees
         function createSampleEmployees() {
-            if (confirm('Bạn có muốn tạo dữ liệu nhân viên mẫu?\n\n' +
-                       'Điều này sẽ tạo:\n' +
-                       '• 10 nhân viên demo với các vai trò khác nhau\n' +
-                       '• 5 vai trò cơ bản (Admin, Manager, Cashier, Staff, Kitchen)\n' +
-                       '• Tài khoản đăng nhập cho từng nhân viên\n\n' +
-                       'Chỉ thực hiện khi hệ thống chưa có nhân viên nào!')) {
-                
-                // Show loading
+            if (confirm('Bạn có muốn tạo dữ liệu nhân viên mẫu?')) {
                 const button = event.target;
                 const originalText = button.innerHTML;
                 button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang tạo...';
@@ -511,10 +498,7 @@ previewContainer.style.display = 'none';
 
                 fetch('@Url.Action("CreateSampleEmployees", "Management")', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -522,23 +506,8 @@ previewContainer.style.display = 'none';
                     button.disabled = false;
                     
                     if (data.success) {
-                        alert('✅ ' + data.message + 
-                              '\n\n📋 Danh sách tài khoản được tạo:' +
-                              '\n• Admin: admin / admin123' +
-                              '\n• Manager: manager / manager123' +
-                              '\n• Cashier 1: cashier1 / cashier123' +
-                              '\n• Cashier 2: cashier2 / cashier123' +
-                              '\n• Chef: chef / chef123' +
-                              '\n• Kitchen Staff: kitchen1 / kitchen123' +
-                              '\n• Staff 1: staff1 / staff123' +
-                              '\n• Staff 2: staff2 / staff123' +
-                              '\n• Waiter 1: waiter1 / waiter123' +
-                              '\n• Waiter 2: waiter2 / waiter123 (bị khóa)' +
-                              '\n\n🔄 Trang sẽ được tải lại để cập nhật dữ liệu...');
-                        
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                        alert('✅ ' + data.message);
+                        setTimeout(() => location.reload(), 1500);
                     } else {
                         alert('❌ Lỗi: ' + data.message);
                     }
@@ -546,22 +515,13 @@ previewContainer.style.display = 'none';
                 .catch(error => {
                     button.innerHTML = originalText;
                     button.disabled = false;
-                    console.error('Error:', error);
-                    alert('❌ Có lỗi xảy ra khi kết nối với máy chủ!\n\nChi tiết lỗi: ' + error.message);
+                    alert('❌ Có lỗi xảy ra!');
                 });
             }
         }
 
-        // Create sample ingredients
         function createSampleIngredients() {
-            if (confirm('Bạn có muốn tạo dữ liệu nguyên liệu mẫu?\n\n' +
-                       'Điều này sẽ tạo:\n' +
-                       '• 20+ nguyên liệu đa dạng (thịt, rau, gia vị...)\n' +
-                       '• Tồn kho và giá cả thực tế\n' +
-                       '• Một số nguyên liệu sắp hết để test cảnh báo\n\n' +
-                       'Chỉ thực hiện khi hệ thống chưa có nguyên liệu nào!')) {
-                
-                // Show loading
+            if (confirm('Bạn có muốn tạo dữ liệu nguyên liệu mẫu?')) {
                 const button = event.target;
                 const originalText = button.innerHTML;
                 button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang tạo...';
@@ -569,10 +529,7 @@ previewContainer.style.display = 'none';
 
                 fetch('@Url.Action("CreateSampleIngredients", "Management")', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
                 })
                 .then(response => response.json())
                 .then(data => {
@@ -580,19 +537,8 @@ previewContainer.style.display = 'none';
                     button.disabled = false;
                     
                     if (data.success) {
-                        alert('✅ ' + data.message + 
-                              '\n\n📦 Các loại nguyên liệu đã tạo:' +
-                              '\n• Thịt & Hải sản (bò, heo, gà, tôm, cá...)' +
-                              '\n• Rau củ quả (cà chua, hành, tỏi, gừng...)' +
-                              '\n• Nguyên liệu khô (gạo, mì, dầu ăn...)' +
-                              '\n• Gia vị (muối, đường, nước mắm...)' +
-                              '\n• Đồ uống (nước ngọt, bia...)' +
-                              '\n\n⚠️ Một số nguyên liệu có tồn kho thấp để test cảnh báo!' +
-                              '\n\n🔄 Trang sẽ được tải lại để cập nhật dữ liệu...');
-                        
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
+                        alert('✅ ' + data.message);
+                        setTimeout(() => location.reload(), 1500);
                     } else {
                         alert('❌ Lỗi: ' + data.message);
                     }
@@ -600,8 +546,7 @@ previewContainer.style.display = 'none';
                 .catch(error => {
                     button.innerHTML = originalText;
                     button.disabled = false;
-                    console.error('Error:', error);
-                    alert('❌ Có lỗi xảy ra khi kết nối với máy chủ!\n\nChi tiết lỗi: ' + error.message);
+                    alert('❌ Có lỗi xảy ra!');
                 });
             }
         }

@@ -425,6 +425,8 @@
     <Content Include="Views\Cashier\PrintBill.cshtml" />
     <Content Include="Views\ReportsManagement\SalesPerformance.cshtml" />
     <Content Include="Views\ReportsManagement\SalesAnalytics.cshtml" />
+    <Content Include="Views\Management\StockInboundDetail.cshtml" />
+    <Content Include="Views\Management\StockOutboundDetail.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

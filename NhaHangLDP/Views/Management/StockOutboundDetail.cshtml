@@ -1,0 +1,406 @@
+﻿@model NhaHangLDP.Models.StockOutboundViewPageModel
+@{
+    ViewBag.Title = "Chi Tiết Phiếu Xuất Kho";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        :root {
+            --primary-blue: #3b82f6;
+            --primary-dark: #1e293b;
+            --bg-white: #ffffff;
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+            --text-gray: #64748b;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        .detail-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .invoice-card {
+            background: var(--bg-white);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .invoice-header {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #334155 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .invoice-header .logo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .invoice-header .logo i {
+            color: var(--primary-blue);
+        }
+
+        .invoice-header .subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .invoice-title {
+            background: var(--warning-color);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .invoice-body {
+            padding: 30px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .info-card {
+            background: var(--bg-light);
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .info-card.warning {
+            border-left-color: var(--warning-color);
+        }
+
+        .info-card h6 {
+            color: var(--text-gray);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .info-card .value {
+            color: var(--primary-dark);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .info-card .highlight {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .reason-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .reason-badge.damage {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .reason-badge.expired {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .detail-box {
+            background: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .detail-box h5 {
+            color: var(--primary-dark);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .ingredient-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .ingredient-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #2563eb 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+        }
+
+        .ingredient-details {
+            flex: 1;
+        }
+
+        .ingredient-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+
+        .ingredient-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .ingredient-meta span {
+            color: var(--text-gray);
+            font-size: 14px;
+        }
+
+        .ingredient-meta span i {
+            color: var(--primary-blue);
+            margin-right: 5px;
+        }
+
+        .summary-section {
+            background: var(--primary-dark);
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-row.total {
+            padding-top: 15px;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .summary-row .label {
+            opacity: 0.8;
+        }
+
+        .summary-row .value {
+            color: var(--primary-blue);
+        }
+
+        .summary-row.total .value {
+            color: var(--warning-color);
+            font-size: 24px;
+        }
+
+        .invoice-footer {
+            text-align: center;
+            padding: 20px 30px;
+            background: var(--bg-light);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .invoice-footer p {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+            margin-bottom: 50px;
+        }
+
+        .btn-print {
+            background: var(--primary-dark);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-print:hover {
+            background: #000;
+            transform: translateY(-2px);
+        }
+
+        .btn-back {
+            background: white;
+            color: var(--primary-dark);
+            border: 1px solid var(--border-color);
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background: var(--bg-light);
+        }
+
+        @@media print {
+            .no-print, .action-buttons, .navbar, .management-sidebar {
+                display: none !important;
+            }
+            body { background: white !important; }
+            .invoice-card { border: none; box-shadow: none; }
+            .detail-container { max-width: 100%; width: 100%; margin: 0; }
+        }
+    </style>
+}
+
+@{
+    var reasonClass = "";
+    if (Model.Reason != null)
+    {
+        var r = Model.Reason.ToLower();
+        if (r.Contains("hỏng") || r.Contains("hư")) { reasonClass = "damage"; }
+        else if (r.Contains("hết hạn")) { reasonClass = "expired"; }
+    }
+}
+
+<div class="detail-container">
+    <div class="invoice-card">
+        <div class="invoice-header">
+            <div class="logo">
+                <i class="fas fa-utensils me-2"></i>LDP Restaurant
+            </div>
+            <div class="subtitle">Hệ thống quản lý nhà hàng chuyên nghiệp</div>
+        </div>
+
+        <div class="invoice-title">
+            <i class="fas fa-arrow-up me-2"></i>Phiếu Xuất Kho
+        </div>
+
+        <div class="invoice-body">
+            <div class="info-grid">
+                <div class="info-card">
+                    <h6><i class="fas fa-file-alt me-1"></i>Mã phiếu</h6>
+                    <div class="highlight">@Model.OutboundCode</div>
+                </div>
+                <div class="info-card">
+                    <h6><i class="fas fa-calendar me-1"></i>Ngày xuất</h6>
+                    <div class="value">@Model.OutboundDate.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+                <div class="info-card">
+                    <h6><i class="fas fa-user me-1"></i>Nhân viên thực hiện</h6>
+                    <div class="value">@Model.EmployeeName</div>
+                </div>
+                <div class="info-card">
+                    <h6><i class="fas fa-check-circle me-1"></i>Trạng thái</h6>
+                    <span class="status-badge">@Model.Status</span>
+                </div>
+            </div>
+
+            <div class="text-center mb-4">
+                <span class="reason-badge @reasonClass">
+                    <i class="fas fa-tag me-2"></i>Lý do xuất: @Model.Reason
+                </span>
+            </div>
+
+            <div class="detail-box">
+                <h5><i class="fas fa-box me-2"></i>Chi tiết nguyên liệu xuất</h5>
+                <div class="ingredient-info">
+                    <div class="ingredient-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div class="ingredient-details">
+                        <div class="ingredient-name">@Model.IngredientName</div>
+                        <div class="ingredient-meta">
+                            <span><i class="fas fa-cubes"></i>Số lượng: <strong>@Model.Quantity.ToString("N1") @Model.Unit</strong></span>
+                            <span><i class="fas fa-tag"></i>Đơn giá: <strong>@Model.UnitPrice.ToString("N0") VNĐ/@Model.Unit</strong></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-row">
+                    <span class="label">Nguyên liệu:</span>
+                    <span>@Model.IngredientName</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Tổng khối lượng xuất:</span>
+                    <span>@Model.Quantity.ToString("N1") @Model.Unit</span>
+                </div>
+                <div class="summary-row">
+                    <span class="label">Đơn giá tham chiếu:</span>
+                    <span>@Model.UnitPrice.ToString("N0") VNĐ</span>
+                </div>
+                <div class="summary-row total">
+                    <span class="label">TỔNG GIÁ TRỊ XUẤT:</span>
+                    <span class="value">@Model.TotalCost.ToString("N0") VNĐ</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="invoice-footer">
+            <p>Phiếu xuất kho được tạo tự động bởi hệ thống LDP Restaurant</p>
+            <p>Thời gian in: @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</p>
+        </div>
+    </div>
+
+    <div class="action-buttons no-print">
+        <a href="@Url.Action("StockOutboundList", "Management")" class="btn-back">
+            <i class="fas fa-chevron-left me-2"></i>Quay lại danh sách
+        </a>
+        <button class="btn-print" onclick="window.print()">
+            <i class="fas fa-print me-2"></i>In phiếu xuất
+        </button>
+    </div>
+</div>
