@@ -5,89 +5,136 @@
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-plus text-primary"></i> Thêm Bàn Mới</h2>
-    <a href="@Url.Action("TableManagement")" class="btn btn-outline-secondary">
-        <i class="fas fa-arrow-left"></i> Quay Lại
-    </a>
+@section styles {
+    <style>
+        .form-card {
+            background: var(--bg-white);
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-card h5 {
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .btn-save:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.4);
+        }
+
+        .required::after {
+            content: " *";
+            color: #ef4444;
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-plus me-2"></i>Thêm Bàn Mới</h1>
+            <p>Thêm bàn mới vào hệ thống quản lý nhà hàng</p>
+        </div>
+        <a href="@Url.Action("TableManagement")" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay Lại
+        </a>
+    </div>
 </div>
 
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle"></i> @TempData["Error"]
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
-                @using (Html.BeginForm("CreateTable", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
-                {
-                    @Html.AntiForgeryToken()
+    <div class="col-lg-8">
+        <div class="form-card">
+            <h5><i class="fas fa-chair me-2"></i>Thông Tin Bàn</h5>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                @Html.LabelFor(model => model.TableNumber, "Số Bàn", new { @class = "form-label required" })
-                                @Html.TextBoxFor(model => model.TableNumber, new { @class = "form-control", placeholder = "Nhập số bàn (VD: B01, T01)", required = "required" })
-                                @Html.ValidationMessageFor(model => model.TableNumber, "", new { @class = "text-danger" })
-                            </div>
-                        </div>
+            @using (Html.BeginForm("CreateTable", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+            {
+                @Html.AntiForgeryToken()
 
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                @Html.LabelFor(model => model.TableAreaId, "Khu Vực", new { @class = "form-label required" })
-                                @Html.DropDownListFor(model => model.TableAreaId, (SelectList)ViewBag.TableAreaId, "-- Chọn Khu Vực --", new { @class = "form-select", required = "required" })
-                                @Html.ValidationMessageFor(model => model.TableAreaId, "", new { @class = "text-danger" })
-                            </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label required">Số Bàn</label>
+                            @Html.TextBoxFor(model => model.TableNumber, new { @class = "form-control", placeholder = "Nhập số bàn (VD: B01, T01)", required = "required" })
+                            @Html.ValidationMessageFor(model => model.TableNumber, "", new { @class = "text-danger small" })
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                @Html.LabelFor(model => model.Capacity, "Số Ghế", new { @class = "form-label required" })
-                                @Html.TextBoxFor(model => model.Capacity, new { @class = "form-control", type = "number", min = "1", max = "20", placeholder = "Số ghế (1-20)", required = "required" })
-                                @Html.ValidationMessageFor(model => model.Capacity, "", new { @class = "text-danger" })
-                            </div>
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label required">Khu Vực</label>
+                            @Html.DropDownListFor(model => model.TableAreaId, (SelectList)ViewBag.TableAreaId, "-- Chọn Khu Vực --", new { @class = "form-select", required = "required" })
+                            @Html.ValidationMessageFor(model => model.TableAreaId, "", new { @class = "text-danger small" })
                         </div>
+                    </div>
+                </div>
 
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                @Html.LabelFor(model => model.Status, "Trạng Thái", new { @class = "form-label" })
-                                @Html.DropDownListFor(model => model.Status,
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label required">Số Ghế</label>
+                            @Html.TextBoxFor(model => model.Capacity, new { @class = "form-control", type = "number", min = "1", max = "20", placeholder = "Số ghế (1-20)", required = "required" })
+                            @Html.ValidationMessageFor(model => model.Capacity, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <label class="form-label">Trạng Thái</label>
+                            @Html.DropDownListFor(model => model.Status,
                                 new List<SelectListItem>
                                 {
-                                  new SelectListItem { Value = "Available", Text = "Trống", Selected = true },
-                                 new SelectListItem { Value = "Occupied", Text = "Có Khách" },
-                           new SelectListItem { Value = "Reserved", Text = "Đặt Trước" },
-                           new SelectListItem { Value = "Maintenance", Text = "Bảo Trì" }
-                          },
+                                    new SelectListItem { Value = "Available", Text = "Trống", Selected = true },
+                                    new SelectListItem { Value = "Occupied", Text = "Có Khách" },
+                                    new SelectListItem { Value = "Reserved", Text = "Đặt Trước" },
+                                    new SelectListItem { Value = "Maintenance", Text = "Bảo Trì" }
+                                },
                                 new { @class = "form-select" })
-                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                        <a href="@Url.Action("TableManagement")" class="btn btn-outline-secondary me-md-2">
-                            <i class="fas fa-times"></i> Hủy
-                        </a>
-                        <button type="submit" class="btn btn-custom">
-                            <i class="fas fa-save"></i> Thêm Bàn
-                        </button>
-                    </div>
-                }
-            </div>
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-between">
+                    <a href="@Url.Action("TableManagement")" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Hủy
+                    </a>
+                    <button type="submit" class="btn btn-save">
+                        <i class="fas fa-save me-2"></i>Thêm Bàn
+                    </button>
+                </div>
+            }
         </div>
     </div>
 </div>
 
 @section scripts {
     <script>
-        // Form validation
         (function () {
             'use strict';
             window.addEventListener('load', function () {
@@ -104,7 +151,6 @@
             }, false);
         })();
 
-        // Auto-format table number
         $('#TableNumber').on('input', function () {
             var value = $(this).val().toUpperCase();
             $(this).val(value);

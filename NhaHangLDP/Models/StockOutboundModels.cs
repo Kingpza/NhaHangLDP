@@ -29,6 +29,41 @@ namespace NhaHangLDP.Models
         public decimal TotalCost { get; set; }
         public string Status { get; set; }
         public int ItemCount { get; set; }
+        public List<StockInboundDetailItem> Details { get; set; }
+
+        public StockInboundListItem()
+        {
+            Details = new List<StockInboundDetailItem>();
+        }
+    }
+
+    public class StockInboundDetailItem
+    {
+        public string IngredientName { get; set; }
+        public decimal Quantity { get; set; }
+        public string Unit { get; set; }
+        public decimal UnitPrice { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+        public string BatchNumber { get; set; }
+    }
+
+    // ViewModel cho chi ti?t phi?u nh?p kho (View Page)
+    public class StockInboundViewPageModel
+    {
+        public int Id { get; set; }
+        public string InboundCode { get; set; }
+        public DateTime InboundDate { get; set; }
+        public string EmployeeName { get; set; }
+        public string SupplierName { get; set; }
+        public string Notes { get; set; }
+        public string Status { get; set; }
+        public decimal TotalCost { get; set; }
+        public List<StockInboundDetailItem> Details { get; set; }
+
+        public StockInboundViewPageModel()
+        {
+            Details = new List<StockInboundDetailItem>();
+        }
     }
 
     public class StockOutboundListViewModel
@@ -55,5 +90,24 @@ namespace NhaHangLDP.Models
         public decimal TotalCost { get; set; }
         public string Status { get; set; }
         public int ItemCount { get; set; }
+        public string IngredientName { get; set; }
+        public decimal Quantity { get; set; }
+        public string Unit { get; set; }
+    }
+
+    // ViewModel cho chi ti?t phi?u xu?t kho (View Page)
+    public class StockOutboundViewPageModel
+    {
+        public int Id { get; set; }
+        public string OutboundCode { get; set; }
+        public DateTime OutboundDate { get; set; }
+        public string EmployeeName { get; set; }
+        public string Reason { get; set; }
+        public string Status { get; set; }
+        public string IngredientName { get; set; }
+        public decimal Quantity { get; set; }
+        public string Unit { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal TotalCost { get; set; }
     }
 }

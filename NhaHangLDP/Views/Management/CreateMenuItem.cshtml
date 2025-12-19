@@ -6,178 +6,194 @@
 
 @section styles {
     <style>
-        .management-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            border-radius: 10px;
-        }
-
-        .form-container {
-            background: white;
+        .form-card {
+            background: var(--bg-white);
             border-radius: 15px;
-            padding: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
         }
 
-        .form-control, .form-select {
-            border-radius: 8px;
-            border: 2px solid #e9ecef;
+        .form-card h5 {
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .image-preview-container {
+            border: 2px dashed var(--border-color);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
             transition: all 0.3s ease;
+            background: var(--bg-light);
         }
 
-            .form-control:focus, .form-select:focus {
-                border-color: #667eea;
-                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-            }
+        .image-preview-container:hover {
+            border-color: var(--primary-blue);
+            background: rgba(59, 130, 246, 0.05);
+        }
 
         .image-preview {
             max-width: 200px;
             max-height: 200px;
-            border-radius: 10px;
-            border: 2px solid #dee2e6;
+            border-radius: 15px;
             object-fit: cover;
+            box-shadow: var(--shadow-md);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--text-gray);
+            margin-bottom: 15px;
         }
 
         .btn-save {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             border: none;
             color: white;
-            padding: 0.75rem 2rem;
-            border-radius: 8px;
+            padding: 12px 30px;
+            border-radius: 10px;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
-            .btn-save:hover {
-                background: linear-gradient(135deg, #218838 0%, #1c7430 100%);
-                color: white;
-                transform: translateY(-2px);
-            }
+        .btn-save:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.4);
+        }
 
         .required-field {
-            color: #dc3545;
-        }
-
-        .alert {
-            margin-bottom: 1rem;
-        }
-
-        .error-message {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 1rem;
-            margin: 2rem 0;
-            color: #856404;
+            color: #ef4444;
         }
 
         .ingredient-table {
             width: 100%;
-            margin-bottom: 1rem;
+            border-collapse: collapse;
         }
 
-            .ingredient-table th, .ingredient-table td {
-                padding: 0.75rem;
-                vertical-align: middle;
-            }
-
-        .ingredient-table-header {
-            background-color: #f8f9fa;
+        .ingredient-table th {
+            background: var(--bg-light);
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-gray);
+            font-size: 13px;
+            text-transform: uppercase;
         }
 
-        .ingredient-row {
-            border-bottom: 1px solid #dee2e6;
+        .ingredient-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
         }
 
-            .ingredient-row:last-child {
-                border-bottom: none;
-            }
+        .ingredient-row:hover {
+            background: var(--bg-light);
+        }
 
         .btn-remove-ingredient {
-            color: #dc3545;
+            color: #ef4444;
             background: none;
             border: none;
-            font-size: 1.2rem;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-remove-ingredient:hover {
+            background: #fee2e2;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+
+        .form-switch .form-check-input {
+            width: 50px;
+            height: 26px;
         }
     </style>
 }
 
-<div class="container-fluid">
-    <div class="management-header text-center">
-        <div class="container">
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
             <h1>
-                <i class="fas fa-@((Model != null && Model.IsEdit) ? "edit" : "plus")"></i>
+                <i class="fas fa-@((Model != null && Model.IsEdit) ? "edit" : "plus") me-2"></i>
                 @((Model != null && Model.IsEdit) ? "Sửa" : "Thêm") Món Ăn
             </h1>
-            <p class="mb-0">@((Model != null && Model.IsEdit) ? "Cập nhật thông tin món ăn trong thực đơn" : "Thêm món ăn mới vào thực đơn nhà hàng")</p>
+            <p>@((Model != null && Model.IsEdit) ? "Cập nhật thông tin món ăn trong thực đơn" : "Thêm món ăn mới vào thực đơn nhà hàng")</p>
         </div>
+        <a href="@Url.Action("MenuManagement", "Management")" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay Lại
+        </a>
     </div>
+</div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    <div class="row mb-4">
-        <div class="col-12 text-end">
-            <a href="@Url.Action("MenuManagement", "Management")" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-left me-2"></i>Quay Lại Thực Đơn
-            </a>
-        </div>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
 
-    @if (Model == null || Model.MenuItem == null)
+@if (Model == null || Model.MenuItem == null)
+{
+    <div class="alert alert-warning">
+        <h5><i class="fas fa-exclamation-triangle me-2"></i>Lỗi Model</h5>
+        <p>Có lỗi xảy ra khi tải dữ liệu. Model hoặc MenuItem bị null.</p>
+        <a href="@Url.Action("CreateMenuItem", "Management")" class="btn btn-warning">
+            <i class="fas fa-refresh me-2"></i>Thử Lại
+        </a>
+    </div>
+}
+else
+{
+    using (Html.BeginForm(Model.IsEdit ? "EditMenuItem" : "CreateMenuItem", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate", enctype = "multipart/form-data" }))
     {
-        <div class="error-message">
-            <h5><i class="fas fa-exclamation-triangle me-2"></i>Lỗi Model</h5>
-            <p>Có lỗi xảy ra khi tải dữ liệu. Model hoặc MenuItem bị null.</p>
-            <a href="@Url.Action("CreateMenuItem", "Management")" class="btn btn-warning">
-                <i class="fas fa-refresh me-2"></i>Thử Lại
-            </a>
-        </div>
-    }
-    else
-    {
-        using (Html.BeginForm(Model.IsEdit ? "EditMenuItem" : "CreateMenuItem", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate", enctype = "multipart/form-data" }))
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.IsEdit)
+
+        if (Model.IsEdit)
         {
-            @Html.AntiForgeryToken()
-            @Html.HiddenFor(m => m.IsEdit)
+            @Html.HiddenFor(m => m.MenuItem.Id)
+        }
 
-            if (Model.IsEdit)
-            {
-                @Html.HiddenFor(m => m.MenuItem.Id)
-            }
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Basic Info -->
+                <div class="form-card">
+                    <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h5>
 
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-container">
-                        <h5><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h5>
-
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="mb-3">
-                                    <label class="form-label">Tên món ăn <span class="required-field">*</span></label>
-                                    @Html.TextBoxFor(m => m.MenuItem.Name, new { @class = "form-control", placeholder = "Nhập tên món ăn...", required = "required" })
-                                    @Html.ValidationMessageFor(m => m.MenuItem.Name, "", new { @class = "text-danger" })
-                                </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">Tên món ăn <span class="required-field">*</span></label>
+                                @Html.TextBoxFor(m => m.MenuItem.Name, new { @class = "form-control", placeholder = "Nhập tên món ăn...", required = "required" })
+                                @Html.ValidationMessageFor(m => m.MenuItem.Name, "", new { @class = "text-danger small" })
                             </div>
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <label class="form-label">Danh mục <span class="required-field">*</span></label>
-                                    @Html.DropDownListFor(m => m.MenuItem.Category,
-                                        new SelectList(new[] {
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Danh mục <span class="required-field">*</span></label>
+                                @Html.DropDownListFor(m => m.MenuItem.Category,
+                                    new SelectList(new[] {
                                         new { Value = "", Text = "-- Chọn danh mục --" },
                                         new { Value = "Nước Lẩu", Text = "Nước Lẩu" },
                                         new { Value = "Thịt", Text = "Thịt" },
@@ -186,151 +202,146 @@
                                         new { Value = "Món Phụ", Text = "Món Phụ" },
                                         new { Value = "Đồ Uống", Text = "Đồ Uống" }
                                     }, "Value", "Text", Model.MenuItem.Category),
-                                        new { @class = "form-select", required = "required" })
-                                    @Html.ValidationMessageFor(m => m.MenuItem.Category, "", new { @class = "text-danger" })
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Mô tả món ăn</label>
-                            @Html.TextAreaFor(m => m.MenuItem.Description, new { @class = "form-control", rows = 3, placeholder = "Mô tả chi tiết về món ăn..." })
-                            @Html.ValidationMessageFor(m => m.MenuItem.Description, "", new { @class = "text-danger" })
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Giá bán (VNĐ) <span class="required-field">*</span></label>
-                                    @Html.TextBoxFor(m => m.MenuItem.Price, new { @class = "form-control", type = "number", min = "1000", max = "10000000", step = "1000", placeholder = "50000", required = "required" })
-                                    @Html.ValidationMessageFor(m => m.MenuItem.Price, "", new { @class = "text-danger" })
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Thời gian chuẩn bị (phút) <span class="required-field">*</span></label>
-                                    @Html.TextBoxFor(m => m.MenuItem.PreparationTime, new { @class = "form-control", type = "number", min = "1", max = "120", placeholder = "15", required = "required" })
-                                    @Html.ValidationMessageFor(m => m.MenuItem.PreparationTime, "", new { @class = "text-danger" })
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Hình ảnh món ăn</label>
-                            <input type="file" name="ImageFile" id="ImageFile" class="form-control" accept="image/*" onchange="previewImage(this)">
-                            <small class="form-text text-muted">
-                                Hỗ trợ: JPG, PNG, GIF. Kích thước tối đa: 5MB
-                            </small>
-
-                            @if (Model.IsEdit && !string.IsNullOrEmpty(Model.MenuItem.ImageUrl))
-                            {
-                                <div class="mt-2">
-                                    <label class="form-label">Hình ảnh hiện tại:</label><br>
-                                    <img src="@Url.Content(Model.MenuItem.ImageUrl)" alt="@Model.MenuItem.Name" class="image-preview">
-                                </div>
-                            }
-
-                            <div id="imagePreview" class="mt-2" style="display: none;">
-                                <label class="form-label">Hình ảnh mới:</label><br>
-                                <img id="preview" src="" alt="Preview" class="image-preview">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="form-check">
-                                @Html.CheckBoxFor(m => m.MenuItem.IsAvailable, new { @class = "form-check-input" })
-                                <label class="form-check-label">Đang bán</label>
+                                    new { @class = "form-select", required = "required" })
+                                @Html.ValidationMessageFor(m => m.MenuItem.Category, "", new { @class = "text-danger small" })
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-container">
-                        <h5><i class="fas fa-carrot me-2"></i>Thành Phần Món Ăn</h5>
-
-                        <div id="ingredient-list-container">
-                            <table class="ingredient-table">
-                                <thead class="ingredient-table-header">
-                                    <tr>
-                                        <th>Nguyên Liệu</th>
-                                        <th style="width: 50px;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="ingredient-list">
-                                    @if (Model.SelectedIngredients != null)
-                                    {
-                                        for (int i = 0; i < Model.SelectedIngredients.Count; i++)
-                                        {
-                                            <tr class="ingredient-row">
-                                                <td>
-                                                    @Html.HiddenFor(m => m.SelectedIngredients[i].IngredientId)
-                                                    @Html.HiddenFor(m => m.SelectedIngredients[i].RequiredQuantity, new { @Value = 0 })
-                                                    @Html.HiddenFor(m => m.SelectedIngredients[i].Unit, new { @Value = "" })
-                                                    <strong>@Model.SelectedIngredients[i].IngredientName</strong>
-                                                </td>
-                                                <td>
-                                                    <button type="button" class="btn-remove-ingredient" onclick="removeIngredientRow(this)">
-                                                        <i class="fas fa-trash-alt"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        }
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <hr />
-
-                        <div class="row align-items-end" id="add-ingredient-form">
-                            <div class="col-md-10">
-                                <label class="form-label">Chọn Nguyên Liệu</label>
-                                <select id="newIngredientId" class="form-select">
-                                    <option value="">-- Chọn nguyên liệu --</option>
-                                    @if (Model.AvailableIngredients != null)
-                                    {
-                                        foreach (var ing in Model.AvailableIngredients)
-                                        {
-                                            <option value="@ing.Id">@ing.Name</option>
-                                        }
-                                    }
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">&nbsp;</label>
-                                <button type="button" id="add-ingredient-btn" class="btn btn-info w-100">
-                                    <i class="fas fa-plus me-1"></i> Thêm
-                                </button>
-                            </div>
-                        </div>
-                        <small id="ingredient-error" class="text-danger d-none">Vui lòng chọn nguyên liệu.</small>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả món ăn</label>
+                        @Html.TextAreaFor(m => m.MenuItem.Description, new { @class = "form-control", rows = 3, placeholder = "Mô tả chi tiết về món ăn..." })
                     </div>
 
-                    <div class="form-container">
-                        <div class="d-flex justify-content-between">
-                            <a href="@Url.Action("MenuManagement", "Management")" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i>Hủy
-                            </a>
-                            <div>
-                                @if (Model.IsEdit)
-                                {
-                                    <button type="submit" class="btn btn-save">
-                                        <i class="fas fa-save me-2"></i>Cập Nhật
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button type="submit" class="btn btn-save">
-                                        <i class="fas fa-plus me-2"></i>Thêm Món Ăn
-                                    </button>
-                                }
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Giá bán (VNĐ) <span class="required-field">*</span></label>
+                                @Html.TextBoxFor(m => m.MenuItem.Price, new { @class = "form-control", type = "number", min = "1000", max = "10000000", step = "1000", placeholder = "50000", required = "required" })
+                                @Html.ValidationMessageFor(m => m.MenuItem.Price, "", new { @class = "text-danger small" })
                             </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Thời gian chuẩn bị (phút) <span class="required-field">*</span></label>
+                                @Html.TextBoxFor(m => m.MenuItem.PreparationTime, new { @class = "form-control", type = "number", min = "1", max = "120", placeholder = "15", required = "required" })
+                                @Html.ValidationMessageFor(m => m.MenuItem.PreparationTime, "", new { @class = "text-danger small" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            @Html.CheckBoxFor(m => m.MenuItem.IsAvailable, new { @class = "form-check-input" })
+                            <label class="form-check-label">Đang bán</label>
                         </div>
                     </div>
                 </div>
+
+                <!-- Ingredients -->
+                <div class="form-card">
+                    <h5><i class="fas fa-carrot me-2"></i>Thành Phần Món Ăn</h5>
+
+                    <div id="ingredient-list-container">
+                        <table class="ingredient-table">
+                            <thead>
+                                <tr>
+                                    <th>Nguyên Liệu</th>
+                                    <th style="width: 60px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="ingredient-list">
+                                @if (Model.SelectedIngredients != null)
+                                {
+                                    for (int i = 0; i < Model.SelectedIngredients.Count; i++)
+                                    {
+                                        <tr class="ingredient-row">
+                                            <td>
+                                                @Html.HiddenFor(m => m.SelectedIngredients[i].IngredientId)
+                                                @Html.HiddenFor(m => m.SelectedIngredients[i].RequiredQuantity, new { @Value = 0 })
+                                                @Html.HiddenFor(m => m.SelectedIngredients[i].Unit, new { @Value = "" })
+                                                <strong>@Model.SelectedIngredients[i].IngredientName</strong>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn-remove-ingredient" onclick="removeIngredientRow(this)">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row align-items-end">
+                        <div class="col-md-9">
+                            <label class="form-label">Chọn Nguyên Liệu</label>
+                            <select id="newIngredientId" class="form-select">
+                                <option value="">-- Chọn nguyên liệu --</option>
+                                @if (Model.AvailableIngredients != null)
+                                {
+                                    foreach (var ing in Model.AvailableIngredients)
+                                    {
+                                        <option value="@ing.Id">@ing.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" id="add-ingredient-btn" class="btn btn-outline-custom w-100">
+                                <i class="fas fa-plus me-1"></i>Thêm
+                            </button>
+                        </div>
+                    </div>
+                    <small id="ingredient-error" class="text-danger d-none">Vui lòng chọn nguyên liệu.</small>
+                </div>
             </div>
-        }
+
+            <div class="col-lg-4">
+                <!-- Image Upload -->
+                <div class="form-card">
+                    <h5><i class="fas fa-image me-2"></i>Hình Ảnh</h5>
+
+                    <div class="image-preview-container">
+                        @if (Model.IsEdit && !string.IsNullOrEmpty(Model.MenuItem.ImageUrl))
+                        {
+                            <img src="@Url.Content(Model.MenuItem.ImageUrl)" alt="@Model.MenuItem.Name" class="image-preview mb-3" id="currentImage">
+                        }
+                        else
+                        {
+                            <div id="uploadPlaceholder">
+                                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                <p class="text-muted mb-0">Kéo thả hoặc click để tải ảnh</p>
+                            </div>
+                        }
+                        <div id="imagePreview" style="display: none;">
+                            <img id="preview" src="" alt="Preview" class="image-preview">
+                        </div>
+                    </div>
+
+                    <input type="file" name="ImageFile" id="ImageFile" class="form-control mt-3" accept="image/*" onchange="previewImage(this)">
+                    <small class="text-muted">Hỗ trợ: JPG, PNG, GIF. Tối đa: 5MB</small>
+                </div>
+
+                <!-- Actions -->
+                <div class="form-card">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-save btn-lg">
+                            <i class="fas fa-@(Model.IsEdit ? "save" : "plus") me-2"></i>
+                            @(Model.IsEdit ? "Cập Nhật" : "Thêm Món Ăn")
+                        </button>
+                        <a href="@Url.Action("MenuManagement", "Management")" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Hủy
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     }
-</div>
+}
 
 @section scripts {
     <script>
@@ -340,6 +351,10 @@
                 reader.onload = function (e) {
                     document.getElementById('preview').src = e.target.result;
                     document.getElementById('imagePreview').style.display = 'block';
+                    var placeholder = document.getElementById('uploadPlaceholder');
+                    if (placeholder) placeholder.style.display = 'none';
+                    var currentImg = document.getElementById('currentImage');
+                    if (currentImg) currentImg.style.display = 'none';
                 };
                 reader.readAsDataURL(input.files[0]);
             }
@@ -358,6 +373,7 @@
             }
         });
 
+        // Form validation
         (function () {
             'use strict';
             var forms = document.querySelectorAll('.needs-validation');
@@ -406,21 +422,22 @@
             });
         })();
 
+        // Ingredient management
         var ingredientRowTemplate = `
-                    <tr class="ingredient-row">
-                        <td>
-                            <input type="hidden" name="SelectedIngredients[__index__].IngredientId" value="__id__" />
-                            <input type="hidden" name="SelectedIngredients[__index__].RequiredQuantity" value="0" />
-                            <input type="hidden" name="SelectedIngredients[__index__].Unit" value="" />
-                            <strong>__name__</strong>
-                        </td>
-                        <td>
-                            <button type="button" class="btn-remove-ingredient" onclick="removeIngredientRow(this)">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
+            <tr class="ingredient-row">
+                <td>
+                    <input type="hidden" name="SelectedIngredients[__index__].IngredientId" value="__id__" />
+                    <input type="hidden" name="SelectedIngredients[__index__].RequiredQuantity" value="0" />
+                    <input type="hidden" name="SelectedIngredients[__index__].Unit" value="" />
+                    <strong>__name__</strong>
+                </td>
+                <td>
+                    <button type="button" class="btn-remove-ingredient" onclick="removeIngredientRow(this)">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
 
         document.getElementById('add-ingredient-btn').addEventListener('click', function () {
             var ddl = document.getElementById('newIngredientId');

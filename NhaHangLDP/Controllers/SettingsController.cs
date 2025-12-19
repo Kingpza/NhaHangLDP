@@ -25,7 +25,7 @@ namespace NhaHangLDP.Controllers
 
                 var viewModel = new SettingsViewModel
                 {
-                    RestaurantName = GetSettingValue(allSettings, "RestaurantName", "LDP Restaurant"),
+                    RestaurantName = GetSettingValue(allSettings, "RestaurantName", " Restaurant"),
                     Address = GetSettingValue(allSettings, "Address", "123 Đường ABC, Quận 1, TP.HCM"),
                     PhoneNumber = GetSettingValue(allSettings, "PhoneNumber", "0123456789"),
                     Email = GetSettingValue(allSettings, "Email", "info@ldprestaurant.com"),
