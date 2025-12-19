@@ -16,10 +16,14 @@ namespace NhaHangLDP.Models
         // Chứa danh sách các nguyên liệu
         public List<MenuItemIngredientViewModel> Ingredients { get; set; }
 
+        // Chứa danh sách món ăn liên quan
+        public List<MenuItem> RelatedItems { get; set; }
+
         public MenuItemDetailViewModel()
         {
             // Khởi tạo để tránh lỗi null
             Ingredients = new List<MenuItemIngredientViewModel>();
+            RelatedItems = new List<MenuItem>();
         }
     }
 }

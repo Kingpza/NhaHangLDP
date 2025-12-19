@@ -56,6 +56,16 @@ namespace NhaHangLDP.Controllers
                                 })
                                 .ToList();
 
+            // Lấy món ăn liên quan (cùng category, khác ID, lấy 4 món)
+            var relatedItems = db.MenuItem
+                                .Where(m => m.IsAvailable && 
+                                           m.Category == menuItem.Category && 
+                                           m.Id != id.Value)
+                                .OrderByDescending(m => m.SoldCount)
+                                .ThenByDescending(m => m.Rating)
+                                .Take(4)
+                                .ToList();
+
             // Tạo ViewModel
             var viewModel = new MenuItemDetailViewModel
             {
@@ -64,261 +74,354 @@ namespace NhaHangLDP.Controllers
                 Description = menuItem.Description,
                 Price = menuItem.Price,
                 ImageUrl = menuItem.ImageUrl,
-                Ingredients = ingredients
+                Ingredients = ingredients,
+                RelatedItems = relatedItems
             };
 
             return View(viewModel);
         }
 
-        // API Chatbot - Xử lý tin nhắn và gợi ý món ăn
+        // ===== CHATBOT API =====
         [HttpPost]
-        public JsonResult ChatBot(string message)
+        public JsonResult ChatBot(string message, string history = null)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(message))
                 {
-                    return Json(new { success = false, message = "Vui lòng nhập tin nhắn!" });
-                }
-
-                message = message.ToLower().Trim();
-                string response = "";
-                List<object> suggestions = null;
-
-                // Xử lý các câu hỏi về giá
-                if (message.Contains("giá") || message.Contains("rẻ") || message.Contains("mắc") || 
-                    message.Contains("bao nhiêu") || message.Contains("tiền"))
-                {
-                    var priceMatch = Regex.Match(message, @"(\d+)");
-                    if (priceMatch.Success)
+                    return Json(new
                     {
-                        decimal targetPrice = decimal.Parse(priceMatch.Value) * 1000; // Giả sử nhập số nghìn
-                        var items = db.MenuItem
-                            .Where(m => m.IsAvailable && m.Price <= targetPrice)
-                            .OrderBy(m => m.Price)
-                            .Take(5)
-                            .Select(m => new
-                            {
-                                id = m.Id,
-                                name = m.Name,
-                                price = m.Price,
-                                description = m.Description,
-                                imageUrl = m.ImageUrl
-                            })
-                            .ToList<object>();
+                        success = false,
+                        response = "Vui lòng nhập tin nhắn!"
+                    });
+                }
 
-                        response = string.Format("Dưới đây là các món ăn dưới {0:N0}đ:", targetPrice);
-                        suggestions = items;
-                    }
-                    else if (message.Contains("rẻ"))
-                    {
-                        var items = db.MenuItem
-                            .Where(m => m.IsAvailable)
-                            .OrderBy(m => m.Price)
-                            .Take(5)
-                            .Select(m => new
-                            {
-                                id = m.Id,
-                                name = m.Name,
-                                price = m.Price,
-                                description = m.Description,
-                                imageUrl = m.ImageUrl
-                            })
-                            .ToList<object>();
+                message = message.Trim().ToLower();
 
-                        response = "Dưới đây là các món ăn có giá rẻ nhất của chúng tôi:";
-                        suggestions = items;
-                    }
-                    else
-                    {
-                        response = "Bạn có thể cho tôi biết mức giá bạn mong muốn không? Ví dụ: 'Món dưới 100 nghìn'";
-                    }
-                }
-                // Xử lý câu hỏi về combo
-                else if (message.Contains("combo") || message.Contains("set"))
-                {
-                    var combos = db.MenuCombo
-                        .Where(c => c.IsActive)
-                        .Select(c => new
-                        {
-                            id = c.Id,
-                            name = c.Name,
-                            price = c.ComboPrice,
-                            description = c.Description,
-                            isCombo = true
-                        })
-                        .ToList<object>();
-
-                    if (combos.Any())
-                    {
-                        response = "Chúng tôi có các combo hấp dẫn sau:";
-                        suggestions = combos;
-                    }
-                    else
-                    {
-                        response = "Hiện tại chúng tôi chưa có combo nào. Bạn có thể xem các món lẻ.";
-                    }
-                }
-                // Xử lý câu hỏi về loại món
-                else if (message.Contains("món chính") || message.Contains("chính"))
-                {
-                    suggestions = GetMenuByCategory("Món chính");
-                    response = "Đây là các món chính của chúng tôi:";
-                }
-                else if (message.Contains("khai vị") || message.Contains("khai vi"))
-                {
-                    suggestions = GetMenuByCategory("Khai vị");
-                    response = "Đây là các món khai vị của chúng tôi:";
-                }
-                else if (message.Contains("tráng miệng") || message.Contains("trang mieng") || message.Contains("ngọt"))
-                {
-                    suggestions = GetMenuByCategory("Tráng miệng");
-                    response = "Đây là các món tráng miệng của chúng tôi:";
-                }
-                else if (message.Contains("nước") || message.Contains("uống") || message.Contains("giải khát"))
-                {
-                    suggestions = GetMenuByCategory("Đồ uống");
-                    response = "Đây là các đồ uống của chúng tôi:";
-                }
-                // Xử lý tìm kiếm món cụ thể
-                else if (message.Contains("tìm") || message.Contains("có") || message.Contains("món"))
-                {
-                    var searchTerms = message.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Where(w => w.Length > 2 && !new[] { "món", "tìm", "cho", "tôi", "mình", "có", "không" }.Contains(w))
-                        .ToList();
-
-                    if (searchTerms.Any())
-                    {
-                        var items = db.MenuItem
-                            .Where(m => m.IsAvailable)
-                            .ToList()
-                            .Where(m => searchTerms.Any(term => 
-                                RemoveDiacritics(m.Name.ToLower()).Contains(RemoveDiacritics(term)) ||
-                                (m.Description != null && RemoveDiacritics(m.Description.ToLower()).Contains(RemoveDiacritics(term)))))
-                            .Take(5)
-                            .Select(m => new
-                            {
-                                id = m.Id,
-                                name = m.Name,
-                                price = m.Price,
-                                description = m.Description,
-                                imageUrl = m.ImageUrl
-                            })
-                            .ToList<object>();
-
-                        if (items.Any())
-                        {
-                            response = string.Format("Tôi tìm thấy các món liên quan đến '{0}':", string.Join(", ", searchTerms));
-                            suggestions = items;
-                        }
-                        else
-                        {
-                            response = "Xin lỗi, tôi không tìm thấy món nào phù hợp. Bạn có thể thử từ khóa khác!";
-                        }
-                    }
-                }
-                // Xử lý chào hỏi
-                else if (message.Contains("chào") || message.Contains("hello") || message.Contains("hi") || message.Contains("xin chào"))
-                {
-                    response = "Xin chào! Tôi là trợ lý ảo của Nhà Hàng LDP. Tôi có thể giúp bạn:\n" +
-                               "- Tìm món theo giá (VD: 'Món dưới 100 nghìn')\n" +
-                               "- Xem combo (VD: 'Có combo nào không?')\n" +
-                               "- Gợi ý món theo loại (VD: 'Món chính', 'Khai vị')\n" +
-                               "- Tìm món cụ thể (VD: 'Có món bò không?')\n" +
-                               "Bạn cần tôi giúp gì?";
-                }
-                // Xử lý gợi ý ngẫu nhiên
-                else if (message.Contains("gợi ý") || message.Contains("đề xuất") || message.Contains("recommend"))
-                {
-                    var random = new Random();
-                    var items = db.MenuItem
-                        .Where(m => m.IsAvailable)
-                        .ToList()
-                        .OrderBy(x => random.Next())
-                        .Take(5)
-                        .Select(m => new
-                        {
-                            id = m.Id,
-                            name = m.Name,
-                            price = m.Price,
-                            description = m.Description,
-                            imageUrl = m.ImageUrl
-                        })
-                        .ToList<object>();
-
-                    response = "Dưới đây là một số món ăn được nhiều khách hàng yêu thích:";
-                    suggestions = items;
-                }
-                // Mặc định
-                else
-                {
-                    response = "Xin lỗi, tôi chưa hiểu câu hỏi của bạn. Bạn có thể hỏi tôi về:\n" +
-                               "- Giá món ăn\n" +
-                               "- Combo/Set\n" +
-                               "- Loại món (món chính, khai vị, tráng miệng, đồ uống)\n" +
-                               "- Tìm món cụ thể\n" +
-                               "Hoặc gõ 'gợi ý' để xem món ngẫu nhiên!";
-                }
+                // Xử lý tin nhắn và tạo response
+                var chatResponse = ProcessChatMessage(message);
 
                 return Json(new
                 {
                     success = true,
-                    response = response,
-                    suggestions = suggestions
+                    response = chatResponse.Response,
+                    suggestions = chatResponse.Suggestions,
+                    quickReplies = chatResponse.QuickReplies
                 });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
+                System.Diagnostics.Debug.WriteLine($"ChatBot Error: {ex.Message}");
+                return Json(new
+                {
+                    success = false,
+                    response = "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại!"
+                });
             }
         }
 
-        // Helper method để lấy món theo category
-        private List<object> GetMenuByCategory(string category)
+        private ChatBotResponse ProcessChatMessage(string message)
         {
-            return db.MenuItem
-                .Where(m => m.IsAvailable && m.Category == category)
-                .OrderBy(m => m.Price)
-                .Take(5)
-                .Select(m => new
-                {
-                    id = m.Id,
-                    name = m.Name,
-                    price = m.Price,
-                    description = m.Description,
-                    imageUrl = m.ImageUrl
-                })
-                .ToList<object>();
-        }
-
-        // Helper method để loại bỏ dấu tiếng Việt
-        private string RemoveDiacritics(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return text;
-
-            var normalizedString = text.Normalize(System.Text.NormalizationForm.FormD);
-            var stringBuilder = new System.Text.StringBuilder();
-
-            foreach (var c in normalizedString)
+            var response = new ChatBotResponse
             {
-                var unicodeCategory = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
-                if (unicodeCategory != System.Globalization.UnicodeCategory.NonSpacingMark)
+                Response = "",
+                Suggestions = new List<MenuSuggestion>(),
+                QuickReplies = new List<string>()
+            };
+
+            // 1. Chào hỏi
+            if (IsGreeting(message))
+            {
+                response.Response = "👋 Xin chào! Mình là **LDP Bot**.\n\n" +
+                    "Mình có thể giúp bạn:\n" +
+                    "🍽️ Tìm món ăn\n" +
+                    "💰 Gợi ý theo ngân sách\n" +
+                    "⭐ Xem món bán chạy\n" +
+                    "🎯 Tư vấn combo\n\n" +
+                    "Bạn muốn tìm món gì?";
+                response.QuickReplies = new List<string>
                 {
-                    stringBuilder.Append(c);
+                    "🔥 Top món bán chạy",
+                    "💰 Món dưới 100k",
+                    "🍜 Món chính",
+                    "🥗 Món khai vị"
+                };
+                return response;
+            }
+
+            // 2. Top món bán chạy
+            if (IsAskingBestSellers(message))
+            {
+                var topItems = db.MenuItem
+                    .Where(m => m.IsAvailable)
+                    .OrderByDescending(m => m.SoldCount)
+                    .Take(5)
+                    .ToList();
+
+                response.Response = $"🔥 **Top {topItems.Count} món bán chạy nhất:**\n\n" +
+                    "Đây là những món được khách hàng yêu thích nhất tại nhà hàng!";
+                response.Suggestions = topItems.Select(m => new MenuSuggestion
+                {
+                    Id = m.Id,
+                    Name = m.Name,
+                    Price = m.Price,
+                    ImageUrl = m.ImageUrl,
+                    Description = m.Description
+                }).ToList();
+                response.QuickReplies = new List<string>
+                {
+                    "💰 Món giá rẻ",
+                    "⭐ Món mới",
+                    "🍜 Món chính"
+                };
+                return response;
+            }
+
+            // 3. Tìm món theo ngân sách
+            var budgetMatch = Regex.Match(message, @"(dưới|dưới|under|<|duoi)\s*(\d+)");
+            if (budgetMatch.Success || message.Contains("giá rẻ") || message.Contains("gia re") || message.Contains("rẻ"))
+            {
+                decimal maxPrice = 100000; // Mặc định 100k
+                if (budgetMatch.Success)
+                {
+                    maxPrice = decimal.Parse(budgetMatch.Groups[2].Value) * 1000;
+                }
+
+                var affordableItems = db.MenuItem
+                    .Where(m => m.IsAvailable && m.Price <= maxPrice)
+                    .OrderBy(m => m.Price)
+                    .Take(6)
+                    .ToList();
+
+                response.Response = $"💰 **Món ăn dưới {maxPrice / 1000}k:**\n\n" +
+                    $"Mình tìm thấy **{affordableItems.Count} món** phù hợp với ngân sách của bạn!";
+                response.Suggestions = affordableItems.Select(m => new MenuSuggestion
+                {
+                    Id = m.Id,
+                    Name = m.Name,
+                    Price = m.Price,
+                    ImageUrl = m.ImageUrl,
+                    Description = m.Description
+                }).ToList();
+                response.QuickReplies = new List<string>
+                {
+                    "🔥 Top món bán chạy",
+                    "💰 Món dưới 200k",
+                    "⭐ Món đặc biệt"
+                };
+                return response;
+            }
+
+            // 4. Tìm món theo danh mục
+            var category = DetectCategory(message);
+            if (!string.IsNullOrEmpty(category))
+            {
+                var categoryItems = db.MenuItem
+                    .Where(m => m.IsAvailable && m.Category == category)
+                    .OrderByDescending(m => m.Rating)
+                    .ThenByDescending(m => m.SoldCount)
+                    .Take(6)
+                    .ToList();
+
+                var categoryEmoji = GetCategoryEmoji(category);
+                response.Response = $"{categoryEmoji} **{category}:**\n\n" +
+                    $"Mình tìm thấy **{categoryItems.Count} món** trong danh mục này!";
+                response.Suggestions = categoryItems.Select(m => new MenuSuggestion
+                {
+                    Id = m.Id,
+                    Name = m.Name,
+                    Price = m.Price,
+                    ImageUrl = m.ImageUrl,
+                    Description = m.Description
+                }).ToList();
+                response.QuickReplies = GetOtherCategories(category);
+                return response;
+            }
+
+            // 5. Món mới
+            if (message.Contains("mới") || message.Contains("new") || message.Contains("moi"))
+            {
+                var newItems = db.MenuItem
+                    .Where(m => m.IsAvailable && m.IsNew)
+                    .OrderByDescending(m => m.CreatedDate)
+                    .Take(5)
+                    .ToList();
+
+                response.Response = $"✨ **Món mới ra mắt:**\n\n" +
+                    $"Nhà hàng vừa ra mắt **{newItems.Count} món mới** đặc sắc!";
+                response.Suggestions = newItems.Select(m => new MenuSuggestion
+                {
+                    Id = m.Id,
+                    Name = m.Name,
+                    Price = m.Price,
+                    ImageUrl = m.ImageUrl,
+                    Description = m.Description
+                }).ToList();
+                response.QuickReplies = new List<string>
+                {
+                    "🔥 Món bán chạy",
+                    "⭐ Món đặc biệt",
+                    "💰 Món giá rẻ"
+                };
+                return response;
+            }
+
+            // 6. Món đặc biệt / Featured
+            if (message.Contains("đặc biệt") || message.Contains("dac biet") || message.Contains("featured") || message.Contains("nổi bật"))
+            {
+                var featuredItems = db.MenuItem
+                    .Where(m => m.IsAvailable && m.IsFeatured)
+                    .OrderByDescending(m => m.Rating)
+                    .Take(5)
+                    .ToList();
+
+                response.Response = $"⭐ **Món đặc biệt hôm nay:**\n\n" +
+                    $"Đầu bếp đề xuất **{featuredItems.Count} món** đặc sắc!";
+                response.Suggestions = featuredItems.Select(m => new MenuSuggestion
+                {
+                    Id = m.Id,
+                    Name = m.Name,
+                    Price = m.Price,
+                    ImageUrl = m.ImageUrl,
+                    Description = m.Description
+                }).ToList();
+                response.QuickReplies = new List<string>
+                {
+                    "🔥 Món bán chạy",
+                    "💰 Món giá rẻ",
+                    "🍜 Món chính"
+                };
+                return response;
+            }
+
+            // 7. Tìm kiếm món ăn theo tên
+            if (message.Length > 2)
+            {
+                var searchResults = db.MenuItem
+                    .Where(m => m.IsAvailable && 
+                        (m.Name.ToLower().Contains(message) || 
+                         m.Description.ToLower().Contains(message)))
+                    .OrderByDescending(m => m.SoldCount)
+                    .Take(5)
+                    .ToList();
+
+                if (searchResults.Any())
+                {
+                    response.Response = $"🔍 **Kết quả tìm kiếm \"{message}\":**\n\n" +
+                        $"Mình tìm thấy **{searchResults.Count} món** phù hợp!";
+                    response.Suggestions = searchResults.Select(m => new MenuSuggestion
+                    {
+                        Id = m.Id,
+                        Name = m.Name,
+                        Price = m.Price,
+                        ImageUrl = m.ImageUrl,
+                        Description = m.Description
+                    }).ToList();
+                    response.QuickReplies = new List<string>
+                    {
+                        "🔥 Món bán chạy",
+                        "💰 Món giá rẻ",
+                        "⭐ Món đặc biệt"
+                    };
+                    return response;
                 }
             }
 
-            return stringBuilder.ToString().Normalize(System.Text.NormalizationForm.FormC);
+            // 8. Mặc định - không hiểu câu hỏi
+            response.Response = "🤔 Mình chưa hiểu rõ câu hỏi của bạn.\n\n" +
+                "Bạn có thể hỏi mình về:\n" +
+                "• Món ăn theo danh mục\n" +
+                "• Món theo ngân sách\n" +
+                "• Top món bán chạy\n" +
+                "• Món mới, món đặc biệt\n\n" +
+                "Hoặc thử các gợi ý bên dưới nhé! 😊";
+            response.QuickReplies = new List<string>
+            {
+                "🔥 Top món bán chạy",
+                "💰 Món dưới 100k",
+                "⭐ Món đặc biệt",
+                "✨ Món mới"
+            };
+
+            return response;
         }
 
-        protected override void Dispose(bool disposing)
+        // Helper methods
+        private bool IsGreeting(string message)
         {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
+            string[] greetings = { "hi", "hello", "chào", "chao", "xin chào", "xin chao", "hey", "alo" };
+            return greetings.Any(g => message.Contains(g));
         }
+
+        private bool IsAskingBestSellers(string message)
+        {
+            return message.Contains("bán chạy") || message.Contains("ban chay") || 
+                   message.Contains("best") || message.Contains("top") || 
+                   message.Contains("nổi tiếng") || message.Contains("noi tieng") ||
+                   message.Contains("phổ biến") || message.Contains("pho bien");
+        }
+
+        private string DetectCategory(string message)
+        {
+            if (message.Contains("khai vị") || message.Contains("khai vi") || message.Contains("appetizer"))
+                return "Món Khai Vị";
+            if (message.Contains("món chính") || message.Contains("mon chinh") || message.Contains("main") || message.Contains("chính"))
+                return "Món Chính";
+            if (message.Contains("tráng miệng") || message.Contains("trang mieng") || message.Contains("dessert") || message.Contains("ngọt"))
+                return "Tráng Miệng";
+            if (message.Contains("đồ uống") || message.Contains("do uong") || message.Contains("nước") || message.Contains("nuoc") || message.Contains("drink"))
+                return "Đồ Uống";
+            return null;
+        }
+
+        private string GetCategoryEmoji(string category)
+        {
+            switch (category)
+            {
+                case "Món Khai Vị": return "🥗";
+                case "Món Chính": return "🍜";
+                case "Tráng Miệng": return "🍰";
+                case "Đồ Uống": return "🥤";
+                default: return "🍽️";
+            }
+        }
+
+        private List<string> GetOtherCategories(string currentCategory)
+        {
+            var allCategories = new List<string>
+            {
+                "🥗 Món khai vị",
+                "🍜 Món chính",
+                "🍰 Tráng miệng",
+                "🥤 Đồ uống"
+            };
+            var categoryMap = new Dictionary<string, string>
+            {
+                { "Món Khai Vị", "🥗 Món khai vị" },
+                { "Món Chính", "🍜 Món chính" },
+                { "Tráng Miệng", "🍰 Tráng miệng" },
+                { "Đồ Uống", "🥤 Đồ uống" }
+            };
+
+            string currentMapped = categoryMap.ContainsKey(currentCategory) ? categoryMap[currentCategory] : "";
+            return allCategories.Where(c => c != currentMapped).ToList();
+        }
+    }
+
+    // ===== VIEW MODELS FOR CHATBOT =====
+    public class ChatBotResponse
+    {
+        public string Response { get; set; }
+        public List<MenuSuggestion> Suggestions { get; set; }
+        public List<string> QuickReplies { get; set; }
+    }
+
+    public class MenuSuggestion
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+        public string ImageUrl { get; set; }
+        public string Description { get; set; }
     }
 }
