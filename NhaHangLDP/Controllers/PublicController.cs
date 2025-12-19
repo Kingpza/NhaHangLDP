@@ -13,6 +13,7 @@ namespace NhaHangLDP.Controllers
     public class PublicController : Controller
     {
         private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        
         // GET: Public
         public ActionResult Menu()
         {
