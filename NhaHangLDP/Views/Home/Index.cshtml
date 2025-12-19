@@ -1,63 +1,539 @@
 ﻿@{
-    ViewBag.Title = "Trang Chủ Quản Lý Nhà Hàng";
+    ViewBag.Title = "Trang Chủ - Nhà Hàng LLP";
+    Layout = null;
 }
-<style>
-    body {
-        background-color: #000; 
-        color: #fff; 
-    }
-    .hero-background {
-        height: 70vh;
-        background-image: url('/images/ảnh nhà hàng.jpg');
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        color: #000;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-    }
-        .hero-background::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 1;
-            border-radius: 8px;
-        }
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            padding: 20px;
-        }
-        .hero-content h1 {
-            color: #ffcc00;
-            font-size: 3.5rem;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px #000;
-        }
 
-        .hero-content p {
-            font-size: 1.5rem;
-            margin-bottom: 30px;
-            text-shadow: 1px 1px 3px #000;
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Nhà Hàng LLP - Hương Vị Đặc Sắc</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="@Url.Content("~/Content/chatbot.css")" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0",
+                        "hover-light": "#e9ecef"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
         }
-</style>
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-        <div class="hero-background position-relative">
-            <div class="hero-content">
-                <h1 class="display-4 mb-3">Chào Mừng Đến Với Nhà Hàng LDP</h1>
-                <p class="lead">Quản lý nhà hàng của bạn một cách hiệu quả và dễ dàng.</p>
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ced4da;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #007bff;
+        }
+        
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @@keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @@keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .animate-fadeInUp {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+        
+        .animate-slideInLeft {
+            animation: slideInLeft 0.8s ease-out forwards;
+        }
+        
+        .animate-slideInRight {
+            animation: slideInRight 0.8s ease-out forwards;
+        }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-8px);
+        }
+    </style>
+</head>
+<body class="bg-background font-display text-text-primary">
+    
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 border-b border-border-light bg-background/95 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-2xl">restaurant</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-black text-text-primary">NHÀ HÀNG LLP</h1>
+                        <p class="text-xs text-text-secondary">Fine Dining Experience</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="@Url.Action("Index", "Home")" class="text-primary font-semibold border-b-2 border-primary pb-1">Trang chủ</a>
+                    <a href="@Url.Action("Menu", "Public")" class="text-text-primary hover:text-primary transition-colors">Thực đơn</a>
+                    <a href="#services" class="text-text-primary hover:text-primary transition-colors">Dịch vụ</a>
+                    <a href="#contact" class="text-text-primary hover:text-primary transition-colors">Liên hệ</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="@Url.Action("Login", "Account")" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all font-semibold">
+                        <span class="material-symbols-outlined text-lg">login</span>
+                        Đăng nhập
+                    </a>
+                    <a href="@Url.Action("Menu", "Public")" class="flex items-center gap-2 px-6 py-2 bg-primary rounded-full text-white hover:bg-[#0056b3] transition-all font-bold shadow-lg">
+                        <span class="material-symbols-outlined text-lg">restaurant_menu</span>
+                        Xem thực đơn
+                    </a>
+                </div>
             </div>
         </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 hero-gradient"></div>
+        <div class="absolute inset-0 bg-cover bg-center opacity-20" style="background-image: url('@Url.Content("~/images/ảnh nhà hàng.jpg")')"></div>
+        <div class="absolute inset-0 bg-black/30"></div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-6 text-center">
+            <div class="animate-fadeInUp">
+                <span class="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-bold rounded-full mb-6">
+                    🌟 Chào mừng đến với LLP
+                </span>
+                <h1 class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
+                    Hương Vị Đặc Sắc<br/>
+                    <span class="text-yellow-300">Trải Nghiệm Khó Quên</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto">
+                    Khám phá ẩm thực Việt Nam đậm đà với những món ăn được chế biến từ nguyên liệu tươi ngon nhất
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="@Url.Action("Menu", "Public")" class="group flex items-center gap-3 px-8 py-4 bg-white text-primary rounded-full font-bold text-lg hover:shadow-2xl transition-all">
+                        <span class="material-symbols-outlined">restaurant_menu</span>
+                        Khám phá thực đơn
+                        <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </a>
+                    <a href="#about" class="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
+                        <span class="material-symbols-outlined">info</span>
+                        Về chúng tôi
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <span class="material-symbols-outlined text-white text-4xl">expand_more</span>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-20 bg-sidebar-surface">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="stat-card bg-white rounded-[2rem] p-8 text-center shadow-lg">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">schedule</span>
+                    </div>
+                    <h3 class="text-4xl font-black text-primary mb-2">10+</h3>
+                    <p class="text-text-secondary font-semibold">Năm kinh nghiệm</p>
+                </div>
+                <div class="stat-card bg-white rounded-[2rem] p-8 text-center shadow-lg">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">restaurant_menu</span>
+                    </div>
+                    <h3 class="text-4xl font-black text-primary mb-2">100+</h3>
+                    <p class="text-text-secondary font-semibold">Món ăn đa dạng</p>
+                </div>
+                <div class="stat-card bg-white rounded-[2rem] p-8 text-center shadow-lg">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">groups</span>
+                    </div>
+                    <h3 class="text-4xl font-black text-primary mb-2">50K+</h3>
+                    <p class="text-text-secondary font-semibold">Khách hàng hài lòng</p>
+                </div>
+                <div class="stat-card bg-white rounded-[2rem] p-8 text-center shadow-lg">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">star</span>
+                    </div>
+                    <h3 class="text-4xl font-black text-primary mb-2">4.9/5</h3>
+                    <p class="text-text-secondary font-semibold">Đánh giá trung bình</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="animate-slideInLeft">
+                    <span class="text-primary font-bold text-sm uppercase tracking-wider">Về chúng tôi</span>
+                    <h2 class="text-4xl md:text-5xl font-black text-text-primary mt-4 mb-6">
+                        Câu Chuyện Của<br/>
+                        <span class="text-primary">Nhà Hàng LLP</span>
+                    </h2>
+                    <p class="text-text-secondary text-lg leading-relaxed mb-6">
+                        Với hơn 10 năm kinh nghiệm trong ngành ẩm thực, Nhà Hàng LLP tự hào mang đến cho thực khách những trải nghiệm ẩm thực đẳng cấp, kết hợp hoàn hảo giữa hương vị truyền thống và phong cách hiện đại.
+                    </p>
+                    <p class="text-text-secondary text-lg leading-relaxed mb-8">
+                        Chúng tôi cam kết sử dụng 100% nguyên liệu tươi sống, được chọn lọc kỹ càng từ các nguồn uy tín, đảm bảo chất lượng và an toàn thực phẩm tuyệt đối.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex items-center gap-3 px-6 py-3 bg-primary/10 rounded-full">
+                            <i class="fas fa-check-circle text-primary text-xl"></i>
+                            <span class="font-semibold text-text-primary">Nguyên liệu tươi ngon</span>
+                        </div>
+                        <div class="flex items-center gap-3 px-6 py-3 bg-primary/10 rounded-full">
+                            <i class="fas fa-check-circle text-primary text-xl"></i>
+                            <span class="font-semibold text-text-primary">Đầu bếp chuyên nghiệp</span>
+                        </div>
+                        <div class="flex items-center gap-3 px-6 py-3 bg-primary/10 rounded-full">
+                            <i class="fas fa-check-circle text-primary text-xl"></i>
+                            <span class="font-semibold text-text-primary">Không gian sang trọng</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="animate-slideInRight">
+                    <div class="relative">
+                        <div class="absolute -inset-4 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-[3rem] blur-2xl"></div>
+                        <img src="@Url.Content("~/images/ảnh nhà hàng.jpg")" 
+                             alt="Nhà hàng LLP" 
+                             class="relative rounded-[2rem] shadow-2xl w-full h-[500px] object-cover"
+                             onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800'" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-20 bg-sidebar-surface">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-primary font-bold text-sm uppercase tracking-wider">Dịch vụ</span>
+                <h2 class="text-4xl md:text-5xl font-black text-text-primary mt-4 mb-6">
+                    Những Gì Chúng Tôi <span class="text-primary">Cung Cấp</span>
+                </h2>
+                <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+                    Trải nghiệm dịch vụ tốt nhất với đội ngũ chuyên nghiệp và tận tâm
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="group bg-white rounded-[2rem] p-8 hover:shadow-2xl transition-all duration-300 border border-border-light">
+                    <div class="w-20 h-20 bg-gradient-to-br from-primary to-purple-500 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-white text-4xl">restaurant</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-4">Ăn tại nhà hàng</h3>
+                    <p class="text-text-secondary leading-relaxed mb-6">
+                        Thưởng thức món ăn trong không gian sang trọng, ấm cúng với dịch vụ phục vụ chuyên nghiệp.
+                    </p>
+                    <a href="@Url.Action("Menu", "Public")" class="inline-flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all">
+                        Xem thực đơn
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                </div>
+
+                <div class="group bg-white rounded-[2rem] p-8 hover:shadow-2xl transition-all duration-300 border border-border-light">
+                    <div class="w-20 h-20 bg-gradient-to-br from-primary to-purple-500 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-white text-4xl">delivery_dining</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-4">Giao hàng tận nơi</h3>
+                    <p class="text-text-secondary leading-relaxed mb-6">
+                        Đặt món online và nhận hàng nhanh chóng, đảm bảo món ăn còn nóng và tươi ngon.
+                    </p>
+                    <a href="#" class="inline-flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all">
+                        Đặt hàng ngay
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                </div>
+
+                <div class="group bg-white rounded-[2rem] p-8 hover:shadow-2xl transition-all duration-300 border border-border-light">
+                    <div class="w-20 h-20 bg-gradient-to-br from-primary to-purple-500 rounded-[1.5rem] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-white text-4xl">celebration</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-4">Tổ chức sự kiện</h3>
+                    <p class="text-text-secondary leading-relaxed mb-6">
+                        Dịch vụ tiệc cưới, sinh nhật, hội nghị với thực đơn linh hoạt và không gian rộng rãi.
+                    </p>
+                    <a href="#contact" class="inline-flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all">
+                        Liên hệ tư vấn
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div>
+                    <span class="text-primary font-bold text-sm uppercase tracking-wider">Liên hệ</span>
+                    <h2 class="text-4xl md:text-5xl font-black text-text-primary mt-4 mb-6">
+                        Ghé Thăm<br/>
+                        <span class="text-primary">Nhà Hàng LLP</span>
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-primary">location_on</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-text-primary mb-1">Địa chỉ</h3>
+                                <p class="text-text-secondary">123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-primary">call</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-text-primary mb-1">Điện thoại</h3>
+                                <p class="text-text-secondary">028 1234 5678</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-primary">mail</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-text-primary mb-1">Email</h3>
+                                <p class="text-text-secondary">contact@nhahangllp.vn</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-primary">schedule</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-text-primary mb-1">Giờ mở cửa</h3>
+                                <p class="text-text-secondary">Thứ 2 - Chủ nhật: 10:00 - 22:00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 mt-8">
+                        <a href="#" class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white hover:scale-110 transition-transform">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-sidebar-surface rounded-[2rem] p-8 border border-border-light">
+                    <h3 class="text-2xl font-bold text-text-primary mb-6">Gửi tin nhắn cho chúng tôi</h3>
+                    <form class="space-y-4">
+                        <div>
+                            <input type="text" placeholder="Họ và tên" class="w-full px-6 py-4 rounded-full border-2 border-border-light focus:border-primary focus:outline-none transition-colors" />
+                        </div>
+                        <div>
+                            <input type="email" placeholder="Email" class="w-full px-6 py-4 rounded-full border-2 border-border-light focus:border-primary focus:outline-none transition-colors" />
+                        </div>
+                        <div>
+                            <input type="tel" placeholder="Số điện thoại" class="w-full px-6 py-4 rounded-full border-2 border-border-light focus:border-primary focus:outline-none transition-colors" />
+                        </div>
+                        <div>
+                            <textarea placeholder="Nội dung tin nhắn" rows="4" class="w-full px-6 py-4 rounded-[1.5rem] border-2 border-border-light focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
+                        </div>
+                        <button type="submit" class="w-full py-4 bg-primary text-white rounded-full font-bold text-lg hover:bg-[#0056b3] transition-all shadow-lg flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">send</span>
+                            Gửi tin nhắn
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-text-primary text-white py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-2xl">restaurant</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-black">NHÀ HÀNG LLP</h3>
+                            <p class="text-xs text-white/70">Fine Dining</p>
+                        </div>
+                    </div>
+                    <p class="text-white/70 text-sm">
+                        Mang đến trải nghiệm ẩm thực tuyệt vời cho mọi thực khách.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Liên kết nhanh</h4>
+                    <ul class="space-y-2 text-white/70 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Giới thiệu</a></li>
+                        <li><a href="@Url.Action("Menu", "Public")" class="hover:text-white transition-colors">Thực đơn</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Đặt bàn</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Tuyển dụng</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Chính sách</h4>
+                    <ul class="space-y-2 text-white/70 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Điều khoản sử dụng</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Chính sách bảo mật</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Chính sách hoàn tiền</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Đăng ký nhận tin</h4>
+                    <p class="text-white/70 text-sm mb-4">Nhận thông tin khuyến mãi mới nhất</p>
+                    <form class="flex gap-2">
+                        <input type="email" placeholder="Email của bạn" class="flex-1 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-primary" />
+                        <button type="submit" class="px-6 py-2 bg-primary rounded-full hover:bg-[#0056b3] transition-colors">
+                            <span class="material-symbols-outlined">send</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/10 pt-8 text-center text-white/70 text-sm">
+                <p>© 2024 Nhà Hàng LLP. All rights reserved. | Designed with ❤️</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Chatbot Toggle Button -->
+    <button class="chatbot-toggle">
+        <i class="fas fa-comment-dots"></i>
+        <span class="chatbot-badge">1</span>
+    </button>
+
+    <!-- Chatbot Container -->
+    <div class="chatbot-container">
+        <div class="chatbot-header">
+            <div class="chatbot-header-info">
+                <div class="chatbot-title">
+                    <h4>Trợ lý ảo LLP</h4>
+                    <div class="chatbot-status">
+                        <span class="status-dot"></span>
+                        <span>Đang online</span>
+                    </div>
+                </div>
+            </div>
+            <button class="chatbot-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Nhập tin nhắn của bạn..." autocomplete="off">
+            <button class="chatbot-send">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
-</div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="@Url.Content("~/Scripts/chatbot.js")"></script>
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.animate-fadeInUp, .animate-slideInLeft, .animate-slideInRight').forEach(el => {
+            el.style.opacity = '0';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
