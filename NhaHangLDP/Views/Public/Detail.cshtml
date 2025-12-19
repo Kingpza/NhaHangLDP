@@ -2,117 +2,347 @@
 
 @{
     ViewBag.Title = Model.Name;
-    Layout = "~/Views/Shared/_PublicLayout.cshtml";
+    Layout = null;
 }
 
-@section styles {
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@Model.Name - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="@Url.Content("~/Content/chatbot.css")" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0",
+                        "hover-light": "#e9ecef"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
     <style>
-        .detail-image {
-            width: 100%;
-            height: auto;
-            object-fit: cover;
-            border-radius: 10px;
-            border: 3px solid var(--food-card-border);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-
-        .detail-content h1 {
-            font-family: 'Playfair Display', serif;
-            color: var(--header-orange);
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
         }
-
-        .detail-price {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--price-bg);
+        ::-webkit-scrollbar-thumb {
+            background: #ced4da;
+            border-radius: 4px;
         }
-
-        .detail-section-title {
-            font-family: 'Playfair Display', serif;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-top: 1.5rem;
-            padding-bottom: 0.25rem;
-            border-bottom: 2px solid var(--header-light-orange);
-            display: inline-block;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #007bff;
         }
-
-        .detail-content .lead {
-            font-size: 1.1rem;
-            color: #3F2C1B;
-            opacity: 0.9;
+        .ingredient-badge {
+            animation: slideInLeft 0.5s ease-out;
         }
-
-        .detail-content .list-group-item {
-            background-color: transparent !important;
-            border: none !important;
-            padding-left: 0;
-            color: var(--text-dark);
-        }
-
-        .detail-content .text-muted {
-            color: var(--text-dark) !important;
-            opacity: 0.7;
-        }
-
-        .btn-back {
-            background-color: var(--header-orange);
-            color: var(--text-light);
-            font-weight: 500;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            transition: background-color 0.2s ease;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-
-            .btn-back:hover {
-                background-color: var(--header-light-orange);
-                color: var(--text-light);
+        @@keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
             }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
     </style>
-}
+</head>
+<body class="bg-background font-display text-text-primary min-h-screen">
+    
+    <!-- Header -->
+    <header class="sticky top-0 z-20 border-b border-border-light bg-background/95 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="@Url.Action("Menu", "Public")" class="flex items-center gap-3 group">
+                <div class="h-10 w-10 rounded-full bg-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-white">arrow_back</span>
+                </div>
+                <span class="text-lg font-bold text-text-primary group-hover:text-primary transition-colors">Quay lại thực đơn</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <button class="h-10 w-10 rounded-full bg-sidebar-surface flex items-center justify-center hover:bg-hover-light transition-colors border border-border-light">
+                    <span class="material-symbols-outlined text-text-primary">favorite_border</span>
+                </button>
+                <button class="h-10 w-10 rounded-full bg-sidebar-surface flex items-center justify-center hover:bg-hover-light transition-colors border border-border-light">
+                    <span class="material-symbols-outlined text-text-primary">share</span>
+                </button>
+            </div>
+        </div>
+    </header>
 
-<div class="row">
-    <div class="col-md-6 mb-3 d-flex align-items-center">
-        @{
-            string imageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(Model.ImageUrl) ? "default-food.jpg" : Model.ImageUrl));
-        }
-        <img src="@imageUrl" class="detail-image" alt="@Model.Name">
-    </div>
-
-    <div class="col-md-6 detail-content">
-
-        <h1>@Model.Name</h1>
-
-        <h3 class="detail-price">@string.Format("{0:N0} VNĐ", Model.Price)</h3>
-
-        <hr />
-
-        <h5 class="detail-section-title"><i class="fa-solid fa-carrot"></i> Thành phần chính:</h5>
-        @if (Model.Ingredients != null && Model.Ingredients.Any())
-        {
-            <ul class="list-group list-group-flush">
-                @foreach (var ing in Model.Ingredients)
-                {
-                    <li class="list-group-item">
-                        <strong>@ing.IngredientName</strong>
-                    </li>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            
+            <!-- Image Section -->
+            <div class="space-y-6">
+                @{
+                    string imageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(Model.ImageUrl) ? "default-food.jpg" : Model.ImageUrl));
                 }
-            </ul>
-        }
-        else
-        {
-            <p class="text-muted"><i>(Không có thông tin nguyên liệu)</i></p>
-        }
+                <div class="relative aspect-square rounded-[2rem] overflow-hidden bg-sidebar-surface shadow-xl border-4 border-white">
+                    <img src="@imageUrl" 
+                         alt="@Model.Name" 
+                         class="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                         onerror="this.src='@Url.Content("~/images/menu/default-food.jpg")'" />
+                    <div class="absolute top-6 left-6">
+                        <span class="px-4 py-2 bg-primary/90 backdrop-blur-sm text-white text-sm font-bold rounded-full shadow-lg">
+                            <i class="fas fa-star mr-1"></i> Món đặc biệt
+                        </span>
+                    </div>
+                </div>
 
-        <hr />
+                <!-- Quick Info Cards -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-sidebar-surface rounded-2xl p-4 text-center border border-border-light">
+                        <span class="material-symbols-outlined text-primary text-3xl mb-2">schedule</span>
+                        <p class="text-xs text-text-secondary">Thời gian</p>
+                        <p class="font-bold text-text-primary">15-20 phút</p>
+                    </div>
+                    <div class="bg-sidebar-surface rounded-2xl p-4 text-center border border-border-light">
+                        <span class="material-symbols-outlined text-primary text-3xl mb-2">restaurant</span>
+                        <p class="text-xs text-text-secondary">Khẩu phần</p>
+                        <p class="font-bold text-text-primary">1-2 người</p>
+                    </div>
+                    <div class="bg-sidebar-surface rounded-2xl p-4 text-center border border-border-light">
+                        <span class="material-symbols-outlined text-primary text-3xl mb-2">local_fire_department</span>
+                        <p class="text-xs text-text-secondary">Calories</p>
+                        <p class="font-bold text-text-primary">~450 kcal</p>
+                    </div>
+                </div>
+            </div>
 
-        <h5 class="detail-section-title"><i class="fa-solid fa-circle-info"></i> Mô tả chi tiết:</h5>
-        <p class="lead" style="white-space: pre-line;">@Model.Description</p>
+            <!-- Details Section -->
+            <div class="space-y-8">
+                <!-- Title & Price -->
+                <div class="space-y-4">
+                    <div class="flex items-start justify-between gap-4">
+                        <h1 class="text-4xl md:text-5xl font-black text-text-primary leading-tight">
+                            @Model.Name
+                        </h1>
+                        <div class="flex flex-col items-end">
+                            <span class="text-xs text-text-secondary uppercase tracking-wider">Giá</span>
+                            <span class="text-4xl font-black text-primary">
+                                @string.Format("{0:N0}₫", Model.Price)
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Rating & Reviews -->
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-1">
+                            @for (int i = 0; i < 5; i++)
+                            {
+                                <i class="fas fa-star text-yellow-400 text-sm"></i>
+                            }
+                        </div>
+                        <span class="text-sm text-text-secondary">4.8 (124 đánh giá)</span>
+                    </div>
+                </div>
 
-        <hr />
+                <hr class="border-border-light" />
 
-        @Html.ActionLink("Quay lại Thực đơn", "Menu", "Public", null, new { @class = "btn btn-back" })
+                <!-- Description -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-2xl">description</span>
+                        <h2 class="text-2xl font-bold text-text-primary">Mô tả món ăn</h2>
+                    </div>
+                    <p class="text-text-secondary leading-relaxed text-lg">
+                        @(string.IsNullOrEmpty(Model.Description) ? "Món ăn đặc sắc được chế biến từ nguyên liệu tươi ngon, đảm bảo vệ sinh an toàn thực phẩm." : Model.Description)
+                    </p>
+                </div>
+
+                <hr class="border-border-light" />
+
+                <!-- Ingredients -->
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary text-2xl">nutrition</span>
+                        <h2 class="text-2xl font-bold text-text-primary">Nguyên liệu chính</h2>
+                    </div>
+                    
+                    @if (Model.Ingredients != null && Model.Ingredients.Any())
+                    {
+                        <div class="flex flex-wrap gap-3">
+                            @foreach (var ing in Model.Ingredients)
+                            {
+                                <span class="ingredient-badge px-4 py-2 bg-primary/10 text-primary rounded-full font-semibold text-sm border-2 border-primary/20 hover:bg-primary hover:text-white transition-all cursor-default">
+                                    <i class="fas fa-leaf mr-2"></i>@ing.IngredientName
+                                </span>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="bg-sidebar-surface rounded-2xl p-6 text-center border border-border-light">
+                            <span class="material-symbols-outlined text-text-secondary text-5xl mb-3">local_dining</span>
+                            <p class="text-text-secondary italic">Thông tin nguyên liệu đang được cập nhật</p>
+                        </div>
+                    }
+                </div>
+
+                <hr class="border-border-light" />
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4">
+                    <button class="flex-1 h-14 bg-primary rounded-full text-white font-bold text-lg hover:bg-[#0056b3] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3">
+                        <span class="material-symbols-outlined">shopping_cart</span>
+                        Thêm vào giỏ hàng
+                    </button>
+                    <button class="h-14 w-14 bg-sidebar-surface rounded-full flex items-center justify-center hover:bg-primary hover:text-white transition-all border border-border-light">
+                        <span class="material-symbols-outlined">favorite_border</span>
+                    </button>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl p-6 border-l-4 border-primary">
+                    <div class="flex items-start gap-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">info</span>
+                        <div>
+                            <h3 class="font-bold text-text-primary mb-2">Lưu ý</h3>
+                            <ul class="text-sm text-text-secondary space-y-1">
+                                <li>• Món ăn được chế biến theo yêu cầu</li>
+                                <li>• Có thể điều chỉnh độ cay, ngọt theo khẩu vị</li>
+                                <li>• Liên hệ nhân viên để biết thêm chi tiết</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Items Section -->
+        <div class="mt-16">
+            <div class="flex items-center gap-3 mb-8">
+                <span class="material-symbols-outlined text-primary text-3xl">restaurant_menu</span>
+                <h2 class="text-3xl font-bold text-text-primary">Món ăn liên quan</h2>
+            </div>
+            
+            @if (Model.RelatedItems != null && Model.RelatedItems.Any())
+            {
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    @foreach (var item in Model.RelatedItems)
+                    {
+                        string relatedImageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl));
+                        string formattedPrice = string.Format("{0:N0}₫", item.Price);
+                        
+                        <a href="@Url.Action("Detail", "Public", new { id = item.Id })" class="group bg-sidebar-surface rounded-[2rem] overflow-hidden hover:shadow-xl transition-all duration-300 border border-border-light hover:border-primary/50">
+                            <div class="aspect-[4/3] bg-cover bg-center overflow-hidden relative" style='background-image: url("@relatedImageUrl");'>
+                                <img src="@relatedImageUrl" 
+                                     alt="@item.Name" 
+                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                     onerror="this.src='@Url.Content("~/images/menu/default-food.jpg")'" />
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-lg font-bold text-text-primary group-hover:text-primary transition-colors mb-2 line-clamp-1">
+                                    @item.Name
+                                </h3>
+                                <p class="text-text-secondary text-sm mb-3 line-clamp-2">
+                                    @(string.IsNullOrEmpty(item.Description) ? "Món ăn ngon đặc biệt" : item.Description)
+                                </p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-primary font-bold text-xl">@formattedPrice</span>
+                                    <span class="flex items-center gap-1 text-yellow-400 text-sm">
+                                        <i class="fas fa-star"></i>
+                                        <span class="text-text-secondary">@item.Rating.ToString("0.0")</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="bg-sidebar-surface/50 rounded-2xl p-8 text-center border border-border-light">
+                    <span class="material-symbols-outlined text-text-secondary text-6xl mb-3">explore</span>
+                    <p class="text-text-secondary">Khám phá thêm nhiều món ngon khác trong thực đơn của chúng tôi</p>
+                    <a href="@Url.Action("Menu", "Public")" class="inline-block mt-4 px-6 py-3 bg-primary text-white rounded-full font-bold hover:bg-[#0056b3] transition-all">
+                        Xem thực đơn đầy đủ
+                    </a>
+                </div>
+            }
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-border-light mt-16 py-8 text-center text-text-secondary bg-sidebar-surface/30">
+        <p class="text-sm">© 2024 Nhà Hàng LDP. All rights reserved.</p>
+    </footer>
+
+    <!-- Chatbot Toggle Button -->
+    <button class="chatbot-toggle">
+        <i class="fas fa-comment-dots"></i>
+        <span class="chatbot-badge">1</span>
+    </button>
+
+    <!-- Chatbot Container -->
+    <div class="chatbot-container">
+        <div class="chatbot-header">
+            <div class="chatbot-header-info">
+                <div class="chatbot-title">
+                    <h4>Trợ lý ảo LDP</h4>
+                    <div class="chatbot-status">
+                        <span class="status-dot"></span>
+                        <span>Đang online</span>
+                    </div>
+                </div>
+            </div>
+            <button class="chatbot-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="chatbot-messages"></div>
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Nhập tin nhắn của bạn..." autocomplete="off">
+            <button class="chatbot-send">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
     </div>
-</div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="@Url.Content("~/Scripts/chatbot.js")"></script>
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Image zoom on hover
+        const img = document.querySelector('main img');
+        if (img) {
+            img.addEventListener('click', function() {
+                this.classList.toggle('scale-150');
+            });
+        }
+    </script>
+</body>
+</html>

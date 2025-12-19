@@ -55,6 +55,16 @@ namespace NhaHangLDP.Controllers
                                 })
                                 .ToList();
 
+            // Lấy món ăn liên quan (cùng category, khác ID, lấy 4 món)
+            var relatedItems = db.MenuItem
+                                .Where(m => m.IsAvailable && 
+                                           m.Category == menuItem.Category && 
+                                           m.Id != id.Value)
+                                .OrderByDescending(m => m.SoldCount)
+                                .ThenByDescending(m => m.Rating)
+                                .Take(4)
+                                .ToList();
+
             // Tạo ViewModel
             var viewModel = new MenuItemDetailViewModel
             {
@@ -63,7 +73,8 @@ namespace NhaHangLDP.Controllers
                 Description = menuItem.Description,
                 Price = menuItem.Price,
                 ImageUrl = menuItem.ImageUrl,
-                Ingredients = ingredients
+                Ingredients = ingredients,
+                RelatedItems = relatedItems
             };
 
             return View(viewModel);
