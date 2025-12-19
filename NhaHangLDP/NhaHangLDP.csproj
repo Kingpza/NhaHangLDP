@@ -354,8 +354,6 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\Home\About.cshtml" />
-    <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Account\Register.cshtml" />
@@ -410,7 +408,7 @@
     <Content Include="Views\Management\StockOutboundList.cshtml" />
     <Content Include="Views\Management\EditIngredient.cshtml" />
     <Content Include="Views\Management\IngredientHistory.cshtml" />
-    <Content Include="Views\Home\BookingDemo.cshtml" />
+    <Content Include="Views\Home\Booking.cshtml" />
     <Content Include="Views\ReportsManagement\LiveShiftMonitor.cshtml" />
     <Content Include="Views\ReportsManagement\Debug.cshtml" />
     <Content Include="Views\ReportsManagement\DebugDishProfit.cshtml" />
