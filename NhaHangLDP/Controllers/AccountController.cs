@@ -19,7 +19,7 @@ namespace NhaHangLDP.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Login(string username, string password)
+        public ActionResult Login(string username, string password, string returnUrl)
         {
             try
             {
@@ -28,6 +28,7 @@ namespace NhaHangLDP.Controllers
                     ModelState.AddModelError("", "Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu.");
                     return View();
                 }
+
                 string hashedPassword = HashPassword(password);
                 var employee = db.Employee.Include(e => e.Role)
                                  .FirstOrDefault(e => e.UserName == username && e.PasswordHash == hashedPassword);
@@ -36,30 +37,38 @@ namespace NhaHangLDP.Controllers
                 {
                     if (employee.IsActive)
                     {
+                        // Set Forms Authentication Cookie
                         FormsAuthentication.SetAuthCookie(username, false);
-                        Session["UserRole"] = employee.Role.RoleName;
+                        
+                        // Lưu thông tin vào Session với Role key chuẩn
+                        Session["Role"] = employee.Role.RoleName; // KEY QUAN TRỌNG!
+                        Session["UserRole"] = employee.Role.RoleName; // Backup key
                         Session["Username"] = employee.UserName;
                         Session["FullName"] = employee.FullName;
                         Session["UserId"] = employee.Id;
                         Session["RoleId"] = employee.RoleId;
-                        
-                        // ⭐ THÊM DÒNG NÀY để lưu CashierId
                         Session["CashierId"] = employee.Id;
-                        Session["EmployeeId"] = employee.Id; // Thêm cả EmployeeId cho các chức năng khác
+                        Session["EmployeeId"] = employee.Id;
+                        Session["LoginTime"] = DateTime.Now;
+                        Session["IsEmployee"] = true;
 
+                        // Log session info (for debugging)
+                        System.Diagnostics.Debug.WriteLine($"Login Success - Employee: {employee.UserName}, Role: {employee.Role.RoleName}");
+
+                        // Redirect based on role
                         switch (employee.Role.RoleName.ToLower())
                         {
                             case "admin":
                             case "manager":
-                                return RedirectToAction("Dashboard", "Management");
+                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Dashboard", "Management");
                             case "cashier":
                             case "thu ngân":
                             case "thu_ngan":
-                                return RedirectToAction("OpenShift", "Cashier");
+                                return RedirectToLocal(returnUrl) ?? RedirectToAction("OpenShift", "Cashier");
                             case "staff":
-                                return RedirectToAction("Menu", "Public");
+                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Menu", "Public");
                             default:
-                                return RedirectToAction("Index", "Home");
+                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Index", "Home");
                         }
                     }
                     else
@@ -76,34 +85,42 @@ namespace NhaHangLDP.Controllers
                 {
                     if (account.IsActive)
                     {
+                        // Set Forms Authentication Cookie
                         FormsAuthentication.SetAuthCookie(username, false);
-                        Session["UserRole"] = account.Role.RoleName;
+                        
+                        // Lưu thông tin vào Session với Role key chuẩn
+                        Session["Role"] = account.Role.RoleName; // KEY QUAN TRỌNG!
+                        Session["UserRole"] = account.Role.RoleName; // Backup key
                         Session["Username"] = account.Username;
                         Session["FullName"] = account.FullName;
                         Session["UserId"] = account.Id;
                         Session["RoleId"] = account.RoleId;
-                        
-                        // ⭐ THÊM DÒNG NÀY cho Account (nếu Account cũng có thể làm cashier)
-                        // Nếu Account không phải là employee, có thể gán giá trị mặc định
                         Session["CashierId"] = account.Id;
                         Session["EmployeeId"] = account.Id;
+                        Session["LoginTime"] = DateTime.Now;
+                        Session["IsEmployee"] = false;
 
+                        // Update last login
                         account.LastLoginDate = DateTime.Now;
                         db.SaveChanges();
+
+                        // Log session info (for debugging)
+                        System.Diagnostics.Debug.WriteLine($"Login Success - Account: {account.Username}, Role: {account.Role.RoleName}");
                         
+                        // Redirect based on role
                         switch (account.Role.RoleName.ToLower())
                         {
                             case "admin":
                             case "manager":
-                                return RedirectToAction("Dashboard", "Management");
+                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Dashboard", "Management");
                             case "cashier":
                             case "thu ngân":
                             case "thu_ngan":
-                                return RedirectToAction("OpenShift", "Cashier");
+                                return RedirectToLocal(returnUrl) ?? RedirectToAction("OpenShift", "Cashier");
                             case "staff":
-                                return RedirectToAction("Menu", "Public");
+                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Menu", "Public");
                             default:
-                                return RedirectToAction("Index", "Home");
+                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Index", "Home");
                         }
                     }
                     else
@@ -118,9 +135,20 @@ namespace NhaHangLDP.Controllers
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Login Error: {ex.Message}");
                 ModelState.AddModelError("", "Có lỗi xảy ra: " + ex.Message);
                 return View();
             }
+        }
+
+        // Helper method to redirect to return URL
+        private ActionResult RedirectToLocal(string returnUrl)
+        {
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            return null;
         }
 
         // GET: /Account/Register (Giữ nguyên)

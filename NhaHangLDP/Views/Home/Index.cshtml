@@ -15,6 +15,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <link href="@Url.Content("~/Content/chatbot.css")" rel="stylesheet" />
+    
+    <!-- Bootstrap CSS for dropdown -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
         tailwind.config = {
@@ -108,6 +112,98 @@
         .stat-card:hover {
             transform: translateY(-8px);
         }
+
+        /* User Menu Styles */
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .user-menu-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 9999px;
+            border: 2px solid #007bff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .user-menu-btn:hover {
+            background: #f0f4f8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: #212529;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.2;
+        }
+
+        .dropdown-menu {
+            border-radius: 1rem;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            margin-top: 8px !important;
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dropdown-item:hover {
+            background: #f0f4f8;
+            color: #007bff;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .dropdown-divider {
+            margin: 8px 0;
+        }
+
+        .login-badge {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body class="bg-background font-display text-text-primary">
@@ -128,14 +224,80 @@
                 <div class="hidden md:flex items-center gap-6">
                     <a href="@Url.Action("Index", "Home")" class="text-primary font-semibold border-b-2 border-primary pb-1">Trang chủ</a>
                     <a href="@Url.Action("Menu", "Public")" class="text-text-primary hover:text-primary transition-colors">Thực đơn</a>
+                    <a href="@Url.Action("Booking", "Home")" class="text-text-primary hover:text-primary transition-colors">Đặt bàn</a>
                     <a href="#services" class="text-text-primary hover:text-primary transition-colors">Dịch vụ</a>
                     <a href="#contact" class="text-text-primary hover:text-primary transition-colors">Liên hệ</a>
                 </div>
                 <div class="flex items-center gap-3">
-                    <a href="@Url.Action("Login", "Account")" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all font-semibold">
-                        <span class="material-symbols-outlined text-lg">login</span>
-                        Đăng nhập
-                    </a>
+                    @if (Session["Username"] != null)
+                    {
+                        <!-- User Menu Dropdown -->
+                        <div class="dropdown">
+                            <button class="user-menu-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar">
+                                    @{
+                                        var fullName = Session["FullName"]?.ToString() ?? Session["Username"]?.ToString() ?? "U";
+                                        var initial = !string.IsNullOrEmpty(fullName) ? fullName[0].ToString().ToUpper() : "U";
+                                    }
+                                    @initial
+                                </div>
+                                <div class="user-info hidden sm:flex">
+                                    <span class="user-name">@(Session["FullName"] ?? Session["Username"])</span>
+                                    <span class="user-role">
+                                        @{
+                                            var role = Session["Role"]?.ToString();
+                                            var roleText = "Khách hàng";
+                                            if (role == "Admin" || role == "Manager")
+                                            {
+                                                roleText = "Quản lý";
+                                            }
+                                            else if (role == "Cashier")
+                                            {
+                                                roleText = "Thu ngân";
+                                            }
+                                        }
+                                        @roleText
+                                    </span>
+                                </div>
+                                <i class="fas fa-chevron-down text-primary text-sm"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Dashboard", "Management")">
+                                        <i class="fas fa-tachometer-alt text-primary"></i>
+                                        Dashboard
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Booking", "Home")">
+                                        <i class="fas fa-calendar-check text-success"></i>
+                                        Đặt bàn của tôi
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#">
+                                        <i class="fas fa-user-circle text-info"></i>
+                                        Thông tin cá nhân
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="@Url.Action("LogOut", "Account")">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        Đăng xuất
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Login", "Account")" class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all font-semibold">
+                            <span class="material-symbols-outlined text-lg">login</span>
+                            Đăng nhập
+                        </a>
+                    }
+                    
                     <a href="@Url.Action("Menu", "Public")" class="flex items-center gap-2 px-6 py-2 bg-primary rounded-full text-white hover:bg-[#0056b3] transition-all font-bold shadow-lg">
                         <span class="material-symbols-outlined text-lg">restaurant_menu</span>
                         Xem thực đơn
@@ -153,9 +315,6 @@
         
         <div class="relative z-10 max-w-7xl mx-auto px-6 text-center">
             <div class="animate-fadeInUp">
-                <span class="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm text-white text-sm font-bold rounded-full mb-6">
-                    🌟 Chào mừng đến với LLP
-                </span>
                 <h1 class="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
                     Hương Vị Đặc Sắc<br/>
                     <span class="text-yellow-300">Trải Nghiệm Khó Quên</span>
@@ -169,10 +328,20 @@
                         Khám phá thực đơn
                         <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </a>
-                    <a href="#about" class="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
-                        <span class="material-symbols-outlined">info</span>
-                        Về chúng tôi
-                    </a>
+                    @if (Session["Username"] == null)
+                    {
+                        <a href="@Url.Action("Booking", "Home")" class="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
+                            <span class="material-symbols-outlined">event</span>
+                            Đặt bàn ngay
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Booking", "Home")" class="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
+                            <span class="material-symbols-outlined">event</span>
+                            Đặt bàn ngay
+                        </a>
+                    }
                 </div>
             </div>
         </div>
@@ -502,6 +671,8 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS for dropdown -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="@Url.Content("~/Scripts/chatbot.js")"></script>
     <script>
         // Smooth scroll
