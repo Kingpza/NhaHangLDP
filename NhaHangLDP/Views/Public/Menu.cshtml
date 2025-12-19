@@ -2,36 +2,325 @@
 
 @{
     ViewBag.Title = "Thực đơn";
-    Layout = "~/Views/Shared/_PublicLayout.cshtml";
+    Layout = null;
 }
 
-
-<div class="row">
-    @if (Model != null && Model.Any())
-    {
-        foreach (var item in Model)
-        {
-            string formattedPrice = string.Format("{0:N0} VNĐ", item.Price);
-
-            string imageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl));
-
-            <div class="col-md-4 mb-4">
-                <a href="@Url.Action("Detail", "Public", new { id = item.Id })" style="text-decoration: none; color: inherit;">
-                    <div class="card food-card h-100">
-                        <img src="@imageUrl" class="card-img-top" alt="@item.Name" style="height: 200px; object-fit: cover;">
-                        <div class="card-body">
-                            <h5 class="card-title">@item.Name</h5>
-                            <p class="card-text text-danger fw-bold">@formattedPrice</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Thực Đơn Món Ăn - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="@Url.Content("~/Content/chatbot.css")" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0",
+                        "hover-light": "#e9ecef"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
         }
-    }
-    else
-    {
-        <div class="col-12">
-            <p class="text-center fs-5">Chưa có món ăn nào để hiển thị.</p>
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f0f2f5;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #ced4da;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #007bff;
+        }
+
+        .chat-open:checked ~ .chat-window {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .chat-open:checked ~ .chat-btn .icon-open {
+            display: none;
+        }
+
+        .chat-open:checked ~ .chat-btn .icon-close {
+            display: block;
+        }
+
+        .chat-window {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    </style>
+</head>
+<body class="bg-background font-display text-text-primary overflow-hidden h-screen flex">
+    <aside class="hidden lg:flex w-72 flex-col justify-between border-r border-border-light bg-sidebar-surface h-full flex-shrink-0">
+        <div class="flex flex-col gap-6 p-6">
+            <div class="flex items-center gap-4">
+                <div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12 border-2 border-primary" data-alt="Restaurant logo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBhlwmgWUTs_tC-ub-_7eDlJ_CQEEM2OG7Y-GBDJ_kirlRItyl3N2IJZYAaTPWiD_8hh5uwPDpkNIMTm2rnscn89-b3gz8iD5JKzAHHPl2vAPRYdRUTQN0LzqHi4Hl5d2ijdpj-DonhwCCg8fVGjB-HR-4SIL_SfUUo1A8oNjIlnx0P3dXd9uULNJqOy7WR0mixqB_s9LbasqJCFaILO1aaHm7lbjtMQsAGX-Qnfqi_ClMXYdv47OXuNRqBwJYSQvS_7DHF6QaT5_A");'>
+                </div>
+                <div class="flex flex-col">
+                    <h1 class="text-text-primary text-lg font-bold leading-tight">NHÀ HÀNG LDP</h1>
+                    <p class="text-text-secondary text-xs font-medium">Fine Dining</p>
+                </div>
+            </div>
+            <nav class="flex flex-col gap-2 mt-4">
+                <a class="flex items-center gap-4 px-4 py-3 rounded-full bg-primary/20 border border-primary/10" href="#all">
+                    <span class="material-symbols-outlined text-primary">restaurant_menu</span>
+                    <p class="text-text-primary text-sm font-bold">Toàn bộ thực đơn</p>
+                </a>
+                @{
+                    var categories = Model.Select(m => m.Category).Distinct().OrderBy(c => c).ToList();
+                    var categoryIcons = new Dictionary<string, string> {
+                        { "Món Khai Vị", "soup_kitchen" },
+                        { "Món Chính", "restaurant" },
+                        { "Tráng Miệng", "icecream" },
+                        { "Đồ Uống", "local_bar" }
+                    };
+                }
+                @foreach (var category in categories)
+                {
+                    var icon = categoryIcons.ContainsKey(category) ? categoryIcons[category] : "restaurant";
+                    var categoryId = category.Replace(" ", "-").ToLower();
+                    <a class="flex items-center gap-4 px-4 py-3 rounded-full hover:bg-hover-light transition-colors group" href="#@categoryId">
+                        <span class="material-symbols-outlined text-text-secondary group-hover:text-primary">@icon</span>
+                        <p class="text-text-secondary group-hover:text-text-primary text-sm font-medium">@category</p>
+                    </a>
+                }
+            </nav>
         </div>
-    }
-</div>
+        <div class="p-6 flex flex-col gap-4">
+            <div class="bg-sidebar-surface rounded-2xl p-4 flex flex-col items-center gap-3 text-center border border-border-light shadow-sm">
+                <div class="bg-primary/20 p-3 rounded-full">
+                    <span class="material-symbols-outlined text-primary">local_offer</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-text-primary text-sm">Giảm 20% hôm nay</h3>
+                    <p class="text-xs text-text-secondary mt-1">Cho đơn hàng trên 2tr</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+    
+    <main class="flex-1 flex flex-col h-full min-w-0 bg-background relative">
+        <header class="sticky top-0 z-20 flex items-center justify-between border-b border-border-light bg-background/80 backdrop-blur-md px-6 py-4 lg:px-10">
+            <button class="lg:hidden text-text-primary mr-4">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="flex-1 max-w-xl">
+                <div class="flex w-full items-center rounded-full bg-sidebar-surface h-12 px-4 transition-all focus-within:ring-2 focus-within:ring-primary/50 border border-border-light">
+                    <span class="material-symbols-outlined text-text-secondary">search</span>
+                    <input class="w-full bg-transparent border-none text-text-primary placeholder-text-secondary focus:ring-0 ml-2" placeholder="Tìm món ăn, đồ uống..." type="text" id="searchInput" />
+                </div>
+            </div>
+            <div class="flex items-center gap-4 ml-6">
+                <div class="hidden md:flex items-center gap-6 mr-4">
+                    <a class="text-text-primary text-sm font-medium hover:text-primary transition-colors" href="@Url.Action("Menu", "Public")">Trang chủ</a>
+                </div>
+                <button class="relative h-10 w-10 flex items-center justify-center rounded-full bg-sidebar-surface text-text-primary hover:bg-hover-light transition-colors border border-border-light">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">notifications</span>
+                    <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border border-background"></span>
+                </button>
+                <button class="flex items-center gap-2 h-10 px-4 bg-primary rounded-full text-white hover:bg-[#0056b3] transition-colors font-bold text-sm shadow-[0_0_15px_rgba(0,123,255,0.3)]">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">shopping_cart</span>
+                    <span class="hidden sm:inline">Giỏ hàng (0)</span>
+                </button>
+            </div>
+        </header>
+        
+        <div class="flex-1 overflow-y-auto scroll-smooth pb-20">
+            <div class="max-w-[1200px] mx-auto p-6 lg:p-10 flex flex-col gap-12">
+                @if (Model != null && Model.Any())
+                {
+                    var featuredItem = Model.FirstOrDefault(m => m.IsFeatured);
+                    if (featuredItem != null)
+                    {
+                        string heroImageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(featuredItem.ImageUrl) ? "default-food.jpg" : featuredItem.ImageUrl));
+                        
+                        <section class="rounded-[2rem] overflow-hidden relative min-h-[400px] flex items-end p-8 md:p-12 group">
+                            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105" style='background-image: url("@heroImageUrl");'>
+                            </div>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                            <div class="relative z-10 max-w-2xl flex flex-col items-start gap-4">
+                                <span class="px-3 py-1 bg-primary text-white text-xs font-bold uppercase tracking-wider rounded-full">Món Ngon Hôm Nay</span>
+                                <h2 class="text-4xl md:text-5xl font-black text-white leading-tight">
+                                    @featuredItem.Name
+                                </h2>
+                                <p class="text-gray-100 text-lg max-w-lg mb-4">
+                                    @featuredItem.Description
+                                </p>
+                                <a href="@Url.Action("Detail", "Public", new { id = featuredItem.Id })" class="flex items-center gap-2 bg-white text-text-primary px-6 py-3 rounded-full font-bold text-base hover:bg-gray-100 transition-colors">
+                                    <span>Xem chi tiết</span>
+                                    <span class="material-symbols-outlined">arrow_forward</span>
+                                </a>
+                            </div>
+                        </section>
+                    }
+
+                    foreach (var category in categories)
+                    {
+                        var categoryId = category.Replace(" ", "-").ToLower();
+                        var categoryItems = Model.Where(m => m.Category == category).ToList();
+                        
+                        if (categoryItems.Any())
+                        {
+                            var categoryIcon = categoryIcons.ContainsKey(category) ? categoryIcons[category] : "restaurant";
+                            
+                            <section id="@categoryId">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-primary text-3xl">@categoryIcon</span>
+                                        <h2 class="text-2xl font-bold text-text-primary">@category</h2>
+                                    </div>
+                                    <a class="text-text-secondary hover:text-primary text-sm font-medium flex items-center gap-1" href="#@categoryId">
+                                        Xem tất cả <span class="material-symbols-outlined text-lg">chevron_right</span>
+                                    </a>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    @foreach (var item in categoryItems)
+                                    {
+                                        string imageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl));
+                                        string formattedPrice = string.Format("{0:N0}k", item.Price / 1000);
+                                        
+                                        <div class="group bg-sidebar-surface rounded-[2rem] p-4 hover:shadow-lg transition-all duration-300 border border-border-light hover:border-primary/50">
+                                            <div class="aspect-[4/3] rounded-[1.5rem] bg-cover bg-center mb-4 overflow-hidden relative" style='background-image: url("@imageUrl");'>
+                                                <button class="absolute top-4 right-4 bg-black/30 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary hover:text-white">
+                                                    <span class="material-symbols-outlined text-xl">favorite</span>
+                                                </button>
+                                            </div>
+                                            <div class="px-2">
+                                                <div class="flex justify-between items-start mb-2">
+                                                    <h3 class="text-xl font-bold text-text-primary group-hover:text-primary transition-colors">@item.Name</h3>
+                                                    <span class="text-primary font-bold text-lg">@formattedPrice</span>
+                                                </div>
+                                                <p class="text-text-secondary text-sm mb-4 line-clamp-2">@(item.Description ?? "Món ăn ngon đặc biệt")</p>
+                                                <a href="@Url.Action("Detail", "Public", new { id = item.Id })" class="w-full h-10 rounded-full border border-border-light hover:bg-primary hover:text-white hover:border-primary text-text-primary font-bold text-sm transition-all flex items-center justify-center gap-2">
+                                                    <span class="material-symbols-outlined text-lg">visibility</span>
+                                                    Xem chi tiết
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </section>
+                        }
+                    }
+                }
+                else
+                {
+                    <div class="text-center p-20">
+                        <span class="material-symbols-outlined text-6xl text-text-secondary mb-4">restaurant_menu</span>
+                        <p class="text-center text-text-secondary text-xl">Chưa có món ăn nào để hiển thị.</p>
+                    </div>
+                }
+            </div>
+            <footer class="border-t border-border-light py-8 text-center text-text-secondary text-sm">
+                <p>© 2024 Nhà Hàng LDP. All rights reserved.</p>
+            </footer>
+        </div>
+    </main>
+
+    <!-- Chatbot Toggle Button -->
+    <button class="chatbot-toggle">
+        <i class="fas fa-comment-dots"></i>
+        <span class="chatbot-badge">1</span>
+    </button>
+
+    <!-- Chatbot Container -->
+    <div class="chatbot-container">
+        <!-- Header -->
+        <div class="chatbot-header">
+            <div class="chatbot-header-info">
+                <div class="chatbot-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="chatbot-title">
+                    <h4>Trợ lý ảo LDP</h4>
+                    <div class="chatbot-status">
+                        <span class="status-dot"></span>
+                        <span>Đang online</span>
+                    </div>
+                </div>
+            </div>
+            <button class="chatbot-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="chatbot-messages">
+            <!-- Messages will be added here dynamically -->
+        </div>
+
+        <!-- Input Area -->
+        <div class="chatbot-input">
+            <input type="text" id="chatbot-input" placeholder="Nhập tin nhắn của bạn..." autocomplete="off">
+            <button class="chatbot-send">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="@Url.Content("~/Scripts/chatbot.js")"></script>
+    <script>
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const menuItems = document.querySelectorAll('.group.bg-sidebar-surface');
+            
+            menuItems.forEach(function(item) {
+                const itemName = item.querySelector('h3').textContent.toLowerCase();
+                const itemDesc = item.querySelector('p').textContent.toLowerCase();
+                
+                if (itemName.includes(searchTerm) || itemDesc.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
