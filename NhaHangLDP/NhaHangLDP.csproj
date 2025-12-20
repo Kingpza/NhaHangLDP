@@ -148,6 +148,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\SettingsHelper.cs" />
+    <Compile Include="Helpers\StatusTextHelper.cs" />
     <Compile Include="Models\Account.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -299,10 +300,13 @@
     <Compile Include="Services\AIChatbotService.cs" />
     <Compile Include="Services\DashboardService.cs" />
     <Compile Include="Services\EmailService.cs" />
+    <Compile Include="Services\EmployeeManagementService.cs" />
+    <Compile Include="Services\MenuService.cs" />
     <Compile Include="Services\OrderManagementService.cs" />
     <Compile Include="Services\OrderQueryService.cs" />
     <Compile Include="Services\PaymentService.cs" />
     <Compile Include="Services\ReportService.cs" />
+    <Compile Include="Services\RequestHandlerService.cs" />
     <Compile Include="Services\ShiftManagementService.cs" />
     <Compile Include="Services\TableManagementService.cs" />
     <Compile Include="Services\TableOperationService.cs" />
