@@ -1,0 +1,293 @@
+﻿@model NhaHangLDP.Models.KitchenDisplayViewModel
+@{
+    ViewBag.Title = "Kitchen Dashboard";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .dashboard-stat {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .dashboard-stat:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 28px;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .station-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .station-header {
+            padding: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .station-header h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+        .station-body {
+            padding: 20px;
+        }
+        .station-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .station-stat:last-child { border-bottom: none; }
+        .quick-actions {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+        .action-btn {
+            display: block;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: #1e3a5f;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            background: #e2e8f0;
+            transform: translateX(5px);
+        }
+        .action-btn i {
+            width: 30px;
+            color: #3b82f6;
+        }
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            background: rgba(34,197,94,0.1);
+            border-radius: 20px;
+            color: #16a34a;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-fire-burner me-2"></i>Kitchen Dashboard</h2>
+            <p>Tổng quan hoạt động bếp</p>
+        </div>
+        <div class="d-flex gap-3 align-items-center">
+            <span class="live-indicator">
+                <span class="live-dot"></span> Live
+            </span>
+            <a href="@Url.Action("Display", "Kitchen")" class="btn btn-primary">
+                <i class="fas fa-desktop me-2"></i>Màn hình bếp
+            </a>
+            <a href="@Url.Action("FullScreen", "Kitchen")" class="btn btn-dark" target="_blank">
+                <i class="fas fa-expand me-2"></i>Toàn màn hình
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="dashboard-stat">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+                <i class="fas fa-hourglass-start"></i>
+            </div>
+            <div class="stat-value" style="color: #d97706;">@Model.Stats.TotalPendingTickets</div>
+            <div class="stat-label">Đang chờ xử lý</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-stat">
+            <div class="stat-icon" style="background: #dbeafe; color: #3b82f6;">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <div class="stat-value" style="color: #3b82f6;">@Model.Stats.TotalPreparingTickets</div>
+            <div class="stat-label">Đang chuẩn bị</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-stat">
+            <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value" style="color: #16a34a;">@Model.Stats.TotalReadyTickets</div>
+            <div class="stat-label">Sẵn sàng phục vụ</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="dashboard-stat">
+            <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-value" style="color: #dc2626;">@Model.Stats.OverdueTickets</div>
+            <div class="stat-label">Quá thời gian</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Stations -->
+    <div class="col-lg-8">
+        <h5 class="mb-3"><i class="fas fa-sitemap text-primary me-2"></i>Trạm Bếp</h5>
+        <div class="row">
+            @if (Model.Stations.Any())
+            {
+                foreach (var station in Model.Stations)
+                {
+                    <div class="col-md-6">
+                        <div class="station-card">
+                            <div class="station-header" style="background: @station.DisplayColor;">
+                                <h5>@station.Name</h5>
+                                <span class="badge bg-white text-dark">@station.Code</span>
+                            </div>
+                            <div class="station-body">
+                                <div class="station-stat">
+                                    <span>Đang chờ</span>
+                                    <span class="badge bg-warning">@station.PendingTicketCount</span>
+                                </div>
+                                <div class="station-stat">
+                                    <span>Đang làm</span>
+                                    <span class="badge bg-info">@station.PreparingTicketCount</span>
+                                </div>
+                                <div class="station-stat">
+                                    <span>Danh mục</span>
+                                    <span class="text-muted small">@station.HandledCategories</span>
+                                </div>
+                                <a href="@Url.Action("Display", "Kitchen", new { station = station.Code })" 
+                                   class="btn btn-outline-primary btn-sm w-100 mt-3">
+                                    <i class="fas fa-eye me-1"></i>Xem màn hình
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="text-center py-5 bg-white rounded">
+                        <i class="fas fa-sitemap fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Chưa có trạm bếp nào</p>
+                        <a href="@Url.Action("Stations", "Kitchen")" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Tạo trạm bếp
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <!-- Today Stats -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="dashboard-stat">
+                    <div class="stat-value" style="color: #1e3a5f;">@Model.Stats.TotalCompletedToday</div>
+                    <div class="stat-label">Đơn hoàn thành hôm nay</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-stat">
+                    <div class="stat-value" style="color: #1e3a5f;">@Model.Stats.TotalItemsToday</div>
+                    <div class="stat-label">Món đã làm hôm nay</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-stat">
+                    <div class="stat-value" style="color: #1e3a5f;">@Model.Stats.AveragePreparationTime phút</div>
+                    <div class="stat-label">Thời gian TB/đơn</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="col-lg-4">
+        <div class="quick-actions">
+            <h5 class="mb-4"><i class="fas fa-bolt text-warning me-2"></i>Thao Tác Nhanh</h5>
+            
+            <a href="@Url.Action("Display", "Kitchen")" class="action-btn">
+                <i class="fas fa-desktop"></i> Mở màn hình bếp
+            </a>
+            <a href="@Url.Action("FullScreen", "Kitchen")" class="action-btn" target="_blank">
+                <i class="fas fa-tv"></i> Chế độ TV (toàn màn hình)
+            </a>
+            <a href="@Url.Action("Stations", "Kitchen")" class="action-btn">
+                <i class="fas fa-sitemap"></i> Quản lý trạm bếp
+            </a>
+            <a href="@Url.Action("PendingOrders", "QROrder")" class="action-btn">
+                <i class="fas fa-qrcode"></i> Đơn QR chờ xác nhận
+            </a>
+            <a href="@Url.Action("SalesPoint", "Cashier")" class="action-btn">
+                <i class="fas fa-cash-register"></i> Quay lại thu ngân
+            </a>
+        </div>
+        
+        <div class="quick-actions mt-4">
+            <h5 class="mb-3"><i class="fas fa-info-circle text-info me-2"></i>Hướng Dẫn</h5>
+            <ul class="list-unstyled text-muted small">
+                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Bấm BẮT ĐẦU khi bắt đầu làm món</li>
+                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Tích vào từng món khi hoàn thành</li>
+                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Bấm HOÀN THÀNH khi xong tất cả</li>
+                <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Đơn quá giờ sẽ nhấp nháy đỏ</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Auto refresh every 30 seconds
+        setInterval(function() {
+            location.reload();
+        }, 30000);
+    </script>
+}

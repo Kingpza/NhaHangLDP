@@ -1,0 +1,303 @@
+﻿@model NhaHangLDP.Models.EmailTemplateViewModel
+@{
+    ViewBag.Title = Model.IsEdit ? "Sửa Template Email" : "Tạo Template Email";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .form-card h5 {
+            color: #1e3a5f;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .form-card h5 i {
+            color: #3b82f6;
+            margin-right: 10px;
+        }
+        .placeholder-list {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .placeholder-item {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: monospace;
+            margin: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .placeholder-item:hover {
+            background: #1d4ed8;
+            color: white;
+        }
+        .preview-frame {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            min-height: 400px;
+            overflow: hidden;
+        }
+        .preview-header {
+            background: #f8fafc;
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .preview-body {
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .editor-toolbar {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid #e2e8f0;
+            border-bottom: none;
+        }
+        .editor-toolbar button {
+            padding: 5px 10px;
+            margin-right: 5px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .editor-toolbar button:hover {
+            background: #e2e8f0;
+        }
+        #htmlBody {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border-radius: 0 0 8px 8px;
+            border-color: #e2e8f0;
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-@(Model.IsEdit ? "edit" : "plus") me-2"></i>@ViewBag.Title</h2>
+            <p>@(Model.IsEdit ? "Chỉnh sửa template email" : "Tạo mẫu email mới")</p>
+        </div>
+        <a href="@Url.Action("Templates", "Email")" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+</div>
+
+<form method="post" action="@(Model.IsEdit ? Url.Action("EditTemplate", "Email") : Url.Action("CreateTemplate", "Email"))">
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.Id)
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="form-card">
+                <h5><i class="fas fa-info-circle"></i>Thông Tin Cơ Bản</h5>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Mã Template <span class="text-danger">*</span></label>
+                            @Html.TextBoxFor(m => m.TemplateCode, new { @class = "form-control text-uppercase", placeholder = "VD: BOOKING_CONFIRMATION", required = "required", @readonly = Model.IsEdit })
+                            @Html.ValidationMessageFor(m => m.TemplateCode, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label">Tên Template <span class="text-danger">*</span></label>
+                            @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "VD: Xác nhận đặt bàn", required = "required" })
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Tiêu Đề Email <span class="text-danger">*</span></label>
+                    @Html.TextBoxFor(m => m.Subject, new { @class = "form-control", placeholder = "VD: [Nhà Hàng LDP] Xác nhận đặt bàn #{{BookingCode}}", required = "required" })
+                    <small class="text-muted">Có thể sử dụng placeholder trong tiêu đề</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Các Placeholder Khả Dụng</label>
+                    @Html.TextBoxFor(m => m.AvailablePlaceholders, new { @class = "form-control", placeholder = "VD: CustomerName, BookingDate, BookingTime (cách nhau bằng dấu phẩy)" })
+                    <small class="text-muted">Danh sách các placeholder có thể dùng trong template</small>
+                </div>
+            </div>
+            
+            <div class="form-card">
+                <h5><i class="fas fa-code"></i>Nội Dung HTML</h5>
+                
+                <div class="editor-toolbar">
+                    <button type="button" onclick="insertTag('b')"><i class="fas fa-bold"></i></button>
+                    <button type="button" onclick="insertTag('i')"><i class="fas fa-italic"></i></button>
+                    <button type="button" onclick="insertTag('u')"><i class="fas fa-underline"></i></button>
+                    <button type="button" onclick="insertTag('h2')"><i class="fas fa-heading"></i></button>
+                    <button type="button" onclick="insertTag('p')"><i class="fas fa-paragraph"></i></button>
+                    <button type="button" onclick="insertTag('br', true)"><i class="fas fa-level-down-alt"></i></button>
+                    <button type="button" onclick="insertTag('hr', true)"><i class="fas fa-minus"></i></button>
+                    <button type="button" onclick="insertLink()"><i class="fas fa-link"></i></button>
+                    <button type="button" onclick="insertImage()"><i class="fas fa-image"></i></button>
+                    <span class="ms-3">|</span>
+                    <button type="button" onclick="previewTemplate()" class="ms-3">
+                        <i class="fas fa-eye"></i> Xem trước
+                    </button>
+                </div>
+                
+                @Html.TextAreaFor(m => m.HtmlBody, new { @class = "form-control", rows = 20, id = "htmlBody", required = "required" })
+            </div>
+            
+            <div class="form-card">
+                <h5><i class="fas fa-text-height"></i>Nội Dung Text (Tùy chọn)</h5>
+                <p class="text-muted small mb-3">Phiên bản text đơn giản cho các email client không hỗ trợ HTML</p>
+                @Html.TextAreaFor(m => m.TextBody, new { @class = "form-control", rows = 6, placeholder = "Nội dung text đơn giản..." })
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Placeholder Helper -->
+            <div class="form-card">
+                <h5><i class="fas fa-code"></i>Placeholder Helper</h5>
+                <p class="text-muted small">Click để chèn vào nội dung</p>
+                <div class="placeholder-list" id="placeholderList">
+                    <span class="placeholder-item" onclick="insertPlaceholder('CustomerName')">{{CustomerName}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('BookingDate')">{{BookingDate}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('BookingTime')">{{BookingTime}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('BookingCode')">{{BookingCode}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('GuestCount')">{{GuestCount}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('TableNumber')">{{TableNumber}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('OrderCode')">{{OrderCode}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('TotalAmount')">{{TotalAmount}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('RestaurantName')">{{RestaurantName}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('RestaurantPhone')">{{RestaurantPhone}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('RestaurantAddress')">{{RestaurantAddress}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('CurrentYear')">{{CurrentYear}}</span>
+                    <span class="placeholder-item" onclick="insertPlaceholder('CurrentDate')">{{CurrentDate}}</span>
+                </div>
+            </div>
+            
+            <!-- Preview -->
+            <div class="form-card">
+                <h5><i class="fas fa-eye"></i>Xem Trước</h5>
+                <div class="preview-frame">
+                    <div class="preview-header">
+                        <strong>Tiêu đề:</strong> <span id="previewSubject">@Model.Subject</span>
+                    </div>
+                    <div class="preview-body" id="previewBody">
+                        <p class="text-muted">Nhấn "Xem trước" để xem nội dung</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status -->
+            <div class="form-card">
+                <h5><i class="fas fa-toggle-on"></i>Trạng Thái</h5>
+                <div class="form-check form-switch">
+                    @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", style = "width: 50px; height: 25px;" })
+                    <label class="form-check-label ms-2">
+                        <strong>@(Model.IsActive ? "Đang hoạt động" : "Tạm dừng")</strong>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Submit -->
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>@(Model.IsEdit ? "Cập Nhật" : "Tạo Template")
+                </button>
+                <a href="@Url.Action("Templates", "Email")" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Hủy Bỏ
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section scripts {
+    <script>
+        function insertPlaceholder(name) {
+            var textarea = document.getElementById('htmlBody');
+            var placeholder = '{{' + name + '}}';
+            var start = textarea.selectionStart;
+            var end = textarea.selectionEnd;
+            var text = textarea.value;
+            textarea.value = text.substring(0, start) + placeholder + text.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
+        }
+        
+        function insertTag(tag, selfClosing) {
+            var textarea = document.getElementById('htmlBody');
+            var start = textarea.selectionStart;
+            var end = textarea.selectionEnd;
+            var text = textarea.value;
+            var selectedText = text.substring(start, end);
+            
+            var newText;
+            if (selfClosing) {
+                newText = '<' + tag + ' />';
+            } else {
+                newText = '<' + tag + '>' + selectedText + '</' + tag + '>';
+            }
+            
+            textarea.value = text.substring(0, start) + newText + text.substring(end);
+            textarea.focus();
+        }
+        
+        function insertLink() {
+            var url = prompt('Nhập URL:', 'https://');
+            if (url) {
+                var textarea = document.getElementById('htmlBody');
+                var start = textarea.selectionStart;
+                var end = textarea.selectionEnd;
+                var text = textarea.value;
+                var selectedText = text.substring(start, end) || 'Link text';
+                
+                var link = '<a href="' + url + '">' + selectedText + '</a>';
+                textarea.value = text.substring(0, start) + link + text.substring(end);
+            }
+        }
+        
+        function insertImage() {
+            var url = prompt('Nhập URL hình ảnh:', 'https://');
+            if (url) {
+                var textarea = document.getElementById('htmlBody');
+                var start = textarea.selectionStart;
+                var text = textarea.value;
+                
+                var img = '<img src="' + url + '" alt="" style="max-width: 100%;" />';
+                textarea.value = text.substring(0, start) + img + text.substring(start);
+            }
+        }
+        
+        function previewTemplate() {
+            var htmlBody = $('#htmlBody').val();
+            $.post('@Url.Action("PreviewTemplate", "Email")', { htmlBody: htmlBody }, function(result) {
+                if (result.success) {
+                    $('#previewBody').html(result.html);
+                } else {
+                    $('#previewBody').html('<p class="text-danger">' + result.message + '</p>');
+                }
+            });
+        }
+        
+        // Update preview subject on input
+        $('#Subject').on('input', function() {
+            $('#previewSubject').text($(this).val() || 'Tiêu đề email');
+        });
+    </script>
+}

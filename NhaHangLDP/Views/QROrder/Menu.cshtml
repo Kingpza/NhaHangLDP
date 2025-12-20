@@ -1,0 +1,605 @@
+﻿@model NhaHangLDP.Models.QRMenuViewModel
+@{
+    ViewBag.Title = "Menu - " + Model.RestaurantName;
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>@ViewBag.Title</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f5f7fa;
+            padding-bottom: 80px;
+        }
+        
+        /* Header */
+        .qr-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .table-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .restaurant-name {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        
+        /* Categories */
+        .category-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            -webkit-overflow-scrolling: touch;
+        }
+        .category-scroll::-webkit-scrollbar { display: none; }
+        .category-btn {
+            flex-shrink: 0;
+            padding: 10px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            background: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .category-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        
+        /* Menu Items */
+        .menu-section {
+            padding: 20px;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .menu-item {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .menu-item:active {
+            transform: scale(0.98);
+        }
+        .menu-item-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+        .menu-item-body {
+            padding: 12px;
+        }
+        .menu-item-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .menu-item-price {
+            color: #e94560;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .original-price {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .discount-badge {
+            background: #e94560;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+        }
+        .new-badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            position: absolute;
+            top: 8px;
+            left: 8px;
+        }
+        
+        .btn-add {
+            width: 100%;
+            padding: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        
+        /* Cart Footer */
+        .cart-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+        }
+        .cart-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .cart-icon {
+            position: relative;
+            font-size: 24px;
+            color: #667eea;
+        }
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e94560;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        .cart-total {
+            font-size: 18px;
+            font-weight: 700;
+            color: #e94560;
+        }
+        .btn-view-cart {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Item Modal */
+        .item-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: flex-end;
+            z-index: 2000;
+        }
+        .item-modal.show {
+            display: flex;
+        }
+        .modal-content-custom {
+            background: white;
+            width: 100%;
+            max-height: 85vh;
+            border-radius: 20px 20px 0 0;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        @@keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .modal-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .modal-body-custom {
+            padding: 20px;
+        }
+        .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .qty-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .qty-value {
+            font-size: 24px;
+            font-weight: 700;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        /* Call Staff */
+        .call-staff-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e94560;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(233,69,96,0.4);
+            font-size: 20px;
+            z-index: 999;
+        }
+        
+        /* Featured Scroll */
+        .featured-scroll {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 0 20px 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .featured-scroll::-webkit-scrollbar { display: none; }
+        .featured-item {
+            flex-shrink: 0;
+            width: 200px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        .featured-item img {
+            width: 100%;
+            height: 130px;
+            object-fit: cover;
+        }
+        .featured-item-body {
+            padding: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="qr-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="table-badge">
+                <i class="fas fa-chair"></i> Bàn @Model.TableNumber
+            </span>
+            <a href="@Url.Action("TrackOrder", "QROrder", new { tableId = Model.TableId, token = Model.SessionToken })" 
+               class="text-white text-decoration-none">
+                <i class="fas fa-receipt me-1"></i> Đơn của tôi
+            </a>
+        </div>
+        <h1 class="restaurant-name">@Model.RestaurantName</h1>
+    </div>
+    
+    <!-- Categories -->
+    <div class="category-scroll">
+        <button class="category-btn active" onclick="scrollToSection('all')">
+            🍽️ Tất cả
+        </button>
+        @foreach (var cat in Model.Categories)
+        {
+            <button class="category-btn" onclick="scrollToSection('@cat.CategoryName.Replace(" ", ""))">
+                @cat.CategoryIcon @cat.CategoryName
+            </button>
+        }
+    </div>
+    
+    <!-- Featured Items -->
+    @if (Model.FeaturedItems.Any())
+    {
+        <div class="menu-section">
+            <h2 class="section-title">⭐ Món nổi bật</h2>
+            <div class="featured-scroll">
+                @foreach (var item in Model.FeaturedItems)
+                {
+                    <div class="featured-item" onclick="showItemModal(@item.Id)">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/Content/images/default-food.jpg" : item.ImageUrl)" 
+                             alt="@item.Name" onerror="this.src='/Content/images/default-food.jpg'">
+                        <div class="featured-item-body">
+                            <div class="menu-item-name">@item.Name</div>
+                            <div class="menu-item-price">@item.Price.ToString("N0")đ</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    
+    <!-- Menu Categories -->
+    @foreach (var category in Model.Categories)
+    {
+        <div class="menu-section" id="@category.CategoryName.Replace(" ", "")">
+            <h2 class="section-title">@category.CategoryIcon @category.CategoryName</h2>
+            <div class="menu-grid">
+                @foreach (var item in category.Items)
+                {
+                    <div class="menu-item" onclick="showItemModal(@item.Id)" style="position: relative;">
+                        @if (item.IsNew)
+                        {
+                            <span class="new-badge">MỚI</span>
+                        }
+                        @if (item.HasDiscount)
+                        {
+                            <span class="discount-badge">-@item.DiscountPercent%</span>
+                        }
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/Content/images/default-food.jpg" : item.ImageUrl)" 
+                             alt="@item.Name" class="menu-item-img" onerror="this.src='/Content/images/default-food.jpg'">
+                        <div class="menu-item-body">
+                            <div class="menu-item-name">@item.Name</div>
+                            <div>
+                                <span class="menu-item-price">@item.Price.ToString("N0")đ</span>
+                                @if (item.HasDiscount)
+                                {
+                                    <span class="original-price">@item.OriginalPrice.ToString("N0")đ</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    
+    <!-- Cart Footer -->
+    <div class="cart-footer" id="cartFooter" style="@(Model.CurrentOrder?.TotalItems > 0 ? "" : "display: none;")">
+        <div class="cart-info">
+            <div class="cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count" id="cartCount">@(Model.CurrentOrder?.TotalItems ?? 0)</span>
+            </div>
+            <div class="cart-total" id="cartTotal">@((Model.CurrentOrder?.SubTotal ?? 0).ToString("N0"))đ</div>
+        </div>
+        <a href="@Url.Action("Cart", "QROrder", new { tableId = Model.TableId, token = Model.SessionToken })" class="btn-view-cart">
+            Xem đơn <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    
+    <!-- Call Staff Button -->
+    <button class="call-staff-btn" onclick="showCallStaffModal()">
+        <i class="fas fa-bell"></i>
+    </button>
+    
+    <!-- Item Modal -->
+    <div class="item-modal" id="itemModal">
+        <div class="modal-content-custom">
+            <img src="" id="modalImg" class="modal-img">
+            <div class="modal-body-custom">
+                <button onclick="closeItemModal()" class="btn-close float-end"></button>
+                <h4 id="modalName" class="mb-2"></h4>
+                <p id="modalDesc" class="text-muted"></p>
+                <h3 id="modalPrice" class="text-danger mb-3"></h3>
+                
+                <div class="qty-control">
+                    <button class="qty-btn" onclick="changeQty(-1)">−</button>
+                    <span class="qty-value" id="modalQty">1</span>
+                    <button class="qty-btn" onclick="changeQty(1)">+</button>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Ghi chú</label>
+                    <input type="text" class="form-control" id="modalNotes" placeholder="VD: Không hành, ít cay...">
+                </div>
+                
+                <button class="btn-add btn-lg w-100" onclick="addToCart()">
+                    <i class="fas fa-plus me-2"></i>
+                    Thêm vào đơn - <span id="modalSubtotal">0</span>đ
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Call Staff Modal -->
+    <div class="item-modal" id="callStaffModal">
+        <div class="modal-content-custom" style="max-height: 50vh;">
+            <div class="modal-body-custom">
+                <button onclick="closeCallStaffModal()" class="btn-close float-end"></button>
+                <h4 class="mb-4"><i class="fas fa-bell text-danger me-2"></i>Gọi nhân viên</h4>
+                
+                <div class="d-grid gap-3">
+                    <button class="btn btn-outline-primary btn-lg" onclick="callStaff('menu')">
+                        <i class="fas fa-book me-2"></i>Cần tư vấn menu
+                    </button>
+                    <button class="btn btn-outline-info btn-lg" onclick="callStaff('water')">
+                        <i class="fas fa-tint me-2"></i>Thêm nước
+                    </button>
+                    <button class="btn btn-outline-success btn-lg" onclick="callStaff('bill')">
+                        <i class="fas fa-receipt me-2"></i>Thanh toán
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg" onclick="callStaff('other')">
+                        <i class="fas fa-hand-paper me-2"></i>Hỗ trợ khác
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        var currentItem = null;
+        var currentQty = 1;
+        var tableId = @Model.TableId;
+        var sessionToken = '@Model.SessionToken';
+        
+        // Menu items data
+        var menuItems = {
+            @foreach (var cat in Model.Categories)
+            {
+                foreach (var item in cat.Items)
+                {
+                    @Html.Raw($"{item.Id}: {{ id: {item.Id}, name: '{item.Name.Replace("'", "\\'")}', desc: '{(item.Description ?? "").Replace("'", "\\'")}', price: {item.Price}, image: '{item.ImageUrl ?? ""}' }},")
+                }
+            }
+        };
+        
+        function showItemModal(itemId) {
+            currentItem = menuItems[itemId];
+            if (!currentItem) return;
+            
+            currentQty = 1;
+            $('#modalImg').attr('src', currentItem.image || '/Content/images/default-food.jpg');
+            $('#modalName').text(currentItem.name);
+            $('#modalDesc').text(currentItem.desc);
+            $('#modalPrice').text(currentItem.price.toLocaleString() + 'đ');
+            $('#modalQty').text(1);
+            $('#modalNotes').val('');
+            updateModalSubtotal();
+            $('#itemModal').addClass('show');
+        }
+        
+        function closeItemModal() {
+            $('#itemModal').removeClass('show');
+        }
+        
+        function changeQty(delta) {
+            currentQty = Math.max(1, Math.min(99, currentQty + delta));
+            $('#modalQty').text(currentQty);
+            updateModalSubtotal();
+        }
+        
+        function updateModalSubtotal() {
+            var subtotal = currentItem.price * currentQty;
+            $('#modalSubtotal').text(subtotal.toLocaleString());
+        }
+        
+        function addToCart() {
+            if (!currentItem) return;
+            
+            $.post('@Url.Action("AddToOrder", "QROrder")', {
+                MenuItemId: currentItem.id,
+                Quantity: currentQty,
+                Notes: $('#modalNotes').val(),
+                SessionToken: sessionToken,
+                TableId: tableId
+            }, function(result) {
+                if (result.success) {
+                    closeItemModal();
+                    updateCartUI(result.itemCount, result.total);
+                    showToast(result.message);
+                } else {
+                    alert(result.message);
+                }
+            });
+        }
+        
+        function updateCartUI(count, total) {
+            $('#cartCount').text(count);
+            $('#cartTotal').text(total.toLocaleString() + 'đ');
+            $('#cartFooter').show();
+        }
+        
+        function showCallStaffModal() {
+            $('#callStaffModal').addClass('show');
+        }
+        
+        function closeCallStaffModal() {
+            $('#callStaffModal').removeClass('show');
+        }
+        
+        function callStaff(type) {
+            $.post('@Url.Action("CallStaff", "QROrder")', {
+                tableId: tableId,
+                token: sessionToken,
+                requestType: type
+            }, function(result) {
+                closeCallStaffModal();
+                if (result.success) {
+                    showToast(result.message);
+                } else {
+                    alert(result.message);
+                }
+            });
+        }
+        
+        function scrollToSection(sectionId) {
+            $('.category-btn').removeClass('active');
+            event.target.classList.add('active');
+            
+            if (sectionId === 'all') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                var section = document.getElementById(sectionId);
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
+        
+        function showToast(message) {
+            var toast = $('<div class="position-fixed bottom-0 start-50 translate-middle-x mb-5 p-3 bg-success text-white rounded-3" style="z-index: 3000;">' + message + '</div>');
+            $('body').append(toast);
+            setTimeout(function() { toast.fadeOut(function() { toast.remove(); }); }, 2000);
+        }
+        
+        // Close modals on backdrop click
+        $('.item-modal').click(function(e) {
+            if (e.target === this) {
+                $(this).removeClass('show');
+            }
+        });
+    </script>
+</body>
+</html>

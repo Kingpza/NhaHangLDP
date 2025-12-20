@@ -1,0 +1,323 @@
+﻿@model NhaHangLDP.Models.PromotionListViewModel
+@{
+    ViewBag.Title = "Quản Lý Khuyến Mãi";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .promo-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+        .promo-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .promo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .promo-code {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-family: monospace;
+            font-size: 16px;
+            display: inline-block;
+        }
+        .promo-body {
+            padding: 20px;
+        }
+        .promo-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e3a5f;
+            margin-bottom: 8px;
+        }
+        .promo-discount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #16a34a;
+        }
+        .promo-meta {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            color: #64748b;
+            font-size: 13px;
+        }
+        .promo-meta i {
+            color: #3b82f6;
+            margin-right: 5px;
+        }
+        .usage-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .usage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .usage-fill.warning { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%); }
+        .usage-fill.danger { background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%); }
+        .stat-card-promo {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-card-promo .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+        }
+        .stat-card-promo h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .promo-actions {
+            display: flex;
+            gap: 8px;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-radius: 0 0 15px 15px;
+        }
+        .btn-action {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-action:hover { transform: translateY(-1px); }
+        .happy-hour-badge {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-tags me-2"></i>Quản Lý Khuyến Mãi</h2>
+            <p>Tạo và quản lý các chương trình khuyến mãi</p>
+        </div>
+        <a href="@Url.Action("Create", "Promotion")" class="btn btn-light btn-lg">
+            <i class="fas fa-plus me-2"></i>Tạo Khuyến Mãi
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card-promo">
+            <div class="stat-icon" style="background: #dbeafe; color: #3b82f6;">
+                <i class="fas fa-tags"></i>
+            </div>
+            <h3>@Model.Stats.TotalPromotions</h3>
+            <p class="text-muted mb-0">Tổng khuyến mãi</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card-promo">
+            <div class="stat-icon" style="background: #dcfce7; color: #16a34a;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3>@Model.Stats.ActivePromotions</h3>
+            <p class="text-muted mb-0">Đang hoạt động</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card-promo">
+            <div class="stat-icon" style="background: #fef3c7; color: #d97706;">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <h3>@Model.Stats.TotalUsageCount</h3>
+            <p class="text-muted mb-0">Lượt sử dụng</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card-promo">
+            <div class="stat-icon" style="background: #fee2e2; color: #dc2626;">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <h3>@Model.Stats.TotalDiscountGiven.ToString("N0")</h3>
+            <p class="text-muted mb-0">Tổng giảm giá (VNĐ)</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Tìm theo mã hoặc tên..." value="@Model.SearchTerm">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">-- Trạng thái --</option>
+                    <option value="active" @(Model.StatusFilter == "active" ? "selected" : "")>Đang hoạt động</option>
+                    <option value="inactive" @(Model.StatusFilter == "inactive" ? "selected" : "")>Tạm dừng</option>
+                    <option value="expired" @(Model.StatusFilter == "expired" ? "selected" : "")>Hết hạn</option>
+                    <option value="upcoming" @(Model.StatusFilter == "upcoming" ? "selected" : "")>Chưa bắt đầu</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="type" class="form-select">
+                    <option value="">-- Loại giảm --</option>
+                    <option value="Percentage" @(Model.TypeFilter == "Percentage" ? "selected" : "")>Phần trăm</option>
+                    <option value="Fixed" @(Model.TypeFilter == "Fixed" ? "selected" : "")>Số tiền cố định</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i>Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Promotions List -->
+<div class="row">
+    @if (Model.Promotions.Any())
+    {
+        foreach (var promo in Model.Promotions)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="promo-card">
+                    <div class="promo-header">
+                        <div>
+                            <span class="promo-code">@promo.Code</span>
+                            @if (promo.HappyHourStart.HasValue)
+                            {
+                                <span class="happy-hour-badge ms-2">
+                                    <i class="fas fa-clock"></i> Happy Hour
+                                </span>
+                            }
+                        </div>
+                        <span class="badge bg-@promo.StatusClass">@promo.StatusText</span>
+                    </div>
+                    <div class="promo-body">
+                        <h5 class="promo-name">@promo.Name</h5>
+                        <div class="promo-discount">@promo.DiscountDisplay</div>
+                        @if (!string.IsNullOrEmpty(promo.Description))
+                        {
+                            <p class="text-muted small mt-2 mb-0">@promo.Description</p>
+                        }
+                        <div class="promo-meta">
+                            <span><i class="far fa-calendar"></i> @promo.StartDate.ToString("dd/MM") - @promo.EndDate.ToString("dd/MM/yyyy")</span>
+                            @if (promo.MinOrderValue > 0)
+                            {
+                                <span><i class="fas fa-shopping-cart"></i> Từ @promo.MinOrderValue.ToString("N0")đ</span>
+                            }
+                        </div>
+                        @if (promo.MaxUsageCount.HasValue)
+                        {
+                            var usageClass = promo.UsagePercentage > 80 ? "danger" : promo.UsagePercentage > 50 ? "warning" : "";
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>Đã dùng: @promo.UsedCount/@promo.MaxUsageCount</span>
+                                    <span>@promo.UsagePercentage%</span>
+                                </div>
+                                <div class="usage-bar">
+                                    <div class="usage-fill @usageClass" style="width: @promo.UsagePercentage%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="promo-actions">
+                        <a href="@Url.Action("Edit", "Promotion", new { id = promo.Id })" class="btn-action btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit"></i> Sửa
+                        </a>
+                        <a href="@Url.Action("UsageReport", "Promotion", new { id = promo.Id })" class="btn-action btn btn-outline-info btn-sm">
+                            <i class="fas fa-chart-bar"></i> Báo cáo
+                        </a>
+                        <button class="btn-action btn btn-outline-@(promo.IsActive ? "warning" : "success") btn-sm" onclick="toggleStatus(@promo.Id)">
+                            <i class="fas fa-@(promo.IsActive ? "pause" : "play")"></i>
+                        </button>
+                        <button class="btn-action btn btn-outline-danger btn-sm" onclick="deletePromotion(@promo.Id)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-tags fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có khuyến mãi nào</h4>
+                <p class="text-muted">Tạo khuyến mãi đầu tiên để thu hút khách hàng</p>
+                <a href="@Url.Action("Create", "Promotion")" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Tạo Khuyến Mãi
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        function toggleStatus(id) {
+            showConfirm('Xác nhận', 'Bạn có chắc muốn thay đổi trạng thái khuyến mãi này?', function() {
+                $.post('@Url.Action("ToggleStatus", "Promotion")', { id: id }, function(result) {
+                    if (result.success) {
+                        showSuccess('Thành công', result.message, function() {
+                            location.reload();
+                        });
+                    } else {
+                        showError('Lỗi', result.message);
+                    }
+                });
+            });
+        }
+
+        function deletePromotion(id) {
+            showDeleteConfirm('Xóa khuyến mãi', 'Bạn có chắc muốn xóa khuyến mãi này?', function() {
+                $.post('@Url.Action("Delete", "Promotion")', { id: id }, function(result) {
+                    if (result.success) {
+                        showSuccess('Thành công', result.message, function() {
+                            location.reload();
+                        });
+                    } else {
+                        showError('Lỗi', result.message);
+                    }
+                });
+            });
+        }
+    </script>
+}

@@ -1,0 +1,251 @@
+﻿@model NhaHangLDP.Models.QROrderListViewModel
+@{
+    ViewBag.Title = "Đơn Hàng QR Code";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .order-card {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #3b82f6;
+        }
+        .order-card.status-submitted { border-left-color: #f59e0b; }
+        .order-card.status-confirmed { border-left-color: #22c55e; }
+        .order-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .order-table {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e3a5f;
+        }
+        .order-code {
+            font-family: monospace;
+            color: #64748b;
+        }
+        .order-time {
+            color: #64748b;
+            font-size: 13px;
+        }
+        .order-body {
+            padding: 20px;
+        }
+        .order-item {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #f8f8f8;
+        }
+        .order-item:last-child { border-bottom: none; }
+        .order-item-qty {
+            font-weight: 700;
+            color: #e94560;
+            width: 40px;
+        }
+        .order-item-name { flex: 1; }
+        .order-item-price {
+            font-weight: 600;
+        }
+        .order-footer {
+            padding: 20px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0 0 15px 15px;
+        }
+        .order-total {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e3a5f;
+        }
+        .stat-badge {
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-badge h3 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-badge.pending h3 { color: #f59e0b; }
+        .stat-badge.confirmed h3 { color: #22c55e; }
+    </style>
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="fas fa-qrcode me-2"></i>Đơn Hàng QR Code</h2>
+        <p>Quản lý các đơn hàng từ khách quét QR</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-badge pending">
+            <h3>@Model.PendingOrders</h3>
+            <p class="text-muted mb-0">Chờ xác nhận</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-badge confirmed">
+            <h3>@Model.ConfirmedOrders</h3>
+            <p class="text-muted mb-0">Đã xác nhận</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-badge">
+            <h3>@Model.TotalOrders</h3>
+            <p class="text-muted mb-0">Tổng đơn</p>
+        </div>
+    </div>
+</div>
+
+@if (Model.Orders.Any())
+{
+    foreach (var order in Model.Orders)
+    {
+        <div class="order-card status-@order.Status.ToLower()">
+            <div class="order-header">
+                <div>
+                    <span class="order-table">Bàn @order.TableNumber</span>
+                    <span class="order-code ms-2">@order.QROrderCode</span>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-@order.StatusClass mb-1">@order.StatusText</span>
+                    <div class="order-time">
+                        <i class="far fa-clock me-1"></i>
+                        @(order.SubmittedTime?.ToString("HH:mm dd/MM") ?? order.CreatedTime.ToString("HH:mm dd/MM"))
+                    </div>
+                </div>
+            </div>
+            <div class="order-body">
+                @if (!string.IsNullOrEmpty(order.CustomerName))
+                {
+                    <p class="mb-2">
+                        <i class="fas fa-user text-primary me-2"></i>@order.CustomerName
+                        @if (!string.IsNullOrEmpty(order.CustomerPhone))
+                        {
+                            <span class="text-muted">- @order.CustomerPhone</span>
+                        }
+                    </p>
+                }
+                
+                @foreach (var item in order.Items)
+                {
+                    <div class="order-item">
+                        <span class="order-item-qty">@item.Quantity×</span>
+                        <span class="order-item-name">
+                            @item.MenuItemName
+                            @if (!string.IsNullOrEmpty(item.ItemNotes))
+                            {
+                                <small class="text-muted d-block">@item.ItemNotes</small>
+                            }
+                        </span>
+                        <span class="order-item-price">@((item.Quantity * item.UnitPrice).ToString("N0"))đ</span>
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(order.Notes))
+                {
+                    <div class="alert alert-warning mt-3 mb-0 py-2">
+                        <i class="fas fa-sticky-note me-2"></i>@order.Notes
+                    </div>
+                }
+            </div>
+            <div class="order-footer">
+                <div class="order-total">Tổng: @order.SubTotal.ToString("N0")đ</div>
+                <div class="d-flex gap-2">
+                    @if (order.Status == "Submitted")
+                    {
+                        <button class="btn btn-success" onclick="confirmOrder(@order.Id)">
+                            <i class="fas fa-check me-2"></i>Xác nhận
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="rejectOrder(@order.Id)">
+                            <i class="fas fa-times me-2"></i>Từ chối
+                        </button>
+                    }
+                    else if (order.Status == "Confirmed")
+                    {
+                        <span class="text-success">
+                            <i class="fas fa-check-circle me-1"></i>Đã xác nhận
+                        </span>
+                        if (order.LinkedOrderId.HasValue)
+                        {
+                            <a href="@Url.Action("SalesPoint", "Cashier", new { orderId = order.LinkedOrderId })" class="btn btn-primary btn-sm">
+                                Xem đơn #@order.LinkedOrderId
+                            </a>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-qrcode fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">Chưa có đơn hàng QR nào</h4>
+        <p class="text-muted">Các đơn từ khách quét QR sẽ hiển thị tại đây</p>
+    </div>
+}
+
+@section scripts {
+    <script>
+        function confirmOrder(orderId) {
+            showConfirm('Xác nhận đơn hàng', 'Xác nhận đơn hàng này và chuyển xuống bếp?', function() {
+                $.post('@Url.Action("ConfirmOrder", "QROrder")', { orderId: orderId }, function(result) {
+                    if (result.success) {
+                        showSuccess('Thành công', result.message, function() {
+                            location.reload();
+                        });
+                    } else {
+                        showError('Lỗi', result.message);
+                    }
+                });
+            });
+        }
+        
+        function rejectOrder(orderId) {
+            Swal.fire({
+                title: 'Từ chối đơn hàng',
+                input: 'text',
+                inputLabel: 'Lý do từ chối',
+                inputPlaceholder: 'Nhập lý do...',
+                showCancelButton: true,
+                confirmButtonText: 'Từ chối',
+                confirmButtonColor: '#dc3545',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("RejectOrder", "QROrder")', { 
+                        orderId: orderId, 
+                        reason: result.value 
+                    }, function(result) {
+                        if (result.success) {
+                            showSuccess('Đã từ chối', result.message, function() {
+                                location.reload();
+                            });
+                        } else {
+                            showError('Lỗi', result.message);
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Auto refresh every 30 seconds
+        setTimeout(function() { location.reload(); }, 30000);
+    </script>
+}

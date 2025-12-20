@@ -1,0 +1,242 @@
+﻿@model NhaHangLDP.Models.EmailTemplateListViewModel
+@{
+    ViewBag.Title = "Quản Lý Template Email";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .template-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .template-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: #3b82f6;
+        }
+        .template-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .template-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .template-info { flex: 1; }
+        .template-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1e3a5f;
+            margin-bottom: 3px;
+        }
+        .template-code {
+            font-family: monospace;
+            font-size: 12px;
+            color: #64748b;
+        }
+        .template-body {
+            padding: 20px;
+        }
+        .template-subject {
+            background: #f8fafc;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+        .template-subject strong {
+            color: #1e3a5f;
+        }
+        .template-placeholders {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .placeholder-tag {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-family: monospace;
+        }
+        .template-footer {
+            padding: 15px 20px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0 0 15px 15px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-card h3 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-card p {
+            color: #64748b;
+            margin: 0;
+            font-size: 13px;
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-file-alt me-2"></i>Quản Lý Template Email</h2>
+            <p>Tạo và quản lý các mẫu email</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Settings", "Email")" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+            <a href="@Url.Action("CreateTemplate", "Email")" class="btn btn-light">
+                <i class="fas fa-plus me-2"></i>Tạo Template
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h3 style="color: #3b82f6;">@Model.TotalTemplates</h3>
+            <p>Tổng số template</p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h3 style="color: #22c55e;">@Model.ActiveTemplates</h3>
+            <p>Đang hoạt động</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    @if (Model.Templates.Any())
+    {
+        var templateIcons = new Dictionary<string, Tuple<string, string>>
+        {
+            { "BOOKING_CONFIRMATION", Tuple.Create("fa-calendar-check", "#22c55e") },
+            { "BOOKING_REMINDER", Tuple.Create("fa-bell", "#f59e0b") },
+            { "BOOKING_CANCELLATION", Tuple.Create("fa-calendar-times", "#ef4444") },
+            { "ORDER_CONFIRMATION", Tuple.Create("fa-receipt", "#3b82f6") },
+            { "ORDER_READY", Tuple.Create("fa-utensils", "#8b5cf6") },
+            { "PROMOTION_NOTIFICATION", Tuple.Create("fa-tags", "#e94560") },
+            { "INVOICE", Tuple.Create("fa-file-invoice", "#06b6d4") },
+            { "WELCOME", Tuple.Create("fa-hand-wave", "#10b981") },
+            { "FEEDBACK", Tuple.Create("fa-star", "#fbbf24") },
+            { "NEWSLETTER", Tuple.Create("fa-newspaper", "#6366f1") }
+        };
+        
+        foreach (var template in Model.Templates)
+        {
+            var iconInfo = templateIcons.ContainsKey(template.TemplateCode) 
+                ? templateIcons[template.TemplateCode] 
+                : Tuple.Create("fa-envelope", "#64748b");
+            
+            <div class="col-md-6">
+                <div class="template-card">
+                    <div class="template-header">
+                        <div class="template-icon" style="background: @(iconInfo.Item2)15; color: @iconInfo.Item2;">
+                            <i class="fas @iconInfo.Item1"></i>
+                        </div>
+                        <div class="template-info">
+                            <div class="template-name">@template.Name</div>
+                            <div class="template-code">@template.TemplateCode</div>
+                        </div>
+                        @if (template.IsActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactive</span>
+                        }
+                    </div>
+                    <div class="template-body">
+                        <div class="template-subject">
+                            <strong>Tiêu đề:</strong> @template.Subject
+                        </div>
+                        @if (!string.IsNullOrEmpty(template.AvailablePlaceholders))
+                        {
+                            <div class="template-placeholders">
+                                @foreach (var ph in template.AvailablePlaceholders.Split(','))
+                                {
+                                    <span class="placeholder-tag">@("{" + ph.Trim() + "}")</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                    <div class="template-footer">
+                        <span class="text-muted small">
+                            <i class="far fa-clock me-1"></i>Cập nhật gần đây
+                        </span>
+                        <div class="d-flex gap-2">
+                            <a href="@Url.Action("EditTemplate", "Email", new { id = template.Id })" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>Sửa
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTemplate(@template.Id)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="text-center py-5 bg-white rounded">
+                <i class="fas fa-file-alt fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có template nào</h4>
+                <p class="text-muted">Tạo template để gửi email tự động</p>
+                <a href="@Url.Action("CreateTemplate", "Email")" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus me-2"></i>Tạo template đầu tiên
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        function deleteTemplate(id) {
+            showDeleteConfirm('Xóa template', 'Bạn có chắc muốn xóa template này?', function() {
+                $.post('@Url.Action("DeleteTemplate", "Email")', { id: id }, function(result) {
+                    if (result.success) {
+                        showSuccess('Thành công', result.message, function() {
+                            location.reload();
+                        });
+                    } else {
+                        showError('Lỗi', result.message);
+                    }
+                });
+            });
+        }
+    </script>
+}
