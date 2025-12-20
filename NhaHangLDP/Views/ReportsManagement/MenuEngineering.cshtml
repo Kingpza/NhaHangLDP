@@ -441,23 +441,39 @@
                 if (items.length === 0) {
                     $(config.container).html('<p class="text-muted text-center py-4">Không có món</p>');
                 } else {
-                    let html = items.slice(0, 5).map(item => `
-                        <div class="dish-item">
-                            <img src="${item.ImageUrl || '/images/menu/default.jpg'}" 
-                                 class="dish-image" 
-                                 onerror="this.src='/images/menu/default.jpg'">
-                            <div class="dish-info">
-                                <div class="dish-name">${item.DishName}</div>
-                                <div class="dish-stats">
-                                    Bán: ${item.SoldQuantity} | Giá: ${formatCurrency(item.Price)}
+                    let html = items.slice(0, 5).map(item => {
+                        // Xử lý đường dẫn hình ảnh
+                        let imageUrl = '/images/menu/default-food.jpg';
+                        
+                        if (item.ImageUrl) {
+                            // Nếu đã có đường dẫn đầy đủ
+                            if (item.ImageUrl.startsWith('/') || item.ImageUrl.startsWith('http')) {
+                                imageUrl = item.ImageUrl;
+                            } else {
+                                // Nếu chỉ là tên file
+                                imageUrl = '/images/menu/' + item.ImageUrl;
+                            }
+                        }
+                        
+                        return `
+                            <div class="dish-item">
+                                <img src="${imageUrl}" 
+                                     alt="${item.DishName}"
+                                     class="dish-image" 
+                                     onerror="this.src='/images/menu/default-food.jpg'">
+                                <div class="dish-info">
+                                    <div class="dish-name">${item.DishName}</div>
+                                    <div class="dish-stats">
+                                        Bán: ${item.SoldQuantity} | Giá: ${formatCurrency(item.Price)}
+                                    </div>
+                                </div>
+                                <div class="dish-profit">
+                                    <div class="dish-profit-value">${formatCurrency(item.Profit)}</div>
+                                    <div class="dish-profit-margin">${item.ProfitMargin.toFixed(1)}%</div>
                                 </div>
                             </div>
-                            <div class="dish-profit">
-                                <div class="dish-profit-value">${formatCurrency(item.Profit)}</div>
-                                <div class="dish-profit-margin">${item.ProfitMargin.toFixed(1)}%</div>
-                            </div>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
 
                     if (items.length > 5) {
                         html += `<p class="text-center text-muted mt-2">+${items.length - 5} món khác</p>`;

@@ -405,7 +405,9 @@
             <option value="prev_month" selected>So với tháng trước</option>
         </select>
     </div>
-    <canvas id="comparisonChart" height="300"></canvas>
+    <div style="position: relative; height: 300px;">
+        <canvas id="comparisonChart"></canvas>
+    </div>
 </div>
 
 <div class="row">
@@ -487,41 +489,85 @@
 </div>
 
 @section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         let currentPeriod = '@period';
         let comparisonChart = null;
+        let isLoadingKPI = false; // Prevent multiple simultaneous loads
 
         $(document).ready(function() {
+            console.log('KPI Tracking initialized');
             loadKPIs(currentPeriod);
 
-            $('.period-btn').click(function() {
+            // Period selector with debounce
+            $('.period-btn').off('click').on('click', function() {
+                if (isLoadingKPI) {
+                    console.log('Still loading KPIs, ignoring click');
+                    return;
+                }
+                
                 currentPeriod = $(this).data('period');
                 $('.period-btn').removeClass('active');
                 $(this).addClass('active');
                 loadKPIs(currentPeriod);
             });
 
-            $('#comparisonPeriod').change(function() {
-                loadComparison(currentPeriod, $(this).val());
-            });
-
-            // Auto refresh every minute
-            setInterval(function() {
-                loadKPIs(currentPeriod);
-            }, 60000);
-        });
-
-        function loadKPIs(period) {
-            $.post('@Url.Action("GetKPIs")', { period: period }, function(response) {
-                if (response.success) {
-                    updateKPICards(response.data);
+            $('#comparisonPeriod').off('change').on('change', function() {
+                if (!isLoadingKPI) {
+                    loadComparison(currentPeriod, $(this).val());
                 }
             });
 
-            loadComparison(period, $('#comparisonPeriod').val());
+            // REMOVED auto refresh to prevent infinite loop
+            // If needed, uncomment with proper protection
+            // setInterval(function() {
+            //     if (!isLoadingKPI) {
+            //         loadKPIs(currentPeriod);
+            //     }
+            // }, 60000);
+        });
+
+        function loadKPIs(period) {
+            if (isLoadingKPI) {
+                console.log('Already loading KPIs, skipping...');
+                return;
+            }
+
+            console.log('Loading KPIs for period:', period);
+            isLoadingKPI = true;
+
+            $.ajax({
+                url: '@Url.Action("GetKPIs")',
+                method: 'POST',
+                data: { period: period },
+                timeout: 10000,
+                success: function(response) {
+                    console.log('KPIs loaded successfully');
+                    if (response.success && response.data) {
+                        updateKPICards(response.data);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading KPIs:', error);
+                },
+                complete: function() {
+                    isLoadingKPI = false;
+                    console.log('KPI loading complete');
+                }
+            });
+
+            // Load comparison chart separately
+            setTimeout(function() {
+                loadComparison(period, $('#comparisonPeriod').val());
+            }, 200);
         }
 
         function updateKPICards(kpis) {
+            if (!kpis || !Array.isArray(kpis)) {
+                console.error('Invalid KPI data');
+                return;
+            }
+
             kpis.forEach(kpi => {
                 switch(kpi.Id) {
                     case 'revenue':
@@ -583,57 +629,91 @@
         }
 
         function loadComparison(period, comparePeriod) {
-            $.post('@Url.Action("GetPerformanceComparison")', { 
-                period1: period, 
-                period2: comparePeriod 
-            }, function(response) {
-                if (response.success) {
-                    updateComparisonChart(response.data);
+            console.log('Loading comparison:', period, 'vs', comparePeriod);
+            
+            $.ajax({
+                url: '@Url.Action("GetPerformanceComparison")',
+                method: 'POST',
+                data: { 
+                    period1: period, 
+                    period2: comparePeriod 
+                },
+                timeout: 10000,
+                success: function(response) {
+                    console.log('Comparison data loaded');
+                    if (response.success && response.data) {
+                        updateComparisonChart(response.data);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading comparison:', error);
                 }
             });
         }
 
         function updateComparisonChart(data) {
-            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            console.log('Updating comparison chart');
             
-            if (comparisonChart) {
-                comparisonChart.destroy();
+            const ctx = document.getElementById('comparisonChart');
+            if (!ctx) {
+                console.error('Comparison chart canvas not found');
+                return;
+            }
+            
+            // CRITICAL: Destroy old chart completely
+            if (comparisonChart !== null && comparisonChart !== undefined) {
+                console.log('Destroying existing comparison chart');
+                try {
+                    comparisonChart.destroy();
+                } catch(e) {
+                    console.error('Error destroying comparison chart:', e);
+                }
+                comparisonChart = null;
             }
 
-            comparisonChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.Metrics.map(m => m.Name),
-                    datasets: [{
-                        label: data.Period1Name,
-                        data: data.Metrics.map(m => m.Period1Value),
-                        backgroundColor: '#3b82f6'
-                    }, {
-                        label: data.Period2Name,
-                        data: data.Metrics.map(m => m.Period2Value),
-                        backgroundColor: '#94a3b8'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return formatCurrencyShort(value);
+            // Small delay to ensure DOM is clean
+            setTimeout(function() {
+                try {
+                    console.log('Creating new comparison chart');
+                    comparisonChart = new Chart(ctx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: data.Metrics.map(m => m.Name),
+                            datasets: [{
+                                label: data.Period1Name,
+                                data: data.Metrics.map(m => m.Period1Value),
+                                backgroundColor: '#3b82f6'
+                            }, {
+                                label: data.Period2Name,
+                                data: data.Metrics.map(m => m.Period2Value),
+                                backgroundColor: '#94a3b8'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top'
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return formatCurrencyShort(value);
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
+                    });
+                    console.log('Comparison chart created successfully');
+                } catch(e) {
+                    console.error('Error creating comparison chart:', e);
                 }
-            });
+            }, 100);
         }
 
         function formatCurrency(value) {
@@ -647,5 +727,13 @@
             if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
             return value.toString();
         }
+
+        // Cleanup on page unload
+        $(window).on('beforeunload', function() {
+            if (comparisonChart) {
+                comparisonChart.destroy();
+                comparisonChart = null;
+            }
+        });
     </script>
 }
