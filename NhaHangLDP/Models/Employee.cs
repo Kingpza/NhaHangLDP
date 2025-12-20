@@ -25,6 +25,9 @@ namespace NhaHangLDP.Models
             this.ReturnBill = new HashSet<ReturnBill>();
             this.ShiftSupportStaff = new HashSet<ShiftSupportStaff>();
             this.StockInbound = new HashSet<StockInbound>();
+            this.KitchenOrderTicket = new HashSet<KitchenOrderTicket>();
+            this.Notification = new HashSet<Notification>();
+            this.QROrder = new HashSet<QROrder>();
         }
     
         public int Id { get; set; }
@@ -54,5 +57,11 @@ namespace NhaHangLDP.Models
         public virtual ICollection<ShiftSupportStaff> ShiftSupportStaff { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<StockInbound> StockInbound { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<KitchenOrderTicket> KitchenOrderTicket { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Notification> Notification { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<QROrder> QROrder { get; set; }
     }
 }

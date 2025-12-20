@@ -12,30 +12,34 @@ namespace NhaHangLDP.Models
     using System;
     using System.Collections.Generic;
     
-    public partial class Bill
+    public partial class QROrder
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
-        public Bill()
+        public QROrder()
         {
-            this.ReturnBill = new HashSet<ReturnBill>();
-            this.PromotionUsage = new HashSet<PromotionUsage>();
+            this.QROrderDetail = new HashSet<QROrderDetail>();
         }
     
         public int Id { get; set; }
-        public int OrderId { get; set; }
-        public int CashierId { get; set; }
-        public System.DateTime BillDate { get; set; }
-        public decimal TotalAmount { get; set; }
-        public decimal DiscountAmount { get; set; }
-        public decimal FinalAmount { get; set; }
-        public string PaymentMethod { get; set; }
+        public string QROrderCode { get; set; }
+        public string SessionToken { get; set; }
+        public int TableId { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
         public string Status { get; set; }
+        public string Notes { get; set; }
+        public System.DateTime CreatedTime { get; set; }
+        public Nullable<System.DateTime> SubmittedTime { get; set; }
+        public Nullable<System.DateTime> ConfirmedTime { get; set; }
+        public Nullable<System.DateTime> CompletedTime { get; set; }
+        public Nullable<int> LinkedOrderId { get; set; }
+        public Nullable<int> ConfirmedByEmployeeId { get; set; }
+        public string AppliedPromotionCode { get; set; }
     
         public virtual Employee Employee { get; set; }
         public virtual Order Order { get; set; }
+        public virtual RestaurantTable RestaurantTable { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<ReturnBill> ReturnBill { get; set; }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual ICollection<PromotionUsage> PromotionUsage { get; set; }
+        public virtual ICollection<QROrderDetail> QROrderDetail { get; set; }
     }
 }

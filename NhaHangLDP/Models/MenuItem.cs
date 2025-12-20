@@ -22,6 +22,8 @@ namespace NhaHangLDP.Models
             this.OrderDetail = new HashSet<OrderDetail>();
             this.PriceHistory = new HashSet<PriceHistory>();
             this.ReturnBillDetail = new HashSet<ReturnBillDetail>();
+            this.KitchenOrderItem = new HashSet<KitchenOrderItem>();
+            this.QROrderDetail = new HashSet<QROrderDetail>();
         }
     
         public int Id { get; set; }
@@ -52,5 +54,9 @@ namespace NhaHangLDP.Models
         public virtual ICollection<PriceHistory> PriceHistory { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ReturnBillDetail> ReturnBillDetail { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<KitchenOrderItem> KitchenOrderItem { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<QROrderDetail> QROrderDetail { get; set; }
     }
 }

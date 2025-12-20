@@ -19,6 +19,9 @@ namespace NhaHangLDP.Models
         {
             this.Booking = new HashSet<Booking>();
             this.Order = new HashSet<Order>();
+            this.KitchenOrderTicket = new HashSet<KitchenOrderTicket>();
+            this.QROrder = new HashSet<QROrder>();
+            this.TableSession = new HashSet<TableSession>();
         }
     
         public int Id { get; set; }
@@ -32,5 +35,11 @@ namespace NhaHangLDP.Models
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Order> Order { get; set; }
         public virtual TableArea TableArea { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<KitchenOrderTicket> KitchenOrderTicket { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<QROrder> QROrder { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<TableSession> TableSession { get; set; }
     }
 }
