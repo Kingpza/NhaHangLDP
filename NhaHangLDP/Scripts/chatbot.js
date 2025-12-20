@@ -220,14 +220,31 @@
         if (!suggestions || suggestions.length === 0) return;
 
         let cardsHtml = suggestions.map(function (item) {
-            const imageUrl = item.imageUrl || item.ImageUrl || '/images/menu/default.jpg';
-            const price = formatCurrency(item.price || item.Price);
-            const name = item.name || item.Name;
-            const id = item.id || item.Id;
+            // Lấy imageUrl từ cả 2 format (camelCase và PascalCase)
+            let rawImageUrl = item.ImageUrl || item.imageUrl || '';
+            
+            // Xử lý đường dẫn hình ảnh
+            let imageUrl = '/images/menu/default-food.jpg'; // Default image
+            
+            if (rawImageUrl) {
+                // Nếu đã có đường dẫn đầy đủ (bắt đầu với / hoặc http)
+                if (rawImageUrl.startsWith('/') || rawImageUrl.startsWith('http')) {
+                    imageUrl = rawImageUrl;
+                } else {
+                    // Nếu chỉ là tên file, thêm đường dẫn đầy đủ
+                    imageUrl = '/images/menu/' + rawImageUrl;
+                }
+            }
+            
+            const price = formatCurrency(item.Price || item.price || 0);
+            const name = item.Name || item.name || 'Món ăn';
+            const id = item.Id || item.id || 0;
 
             return `
                 <div class="suggestion-card" data-id="${id}">
-                    <img src="${imageUrl}" alt="${name}" onerror="this.src='/images/menu/default.jpg'">
+                    <img src="${imageUrl}" 
+                         alt="${escapeHtml(name)}" 
+                         onerror="this.src='/images/menu/default-food.jpg'">
                     <div class="suggestion-info">
                         <h4>${escapeHtml(name)}</h4>
                         <p class="suggestion-price">${price}</p>
@@ -252,7 +269,8 @@
         scrollToBottom();
 
         // Bind click events
-        $('.btn-view-dish').off('click').on('click', function () {
+        $('.btn-view-dish').off('click').on('click', function (e) {
+            e.stopPropagation();
             const id = $(this).data('id');
             window.open('/Public/Detail/' + id, '_blank');
         });
