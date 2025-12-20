@@ -43,7 +43,7 @@
         /* ========== SIDEBAR STYLES ========== */
         .management-sidebar {
             background: linear-gradient(180deg, var(--primary-dark) 0%, #0d1b2a 100%);
-            min-height: 100vh;
+            height: 100vh;
             position: fixed;
             left: 0;
             top: 0;
@@ -51,6 +51,26 @@
             z-index: 1000;
             padding: 0;
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar scrollbar styling */
+        .management-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .management-sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .management-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.5);
+            border-radius: 3px;
+        }
+
+        .management-sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.7);
         }
 
         .sidebar-header {
