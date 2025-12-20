@@ -147,6 +147,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\AuthorizationHelper.cs" />
     <Compile Include="Helpers\SettingsHelper.cs" />
     <Compile Include="Helpers\StatusTextHelper.cs" />
     <Compile Include="Models\Account.cs">
@@ -301,11 +302,24 @@
     <Compile Include="Services\DashboardService.cs" />
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\EmployeeManagementService.cs" />
+    <Compile Include="Services\Management\EmployeeAdminService.cs" />
+    <Compile Include="Services\Management\InventoryService.cs" />
+    <Compile Include="Services\Management\ManagementDashboardDataService.cs" />
+    <Compile Include="Services\Management\MenuAdminService.cs" />
+    <Compile Include="Services\Management\TableAdminService.cs" />
     <Compile Include="Services\MenuService.cs" />
     <Compile Include="Services\OrderManagementService.cs" />
     <Compile Include="Services\OrderQueryService.cs" />
     <Compile Include="Services\PaymentService.cs" />
     <Compile Include="Services\ReportService.cs" />
+    <Compile Include="Services\Reports\BookingAnalyticsService.cs" />
+    <Compile Include="Services\Reports\DashboardReportService.cs" />
+    <Compile Include="Services\Reports\DateRangeHelper.cs" />
+    <Compile Include="Services\Reports\DetailedShiftReportService.cs" />
+    <Compile Include="Services\Reports\DishProfitAnalysisService.cs" />
+    <Compile Include="Services\Reports\RevenueAnalyticsService.cs" />
+    <Compile Include="Services\Reports\SalesAnalyticsService.cs" />
+    <Compile Include="Services\Reports\ShiftManagementService.cs" />
     <Compile Include="Services\RequestHandlerService.cs" />
     <Compile Include="Services\ShiftManagementService.cs" />
     <Compile Include="Services\TableManagementService.cs" />
