@@ -1,0 +1,651 @@
+﻿@{
+    ViewBag.Title = "Theo Dõi KPI";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    var period = ViewBag.Period ?? "today";
+}
+
+@section styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .period-btn {
+            padding: 8px 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: transparent;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .period-btn:hover, .period-btn.active {
+            background: white;
+            color: #16a34a;
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .kpi-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .kpi-trend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .kpi-trend.up {
+            background: #dcfce7;
+            color: #22c55e;
+        }
+
+        .kpi-trend.down {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+
+        .kpi-trend.stable {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .kpi-name {
+            font-size: 15px;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+
+        /* Progress Bar */
+        .kpi-progress-container {
+            margin-bottom: 15px;
+        }
+
+        .kpi-progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .kpi-progress-label {
+            color: #64748b;
+        }
+
+        .kpi-progress-value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .kpi-progress-bar {
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .kpi-progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .kpi-footer {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        .kpi-footer-item {
+            text-align: center;
+        }
+
+        .kpi-footer-value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .kpi-footer-label {
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        /* Colors */
+        .kpi-card.revenue .kpi-icon { background: rgba(59,130,246,0.1); color: #3b82f6; }
+        .kpi-card.revenue .kpi-progress-fill { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+
+        .kpi-card.orders .kpi-icon { background: rgba(34,197,94,0.1); color: #22c55e; }
+        .kpi-card.orders .kpi-progress-fill { background: linear-gradient(90deg, #22c55e, #4ade80); }
+
+        .kpi-card.avg-order .kpi-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+        .kpi-card.avg-order .kpi-progress-fill { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+        .kpi-card.table-util .kpi-icon { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+        .kpi-card.table-util .kpi-progress-fill { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+
+        /* Comparison Chart */
+        .comparison-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .comparison-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* Target Setting */
+        .targets-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .target-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .target-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .target-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .target-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .target-current {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .target-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="mb-1">🎯 Theo Dõi KPI</h2>
+            <p class="mb-0 opacity-75">Giám sát hiệu suất kinh doanh theo thời gian thực</p>
+        </div>
+        <div class="period-selector">
+            <button class="period-btn @(period == "today" ? "active" : "")" data-period="today">Hôm nay</button>
+            <button class="period-btn @(period == "week" ? "active" : "")" data-period="week">Tuần này</button>
+            <button class="period-btn @(period == "month" ? "active" : "")" data-period="month">Tháng này</button>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid" id="kpiGrid">
+    <!-- Revenue KPI -->
+    <div class="kpi-card revenue">
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="kpi-trend stable" id="revenueTrend">
+                <i class="fas fa-minus"></i>
+                <span>--</span>
+            </div>
+        </div>
+        <div class="kpi-value" id="revenueValue">--</div>
+        <div class="kpi-name">Doanh thu</div>
+        <div class="kpi-progress-container">
+            <div class="kpi-progress-header">
+                <span class="kpi-progress-label">Tiến độ mục tiêu</span>
+                <span class="kpi-progress-value" id="revenueProgress">--%</span>
+            </div>
+            <div class="kpi-progress-bar">
+                <div class="kpi-progress-fill" id="revenueProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="kpi-footer">
+            <div class="kpi-footer-item">
+                <div class="kpi-footer-value" id="revenueTarget">--</div>
+                <div class="kpi-footer-label">Mục tiêu</div>
+            </div>
+            <div class="kpi-footer-item">
+                <div class="kpi-footer-value" id="revenueRemaining">--</div>
+                <div class="kpi-footer-label">Còn lại</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders KPI -->
+    <div class="kpi-card orders">
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-shopping-cart"></i></div>
+            <div class="kpi-trend stable" id="ordersTrend">
+                <i class="fas fa-minus"></i>
+                <span>--</span>
+            </div>
+        </div>
+        <div class="kpi-value" id="ordersValue">--</div>
+        <div class="kpi-name">Số đơn hàng</div>
+        <div class="kpi-progress-container">
+            <div class="kpi-progress-header">
+                <span class="kpi-progress-label">Tiến độ mục tiêu</span>
+                <span class="kpi-progress-value" id="ordersProgress">--%</span>
+            </div>
+            <div class="kpi-progress-bar">
+                <div class="kpi-progress-fill" id="ordersProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="kpi-footer">
+            <div class="kpi-footer-item">
+                <div class="kpi-footer-value" id="ordersTarget">--</div>
+                <div class="kpi-footer-label">Mục tiêu</div>
+            </div>
+            <div class="kpi-footer-item">
+                <div class="kpi-footer-value" id="ordersRemaining">--</div>
+                <div class="kpi-footer-label">Còn lại</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Average Order KPI -->
+    <div class="kpi-card avg-order">
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+            <div class="kpi-trend stable" id="avgOrderTrend">
+                <i class="fas fa-minus"></i>
+                <span>--</span>
+            </div>
+        </div>
+        <div class="kpi-value" id="avgOrderValue">--</div>
+        <div class="kpi-name">Giá trị TB/Đơn</div>
+        <div class="kpi-progress-container">
+            <div class="kpi-progress-header">
+                <span class="kpi-progress-label">Tiến độ mục tiêu</span>
+                <span class="kpi-progress-value" id="avgOrderProgress">--%</span>
+            </div>
+            <div class="kpi-progress-bar">
+                <div class="kpi-progress-fill" id="avgOrderProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="kpi-footer">
+            <div class="kpi-footer-item">
+                <div class="kpi-footer-value" id="avgOrderTarget">--</div>
+                <div class="kpi-footer-label">Mục tiêu</div>
+            </div>
+            <div class="kpi-footer-item">
+                <div class="kpi-footer-value" id="avgOrderRemaining">--</div>
+                <div class="kpi-footer-label">Còn lại</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table Utilization KPI -->
+    <div class="kpi-card table-util">
+        <div class="kpi-header">
+            <div class="kpi-icon"><i class="fas fa-chair"></i></div>
+            <div class="kpi-trend stable" id="tableUtilTrend">
+                <i class="fas fa-minus"></i>
+                <span>--</span>
+            </div>
+        </div>
+        <div class="kpi-value" id="tableUtilValue">--%</div>
+        <div class="kpi-name">Sử dụng bàn</div>
+        <div class="kpi-progress-container">
+            <div class="kpi-progress-header">
+                <span class="kpi-progress-label">Tiến độ mục tiêu</span>
+                <span class="kpi-progress-value" id="tableUtilProgress">--%</span>
+            </div>
+            <div class="kpi-progress-bar">
+                <div class="kpi-progress-fill" id="tableUtilProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="kpi-footer">
+            <div class="kpi-footer-item">
+                <div class="kpi-footer-value" id="tableUtilTarget">80%</div>
+                <div class="kpi-footer-label">Mục tiêu</div>
+            </div>
+            <div class="kpi-footer-item">
+                <div class="kpi-footer-value" id="tableUtilRemaining">--</div>
+                <div class="kpi-footer-label">Còn lại</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Chart -->
+<div class="comparison-container">
+    <div class="comparison-header">
+        <h5 class="comparison-title">📊 So sánh với kỳ trước</h5>
+        <select class="form-select" style="width: auto;" id="comparisonPeriod">
+            <option value="prev_day">So với hôm qua</option>
+            <option value="prev_week">So với tuần trước</option>
+            <option value="prev_month" selected>So với tháng trước</option>
+        </select>
+    </div>
+    <canvas id="comparisonChart" height="300"></canvas>
+</div>
+
+<div class="row">
+    <!-- Targets Panel -->
+    <div class="col-md-6">
+        <div class="targets-panel">
+            <h5 class="mb-4">🎯 Mục tiêu đã đặt</h5>
+            <div class="target-item">
+                <div class="target-info">
+                    <div class="target-icon" style="background: rgba(59,130,246,0.1); color: #3b82f6;">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <div class="target-name">Doanh thu hàng ngày</div>
+                        <div class="target-current">Hiện tại: <span id="currentRevenueTarget">--</span></div>
+                    </div>
+                </div>
+                <div class="target-value">5,000,000đ</div>
+            </div>
+            <div class="target-item">
+                <div class="target-info">
+                    <div class="target-icon" style="background: rgba(34,197,94,0.1); color: #22c55e;">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div>
+                        <div class="target-name">Đơn hàng hàng ngày</div>
+                        <div class="target-current">Hiện tại: <span id="currentOrdersTarget">--</span></div>
+                    </div>
+                </div>
+                <div class="target-value">50 đơn</div>
+            </div>
+            <div class="target-item">
+                <div class="target-info">
+                    <div class="target-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div>
+                        <div class="target-name">Giá trị TB/Đơn</div>
+                        <div class="target-current">Hiện tại: <span id="currentAvgTarget">--</span></div>
+                    </div>
+                </div>
+                <div class="target-value">150,000đ</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-md-6">
+        <div class="targets-panel">
+            <h5 class="mb-4">📈 Thống kê nhanh</h5>
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="text-center p-3 bg-light rounded-3">
+                        <div class="fs-3 fw-bold text-primary" id="profitMargin">--</div>
+                        <div class="small text-muted">Biên lợi nhuận</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="text-center p-3 bg-light rounded-3">
+                        <div class="fs-3 fw-bold text-success" id="tableTurnover">--</div>
+                        <div class="small text-muted">Vòng quay bàn</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="text-center p-3 bg-light rounded-3">
+                        <div class="fs-3 fw-bold text-warning" id="peakHour">--</div>
+                        <div class="small text-muted">Giờ cao điểm</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="text-center p-3 bg-light rounded-3">
+                        <div class="fs-3 fw-bold text-info" id="revPASH">--</div>
+                        <div class="small text-muted">RevPASH</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        let currentPeriod = '@period';
+        let comparisonChart = null;
+
+        $(document).ready(function() {
+            loadKPIs(currentPeriod);
+
+            $('.period-btn').click(function() {
+                currentPeriod = $(this).data('period');
+                $('.period-btn').removeClass('active');
+                $(this).addClass('active');
+                loadKPIs(currentPeriod);
+            });
+
+            $('#comparisonPeriod').change(function() {
+                loadComparison(currentPeriod, $(this).val());
+            });
+
+            // Auto refresh every minute
+            setInterval(function() {
+                loadKPIs(currentPeriod);
+            }, 60000);
+        });
+
+        function loadKPIs(period) {
+            $.post('@Url.Action("GetKPIs")', { period: period }, function(response) {
+                if (response.success) {
+                    updateKPICards(response.data);
+                }
+            });
+
+            loadComparison(period, $('#comparisonPeriod').val());
+        }
+
+        function updateKPICards(kpis) {
+            kpis.forEach(kpi => {
+                switch(kpi.Id) {
+                    case 'revenue':
+                        updateKPICard('revenue', kpi, formatCurrency);
+                        $('#currentRevenueTarget').text(formatCurrency(kpi.CurrentValue));
+                        break;
+                    case 'orders':
+                        updateKPICard('orders', kpi, (v) => v + ' đơn');
+                        $('#currentOrdersTarget').text(kpi.CurrentValue + ' đơn');
+                        break;
+                    case 'avg_order':
+                        updateKPICard('avgOrder', kpi, formatCurrency);
+                        $('#currentAvgTarget').text(formatCurrency(kpi.CurrentValue));
+                        break;
+                    case 'table_util':
+                        updateKPICard('tableUtil', kpi, (v) => v.toFixed(0) + '%');
+                        break;
+                }
+            });
+
+            // Quick stats
+            const revKPI = kpis.find(k => k.Id === 'revenue');
+            if (revKPI) {
+                const profitMargin = revKPI.CurrentValue > 0 ? (revKPI.CurrentValue * 0.4 / revKPI.CurrentValue * 100) : 0;
+                $('#profitMargin').text(profitMargin.toFixed(1) + '%');
+            }
+
+            $('#tableTurnover').text('2.5x');
+            $('#peakHour').text('12:00');
+            $('#revPASH').text('125K');
+        }
+
+        function updateKPICard(prefix, kpi, formatter) {
+            $(`#${prefix}Value`).text(formatter(kpi.CurrentValue));
+            
+            const progress = Math.min(kpi.Achievement, 100);
+            $(`#${prefix}Progress`).text(progress.toFixed(0) + '%');
+            $(`#${prefix}ProgressBar`).css('width', progress + '%');
+            
+            $(`#${prefix}Target`).text(formatter(kpi.TargetValue));
+            
+            const remaining = Math.max(0, kpi.TargetValue - kpi.CurrentValue);
+            $(`#${prefix}Remaining`).text(formatter(remaining));
+
+            // Trend
+            const trendEl = $(`#${prefix}Trend`);
+            const growth = kpi.PreviousValue > 0 
+                ? ((kpi.CurrentValue - kpi.PreviousValue) / kpi.PreviousValue * 100) 
+                : 0;
+            
+            trendEl.removeClass('up down stable');
+            if (growth > 0) {
+                trendEl.addClass('up').html(`<i class="fas fa-arrow-up"></i><span>+${growth.toFixed(1)}%</span>`);
+            } else if (growth < 0) {
+                trendEl.addClass('down').html(`<i class="fas fa-arrow-down"></i><span>${growth.toFixed(1)}%</span>`);
+            } else {
+                trendEl.addClass('stable').html(`<i class="fas fa-minus"></i><span>0%</span>`);
+            }
+        }
+
+        function loadComparison(period, comparePeriod) {
+            $.post('@Url.Action("GetPerformanceComparison")', { 
+                period1: period, 
+                period2: comparePeriod 
+            }, function(response) {
+                if (response.success) {
+                    updateComparisonChart(response.data);
+                }
+            });
+        }
+
+        function updateComparisonChart(data) {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            
+            if (comparisonChart) {
+                comparisonChart.destroy();
+            }
+
+            comparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.Metrics.map(m => m.Name),
+                    datasets: [{
+                        label: data.Period1Name,
+                        data: data.Metrics.map(m => m.Period1Value),
+                        backgroundColor: '#3b82f6'
+                    }, {
+                        label: data.Period2Name,
+                        data: data.Metrics.map(m => m.Period2Value),
+                        backgroundColor: '#94a3b8'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrencyShort(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function formatCurrency(value) {
+            if (!value) return '0đ';
+            return new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+        }
+
+        function formatCurrencyShort(value) {
+            if (!value) return '0';
+            if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+            if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+            return value.toString();
+        }
+    </script>
+}

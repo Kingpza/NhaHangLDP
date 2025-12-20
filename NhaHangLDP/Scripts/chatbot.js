@@ -1,162 +1,178 @@
-﻿// ===== MODERN AI CHATBOT WITH ENHANCED FEATURES =====
+﻿/**
+ * LDP Restaurant Chatbot - Enhanced Version
+ * Features: AI Integration, Session Management, Voice Input, Rich UI
+ */
 
-$(document).ready(function () {
-    let isOpen = false;
-    let isTyping = false;
-    let messageHistory = [];
+(function ($) {
+    'use strict';
 
-    // Khởi tạo chatbot với welcome message hiện đại
+    // ===== CONFIGURATION =====
+    const CONFIG = {
+        apiEndpoint: '/Public/ChatBotAI',
+        searchEndpoint: '/Public/SearchMenu',
+        suggestionsEndpoint: '/Public/GetQuickSuggestions',
+        typingDelay: 500,
+        messageDelay: 300,
+        maxHistoryLength: 50,
+        voiceEnabled: true
+    };
+
+    // ===== STATE =====
+    let state = {
+        isTyping: false,
+        sessionId: null,
+        isOpen: false,
+        messageHistory: [],
+        voiceRecognition: null
+    };
+
+    // ===== INITIALIZATION =====
+    $(document).ready(function () {
+        initChatbot();
+        loadQuickSuggestions();
+        initVoiceRecognition();
+    });
+
     function initChatbot() {
-        setTimeout(() => {
-            addBotMessage(
-                "👋 Xin chào! Mình là **LDP Bot** - trợ lý ảo thông minh của Nhà Hàng LDP.\n\n" +
-                "Mình có thể giúp bạn:\n" +
-                "🍽️ Tìm món ăn theo sở thích\n" +
-                "💰 Gợi ý món theo ngân sách\n" +
-                "🎯 Tư vấn combo & set meal\n" +
-                "⭐ Xem món bán chạy\n\n" +
-                "Hãy thử hỏi mình nhé! 😊"
-            );
-            addQuickReplies([
-                "🔥 Top món bán chạy",
-                "💰 Món dưới 100k",
-                "🍜 Món chính ngon",
-                "🥗 Món khai vị"
-            ]);
-        }, 600);
+        // Load session from localStorage
+        state.sessionId = localStorage.getItem('chatbot_session_id');
+
+        // Toggle chatbot
+        $('.chatbot-toggle').click(function () {
+            toggleChatbot();
+        });
+
+        // Close chatbot
+        $('.chatbot-close').click(function () {
+            closeChatbot();
+        });
+
+        // Send message
+        $('.chatbot-send').click(function () {
+            sendMessage();
+        });
+
+        // Enter key to send
+        $('#chatbot-input').keypress(function (e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Voice input button
+        if (CONFIG.voiceEnabled) {
+            addVoiceButton();
+        }
+
+        // Show welcome message if first time
+        if (!state.sessionId) {
+            setTimeout(function () {
+                showWelcomeMessage();
+            }, 1000);
+        }
+
+        // Update badge
+        updateBadge();
     }
 
-    // Toggle chatbot với animation
-    $('.chatbot-toggle').click(function () {
-        isOpen = !isOpen;
-        if (isOpen) {
-            $('.chatbot-container').addClass('active');
-            $('.chatbot-badge').fadeOut(200);
-            if ($('.chatbot-messages .message').length === 0) {
-                initChatbot();
-            }
-            // Track analytics
-            trackChatbotOpen();
+    // ===== CHATBOT TOGGLE =====
+    function toggleChatbot() {
+        if (state.isOpen) {
+            closeChatbot();
         } else {
-            $('.chatbot-container').removeClass('active');
+            openChatbot();
         }
-    });
+    }
 
-    // Đóng chatbot
-    $('.chatbot-close').click(function () {
-        isOpen = false;
+    function openChatbot() {
+        $('.chatbot-container').addClass('active');
+        $('.chatbot-toggle').addClass('hidden');
+        state.isOpen = true;
+        $('#chatbot-input').focus();
+        updateBadge(0);
+        scrollToBottom();
+    }
+
+    function closeChatbot() {
         $('.chatbot-container').removeClass('active');
-    });
+        $('.chatbot-toggle').removeClass('hidden');
+        state.isOpen = false;
+    }
 
-    // Gửi tin nhắn với enhanced features
+    // ===== SEND MESSAGE =====
     function sendMessage() {
-        const message = $('#chatbot-input').val().trim();
-        if (!message || isTyping) return;
+        const input = $('#chatbot-input');
+        const message = input.val().trim();
 
-        // Add to history
-        messageHistory.push({ role: 'user', content: message });
+        if (!message || state.isTyping) return;
 
-        // Hiển thị tin nhắn của user
+        // Add user message
         addUserMessage(message);
-        $('#chatbot-input').val('');
+        input.val('');
+
+        // Show typing indicator
+        showTypingIndicator();
+        state.isTyping = true;
 
         // Disable input
-        isTyping = true;
-        $('#chatbot-input, .chatbot-send').prop('disabled', true);
-        $('.chatbot-send').html('<i class="fas fa-spinner fa-spin"></i>');
-
-        // Show typing
-        showTypingIndicator();
-
-        // Smart delay based on message length
-        const baseDelay = 800;
-        const delayPerChar = 10;
-        const responseDelay = Math.min(baseDelay + (message.length * delayPerChar), 2000);
+        input.prop('disabled', true);
+        $('.chatbot-send').prop('disabled', true);
 
         // Call API
-        setTimeout(() => {
-            $.ajax({
-                url: '/Public/ChatBot',
-                type: 'POST',
-                data: { 
-                    message: message,
-                    history: JSON.stringify(messageHistory.slice(-5)) // Last 5 messages for context
-                },
-                success: function (response) {
-                    console.log('✅ Chatbot response:', response);
-                    hideTypingIndicator();
+        $.ajax({
+            url: CONFIG.apiEndpoint,
+            method: 'POST',
+            data: {
+                message: message,
+                sessionId: state.sessionId
+            },
+            success: function (response) {
+                hideTypingIndicator();
 
-                    if (response.success) {
-                        // Add to history
-                        messageHistory.push({ role: 'bot', content: response.response });
-
-                        // Format and display response
-                        const formattedResponse = formatBotResponse(response.response);
-                        addBotMessage(formattedResponse);
-
-                        // Display suggestions with animation
-                        if (response.suggestions && response.suggestions.length > 0) {
-                            setTimeout(() => {
-                                addSuggestions(response.suggestions);
-                            }, 400);
-                        }
-
-                        // Auto quick replies based on context
-                        if (response.quickReplies && response.quickReplies.length > 0) {
-                            setTimeout(() => {
-                                addQuickReplies(response.quickReplies);
-                            }, 600);
-                        }
-                    } else {
-                        addBotMessage("😕 Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau!");
+                if (response.success) {
+                    // Save session ID
+                    if (response.sessionId) {
+                        state.sessionId = response.sessionId;
+                        localStorage.setItem('chatbot_session_id', response.sessionId);
                     }
-                },
-                error: function (xhr, status, error) {
-                    console.error('❌ Chatbot error:', error);
-                    hideTypingIndicator();
-                    addBotMessage(
-                        "🔌 Không thể kết nối đến máy chủ.\n\n" +
-                        "Vui lòng:\n" +
-                        "• Kiểm tra kết nối internet\n" +
-                        "• Thử lại sau vài giây\n" +
-                        "• Liên hệ admin nếu lỗi tiếp diễn"
-                    );
-                },
-                complete: function () {
-                    isTyping = false;
-                    $('#chatbot-input, .chatbot-send').prop('disabled', false);
-                    $('.chatbot-send').html('<i class="fas fa-paper-plane"></i>');
-                    $('#chatbot-input').focus();
+
+                    // Add bot response
+                    setTimeout(function () {
+                        addBotMessage(response.response);
+
+                        // Add suggestions if any
+                        if (response.suggestions && response.suggestions.length > 0) {
+                            addSuggestions(response.suggestions);
+                        }
+
+                        // Add quick replies if any
+                        if (response.quickReplies && response.quickReplies.length > 0) {
+                            addQuickReplies(response.quickReplies);
+                        }
+                    }, CONFIG.messageDelay);
+                } else {
+                    addBotMessage(response.response || 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại!');
                 }
-            });
-        }, responseDelay);
+            },
+            error: function () {
+                hideTypingIndicator();
+                addBotMessage('❌ Không thể kết nối. Vui lòng kiểm tra mạng và thử lại!');
+            },
+            complete: function () {
+                state.isTyping = false;
+                input.prop('disabled', false);
+                $('.chatbot-send').prop('disabled', false);
+                input.focus();
+            }
+        });
     }
 
-    // Event handlers
-    $('.chatbot-send').click(sendMessage);
-
-    $('#chatbot-input').keypress(function (e) {
-        if (e.which === 13 && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
-        }
-    });
-
-    // Format bot response with markdown-like syntax
-    function formatBotResponse(text) {
-        if (!text) return '';
-        
-        return text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-            .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
-            .replace(/\n/g, '<br>'); // Line breaks
-    }
-
-    // Add user message với animation (No Avatar)
+    // ===== MESSAGE DISPLAY =====
     function addUserMessage(text) {
         const time = getCurrentTime();
         const html = `
-            <div class="message user" style="opacity: 0;">
+            <div class="message user" style="opacity: 0; transform: translateX(20px);">
                 <div class="message-content">
                     <div class="message-bubble">${escapeHtml(text)}</div>
                     <div class="message-time">${time}</div>
@@ -164,16 +180,23 @@ $(document).ready(function () {
             </div>
         `;
         $('.chatbot-messages').append(html);
-        $('.message.user').last().animate({ opacity: 1 }, 300);
+        
+        // Animate in
+        $('.message.user').last().animate({
+            opacity: 1
+        }, 300).css('transform', 'translateX(0)');
+        
         scrollToBottom();
+
+        // Save to history
+        state.messageHistory.push({ role: 'user', content: text, time: time });
     }
 
-    // Add bot message với rich formatting (No Avatar)
     function addBotMessage(text) {
         const time = getCurrentTime();
         const formattedText = formatBotResponse(text);
         const html = `
-            <div class="message bot" style="opacity: 0;">
+            <div class="message bot" style="opacity: 0; transform: translateX(-20px);">
                 <div class="message-content">
                     <div class="message-bubble">${formattedText}</div>
                     <div class="message-time">${time}</div>
@@ -181,11 +204,98 @@ $(document).ready(function () {
             </div>
         `;
         $('.chatbot-messages').append(html);
-        $('.message.bot').last().animate({ opacity: 1 }, 300);
+        
+        // Animate in
+        $('.message.bot').last().animate({
+            opacity: 1
+        }, 300).css('transform', 'translateX(0)');
+        
         scrollToBottom();
+
+        // Save to history
+        state.messageHistory.push({ role: 'bot', content: text, time: time });
     }
 
-    // Typing indicator với animation (No Avatar)
+    function addSuggestions(suggestions) {
+        if (!suggestions || suggestions.length === 0) return;
+
+        let cardsHtml = suggestions.map(function (item) {
+            const imageUrl = item.imageUrl || item.ImageUrl || '/images/menu/default.jpg';
+            const price = formatCurrency(item.price || item.Price);
+            const name = item.name || item.Name;
+            const id = item.id || item.Id;
+
+            return `
+                <div class="suggestion-card" data-id="${id}">
+                    <img src="${imageUrl}" alt="${name}" onerror="this.src='/images/menu/default.jpg'">
+                    <div class="suggestion-info">
+                        <h4>${escapeHtml(name)}</h4>
+                        <p class="suggestion-price">${price}</p>
+                    </div>
+                    <button class="btn-view-dish" data-id="${id}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+
+        const html = `
+            <div class="message bot suggestions-container" style="opacity: 0;">
+                <div class="suggestions-scroll">
+                    ${cardsHtml}
+                </div>
+            </div>
+        `;
+
+        $('.chatbot-messages').append(html);
+        $('.suggestions-container').last().animate({ opacity: 1 }, 300);
+        scrollToBottom();
+
+        // Bind click events
+        $('.btn-view-dish').off('click').on('click', function () {
+            const id = $(this).data('id');
+            window.open('/Public/Detail/' + id, '_blank');
+        });
+
+        $('.suggestion-card').off('click').on('click', function (e) {
+            if (!$(e.target).hasClass('btn-view-dish') && !$(e.target).closest('.btn-view-dish').length) {
+                const name = $(this).find('h4').text();
+                $('#chatbot-input').val('Cho tôi biết thêm về ' + name);
+                sendMessage();
+            }
+        });
+    }
+
+    function addQuickReplies(replies) {
+        if (!replies || replies.length === 0) return;
+
+        // Remove old quick replies
+        $('.quick-replies-container').remove();
+
+        const buttonsHtml = replies.map(function (reply) {
+            return `<button class="quick-reply-btn">${reply}</button>`;
+        }).join('');
+
+        const html = `
+            <div class="quick-replies-container" style="opacity: 0;">
+                ${buttonsHtml}
+            </div>
+        `;
+
+        $('.chatbot-messages').append(html);
+        $('.quick-replies-container').last().animate({ opacity: 1 }, 300);
+        scrollToBottom();
+
+        // Bind click events
+        $('.quick-reply-btn').off('click').on('click', function () {
+            const text = $(this).text();
+            $('#chatbot-input').val(text);
+            $(this).closest('.quick-replies-container').remove();
+            sendMessage();
+        });
+    }
+
+    // ===== TYPING INDICATOR =====
     function showTypingIndicator() {
         const html = `
             <div class="message bot typing-message" style="opacity: 0;">
@@ -204,120 +314,120 @@ $(document).ready(function () {
     }
 
     function hideTypingIndicator() {
-        $('.typing-message').fadeOut(200, function() {
+        $('.typing-message').fadeOut(200, function () {
             $(this).remove();
         });
     }
 
-    // Enhanced suggestions với lazy loading images
-    function addSuggestions(suggestions) {
-        if (!suggestions || suggestions.length === 0) return;
+    // ===== WELCOME MESSAGE =====
+    function showWelcomeMessage() {
+        const hour = new Date().getHours();
+        let greeting;
 
-        console.log('📦 Adding', suggestions.length, 'suggestions');
+        if (hour < 10) greeting = 'Chào buổi sáng';
+        else if (hour < 14) greeting = 'Chào buổi trưa';
+        else if (hour < 18) greeting = 'Chào buổi chiều';
+        else greeting = 'Chào buổi tối';
 
-        const container = $('<div class="suggestions" style="opacity: 0;"></div>');
+        const welcomeText = `👋 ${greeting}! Mình là **LDP Bot**.\n\nMình có thể giúp bạn tìm món ăn, gợi ý theo ngân sách, hoặc hỗ trợ đặt bàn.\n\nBạn muốn tìm gì hôm nay?`;
+        
+        addBotMessage(welcomeText);
+        
+        addQuickReplies([
+            '🔥 Top món bán chạy',
+            '💰 Món dưới 100k',
+            '⭐ Món đặc biệt',
+            '📅 Đặt bàn'
+        ]);
+    }
 
-        suggestions.forEach((item, index) => {
-            // Xử lý đường dẫn hình ảnh
-            let imageUrl = '/images/menu/default-food.jpg';
-            if (item.imageUrl && item.imageUrl.trim() !== '') {
-                imageUrl = '/images/menu/' + item.imageUrl;
-            } else if (item.ImageUrl && item.ImageUrl.trim() !== '') {
-                imageUrl = '/images/menu/' + item.ImageUrl;
+    // ===== QUICK SUGGESTIONS =====
+    function loadQuickSuggestions() {
+        $.get(CONFIG.suggestionsEndpoint, function (response) {
+            if (response.success) {
+                // Could update UI with time-based suggestions
+                console.log('Quick suggestions loaded:', response.mealType);
             }
-
-            const price = formatPrice(item.price || item.Price || 0);
-            const description = item.description || item.Description || '';
-            const descriptionHtml = description 
-                ? `<div class="suggestion-description">${escapeHtml(truncateText(description, 80))}</div>`
-                : '';
-            
-            const linkUrl = `/Public/Detail/${item.id || item.Id}`;
-
-            const card = $(`
-                <a href="${linkUrl}" target="_blank" class="suggestion-card" data-id="${item.id || item.Id}" style="opacity: 0; transform: translateY(20px);">
-                    <img src="${imageUrl}" 
-                         alt="${escapeHtml(item.name || item.Name)}" 
-                         class="suggestion-image" 
-                         loading="lazy"
-                         onerror="this.src='/images/menu/default-food.jpg'">
-                    <div class="suggestion-info">
-                        <div class="suggestion-name">${escapeHtml(item.name || item.Name)}</div>
-                        <div class="suggestion-price">${price}</div>
-                        ${descriptionHtml}
-                    </div>
-                </a>
-            `);
-
-            container.append(card);
-
-            // Animate each card with delay
-            setTimeout(() => {
-                card.animate({ 
-                    opacity: 1, 
-                    transform: 'translateY(0)' 
-                }, 400);
-            }, index * 100);
-        });
-
-        $('.chatbot-messages').append(container);
-        container.animate({ opacity: 1 }, 300);
-
-        setTimeout(() => scrollToBottom(), suggestions.length * 100 + 400);
-    }
-
-    // Quick replies với enhanced UX
-    function addQuickReplies(replies) {
-        const container = $('<div class="quick-replies" style="opacity: 0;"></div>');
-
-        replies.forEach((reply, index) => {
-            const button = $(`
-                <button class="quick-reply" 
-                        data-text="${escapeHtml(reply)}"
-                        style="opacity: 0; transform: scale(0.8);">
-                    ${escapeHtml(reply)}
-                </button>
-            `);
-
-            container.append(button);
-
-            // Animate each button
-            setTimeout(() => {
-                button.animate({ 
-                    opacity: 1,
-                    transform: 'scale(1)'
-                }, 300);
-            }, index * 80);
-        });
-
-        $('.chatbot-messages').append(container);
-        container.animate({ opacity: 1 }, 200);
-        scrollToBottom();
-
-        // Event handler with animation
-        $('.quick-reply').click(function () {
-            const text = $(this).data('text');
-            $(this).parent().fadeOut(300, function() {
-                $(this).remove();
-            });
-            $('#chatbot-input').val(text);
-            setTimeout(sendMessage, 100);
         });
     }
 
-    // Helper functions
-    function getCurrentTime() {
-        const now = new Date();
-        return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    }
-
-    function scrollToBottom() {
-        const container = $('.chatbot-messages');
-        if (container.length > 0) {
-            container.animate({
-                scrollTop: container[0].scrollHeight
-            }, 500, 'swing');
+    // ===== VOICE RECOGNITION =====
+    function initVoiceRecognition() {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            CONFIG.voiceEnabled = false;
+            return;
         }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        state.voiceRecognition = new SpeechRecognition();
+        state.voiceRecognition.continuous = false;
+        state.voiceRecognition.interimResults = false;
+        state.voiceRecognition.lang = 'vi-VN';
+
+        state.voiceRecognition.onresult = function (event) {
+            const transcript = event.results[0][0].transcript;
+            $('#chatbot-input').val(transcript);
+            stopVoiceRecording();
+            sendMessage();
+        };
+
+        state.voiceRecognition.onerror = function (event) {
+            console.error('Voice recognition error:', event.error);
+            stopVoiceRecording();
+        };
+
+        state.voiceRecognition.onend = function () {
+            stopVoiceRecording();
+        };
+    }
+
+    function addVoiceButton() {
+        const voiceBtn = `
+            <button class="chatbot-voice" title="Nhập bằng giọng nói">
+                <i class="fas fa-microphone"></i>
+            </button>
+        `;
+        $('.chatbot-input').append(voiceBtn);
+
+        $('.chatbot-voice').click(function () {
+            toggleVoiceRecording();
+        });
+    }
+
+    function toggleVoiceRecording() {
+        if (!state.voiceRecognition) return;
+
+        const btn = $('.chatbot-voice');
+        
+        if (btn.hasClass('recording')) {
+            state.voiceRecognition.stop();
+            stopVoiceRecording();
+        } else {
+            state.voiceRecognition.start();
+            btn.addClass('recording');
+            btn.find('i').removeClass('fa-microphone').addClass('fa-stop');
+        }
+    }
+
+    function stopVoiceRecording() {
+        const btn = $('.chatbot-voice');
+        btn.removeClass('recording');
+        btn.find('i').removeClass('fa-stop').addClass('fa-microphone');
+    }
+
+    // ===== UTILITIES =====
+    function formatBotResponse(text) {
+        if (!text) return '';
+
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')              // Italic
+            .replace(/\n/g, '<br>');                            // Line breaks
+    }
+
+    function formatCurrency(amount) {
+        if (!amount) return '0đ';
+        return new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
     }
 
     function escapeHtml(text) {
@@ -329,52 +439,28 @@ $(document).ready(function () {
             '"': '&quot;',
             "'": '&#039;'
         };
-        return String(text).replace(/[&<>"']/g, m => map[m]);
+        return text.replace(/[&<>"']/g, function (m) { return map[m]; });
     }
 
-    function formatPrice(price) {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-            minimumFractionDigits: 0
-        }).format(price);
+    function getCurrentTime() {
+        const now = new Date();
+        return now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
     }
 
-    function truncateText(text, maxLength) {
-        if (!text || text.length <= maxLength) return text;
-        return text.substring(0, maxLength).trim() + '...';
+    function scrollToBottom() {
+        const container = $('.chatbot-messages');
+        container.animate({
+            scrollTop: container[0].scrollHeight
+        }, 300);
     }
 
-    function trackChatbotOpen() {
-        console.log('📊 Chatbot opened at', new Date().toISOString());
-        // Add analytics tracking here
-    }
-
-    // Auto-focus input
-    $('.chatbot-toggle').click(function () {
-        setTimeout(() => {
-            if (isOpen) $('#chatbot-input').focus();
-        }, 400);
-    });
-
-    // Show badge after 30 seconds
-    setTimeout(() => {
-        if (!isOpen) {
-            $('.chatbot-badge').fadeIn(400);
+    function updateBadge(count) {
+        const badge = $('.chatbot-badge');
+        if (count === 0 || count === undefined) {
+            badge.hide();
+        } else {
+            badge.text(count).show();
         }
-    }, 30000);
+    }
 
-    // Close on ESC key
-    $(document).keyup(function(e) {
-        if (e.key === "Escape" && isOpen) {
-            $('.chatbot-close').click();
-        }
-    });
-
-    // Prevent closing when clicking inside
-    $('.chatbot-container').click(function(e) {
-        e.stopPropagation();
-    });
-
-    console.log('🤖 Chatbot initialized successfully');
-});
+})(jQuery);

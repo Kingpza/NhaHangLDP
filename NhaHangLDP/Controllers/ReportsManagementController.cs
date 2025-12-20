@@ -5,12 +5,20 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using NhaHangLDP.Models;
+using NhaHangLDP.Services;
 
 namespace NhaHangLDP.Controllers
 {
     public partial class ReportsManagementController : Controller
     {
         private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private AdvancedAnalyticsService _analyticsService;
+
+        // Constructor
+        public ReportsManagementController()
+        {
+            _analyticsService = new AdvancedAnalyticsService();
+        }
 
         public ActionResult Dashboard()
         {
@@ -1305,5 +1313,407 @@ namespace NhaHangLDP.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
+        #region Advanced Analytics Endpoints
+
+        /// <summary>
+        /// Advanced Dashboard View
+        /// </summary>
+        public ActionResult AdvancedDashboard(string period = "today")
+        {
+            ViewBag.Period = period;
+            return View();
+        }
+
+        /// <summary>
+        /// API: Lấy dữ liệu dashboard nâng cao
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetAdvancedDashboardData(string period = "today")
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var data = analyticsService.GetDashboardData(period);
+                return Json(new { success = true, data = data });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API: Lấy dữ liệu biểu đồ doanh thu
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetRevenueChartData(string period = "today")
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var (start, end) = GetDateRangeForPeriod(period);
+                var data = analyticsService.GetRevenueChart(start, end, period);
+                return Json(new { success = true, data = data });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API: Lấy dữ liệu heatmap giờ cao điểm
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetPeakHoursHeatmap(string period = "week")
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var (start, end) = GetDateRangeForPeriod(period);
+                var data = analyticsService.GetPeakHoursHeatmap(start, end);
+                return Json(new { success = true, data = data });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API: Lấy top performers
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetTopPerformers(string period = "month", string type = "dish", int limit = 10)
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var (start, end) = GetDateRangeForPeriod(period);
+
+                List<TopPerformer> data;
+                if (type == "employee")
+                {
+                    data = analyticsService.GetTopCashiers(start, end, limit);
+                }
+                else
+                {
+                    data = analyticsService.GetTopPerformers(start, end, limit);
+                }
+
+                return Json(new { success = true, data = data });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API: Lấy dự đoán doanh thu
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetRevenuePrediction(string period = "week")
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var data = analyticsService.GetPredictions(period);
+                return Json(new { success = true, data = data });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Menu Engineering View
+        /// </summary>
+        public ActionResult MenuEngineering(string period = "month")
+        {
+            ViewBag.Period = period;
+            return View();
+        }
+
+        /// <summary>
+        /// API: Lấy dữ liệu Menu Engineering
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetMenuEngineeringData(string period = "month")
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var (start, end) = GetDateRangeForPeriod(period);
+                var data = analyticsService.GetMenuEngineering(start, end);
+
+                // Thống kê theo classification
+                var summary = data.GroupBy(d => d.Classification)
+                    .Select(g => new
+                    {
+                        Classification = g.Key,
+                        Count = g.Count(),
+                        TotalRevenue = g.Sum(d => d.SoldQuantity * d.Price),
+                        TotalProfit = g.Sum(d => d.Profit)
+                    })
+                    .ToList();
+
+                return Json(new { success = true, data = data, summary = summary });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API: Lấy dữ liệu ABC Analysis
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetABCAnalysis(string period = "month")
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var (start, end) = GetDateRangeForPeriod(period);
+                var data = analyticsService.GetABCAnalysis(start, end);
+
+                // Summary
+                var summary = new
+                {
+                    ClassA = new
+                    {
+                        Count = data.Count(d => d.Classification == "A"),
+                        Percentage = data.Any() ? (decimal)data.Count(d => d.Classification == "A") / data.Count * 100 : 0,
+                        Revenue = data.Where(d => d.Classification == "A").Sum(d => d.Revenue)
+                    },
+                    ClassB = new
+                    {
+                        Count = data.Count(d => d.Classification == "B"),
+                        Percentage = data.Any() ? (decimal)data.Count(d => d.Classification == "B") / data.Count * 100 : 0,
+                        Revenue = data.Where(d => d.Classification == "B").Sum(d => d.Revenue)
+                    },
+                    ClassC = new
+                    {
+                        Count = data.Count(d => d.Classification == "C"),
+                        Percentage = data.Any() ? (decimal)data.Count(d => d.Classification == "C") / data.Count * 100 : 0,
+                        Revenue = data.Where(d => d.Classification == "C").Sum(d => d.Revenue)
+                    }
+                };
+
+                return Json(new { success = true, data = data, summary = summary });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API: Phát hiện bất thường
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetAnomalies(string period = "month")
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var (start, end) = GetDateRangeForPeriod(period);
+                var data = analyticsService.DetectAnomalies(start, end);
+                return Json(new { success = true, data = data });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API: Lấy danh sách cảnh báo
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetAlerts()
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var data = analyticsService.GetAlerts();
+                return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// API: Lấy KPIs
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetKPIs(string period = "today")
+        {
+            try
+            {
+                var analyticsService = new AdvancedAnalyticsService(db);
+                var (start, end) = GetDateRangeForPeriod(period);
+                var (prevStart, prevEnd) = GetPreviousDateRangeForPeriod(start, period);
+                var data = analyticsService.GetKPIs(start, end, prevStart, prevEnd);
+                return Json(new { success = true, data = data });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// KPI Tracking View
+        /// </summary>
+        public ActionResult KPITracking(string period = "today")
+        {
+            ViewBag.Period = period;
+            return View();
+        }
+
+        /// <summary>
+        /// Predictive Analytics View
+        /// </summary>
+        public ActionResult PredictiveAnalytics(string period = "week")
+        {
+            ViewBag.Period = period;
+            return View();
+        }
+
+        /// <summary>
+        /// API: So sánh hiệu suất giữa các kỳ
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetPerformanceComparison(string period1 = "month", string period2 = "prev_month")
+        {
+            try
+            {
+                var (start1, end1) = GetDateRangeForPeriod(period1);
+                var (start2, end2) = period2 == "prev_month" 
+                    ? (start1.AddMonths(-1), start1)
+                    : GetDateRangeForPeriod(period2);
+
+                // Period 1 data
+                var revenue1 = db.Bill
+                    .Where(b => b.BillDate >= start1 && b.BillDate < end1 && b.Status == "Paid")
+                    .Sum(b => (decimal?)b.FinalAmount) ?? 0;
+
+                var orders1 = db.Order.Count(o => o.OrderTime >= start1 && o.OrderTime < end1);
+
+                // Period 2 data
+                var revenue2 = db.Bill
+                    .Where(b => b.BillDate >= start2 && b.BillDate < end2 && b.Status == "Paid")
+                    .Sum(b => (decimal?)b.FinalAmount) ?? 0;
+
+                var orders2 = db.Order.Count(o => o.OrderTime >= start2 && o.OrderTime < end2);
+
+                var comparison = new ComparativeAnalysis
+                {
+                    Period1Name = GetPeriodName(period1),
+                    Period2Name = GetPeriodName(period2),
+                    Metrics = new List<ComparisonMetric>
+                    {
+                        new ComparisonMetric
+                        {
+                            Name = "Doanh thu",
+                            Period1Value = revenue1,
+                            Period2Value = revenue2,
+                            Change = revenue1 - revenue2,
+                            ChangePercentage = revenue2 > 0 ? (revenue1 - revenue2) / revenue2 * 100 : 0,
+                            Trend = revenue1 > revenue2 ? "up" : revenue1 < revenue2 ? "down" : "stable"
+                        },
+                        new ComparisonMetric
+                        {
+                            Name = "Đơn hàng",
+                            Period1Value = orders1,
+                            Period2Value = orders2,
+                            Change = orders1 - orders2,
+                            ChangePercentage = orders2 > 0 ? (decimal)(orders1 - orders2) / orders2 * 100 : 0,
+                            Trend = orders1 > orders2 ? "up" : orders1 < orders2 ? "down" : "stable"
+                        },
+                        new ComparisonMetric
+                        {
+                            Name = "TB/Đơn",
+                            Period1Value = orders1 > 0 ? revenue1 / orders1 : 0,
+                            Period2Value = orders2 > 0 ? revenue2 / orders2 : 0,
+                            Change = (orders1 > 0 ? revenue1 / orders1 : 0) - (orders2 > 0 ? revenue2 / orders2 : 0),
+                            Trend = "stable"
+                        }
+                    }
+                };
+
+                return Json(new { success = true, data = comparison });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
+        #region Helper Methods for Advanced Analytics
+
+        private (DateTime start, DateTime end) GetDateRangeForPeriod(string period)
+        {
+            var today = DateTime.Today;
+
+            switch (period?.ToLower())
+            {
+                case "week":
+                    var weekStart = today.AddDays(-(int)today.DayOfWeek);
+                    return (weekStart, weekStart.AddDays(7));
+                case "month":
+                    return (new DateTime(today.Year, today.Month, 1), new DateTime(today.Year, today.Month, 1).AddMonths(1));
+                case "quarter":
+                    var quarter = (today.Month - 1) / 3 + 1;
+                    var quarterStart = new DateTime(today.Year, (quarter - 1) * 3 + 1, 1);
+                    return (quarterStart, quarterStart.AddMonths(3));
+                case "year":
+                    return (new DateTime(today.Year, 1, 1), new DateTime(today.Year + 1, 1, 1));
+                default: // today
+                    return (today, today.AddDays(1));
+            }
+        }
+
+        private (DateTime start, DateTime end) GetPreviousDateRangeForPeriod(DateTime currentStart, string period)
+        {
+            switch (period?.ToLower())
+            {
+                case "week":
+                    return (currentStart.AddDays(-7), currentStart);
+                case "month":
+                    return (currentStart.AddMonths(-1), currentStart);
+                case "quarter":
+                    return (currentStart.AddMonths(-3), currentStart);
+                case "year":
+                    return (currentStart.AddYears(-1), currentStart);
+                default:
+                    return (currentStart.AddDays(-1), currentStart);
+            }
+        }
+
+        private string GetPeriodName(string period)
+        {
+            switch (period?.ToLower())
+            {
+                case "today": return "Hôm nay";
+                case "week": return "Tuần này";
+                case "month": return "Tháng này";
+                case "quarter": return "Quý này";
+                case "year": return "Năm này";
+                case "prev_month": return "Tháng trước";
+                case "prev_week": return "Tuần trước";
+                default: return period;
+            }
+        }
+
+        #endregion
     }
 }

@@ -151,6 +151,7 @@
     <Compile Include="Models\Account.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\AdvancedReportsModels.cs" />
     <Compile Include="Models\AppSetting.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -165,6 +166,7 @@
     <Compile Include="Models\CashierShift.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\ChatbotModels.cs" />
     <Compile Include="Models\DamagedStock.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -293,6 +295,8 @@
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AdvancedAnalyticsService.cs" />
+    <Compile Include="Services\AIChatbotService.cs" />
     <Compile Include="Services\EmailService.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -491,6 +495,10 @@
     <Content Include="Views\Email\Logs.cshtml" />
     <Content Include="Views\Email\LogDetail.cshtml" />
     <Content Include="Views\QROrder\Error.cshtml" />
+    <Content Include="Views\ReportsManagement\AdvancedDashboard.cshtml" />
+    <Content Include="Views\ReportsManagement\MenuEngineering.cshtml" />
+    <Content Include="Views\ReportsManagement\KPITracking.cshtml" />
+    <Content Include="Views\ReportsManagement\PredictiveAnalytics.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

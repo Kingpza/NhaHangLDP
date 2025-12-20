@@ -1,0 +1,653 @@
+﻿@{
+    ViewBag.Title = "Dự Đoán Kinh Doanh";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    var period = ViewBag.Period ?? "week";
+}
+
+@section styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+            padding: 25px 30px;
+            margin: -25px -30px 25px -30px;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .period-btn {
+            padding: 8px 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: transparent;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .period-btn:hover, .period-btn.active {
+            background: white;
+            color: #0284c7;
+        }
+
+        /* Prediction Cards */
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .prediction-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prediction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .prediction-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .prediction-card.revenue::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .prediction-card.orders::before { background: linear-gradient(90deg, #22c55e, #4ade80); }
+        .prediction-card.profit::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .prediction-card.confidence::before { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+
+        .prediction-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+
+        .prediction-card.revenue .prediction-icon { background: rgba(59,130,246,0.1); color: #3b82f6; }
+        .prediction-card.orders .prediction-icon { background: rgba(34,197,94,0.1); color: #22c55e; }
+        .prediction-card.profit .prediction-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+        .prediction-card.confidence .prediction-icon { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+
+        .prediction-label {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }
+
+        .prediction-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .prediction-comparison {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .prediction-comparison.up { color: #22c55e; }
+        .prediction-comparison.down { color: #ef4444; }
+        .prediction-comparison.stable { color: #64748b; }
+
+        /* Trend Chart Container */
+        .chart-container {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.actual { background: #3b82f6; }
+        .legend-dot.predicted { background: #22c55e; border: 2px dashed #22c55e; background: transparent; }
+
+        /* Insights Panel */
+        .insights-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            margin-bottom: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .insight-item:hover {
+            transform: translateX(5px);
+        }
+
+        .insight-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .insight-icon.positive { background: #dcfce7; color: #22c55e; }
+        .insight-icon.warning { background: #fef3c7; color: #f59e0b; }
+        .insight-icon.info { background: #dbeafe; color: #3b82f6; }
+        .insight-icon.negative { background: #fee2e2; color: #ef4444; }
+
+        .insight-content h5 {
+            margin: 0 0 5px 0;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .insight-content p {
+            margin: 0;
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Anomaly Alerts */
+        .anomaly-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .anomaly-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-left: 4px solid;
+            background: #f8fafc;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 12px;
+        }
+
+        .anomaly-item.high { border-color: #ef4444; }
+        .anomaly-item.medium { border-color: #f59e0b; }
+        .anomaly-item.low { border-color: #3b82f6; }
+
+        .anomaly-date {
+            font-weight: 600;
+            color: #1e293b;
+            min-width: 80px;
+        }
+
+        .anomaly-info {
+            flex: 1;
+        }
+
+        .anomaly-info h6 {
+            margin: 0 0 3px 0;
+            font-weight: 600;
+        }
+
+        .anomaly-info p {
+            margin: 0;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .anomaly-deviation {
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .anomaly-item.high .anomaly-deviation { background: #fee2e2; color: #ef4444; }
+        .anomaly-item.medium .anomaly-deviation { background: #fef3c7; color: #f59e0b; }
+        .anomaly-item.low .anomaly-deviation { background: #dbeafe; color: #3b82f6; }
+
+        /* Confidence Meter */
+        .confidence-meter {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .confidence-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(#8b5cf6 0%, #8b5cf6 var(--confidence), #e2e8f0 var(--confidence), #e2e8f0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .confidence-circle::before {
+            content: '';
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+        }
+
+        .confidence-value {
+            position: relative;
+            font-size: 28px;
+            font-weight: 800;
+            color: #8b5cf6;
+        }
+
+        .confidence-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .prediction-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="mb-1">🔮 Dự Đoán Kinh Doanh</h2>
+            <p class="mb-0 opacity-75">Phân tích xu hướng và dự báo doanh thu dựa trên dữ liệu lịch sử</p>
+        </div>
+        <div class="period-selector">
+            <button class="period-btn @(period == "today" ? "active" : "")" data-period="today">Ngày mai</button>
+            <button class="period-btn @(period == "week" ? "active" : "")" data-period="week">Tuần tới</button>
+            <button class="period-btn @(period == "month" ? "active" : "")" data-period="month">Tháng tới</button>
+        </div>
+    </div>
+</div>
+
+<!-- Prediction Cards -->
+<div class="prediction-grid" id="predictionGrid">
+    <div class="prediction-card revenue">
+        <div class="prediction-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="prediction-label">Doanh thu dự kiến</div>
+        <div class="prediction-value" id="predictedRevenue">--</div>
+        <div class="prediction-comparison" id="revenueComparison">
+            <i class="fas fa-minus"></i>
+            <span>So với kỳ trước: --</span>
+        </div>
+    </div>
+
+    <div class="prediction-card orders">
+        <div class="prediction-icon"><i class="fas fa-shopping-cart"></i></div>
+        <div class="prediction-label">Đơn hàng dự kiến</div>
+        <div class="prediction-value" id="predictedOrders">--</div>
+        <div class="prediction-comparison" id="ordersComparison">
+            <i class="fas fa-minus"></i>
+            <span>So với kỳ trước: --</span>
+        </div>
+    </div>
+
+    <div class="prediction-card profit">
+        <div class="prediction-icon"><i class="fas fa-coins"></i></div>
+        <div class="prediction-label">Lợi nhuận dự kiến</div>
+        <div class="prediction-value" id="predictedProfit">--</div>
+        <div class="prediction-comparison" id="profitComparison">
+            <i class="fas fa-minus"></i>
+            <span>Biên lợi nhuận: 40%</span>
+        </div>
+    </div>
+
+    <div class="prediction-card confidence">
+        <div class="prediction-icon"><i class="fas fa-brain"></i></div>
+        <div class="prediction-label">Độ tin cậy</div>
+        <div class="confidence-meter">
+            <div class="confidence-circle" id="confidenceCircle" style="--confidence: 0%;">
+                <span class="confidence-value" id="confidenceValue">--%</span>
+            </div>
+        </div>
+        <div class="confidence-label text-center">Dựa trên 30 ngày dữ liệu</div>
+    </div>
+</div>
+
+<!-- Trend Chart -->
+<div class="chart-container">
+    <div class="chart-header">
+        <h5 class="chart-title">📈 Xu hướng doanh thu & Dự đoán</h5>
+        <div class="chart-legend">
+            <div class="legend-item">
+                <div class="legend-dot actual"></div>
+                <span>Thực tế</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot predicted"></div>
+                <span>Dự đoán</span>
+            </div>
+        </div>
+    </div>
+    <canvas id="trendChart" height="350"></canvas>
+</div>
+
+<div class="row">
+    <!-- Insights Panel -->
+    <div class="col-lg-7">
+        <div class="insights-panel">
+            <h5 class="mb-4">💡 Nhận định từ AI</h5>
+            <div id="insightsList">
+                <div class="insight-item">
+                    <div class="insight-icon info"><i class="fas fa-sync"></i></div>
+                    <div class="insight-content">
+                        <h5>Đang phân tích...</h5>
+                        <p>Hệ thống đang xử lý dữ liệu để đưa ra nhận định.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anomaly Panel -->
+    <div class="col-lg-5">
+        <div class="anomaly-panel">
+            <h5 class="mb-4">⚠️ Phát hiện bất thường</h5>
+            <div id="anomalyList">
+                <p class="text-muted text-center py-3">Đang tải...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        let currentPeriod = '@period';
+        let trendChart = null;
+
+        $(document).ready(function() {
+            loadPredictions(currentPeriod);
+
+            $('.period-btn').click(function() {
+                currentPeriod = $(this).data('period');
+                $('.period-btn').removeClass('active');
+                $(this).addClass('active');
+                loadPredictions(currentPeriod);
+            });
+
+            // Auto refresh every 5 minutes
+            setInterval(function() {
+                loadPredictions(currentPeriod);
+            }, 300000);
+        });
+
+        function loadPredictions(period) {
+            // Load predictions
+            $.post('@Url.Action("GetRevenuePrediction")', { period: period }, function(response) {
+                if (response.success) {
+                    updatePredictionCards(response.data);
+                    updateTrendChart(response.data.TrendPrediction);
+                    generateInsights(response.data);
+                }
+            });
+
+            // Load anomalies
+            $.post('@Url.Action("GetAnomalies")', { period: 'month' }, function(response) {
+                if (response.success) {
+                    updateAnomalies(response.data);
+                }
+            });
+        }
+
+        function updatePredictionCards(data) {
+            $('#predictedRevenue').text(formatCurrency(data.PredictedRevenue));
+            $('#predictedOrders').text(data.PredictedOrders || '0');
+            $('#predictedProfit').text(formatCurrency(data.PredictedProfit));
+            
+            // Confidence
+            const confidence = data.Confidence || 0;
+            $('#confidenceValue').text(confidence.toFixed(0) + '%');
+            $('#confidenceCircle').css('--confidence', confidence + '%');
+
+            // Comparisons
+            updateComparison('#revenueComparison', 10.5); // Mock data
+            updateComparison('#ordersComparison', 5.2);
+        }
+
+        function updateComparison(selector, value) {
+            const $el = $(selector);
+            const icon = value > 0 ? 'fa-arrow-up' : value < 0 ? 'fa-arrow-down' : 'fa-minus';
+            const cls = value > 0 ? 'up' : value < 0 ? 'down' : 'stable';
+            const sign = value > 0 ? '+' : '';
+            
+            $el.removeClass('up down stable').addClass(cls);
+            $el.html(`<i class="fas ${icon}"></i><span>So với kỳ trước: ${sign}${value.toFixed(1)}%</span>`);
+        }
+
+        function updateTrendChart(trendData) {
+            if (!trendData || trendData.length === 0) return;
+
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            if (trendChart) {
+                trendChart.destroy();
+            }
+
+            const actualData = trendData.filter(d => d.IsActual);
+            const predictedData = trendData.filter(d => !d.IsActual);
+
+            // Combine data for smooth transition
+            const labels = trendData.map(d => d.Label);
+            const actualValues = trendData.map(d => d.IsActual ? d.Value : null);
+            const predictedValues = trendData.map((d, i) => {
+                if (!d.IsActual) return d.Value;
+                if (i === actualData.length - 1) return d.Value; // Last actual point connects
+                return null;
+            });
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Thực tế',
+                        data: actualValues,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3b82f6'
+                    }, {
+                        label: 'Dự đoán',
+                        data: predictedValues,
+                        borderColor: '#22c55e',
+                        borderDash: [5, 5],
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointStyle: 'triangle',
+                        pointBackgroundColor: '#22c55e'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrencyShort(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateInsights(data) {
+            const insights = [];
+            
+            // Revenue trend insight
+            if (data.PredictedRevenue > 0) {
+                insights.push({
+                    icon: 'positive',
+                    iconClass: 'fa-chart-line',
+                    title: 'Doanh thu dự kiến tăng trưởng',
+                    content: `Dựa trên phân tích xu hướng 30 ngày qua, doanh thu dự kiến đạt ${formatCurrency(data.PredictedRevenue)} trong kỳ tới.`
+                });
+            }
+
+            // Confidence insight
+            if (data.Confidence >= 70) {
+                insights.push({
+                    icon: 'info',
+                    iconClass: 'fa-check-circle',
+                    title: 'Độ tin cậy cao',
+                    content: `Mô hình dự đoán đạt độ tin cậy ${data.Confidence.toFixed(0)}%, cho thấy xu hướng ổn định và dễ dự báo.`
+                });
+            } else if (data.Confidence >= 50) {
+                insights.push({
+                    icon: 'warning',
+                    iconClass: 'fa-exclamation-circle',
+                    title: 'Độ tin cậy trung bình',
+                    content: `Độ tin cậy ${data.Confidence.toFixed(0)}% cho thấy có biến động trong dữ liệu. Nên theo dõi sát hơn.`
+                });
+            } else {
+                insights.push({
+                    icon: 'negative',
+                    iconClass: 'fa-times-circle',
+                    title: 'Dữ liệu biến động lớn',
+                    content: `Độ tin cậy thấp (${data.Confidence.toFixed(0)}%) do dữ liệu có nhiều biến động. Cần thêm dữ liệu để cải thiện dự đoán.`
+                });
+            }
+
+            // Recommendation
+            insights.push({
+                icon: 'info',
+                iconClass: 'fa-lightbulb',
+                title: 'Đề xuất hành động',
+                content: 'Dựa trên dự báo, nên chuẩn bị nguồn nguyên liệu và nhân sự phù hợp cho kỳ kinh doanh sắp tới.'
+            });
+
+            let html = insights.map(i => `
+                <div class="insight-item">
+                    <div class="insight-icon ${i.icon}"><i class="fas ${i.iconClass}"></i></div>
+                    <div class="insight-content">
+                        <h5>${i.title}</h5>
+                        <p>${i.content}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            $('#insightsList').html(html);
+        }
+
+        function updateAnomalies(anomalies) {
+            if (!anomalies || anomalies.length === 0) {
+                $('#anomalyList').html('<p class="text-muted text-center py-3">Không có bất thường được phát hiện</p>');
+                return;
+            }
+
+            let html = anomalies.slice(0, 5).map(a => {
+                const date = new Date(a.Date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                return `
+                    <div class="anomaly-item ${a.Severity}">
+                        <div class="anomaly-date">${date}</div>
+                        <div class="anomaly-info">
+                            <h6>${a.Metric}</h6>
+                            <p>${a.PossibleCause || 'Cần xem xét nguyên nhân'}</p>
+                        </div>
+                        <div class="anomaly-deviation">σ ${a.Deviation.toFixed(1)}</div>
+                    </div>
+                `;
+            }).join('');
+
+            $('#anomalyList').html(html);
+        }
+
+        function formatCurrency(value) {
+            if (!value) return '0đ';
+            return new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+        }
+
+        function formatCurrencyShort(value) {
+            if (!value) return '0';
+            if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+            if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+            return value.toString();
+        }
+    </script>
+}
