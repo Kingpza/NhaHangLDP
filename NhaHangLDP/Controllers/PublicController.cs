@@ -28,6 +28,21 @@ namespace NhaHangLDP.Controllers
             var menu = db.MenuItem
              .Where(m => m.IsAvailable == true)
              .ToList();
+    
+            // Load wishlist items for logged in customer
+            var customerId = Session["CustomerId"] as int?;
+            if (customerId.HasValue)
+            {
+                var wishlistIds = db.Database.SqlQuery<int>(
+                    "SELECT MenuItemId FROM Wishlist WHERE CustomerId = @p0",
+                    customerId.Value).ToList();
+                ViewBag.WishlistIds = wishlistIds;
+            }
+            else
+            {
+                ViewBag.WishlistIds = new List<int>();
+            }
+    
             return View(menu);
         }
 

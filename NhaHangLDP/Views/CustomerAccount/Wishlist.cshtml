@@ -1,7 +1,7 @@
-﻿@{
+﻿@model List<NhaHangLDP.Models.WishlistItemViewModel>
+@{
     ViewBag.Title = "Yêu thích";
     Layout = null;
-    var items = Model as List<dynamic>;
 }
 
 <!DOCTYPE html>
@@ -46,10 +46,10 @@
     </header>
 
     <main class="max-w-4xl mx-auto px-4 py-8">
-        @if (items != null && items.Count > 0)
+        @if (Model != null && Model.Count > 0)
         {
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                @foreach (var item in items)
+                @foreach (var item in Model)
                 {
                     var imageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl));
                     <div class="bg-white rounded-2xl shadow-sm overflow-hidden group wishlist-item" data-id="@item.Id">
@@ -112,7 +112,12 @@
                             }
                         });
                         showToast('Đã xóa khỏi yêu thích', 'success');
+                    } else {
+                        showToast(response.message || 'Có lỗi xảy ra', 'error');
                     }
+                })
+                .fail(function() {
+                    showToast('Có lỗi xảy ra', 'error');
                 });
         }
 
@@ -124,12 +129,17 @@
                     } else {
                         showToast(response.message, 'error');
                     }
+                })
+                .fail(function() {
+                    showToast('Có lỗi xảy ra', 'error');
                 });
         }
 
         function showToast(message, type) {
             var bgColor = type === 'success' ? '#28a745' : '#dc3545';
-            var toast = $('<div style="background:' + bgColor + ';color:white;padding:12px 20px;border-radius:10px;margin-top:8px">' + message + '</div>');
+            var icon = type === 'success' ? 'check_circle' : 'error';
+            var toast = $('<div style="background:' + bgColor + ';color:white;padding:12px 20px;border-radius:10px;margin-top:8px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15)">' +
+                          '<span class="material-symbols-outlined">' + icon + '</span>' + message + '</div>');
             $('#toastContainer').append(toast);
             setTimeout(function() { toast.fadeOut(300, function() { $(this).remove(); }); }, 3000);
         }

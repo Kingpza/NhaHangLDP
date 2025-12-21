@@ -395,6 +395,17 @@ namespace NhaHangLDP.Models
         public string Email { get; set; }
     }
 
+    public class WishlistItemViewModel
+    {
+        public int Id { get; set; }
+        public int MenuItemId { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+        public string ImageUrl { get; set; }
+        public string Category { get; set; }
+        public DateTime AddedDate { get; set; }
+    }
+
     #endregion
 
     #region Menu ViewModels

@@ -112,7 +112,7 @@
                              style='background-image: url("@Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl))")'></div>
                         <div class="flex-1">
                             <p class="font-medium">@item.Name</p>
-                            <p class="text-sm text-gray-500">x@item.Quantity</p>
+                            <p class="text-sm text-gray-500">x@(item.Quantity)</p>
                         </div>
                         <p class="font-semibold">@item.Subtotal.ToString("N0")đ</p>
                     </div>

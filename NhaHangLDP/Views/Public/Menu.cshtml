@@ -77,8 +77,8 @@
     </style>
 </head>
 <body class="bg-background font-display text-text-primary overflow-hidden h-screen flex">
-    <aside class="hidden lg:flex w-72 flex-col justify-between border-r border-border-light bg-sidebar-surface h-full flex-shrink-0">
-        <div class="flex flex-col gap-6 p-6">
+    <aside class="hidden lg:flex w-72 flex-col justify-between border-r border-border-light bg-sidebar-surface h-full flex-shrink-0 overflow-hidden">
+        <div class="flex flex-col gap-6 p-6 overflow-y-auto flex-1">
             <div class="flex items-center gap-4">
                 <div class="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12 border-2 border-primary" data-alt="Restaurant logo" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBhlwmgWUTs_tC-ub-_7eDlJ_CQEEM2OG7Y-GBDJ_kirlRItyl3N2IJZYAaTPWiD_8hh5uwPDpkNIMTm2rnscn89-b3gz8iD5JKzAHHPl2vAPRYdRUTQN0LzqHi4Hl5d2ijdpj-DonhwCCg8fVGjB-HR-4SIL_SfUUo1A8oNjIlnx0P3dXd9uULNJqOy7WR0mixqB_s9LbasqJCFaILO1aaHm7lbjtMQsAGX-Qnfqi_ClMXYdv47OXuNRqBwJYSQvS_7DHF6QaT5_A");'>
                 </div>
@@ -112,7 +112,7 @@
                 }
             </nav>
         </div>
-        <div class="p-6 flex flex-col gap-4">
+        <div class="p-6 flex flex-col gap-4 flex-shrink-0 border-t border-border-light">
             @if (Session["CustomerId"] != null)
             {
                 <!-- User Account Section -->
@@ -261,6 +261,8 @@
                         </section>
                     }
 
+                    var wishlistIds = ViewBag.WishlistIds as List<int> ?? new List<int>();
+                    
                     foreach (var category in categories)
                     {
                         var categoryId = category.Replace(" ", "-").ToLower();
@@ -283,11 +285,12 @@
                                     {
                                         string imageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl));
                                         string formattedPrice = item.Price.ToString("N0") + "đ";
+                                        bool isInWishlist = wishlistIds.Contains(item.Id);
                                         
-                                        <div class="menu-item-card group bg-sidebar-surface rounded-[2rem] p-4 hover:shadow-lg transition-all duration-300 border border-border-light hover:border-primary/50" data-name="@item.Name.ToLower()" data-desc="@(item.Description?.ToLower() ?? "")">
+                                        <div class="menu-item-card group bg-sidebar-surface rounded-[2rem] p-4 hover:shadow-lg transition-all duration-300 border border-border-light hover:border-primary/50" data-name="@item.Name.ToLower()" data-desc="@(item.Description?.ToLower() ?? "")" data-item-id="@item.Id">
                                             <div class="aspect-[4/3] rounded-[1.5rem] bg-cover bg-center mb-4 overflow-hidden relative" style='background-image: url("@imageUrl");'>
-                                                <button onclick="toggleWishlist(@item.Id, this)" class="absolute top-4 right-4 bg-black/30 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary hover:text-white wishlist-btn">
-                                                    <span class="material-symbols-outlined text-xl">favorite</span>
+                                                <button onclick="toggleWishlist(@item.Id, this)" class="wishlist-btn absolute top-4 right-4 bg-black/30 backdrop-blur-sm p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary @(isInWishlist ? "text-red-500" : "text-white")">
+                                                    <span class="material-symbols-outlined text-xl">@(isInWishlist ? "favorite" : "favorite_border")</span>
                                                 </button>
                                                 @if (!item.IsAvailable)
                                                 {
@@ -423,10 +426,10 @@
                         var icon = $(btn).find('.material-symbols-outlined');
                         if (response.added) {
                             icon.text('favorite');
-                            icon.css('color', '#e74c3c');
+                            $(btn).addClass('text-red-500').removeClass('text-white');
                         } else {
                             icon.text('favorite_border');
-                            icon.css('color', '');
+                            $(btn).addClass('text-white').removeClass('text-red-500');
                         }
                         showToast(response.message);
                     } else if (response.needLogin) {
@@ -435,7 +438,7 @@
                             window.location.href = '@Url.Action("Login", "CustomerAccount")';
                         }, 1500);
                     } else {
-                        showToast(response.message, 'error');
+                        showToast(response.message || 'Có lỗi xảy ra', 'error');
                     }
                 })
                 .fail(function() {
