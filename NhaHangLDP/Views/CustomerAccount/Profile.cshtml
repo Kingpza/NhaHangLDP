@@ -1,0 +1,251 @@
+﻿@model NhaHangLDP.Models.CustomerProfileViewModel
+@{
+    ViewBag.Title = "Tài khoản";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Tài khoản - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007bff",
+                        success: "#28a745",
+                        warning: "#ffc107",
+                        danger: "#dc3545"
+                    },
+                    fontFamily: {
+                        display: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-display min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="@Url.Action("Menu", "Public")" class="flex items-center gap-2 text-gray-600 hover:text-primary">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span class="font-medium">Quay lại</span>
+            </a>
+            <h1 class="text-xl font-bold">Tài khoản</h1>
+            <a href="@Url.Action("Logout")" class="text-danger hover:underline flex items-center gap-1">
+                <span class="material-symbols-outlined">logout</span>
+                Đăng xuất
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div class="grid lg:grid-cols-4 gap-8">
+            <!-- Sidebar -->
+            <aside class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-sm p-6 text-center mb-6">
+                    <div class="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                        @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                        {
+                            <img src="@Model.AvatarUrl" alt="Avatar" class="w-full h-full rounded-full object-cover" />
+                        }
+                        else
+                        {
+                            <span class="text-4xl font-bold text-primary">@Model.FullName.Substring(0, 1).ToUpper()</span>
+                        }
+                    </div>
+                    <h2 class="text-xl font-bold">@Model.FullName</h2>
+                    <p class="text-gray-500 text-sm">@Model.Email</p>
+                    
+                    <!-- Membership Badge -->
+                    <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full 
+                         @(Model.MembershipLevel == "Platinum" ? "bg-purple-100 text-purple-700" : 
+                           Model.MembershipLevel == "Gold" ? "bg-yellow-100 text-yellow-700" :
+                           Model.MembershipLevel == "Silver" ? "bg-gray-100 text-gray-700" : "bg-orange-100 text-orange-700")">
+                        <span class="material-symbols-outlined text-lg">workspace_premium</span>
+                        <span class="font-semibold">@Model.MembershipLevel</span>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-primary/5 rounded-xl">
+                        <p class="text-2xl font-bold text-primary">@Model.LoyaltyPoints.ToString("N0")</p>
+                        <p class="text-sm text-gray-500">Điểm tích lũy</p>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <a href="#profile" class="flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-primary bg-primary/5 text-primary font-semibold">
+                        <span class="material-symbols-outlined">person</span>
+                        Thông tin cá nhân
+                    </a>
+                    <a href="@Url.Action("Orders")" class="flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-transparent">
+                        <span class="material-symbols-outlined">receipt_long</span>
+                        Đơn hàng (@Model.TotalOrders)
+                    </a>
+                    <a href="@Url.Action("Wishlist")" class="flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-transparent">
+                        <span class="material-symbols-outlined">favorite</span>
+                        Yêu thích
+                    </a>
+                    <a href="#addresses" class="flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-transparent">
+                        <span class="material-symbols-outlined">location_on</span>
+                        Địa chỉ
+                    </a>
+                    <a href="#security" class="flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-transparent">
+                        <span class="material-symbols-outlined">lock</span>
+                        Bảo mật
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-2xl font-bold text-primary">@Model.TotalOrders</p>
+                        <p class="text-sm text-gray-500">Đơn hàng</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-2xl font-bold text-success">@Model.TotalSpent.ToString("N0")đ</p>
+                        <p class="text-sm text-gray-500">Tổng chi tiêu</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-2xl font-bold text-warning">@Model.LoyaltyPoints</p>
+                        <p class="text-sm text-gray-500">Điểm thưởng</p>
+                    </div>
+                </div>
+
+                <!-- Profile Form -->
+                <section id="profile" class="bg-white rounded-2xl shadow-sm p-6">
+                    <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">edit</span>
+                        Thông tin cá nhân
+                    </h3>
+                    <form id="profileForm" class="space-y-4">
+                        @Html.AntiForgeryToken()
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Họ tên</label>
+                                <input type="text" name="fullName" value="@Model.FullName" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Số điện thoại</label>
+                                <input type="tel" name="phone" value="@Model.Phone" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Email</label>
+                                <input type="email" value="@Model.Email" disabled
+                                       class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Ngày sinh</label>
+                                <input type="date" name="dateOfBirth" value="@Model.DateOfBirth?.ToString("yyyy-MM-dd")" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Giới tính</label>
+                                <select name="gender" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="Male" @(Model.Gender == "Male" ? "selected" : "")>Nam</option>
+                                    <option value="Female" @(Model.Gender == "Female" ? "selected" : "")>Nữ</option>
+                                    <option value="Other" @(Model.Gender == "Other" ? "selected" : "")>Khác</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors">
+                            <span class="material-symbols-outlined align-middle mr-1">save</span>
+                            Lưu thay đổi
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Change Password -->
+                <section id="security" class="bg-white rounded-2xl shadow-sm p-6">
+                    <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">lock</span>
+                        Đổi mật khẩu
+                    </h3>
+                    <form id="passwordForm" class="space-y-4">
+                        @Html.AntiForgeryToken()
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Mật khẩu hiện tại</label>
+                                <input type="password" name="currentPassword" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Mật khẩu mới</label>
+                                <input type="password" name="newPassword" required minlength="6"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Xác nhận mật khẩu</label>
+                                <input type="password" name="confirmPassword" required
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                            </div>
+                        </div>
+                        <button type="submit" class="px-6 py-3 bg-warning text-gray-800 rounded-xl font-semibold hover:bg-yellow-400 transition-colors">
+                            <span class="material-symbols-outlined align-middle mr-1">vpn_key</span>
+                            Đổi mật khẩu
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Member Since -->
+                <div class="text-center text-gray-500 text-sm">
+                    <p>Thành viên từ @Model.CreatedDate.ToString("dd/MM/yyyy")</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Update profile
+        $('#profileForm').submit(function(e) {
+            e.preventDefault();
+            $.post('@Url.Action("UpdateProfile")', $(this).serialize())
+                .done(function(response) {
+                    if (response.success) {
+                        Swal.fire('Thành công!', response.message, 'success');
+                    } else {
+                        Swal.fire('Lỗi', response.message, 'error');
+                    }
+                });
+        });
+
+        // Change password
+        $('#passwordForm').submit(function(e) {
+            e.preventDefault();
+            var newPass = $('input[name="newPassword"]').val();
+            var confirmPass = $('input[name="confirmPassword"]').val();
+
+            if (newPass !== confirmPass) {
+                Swal.fire('Lỗi', 'Mật khẩu xác nhận không khớp!', 'error');
+                return;
+            }
+
+            $.post('@Url.Action("ChangePassword")', $(this).serialize())
+                .done(function(response) {
+                    if (response.success) {
+                        Swal.fire('Thành công!', response.message, 'success');
+                        $('#passwordForm')[0].reset();
+                    } else {
+                        Swal.fire('Lỗi', response.message, 'error');
+                    }
+                });
+        });
+    </script>
+</body>
+</html>

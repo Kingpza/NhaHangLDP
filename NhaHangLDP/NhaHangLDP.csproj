@@ -131,7 +131,10 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\CartController.cs" />
     <Compile Include="Controllers\CashierController.cs" />
+    <Compile Include="Controllers\CheckoutController.cs" />
+    <Compile Include="Controllers\CustomerAccountController.cs" />
     <Compile Include="Controllers\EmailController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\HRController.cs" />
@@ -142,6 +145,7 @@
     <Compile Include="Controllers\QROrderController.cs" />
     <Compile Include="Controllers\ReportsManagementController.cs" />
     <Compile Include="Controllers\ReportsManagementController.DetailedShiftReport.cs" />
+    <Compile Include="Controllers\ReservationController.cs" />
     <Compile Include="Controllers\ReturnManagementController.cs" />
     <Compile Include="Controllers\SettingsController.cs" />
     <Compile Include="Filters\CustomAuthorizeAttribute.cs" />
@@ -173,6 +177,8 @@
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\ChatbotModels.cs" />
+    <Compile Include="Models\CustomerModels.cs" />
+    <Compile Include="Models\CustomerViewModels.cs" />
     <Compile Include="Models\DamagedStock.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -565,6 +571,20 @@
     <Content Include="Views\HR\CreateWorkShift.cshtml" />
     <Content Include="Views\HR\EmployeeStats.cshtml" />
     <Content Include="Views\HR\PayrollDetail.cshtml" />
+    <Content Include="Views\Cart\Index.cshtml" />
+    <Content Include="Views\Checkout\Index.cshtml" />
+    <Content Include="Views\Checkout\Confirmation.cshtml" />
+    <Content Include="Views\Reservation\Index.cshtml" />
+    <Content Include="Views\Reservation\Confirmation.cshtml" />
+    <Content Include="Views\CustomerAccount\Login.cshtml" />
+    <Content Include="Views\CustomerAccount\Register.cshtml" />
+    <Content Include="Views\CustomerAccount\Profile.cshtml" />
+    <Content Include="Views\CustomerAccount\Orders.cshtml" />
+    <Content Include="Views\Checkout\TrackOrder.cshtml" />
+    <Content Include="Views\Cart\_MiniCart.cshtml" />
+    <Content Include="Views\Checkout\TrackOrderSearch.cshtml" />
+    <Content Include="Views\CustomerAccount\Wishlist.cshtml" />
+    <Content Include="Views\CustomerAccount\ForgotPassword.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

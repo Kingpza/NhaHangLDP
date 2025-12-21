@@ -58,25 +58,21 @@
             background: #007bff;
         }
 
-        .chat-open:checked ~ .chat-window {
-            display: flex;
-            opacity: 1;
-            transform: translateY(0) scale(1);
+        .toast-notification {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            padding: 16px 24px;
+            background: #28a745;
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
         }
-
-        .chat-open:checked ~ .chat-btn .icon-open {
-            display: none;
-        }
-
-        .chat-open:checked ~ .chat-btn .icon-close {
-            display: block;
-        }
-
-        .chat-window {
-            display: none;
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        @@keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
     </style>
 </head>
@@ -117,6 +113,33 @@
             </nav>
         </div>
         <div class="p-6 flex flex-col gap-4">
+            @if (Session["CustomerId"] != null)
+            {
+                <!-- User Account Section -->
+                <div class="bg-white rounded-2xl p-4 flex items-center gap-3 border border-border-light shadow-sm">
+                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                        <span class="text-lg font-bold text-primary">@Session["CustomerName"].ToString().Substring(0, 1).ToUpper()</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-semibold text-text-primary text-sm truncate">@Session["CustomerName"]</p>
+                        <a href="@Url.Action("Profile", "CustomerAccount")" class="text-xs text-primary hover:underline">Xem tài khoản</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Login Prompt -->
+                <a href="@Url.Action("Login", "CustomerAccount")" class="bg-white rounded-2xl p-4 flex items-center gap-3 border border-border-light shadow-sm hover:border-primary transition-colors group">
+                    <div class="bg-primary/20 p-2 rounded-full group-hover:bg-primary transition-colors">
+                        <span class="material-symbols-outlined text-primary group-hover:text-white">login</span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-text-primary text-sm">Đăng nhập</p>
+                        <p class="text-xs text-text-secondary">Để nhận ưu đãi đặc biệt</p>
+                    </div>
+                </a>
+            }
+            
             <div class="bg-sidebar-surface rounded-2xl p-4 flex flex-col items-center gap-3 text-center border border-border-light shadow-sm">
                 <div class="bg-primary/20 p-3 rounded-full">
                     <span class="material-symbols-outlined text-primary">local_offer</span>
@@ -143,15 +166,62 @@
             <div class="flex items-center gap-4 ml-6">
                 <div class="hidden md:flex items-center gap-6 mr-4">
                     <a class="text-text-primary text-sm font-medium hover:text-primary transition-colors" href="@Url.Action("Menu", "Public")">Trang chủ</a>
+                    <a class="text-text-secondary text-sm font-medium hover:text-primary transition-colors" href="@Url.Action("Index", "Reservation")">Đặt bàn</a>
+                    <a class="text-text-secondary text-sm font-medium hover:text-primary transition-colors" href="@Url.Action("TrackOrder", "Checkout")">Tra cứu đơn</a>
                 </div>
-                <button class="relative h-10 w-10 flex items-center justify-center rounded-full bg-sidebar-surface text-text-primary hover:bg-hover-light transition-colors border border-border-light">
-                    <span class="material-symbols-outlined" style="font-size: 20px;">notifications</span>
-                    <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border border-background"></span>
-                </button>
-                <button class="flex items-center gap-2 h-10 px-4 bg-primary rounded-full text-white hover:bg-[#0056b3] transition-colors font-bold text-sm shadow-[0_0_15px_rgba(0,123,255,0.3)]">
+                
+                @if (Session["CustomerId"] != null)
+                {
+                    <!-- User logged in -->
+                    <div class="relative group">
+                        <button class="flex items-center gap-2 h-10 px-4 rounded-full bg-sidebar-surface hover:bg-hover-light transition-colors border border-border-light">
+                            <span class="material-symbols-outlined text-text-primary" style="font-size: 20px;">account_circle</span>
+                            <span class="hidden sm:inline text-sm font-medium text-text-primary">@Session["CustomerName"]</span>
+                            <span class="material-symbols-outlined text-text-secondary text-sm">expand_more</span>
+                        </button>
+                        <!-- Dropdown -->
+                        <div class="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-lg border border-border-light opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                            <div class="p-4 border-b border-border-light">
+                                <p class="font-semibold text-text-primary">@Session["CustomerName"]</p>
+                                <p class="text-xs text-text-secondary">@Session["CustomerEmail"]</p>
+                            </div>
+                            <div class="py-2">
+                                <a href="@Url.Action("Profile", "CustomerAccount")" class="flex items-center gap-3 px-4 py-2 hover:bg-hover-light transition-colors">
+                                    <span class="material-symbols-outlined text-text-secondary">person</span>
+                                    <span class="text-sm">Tài khoản</span>
+                                </a>
+                                <a href="@Url.Action("Orders", "CustomerAccount")" class="flex items-center gap-3 px-4 py-2 hover:bg-hover-light transition-colors">
+                                    <span class="material-symbols-outlined text-text-secondary">receipt_long</span>
+                                    <span class="text-sm">Đơn hàng</span>
+                                </a>
+                                <a href="@Url.Action("Wishlist", "CustomerAccount")" class="flex items-center gap-3 px-4 py-2 hover:bg-hover-light transition-colors">
+                                    <span class="material-symbols-outlined text-text-secondary">favorite</span>
+                                    <span class="text-sm">Yêu thích</span>
+                                </a>
+                            </div>
+                            <div class="border-t border-border-light py-2">
+                                <a href="@Url.Action("Logout", "CustomerAccount")" class="flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-500 transition-colors">
+                                    <span class="material-symbols-outlined">logout</span>
+                                    <span class="text-sm">Đăng xuất</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- User not logged in -->
+                    <a href="@Url.Action("Login", "CustomerAccount")" class="hidden sm:flex items-center gap-2 h-10 px-4 rounded-full bg-sidebar-surface hover:bg-hover-light transition-colors border border-border-light">
+                        <span class="material-symbols-outlined text-text-secondary" style="font-size: 20px;">login</span>
+                        <span class="text-sm font-medium text-text-primary">Đăng nhập</span>
+                    </a>
+                }
+                
+                <a href="@Url.Action("Index", "Cart")" class="flex items-center gap-2 h-10 px-4 bg-primary rounded-full text-white hover:bg-[#0056b3] transition-colors font-bold text-sm shadow-[0_0_15px_rgba(0,123,255,0.3)] relative">
                     <span class="material-symbols-outlined" style="font-size: 20px;">shopping_cart</span>
-                    <span class="hidden sm:inline">Giỏ hàng (0)</span>
-                </button>
+                    <span class="hidden sm:inline">Giỏ hàng</span>
+                    <span id="cartBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">0</span>
+                </a>
             </div>
         </header>
         
@@ -173,13 +243,20 @@
                                 <h2 class="text-4xl md:text-5xl font-black text-white leading-tight">
                                     @featuredItem.Name
                                 </h2>
-                                <p class="text-gray-100 text-lg max-w-lg mb-4">
+                                <p class="text-gray-100 text-lg max-w-lg mb-2">
                                     @featuredItem.Description
                                 </p>
-                                <a href="@Url.Action("Detail", "Public", new { id = featuredItem.Id })" class="flex items-center gap-2 bg-white text-text-primary px-6 py-3 rounded-full font-bold text-base hover:bg-gray-100 transition-colors">
-                                    <span>Xem chi tiết</span>
-                                    <span class="material-symbols-outlined">arrow_forward</span>
-                                </a>
+                                <p class="text-2xl font-bold text-white mb-2">@featuredItem.Price.ToString("N0")đ</p>
+                                <div class="flex gap-3">
+                                    <button onclick="addToCart(@featuredItem.Id)" class="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full font-bold text-base hover:bg-[#0056b3] transition-colors">
+                                        <span class="material-symbols-outlined">add_shopping_cart</span>
+                                        Thêm vào giỏ
+                                    </button>
+                                    <a href="@Url.Action("Detail", "Public", new { id = featuredItem.Id })" class="flex items-center gap-2 bg-white text-text-primary px-6 py-3 rounded-full font-bold text-base hover:bg-gray-100 transition-colors">
+                                        <span>Xem chi tiết</span>
+                                        <span class="material-symbols-outlined">arrow_forward</span>
+                                    </a>
+                                </div>
                             </div>
                         </section>
                     }
@@ -199,32 +276,51 @@
                                         <span class="material-symbols-outlined text-primary text-3xl">@categoryIcon</span>
                                         <h2 class="text-2xl font-bold text-text-primary">@category</h2>
                                     </div>
-                                    <a class="text-text-secondary hover:text-primary text-sm font-medium flex items-center gap-1" href="#@categoryId">
-                                        Xem tất cả <span class="material-symbols-outlined text-lg">chevron_right</span>
-                                    </a>
+                                    <span class="text-text-secondary text-sm">@categoryItems.Count món</span>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     @foreach (var item in categoryItems)
                                     {
                                         string imageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl));
-                                        string formattedPrice = string.Format("{0:N0}k", item.Price / 1000);
+                                        string formattedPrice = item.Price.ToString("N0") + "đ";
                                         
-                                        <div class="group bg-sidebar-surface rounded-[2rem] p-4 hover:shadow-lg transition-all duration-300 border border-border-light hover:border-primary/50">
+                                        <div class="menu-item-card group bg-sidebar-surface rounded-[2rem] p-4 hover:shadow-lg transition-all duration-300 border border-border-light hover:border-primary/50" data-name="@item.Name.ToLower()" data-desc="@(item.Description?.ToLower() ?? "")">
                                             <div class="aspect-[4/3] rounded-[1.5rem] bg-cover bg-center mb-4 overflow-hidden relative" style='background-image: url("@imageUrl");'>
-                                                <button class="absolute top-4 right-4 bg-black/30 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary hover:text-white">
+                                                <button onclick="toggleWishlist(@item.Id, this)" class="absolute top-4 right-4 bg-black/30 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary hover:text-white wishlist-btn">
                                                     <span class="material-symbols-outlined text-xl">favorite</span>
                                                 </button>
+                                                @if (!item.IsAvailable)
+                                                {
+                                                    <div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                        <span class="bg-red-500 text-white px-4 py-2 rounded-full font-bold">Hết món</span>
+                                                    </div>
+                                                }
                                             </div>
                                             <div class="px-2">
                                                 <div class="flex justify-between items-start mb-2">
                                                     <h3 class="text-xl font-bold text-text-primary group-hover:text-primary transition-colors">@item.Name</h3>
-                                                    <span class="text-primary font-bold text-lg">@formattedPrice</span>
+                                                    <span class="text-primary font-bold text-lg whitespace-nowrap ml-2">@formattedPrice</span>
                                                 </div>
                                                 <p class="text-text-secondary text-sm mb-4 line-clamp-2">@(item.Description ?? "Món ăn ngon đặc biệt")</p>
-                                                <a href="@Url.Action("Detail", "Public", new { id = item.Id })" class="w-full h-10 rounded-full border border-border-light hover:bg-primary hover:text-white hover:border-primary text-text-primary font-bold text-sm transition-all flex items-center justify-center gap-2">
-                                                    <span class="material-symbols-outlined text-lg">visibility</span>
-                                                    Xem chi tiết
-                                                </a>
+                                                <div class="flex gap-2">
+                                                    @if (item.IsAvailable)
+                                                    {
+                                                        <button onclick="addToCart(@item.Id)" class="flex-1 h-10 rounded-full bg-primary text-white font-bold text-sm transition-all flex items-center justify-center gap-2 hover:bg-[#0056b3]">
+                                                            <span class="material-symbols-outlined text-lg">add_shopping_cart</span>
+                                                            Thêm
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button disabled class="flex-1 h-10 rounded-full bg-gray-300 text-gray-500 font-bold text-sm flex items-center justify-center gap-2 cursor-not-allowed">
+                                                            <span class="material-symbols-outlined text-lg">block</span>
+                                                            Hết món
+                                                        </button>
+                                                    }
+                                                    <a href="@Url.Action("Detail", "Public", new { id = item.Id })" class="h-10 w-10 rounded-full border border-border-light hover:bg-primary hover:text-white hover:border-primary text-text-primary transition-all flex items-center justify-center">
+                                                        <span class="material-symbols-outlined text-lg">visibility</span>
+                                                    </a>
+                                                </div>
                                             </div>
                                         </div>
                                     }
@@ -247,6 +343,9 @@
         </div>
     </main>
 
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
     <!-- Chatbot Toggle Button -->
     <button class="chatbot-toggle">
         <i class="fas fa-comment-dots"></i>
@@ -255,7 +354,6 @@
 
     <!-- Chatbot Container -->
     <div class="chatbot-container">
-        <!-- Header -->
         <div class="chatbot-header">
             <div class="chatbot-header-info">
                 <div class="chatbot-title">
@@ -270,13 +368,7 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-
-        <!-- Messages Area -->
-        <div class="chatbot-messages">
-            <!-- Messages will be added here dynamically -->
-        </div>
-
-        <!-- Input Area -->
+        <div class="chatbot-messages"></div>
         <div class="chatbot-input">
             <input type="text" id="chatbot-input" placeholder="Nhập tin nhắn của bạn..." autocomplete="off">
             <button class="chatbot-send">
@@ -288,14 +380,89 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="@Url.Content("~/Scripts/chatbot.js")"></script>
     <script>
+        // Load cart count on page load
+        $(document).ready(function() {
+            updateCartBadge();
+        });
+
+        // Add to cart function
+        function addToCart(menuItemId) {
+            $.post('@Url.Action("AddToCart", "Cart")', { menuItemId: menuItemId, quantity: 1 })
+                .done(function(response) {
+                    if (response.success) {
+                        showToast(response.message);
+                        updateCartBadge();
+                    } else {
+                        showToast(response.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    showToast('Có lỗi xảy ra!', 'error');
+                });
+        }
+
+        // Update cart badge
+        function updateCartBadge() {
+            $.get('@Url.Action("GetCartCount", "Cart")')
+                .done(function(response) {
+                    var badge = $('#cartBadge');
+                    badge.text(response.count);
+                    if (response.count > 0) {
+                        badge.show();
+                    } else {
+                        badge.hide();
+                    }
+                });
+        }
+
+        // Toggle wishlist
+        function toggleWishlist(itemId, btn) {
+            $.post('@Url.Action("ToggleWishlist", "CustomerAccount")', { menuItemId: itemId })
+                .done(function(response) {
+                    if (response.success) {
+                        var icon = $(btn).find('.material-symbols-outlined');
+                        if (response.added) {
+                            icon.text('favorite');
+                            icon.css('color', '#e74c3c');
+                        } else {
+                            icon.text('favorite_border');
+                            icon.css('color', '');
+                        }
+                        showToast(response.message);
+                    } else if (response.needLogin) {
+                        showToast('Vui lòng đăng nhập để sử dụng tính năng này!', 'error');
+                        setTimeout(function() {
+                            window.location.href = '@Url.Action("Login", "CustomerAccount")';
+                        }, 1500);
+                    } else {
+                        showToast(response.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    showToast('Có lỗi xảy ra!', 'error');
+                });
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            var bgColor = type === 'success' ? '#28a745' : '#dc3545';
+            var toast = $('<div class="toast-notification" style="background:' + bgColor + '">' + 
+                          '<span class="material-symbols-outlined" style="vertical-align:middle;margin-right:8px;">' + 
+                          (type === 'success' ? 'check_circle' : 'error') + '</span>' + message + '</div>');
+            $('#toastContainer').append(toast);
+            setTimeout(function() {
+                toast.fadeOut(300, function() { $(this).remove(); });
+            }, 3000);
+        }
+
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase();
-            const menuItems = document.querySelectorAll('.group.bg-sidebar-surface');
+            const menuItems = document.querySelectorAll('.menu-item-card');
             
             menuItems.forEach(function(item) {
-                const itemName = item.querySelector('h3').textContent.toLowerCase();
-                const itemDesc = item.querySelector('p').textContent.toLowerCase();
+                const itemName = item.dataset.name;
+                const itemDesc = item.dataset.desc;
                 
                 if (itemName.includes(searchTerm) || itemDesc.includes(searchTerm)) {
                     item.style.display = 'block';
