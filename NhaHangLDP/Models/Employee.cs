@@ -28,6 +28,14 @@ namespace NhaHangLDP.Models
             this.KitchenOrderTicket = new HashSet<KitchenOrderTicket>();
             this.Notification = new HashSet<Notification>();
             this.QROrder = new HashSet<QROrder>();
+            this.Attendance = new HashSet<Attendance>();
+            this.EmployeeContract = new HashSet<EmployeeContract>();
+            this.EmployeeSchedule = new HashSet<EmployeeSchedule>();
+            this.LeaveRequest = new HashSet<LeaveRequest>();
+            this.LeaveRequest1 = new HashSet<LeaveRequest>();
+            this.Payroll = new HashSet<Payroll>();
+            this.PerformanceReview = new HashSet<PerformanceReview>();
+            this.PerformanceReview1 = new HashSet<PerformanceReview>();
         }
     
         public int Id { get; set; }
@@ -63,5 +71,21 @@ namespace NhaHangLDP.Models
         public virtual ICollection<Notification> Notification { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<QROrder> QROrder { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Attendance> Attendance { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<EmployeeContract> EmployeeContract { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<EmployeeSchedule> EmployeeSchedule { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<LeaveRequest> LeaveRequest { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<LeaveRequest> LeaveRequest1 { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Payroll> Payroll { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<PerformanceReview> PerformanceReview { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<PerformanceReview> PerformanceReview1 { get; set; }
     }
 }

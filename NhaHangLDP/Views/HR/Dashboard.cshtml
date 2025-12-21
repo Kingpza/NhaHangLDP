@@ -1,0 +1,726 @@
+﻿@model NhaHangLDP.Models.HRDashboardViewModel
+@{
+    ViewBag.Title = "HR Dashboard";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .hr-dashboard {
+            padding: 20px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+        }
+
+        .stat-card.employees::before { background: linear-gradient(180deg, #3498db, #2980b9); }
+        .stat-card.attendance::before { background: linear-gradient(180deg, #2ecc71, #27ae60); }
+        .stat-card.leave::before { background: linear-gradient(180deg, #f39c12, #e67e22); }
+        .stat-card.late::before { background: linear-gradient(180deg, #e74c3c, #c0392b); }
+
+        .stat-card .stat-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 2.5rem;
+            opacity: 0.15;
+        }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-change {
+            font-size: 0.85rem;
+        }
+
+        .stat-card .stat-change.positive { color: #2ecc71; }
+        .stat-card .stat-change.negative { color: #e74c3c; }
+
+        .dashboard-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .section-header h4 {
+            margin: 0;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .attendance-table {
+            width: 100%;
+        }
+
+        .attendance-table th {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+        }
+
+        .attendance-table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .attendance-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.success { background: #d4edda; color: #155724; }
+        .status-badge.warning { background: #fff3cd; color: #856404; }
+        .status-badge.danger { background: #f8d7da; color: #721c24; }
+        .status-badge.secondary { background: #e2e3e5; color: #383d41; }
+        .status-badge.info { background: #d1ecf1; color: #0c5460; }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-action-btn {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        .leave-request-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+
+        .leave-request-item:hover {
+            background: #e9ecef;
+        }
+
+        .leave-info h5 {
+            margin: 0 0 5px 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .leave-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .leave-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .top-performer {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+
+        .top-performer .rank {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 15px;
+        }
+
+        .top-performer .rank.gold { background: #f39c12; color: white; }
+        .top-performer .rank.silver { background: #95a5a6; color: white; }
+        .top-performer .rank.bronze { background: #cd6155; color: white; }
+        .top-performer .rank.other { background: #bdc3c7; color: white; }
+
+        .top-performer .info h5 {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+
+        .top-performer .info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .top-performer .score {
+            margin-left: auto;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2ecc71;
+        }
+
+        .donut-chart-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .chart-legend {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .chart-legend li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .chart-legend .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+    </style>
+}
+
+<div class="hr-dashboard">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-users-cog me-2"></i>HR Dashboard</h2>
+            <p class="text-muted mb-0">Quản lý nhân sự toàn diện</p>
+        </div>
+        <div class="quick-actions">
+            <a href="@Url.Action("Attendance")" class="quick-action-btn btn btn-primary">
+                <i class="fas fa-clock"></i> Chấm công
+            </a>
+            <a href="@Url.Action("Payroll")" class="quick-action-btn btn btn-success">
+                <i class="fas fa-money-bill-wave"></i> Bảng lương
+            </a>
+            <a href="@Url.Action("LeaveManagement")" class="quick-action-btn btn btn-warning">
+                <i class="fas fa-calendar-minus"></i> Nghỉ phép
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card employees">
+            <i class="fas fa-users stat-icon"></i>
+            <h3>Tổng nhân viên</h3>
+            <div class="stat-value">@Model.TotalEmployees</div>
+            <div class="stat-change positive">
+                <i class="fas fa-user-check me-1"></i>@Model.ActiveEmployees đang hoạt động
+            </div>
+        </div>
+
+        <div class="stat-card attendance">
+            <i class="fas fa-check-circle stat-icon"></i>
+            <h3>Tỷ lệ chuyên cần</h3>
+            <div class="stat-value">@Model.AttendanceRate.ToString("N1")%</div>
+            <div class="stat-change positive">
+                <i class="fas fa-chart-line me-1"></i>Tháng này
+            </div>
+        </div>
+
+        <div class="stat-card leave">
+            <i class="fas fa-calendar-alt stat-icon"></i>
+            <h3>Đơn nghỉ chờ duyệt</h3>
+            <div class="stat-value">@Model.PendingLeaveRequests</div>
+            <div class="stat-change @(Model.PendingLeaveRequests > 0 ? "negative" : "positive")">
+                @if (Model.PendingLeaveRequests > 0)
+                {
+                    <i class="fas fa-exclamation-circle me-1"></i>@:Cần xử lý
+                }
+                else
+                {
+                    <i class="fas fa-check me-1"></i>@:Đã xử lý hết
+                }
+            </div>
+        </div>
+
+        <div class="stat-card late">
+            <i class="fas fa-user-clock stat-icon"></i>
+            <h3>Đi trễ hôm nay</h3>
+            <div class="stat-value">@Model.TodayLate</div>
+            <div class="stat-change @(Model.TodayLate > 0 ? "negative" : "positive")">
+                <i class="fas fa-user-times me-1"></i>@Model.TodayAbsent vắng mặt
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Today Attendance -->
+        <div class="col-lg-8">
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-clipboard-list me-2"></i>Chấm công hôm nay</h4>
+                    <a href="@Url.Action("AttendanceReport")" class="btn btn-sm btn-outline-primary">
+                        Xem báo cáo <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+
+                @if (Model.TodayAttendance != null && Model.TodayAttendance.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>Nhân viên</th>
+                                    <th>Chức vụ</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Giờ làm</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.TodayAttendance.Take(10))
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.EmployeeName</strong>
+                                        </td>
+                                        <td>@item.RoleName</td>
+                                        <td>
+                                            @if (item.CheckInTime.HasValue)
+                                            {
+                                                <span class="text-success">@item.CheckInTime.Value.ToString("HH:mm")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">--:--</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (item.CheckOutTime.HasValue)
+                                            {
+                                                <span class="text-danger">@item.CheckOutTime.Value.ToString("HH:mm")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">--:--</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (item.WorkHours.HasValue)
+                                            {
+                                                <span>@item.WorkHours.Value.ToString("N1")h</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="status-badge @item.StatusClass">
+                                                @switch (item.Status)
+                                                {
+                                                    case "OnTime":
+                                                        @:Đúng giờ
+                                                        break;
+                                                    case "Late":
+                                                        @:Đi trễ
+                                                        break;
+                                                    case "EarlyLeave":
+                                                        @:Về sớm
+                                                        break;
+                                                    case "NotCheckedIn":
+                                                        @:Chưa check-in
+                                                        break;
+                                                    default:
+                                                        @item.Status
+                                                        break;
+                                                }
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-day"></i>
+                        <p>Chưa có dữ liệu chấm công hôm nay</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Attendance Trend Chart -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-chart-line me-2"></i>Xu hướng chuyên cần (7 ngày)</h4>
+                </div>
+                <div class="chart-container">
+                    <canvas id="attendanceTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-lg-4">
+            <!-- Pending Leave Requests -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-calendar-minus me-2"></i>Đơn nghỉ chờ duyệt</h4>
+                </div>
+
+                @if (Model.RecentLeaveRequests != null && Model.RecentLeaveRequests.Any(l => l.Status == "Pending"))
+                {
+                    foreach (var leave in Model.RecentLeaveRequests.Where(l => l.Status == "Pending").Take(5))
+                    {
+                        <div class="leave-request-item">
+                            <div class="leave-info">
+                                <h5>@leave.EmployeeName</h5>
+                                <p>
+                                    <i class="fas fa-calendar me-1"></i>
+                                    @leave.StartDate.ToString("dd/MM") - @leave.EndDate.ToString("dd/MM")
+                                    (@leave.Days ngày)
+                                </p>
+                                <p><i class="fas fa-tag me-1"></i>@leave.LeaveType</p>
+                            </div>
+                            <div class="leave-actions">
+                                <button class="btn btn-sm btn-success" onclick="approveLeave(@leave.Id)">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="rejectLeave(@leave.Id)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Không có đơn chờ duyệt</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Employee by Role -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-user-tag me-2"></i>Nhân viên theo vai trò</h4>
+                </div>
+                <div class="donut-chart-container">
+                    <canvas id="employeesByRoleChart" width="150" height="150"></canvas>
+                    <ul class="chart-legend">
+                        @if (Model.EmployeesByRole != null)
+                        {
+                            foreach (var role in Model.EmployeesByRole)
+                            {
+                                <li>
+                                    <span class="color-dot" style="background: @role.Color"></span>
+                                    @role.RoleName: <strong>@role.Count</strong>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Top Performers -->
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h4><i class="fas fa-trophy me-2"></i>Nhân viên xuất sắc</h4>
+                </div>
+
+                @if (Model.TopPerformers != null && Model.TopPerformers.Any())
+                {
+                    var index = 0;
+                    foreach (var performer in Model.TopPerformers)
+                    {
+                        index++;
+                        var rankClass = index == 1 ? "gold" : (index == 2 ? "silver" : (index == 3 ? "bronze" : "other"));
+                        <div class="top-performer">
+                            <div class="rank @rankClass">@index</div>
+                            <div class="info">
+                                <h5>@performer.EmployeeName</h5>
+                                <p>@performer.RoleName</p>
+                            </div>
+                            <div class="score">
+                                <i class="fas fa-star text-warning me-1"></i>
+                                @performer.OverallScore.ToString("N1")
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-medal"></i>
+                        <p>Chưa có dữ liệu đánh giá</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Attendance Trend Chart
+        var trendData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.AttendanceTrend ?? new List<NhaHangLDP.Models.AttendanceTrendItem>()));
+
+        if (trendData.length > 0) {
+            var ctx = document.getElementById('attendanceTrendChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: trendData.map(d => d.Label),
+                    datasets: [
+                        {
+                            label: 'Có mặt',
+                            data: trendData.map(d => d.Present),
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Đi trễ',
+                            data: trendData.map(d => d.Late),
+                            borderColor: '#f39c12',
+                            backgroundColor: 'rgba(243, 156, 18, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Vắng mặt',
+                            data: trendData.map(d => d.Absent),
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Employee by Role Donut Chart
+        var roleData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.EmployeesByRole ?? new List<NhaHangLDP.Models.EmployeeByRoleItem>()));
+
+        if (roleData.length > 0) {
+            var ctx2 = document.getElementById('employeesByRoleChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: roleData.map(d => d.RoleName),
+                    datasets: [{
+                        data: roleData.map(d => d.Count),
+                        backgroundColor: roleData.map(d => d.Color),
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+
+        // Approve Leave Request
+        function approveLeave(requestId) {
+            Swal.fire({
+                title: 'Xác nhận phê duyệt?',
+                text: 'Bạn có chắc muốn phê duyệt đơn xin nghỉ này?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Phê duyệt',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("ApproveLeaveRequest", "HR")', { requestId: requestId }, function (response) {
+                        if (response.Success) {
+                            showSuccess('Thành công', response.Message);
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showError('Lỗi', response.Message);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Reject Leave Request
+        function rejectLeave(requestId) {
+            Swal.fire({
+                title: 'Từ chối đơn xin nghỉ?',
+                input: 'textarea',
+                inputLabel: 'Lý do từ chối',
+                inputPlaceholder: 'Nhập lý do từ chối...',
+                showCancelButton: true,
+                confirmButtonText: 'Từ chối',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#e74c3c'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("RejectLeaveRequest", "HR")', {
+                        requestId: requestId,
+                        reason: result.value
+                    }, function (response) {
+                        if (response.Success) {
+                            showSuccess('Thành công', response.Message);
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showError('Lỗi', response.Message);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Create Sample Data
+        function createSampleData() {
+            Swal.fire({
+                title: 'Tạo dữ liệu mẫu?',
+                text: 'Hệ thống sẽ tạo dữ liệu mẫu cho HR (ca làm, hợp đồng, chấm công...)',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Tạo dữ liệu',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showLoading('Đang tạo dữ liệu...');
+                    $.post('@Url.Action("CreateSampleData", "HR")', function (response) {
+                        closeLoading();
+                        if (response.success) {
+                            showSuccess('Thành công', response.message);
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            showError('Lỗi', response.message);
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

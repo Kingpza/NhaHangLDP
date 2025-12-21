@@ -1,0 +1,230 @@
+﻿@model List<NhaHangLDP.Models.EmployeeContract>
+@{
+    ViewBag.Title = "Hợp đồng lao động";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .contracts-page {
+            padding: 20px 0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .contracts-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .contract-card {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .contract-card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .contract-card.active {
+            border-left: 4px solid #2ecc71;
+        }
+
+        .contract-card.expired {
+            border-left: 4px solid #f39c12;
+            opacity: 0.8;
+        }
+
+        .contract-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .employee-info h5 {
+            margin: 0 0 5px 0;
+            font-weight: 600;
+        }
+
+        .contract-type-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .contract-type-badge.fulltime { background: #d4edda; color: #155724; }
+        .contract-type-badge.parttime { background: #d1ecf1; color: #0c5460; }
+        .contract-type-badge.probation { background: #fff3cd; color: #856404; }
+        .contract-type-badge.freelance { background: #e2e3e5; color: #383d41; }
+
+        .contract-details {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .contract-detail-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .contract-detail-item .value {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .contract-detail-item .label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.success { background: #d4edda; color: #155724; }
+        .status-badge.warning { background: #fff3cd; color: #856404; }
+        .status-badge.danger { background: #f8d7da; color: #721c24; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+    </style>
+}
+
+<div class="contracts-page">
+    <div class="page-header">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-file-contract me-2"></i>Hợp đồng lao động</h2>
+            <p class="text-muted mb-0">Quản lý hợp đồng nhân viên</p>
+        </div>
+        <a href="@Url.Action("CreateContract")" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Tạo hợp đồng
+        </a>
+    </div>
+
+    <div class="contracts-section">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var contract in Model)
+            {
+                var cardClass = contract.Status == "Active" ? "active" : "expired";
+                var typeClass = contract.ContractType?.ToLower() ?? "fulltime";
+                
+                string typeName;
+                switch (contract.ContractType)
+                {
+                    case "FullTime": typeName = "Toàn thời gian"; break;
+                    case "PartTime": typeName = "Bán thời gian"; break;
+                    case "Probation": typeName = "Thử việc"; break;
+                    case "Freelance": typeName = "Tự do"; break;
+                    default: typeName = contract.ContractType ?? "N/A"; break;
+                }
+
+                // Lấy tên nhân viên an toàn
+                var employeeName = "N/A";
+                if (contract.Employee != null)
+                {
+                    employeeName = contract.Employee.FullName ?? "N/A";
+                }
+
+                <div class="contract-card @cardClass">
+                    <div class="contract-header">
+                        <div class="employee-info">
+                            <h5><i class="fas fa-user me-2"></i>@employeeName</h5>
+                            <p class="text-muted mb-0">
+                                <i class="fas fa-calendar me-1"></i>
+                                @contract.StartDate.ToString("dd/MM/yyyy")
+                                @if (contract.EndDate.HasValue)
+                                {
+                                    @: - @contract.EndDate.Value.ToString("dd/MM/yyyy")
+                                }
+                                else
+                                {
+                                    @: - Không thời hạn
+                                }
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <span class="contract-type-badge @typeClass">@typeName</span>
+                            @if (contract.Status == "Active")
+                            {
+                                <span class="status-badge success">Đang hiệu lực</span>
+                            }
+                            else if (contract.Status == "Expired")
+                            {
+                                <span class="status-badge warning">Hết hạn</span>
+                            }
+                            else
+                            {
+                                <span class="status-badge danger">@contract.Status</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="contract-details">
+                        <div class="contract-detail-item">
+                            <div class="value text-primary">@contract.BaseSalary.ToString("N0")đ</div>
+                            <div class="label">Lương cơ bản</div>
+                        </div>
+                        <div class="contract-detail-item">
+                            <div class="value text-success">@((contract.Allowance ?? 0).ToString("N0"))đ</div>
+                            <div class="label">Phụ cấp</div>
+                        </div>
+                        <div class="contract-detail-item">
+                            <div class="value text-info">@((contract.BaseSalary + (contract.Allowance ?? 0)).ToString("N0"))đ</div>
+                            <div class="label">Tổng thu nhập</div>
+                        </div>
+                        <div class="contract-detail-item">
+                            <div class="value">@contract.CreatedDate.ToString("dd/MM/yyyy")</div>
+                            <div class="label">Ngày tạo</div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(contract.Notes))
+                    {
+                        <div class="mt-3 pt-3 border-top">
+                            <small class="text-muted"><i class="fas fa-sticky-note me-1"></i>@contract.Notes</small>
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-file-contract"></i>
+                <h5>Chưa có hợp đồng nào</h5>
+                <p class="mb-4">Nhấn "Tạo hợp đồng" để thêm hợp đồng mới cho nhân viên</p>
+                <a href="@Url.Action("CreateContract")" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Tạo hợp đồng đầu tiên
+                </a>
+            </div>
+        }
+    </div>
+</div>

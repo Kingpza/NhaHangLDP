@@ -1,0 +1,639 @@
+﻿@model List<NhaHangLDP.Models.AttendanceSummaryItem>
+@{
+    ViewBag.Title = "Chấm công";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    var employees = ViewBag.Employees as List<NhaHangLDP.Models.Employee> ?? new List<NhaHangLDP.Models.Employee>();
+}
+
+@section styles {
+    <style>
+        .attendance-page {
+            padding: 20px 0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .time-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .time-display .time {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .time-display .date {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .attendance-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .section-header h4 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .quick-checkin-form {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .form-group-custom {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group-custom label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .form-group-custom select,
+        .form-group-custom input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group-custom select:focus,
+        .form-group-custom input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+
+        .btn-checkin {
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-checkin.check-in {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+        }
+
+        .btn-checkin.check-out {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+
+        .btn-checkin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .attendance-table {
+            width: 100%;
+        }
+
+        .attendance-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .attendance-table td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .attendance-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .employee-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .employee-name {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .employee-role {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .time-badge {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .time-badge.check-in {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .time-badge.check-out {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .time-badge.pending {
+            background: #e2e3e5;
+            color: #6c757d;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.success { background: #d4edda; color: #155724; }
+        .status-badge.warning { background: #fff3cd; color: #856404; }
+        .status-badge.danger { background: #f8d7da; color: #721c24; }
+        .status-badge.secondary { background: #e2e3e5; color: #383d41; }
+        .status-badge.info { background: #d1ecf1; color: #0c5460; }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-card .label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .summary-card.present .value { color: #2ecc71; }
+        .summary-card.late .value { color: #f39c12; }
+        .summary-card.absent .value { color: #e74c3c; }
+        .summary-card.total .value { color: #3498db; }
+
+        @@media (max-width: 768px) {
+            .summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+}
+
+<div class="attendance-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-clock me-2"></i>Chấm công</h2>
+            <p class="text-muted mb-0">Quản lý chấm công nhân viên</p>
+        </div>
+        <div class="time-display">
+            <div class="time" id="currentTime">@DateTime.Now.ToString("HH:mm:ss")</div>
+            <div class="date" id="currentDate">@DateTime.Now.ToString("dddd, dd MMMM, yyyy", new System.Globalization.CultureInfo("vi-VN"))</div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div class="summary-card present">
+            <div class="value" id="presentCount">@Model.Count(m => m.CheckInTime.HasValue)</div>
+            <div class="label"><i class="fas fa-user-check me-1"></i>Có mặt</div>
+        </div>
+        <div class="summary-card late">
+            <div class="value" id="lateCount">@Model.Count(m => m.Status == "Late")</div>
+            <div class="label"><i class="fas fa-user-clock me-1"></i>Đi trễ</div>
+        </div>
+        <div class="summary-card absent">
+            <div class="value" id="absentCount">@Model.Count(m => !m.CheckInTime.HasValue)</div>
+            <div class="label"><i class="fas fa-user-times me-1"></i>Vắng mặt</div>
+        </div>
+        <div class="summary-card total">
+            <div class="value">@employees.Count</div>
+            <div class="label"><i class="fas fa-users me-1"></i>Tổng NV</div>
+        </div>
+    </div>
+
+    <!-- Quick Check-in/out -->
+    <div class="attendance-section">
+        <div class="section-header">
+            <h4><i class="fas fa-fingerprint me-2"></i>Chấm công nhanh</h4>
+        </div>
+
+        <div class="quick-checkin-form">
+            <div class="form-group-custom">
+                <label><i class="fas fa-user me-2"></i>Chọn nhân viên</label>
+                <select id="employeeSelect" class="form-select">
+                    <option value="">-- Chọn nhân viên --</option>
+                    @foreach (var emp in employees)
+                    {
+                        var roleName = emp.Role != null ? emp.Role.RoleName : "N/A";
+                        <option value="@emp.Id">@emp.FullName - @roleName</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group-custom">
+                <label><i class="fas fa-sticky-note me-2"></i>Ghi chú (tùy chọn)</label>
+                <input type="text" id="attendanceNote" class="form-control" placeholder="Nhập ghi chú...">
+            </div>
+            <div>
+                <button class="btn-checkin check-in" onclick="doCheckIn()">
+                    <i class="fas fa-sign-in-alt me-2"></i>Check-in
+                </button>
+            </div>
+            <div>
+                <button class="btn-checkin check-out" onclick="doCheckOut()">
+                    <i class="fas fa-sign-out-alt me-2"></i>Check-out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance List -->
+    <div class="attendance-section">
+        <div class="section-header">
+            <h4><i class="fas fa-list me-2"></i>Danh sách chấm công hôm nay</h4>
+            <div>
+                <a href="@Url.Action("AttendanceReport")" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-chart-bar me-1"></i>Báo cáo
+                </a>
+                <button class="btn btn-outline-secondary btn-sm" onclick="refreshAttendance()">
+                    <i class="fas fa-sync-alt me-1"></i>Làm mới
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="attendance-table">
+                <thead>
+                    <tr>
+                        <th>Nhân viên</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Giờ làm</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                    @foreach (var item in Model)
+                    {
+                        <tr data-employee-id="@item.EmployeeId">
+                            <td>
+                                <div class="employee-info">
+                                    <div class="employee-avatar">
+                                        @item.EmployeeName.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <div>
+                                        <div class="employee-name">@item.EmployeeName</div>
+                                        <div class="employee-role">@item.RoleName</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @if (item.CheckInTime.HasValue)
+                                {
+                                    <span class="time-badge check-in">
+                                        <i class="fas fa-arrow-right me-1"></i>@item.CheckInTime.Value.ToString("HH:mm")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="time-badge pending">--:--</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.CheckOutTime.HasValue)
+                                {
+                                    <span class="time-badge check-out">
+                                        <i class="fas fa-arrow-left me-1"></i>@item.CheckOutTime.Value.ToString("HH:mm")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="time-badge pending">--:--</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.WorkHours.HasValue)
+                                {
+                                    <strong>@item.WorkHours.Value.ToString("N1") giờ</strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="status-badge @item.StatusClass">
+                                    @switch (item.Status)
+                                    {
+                                        case "OnTime":
+                                            <i class="fas fa-check-circle me-1"></i>@:Đúng giờ
+                                            break;
+                                        case "Late":
+                                            <i class="fas fa-exclamation-circle me-1"></i>@:Đi trễ
+                                            break;
+                                        case "EarlyLeave":
+                                            <i class="fas fa-clock me-1"></i>@:Về sớm
+                                            break;
+                                        case "NotCheckedIn":
+                                            <i class="fas fa-minus-circle me-1"></i>@:Chưa check-in
+                                            break;
+                                        default:
+                                            @item.Status
+                                            break;
+                                    }
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    @if (!item.CheckInTime.HasValue)
+                                    {
+                                        <button class="action-btn btn btn-success btn-sm"
+                                                onclick="quickCheckIn(@item.EmployeeId)">
+                                            <i class="fas fa-sign-in-alt"></i>
+                                        </button>
+                                    }
+                                    else if (!item.CheckOutTime.HasValue)
+                                    {
+                                        <button class="action-btn btn btn-danger btn-sm"
+                                                onclick="quickCheckOut(@item.EmployeeId)">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                        </button>
+                                    }
+                                    <button class="action-btn btn btn-outline-secondary btn-sm"
+                                            onclick="openManualAttendance(@item.EmployeeId, '@item.EmployeeName')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Manual Attendance Modal -->
+<div class="modal fade" id="manualAttendanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Chấm công thủ công</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="manualEmployeeId">
+                <div class="mb-3">
+                    <label class="form-label">Nhân viên</label>
+                    <input type="text" id="manualEmployeeName" class="form-control" readonly>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Giờ Check-in</label>
+                        <input type="datetime-local" id="manualCheckIn" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Giờ Check-out</label>
+                        <input type="datetime-local" id="manualCheckOut" class="form-control">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Trạng thái</label>
+                    <select id="manualStatus" class="form-select">
+                        <option value="OnTime">Đúng giờ</option>
+                        <option value="Late">Đi trễ</option>
+                        <option value="EarlyLeave">Về sớm</option>
+                        <option value="Absent">Vắng mặt</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea id="manualNote" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="saveManualAttendance()">
+                    <i class="fas fa-save me-1"></i>Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Update clock
+        function updateClock() {
+            var now = new Date();
+            document.getElementById('currentTime').textContent =
+                now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('currentDate').textContent =
+                now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Check-in
+        function doCheckIn() {
+            var employeeId = $('#employeeSelect').val();
+            var note = $('#attendanceNote').val();
+
+            if (!employeeId) {
+                showWarning('Chưa chọn', 'Vui lòng chọn nhân viên!');
+                return;
+            }
+
+            showLoading('Đang check-in...');
+            $.post('@Url.Action("CheckIn", "HR")', { employeeId: employeeId, note: note }, function (response) {
+                closeLoading();
+                if (response.Success) {
+                    showSuccess('Check-in thành công!', response.Message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showError('Lỗi', response.Message);
+                }
+            });
+        }
+
+        // Check-out
+        function doCheckOut() {
+            var employeeId = $('#employeeSelect').val();
+            var note = $('#attendanceNote').val();
+
+            if (!employeeId) {
+                showWarning('Chưa chọn', 'Vui lòng chọn nhân viên!');
+                return;
+            }
+
+            showLoading('Đang check-out...');
+            $.post('@Url.Action("CheckOut", "HR")', { employeeId: employeeId, note: note }, function (response) {
+                closeLoading();
+                if (response.Success) {
+                    showSuccess('Check-out thành công!', response.Message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showError('Lỗi', response.Message);
+                }
+            });
+        }
+
+        // Quick check-in from table
+        function quickCheckIn(employeeId) {
+            showLoading('Đang check-in...');
+            $.post('@Url.Action("CheckIn", "HR")', { employeeId: employeeId }, function (response) {
+                closeLoading();
+                if (response.Success) {
+                    showSuccess('Thành công', response.Message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showError('Lỗi', response.Message);
+                }
+            });
+        }
+
+        // Quick check-out from table
+        function quickCheckOut(employeeId) {
+            showLoading('Đang check-out...');
+            $.post('@Url.Action("CheckOut", "HR")', { employeeId: employeeId }, function (response) {
+                closeLoading();
+                if (response.Success) {
+                    showSuccess('Thành công', response.Message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showError('Lỗi', response.Message);
+                }
+            });
+        }
+
+        // Open manual attendance modal
+        function openManualAttendance(employeeId, employeeName) {
+            $('#manualEmployeeId').val(employeeId);
+            $('#manualEmployeeName').val(employeeName);
+
+            var now = new Date();
+            var today = now.toISOString().slice(0, 10);
+            $('#manualCheckIn').val(today + 'T08:00');
+            $('#manualCheckOut').val(today + 'T17:00');
+
+            $('#manualAttendanceModal').modal('show');
+        }
+
+        // Save manual attendance
+        function saveManualAttendance() {
+            var data = {
+                employeeId: $('#manualEmployeeId').val(),
+                checkIn: $('#manualCheckIn').val(),
+                checkOut: $('#manualCheckOut').val() || null,
+                status: $('#manualStatus').val(),
+                note: $('#manualNote').val()
+            };
+
+            showLoading('Đang lưu...');
+            $.post('@Url.Action("ManualAttendance", "HR")', data, function (response) {
+                closeLoading();
+                if (response.Success) {
+                    $('#manualAttendanceModal').modal('hide');
+                    showSuccess('Thành công', response.Message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showError('Lỗi', response.Message);
+                }
+            });
+        }
+
+        // Refresh attendance list
+        function refreshAttendance() {
+            location.reload();
+        }
+    </script>
+}

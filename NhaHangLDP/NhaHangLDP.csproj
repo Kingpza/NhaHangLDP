@@ -134,6 +134,7 @@
     <Compile Include="Controllers\CashierController.cs" />
     <Compile Include="Controllers\EmailController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\HRController.cs" />
     <Compile Include="Controllers\KitchenController.cs" />
     <Compile Include="Controllers\ManagementController.cs" />
     <Compile Include="Controllers\PromotionController.cs" />
@@ -155,6 +156,9 @@
     </Compile>
     <Compile Include="Models\AdvancedReportsModels.cs" />
     <Compile Include="Models\AppSetting.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Attendance.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Bill.cs">
@@ -186,6 +190,13 @@
     <Compile Include="Models\Employee.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\EmployeeContract.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EmployeeSchedule.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\HRModels.cs" />
     <Compile Include="Models\Ingredient.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -201,6 +212,9 @@
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\KitchenViewModels.cs" />
+    <Compile Include="Models\LeaveRequest.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\ManagementDashboardViewModel.cs" />
     <Compile Include="Models\MenuCombo.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
@@ -239,6 +253,12 @@
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\OrderDetail.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Payroll.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PerformanceReview.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\PriceHistory.cs">
@@ -296,12 +316,16 @@
     <Compile Include="Models\TableSession.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\WorkShift.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\AdvancedAnalyticsService.cs" />
     <Compile Include="Services\AIChatbotService.cs" />
     <Compile Include="Services\DashboardService.cs" />
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\EmployeeManagementService.cs" />
+    <Compile Include="Services\HR\HRManagementService.cs" />
     <Compile Include="Services\Management\EmployeeAdminService.cs" />
     <Compile Include="Services\Management\InventoryService.cs" />
     <Compile Include="Services\Management\ManagementDashboardDataService.cs" />
@@ -526,6 +550,21 @@
     <Content Include="Views\ReportsManagement\MenuEngineering.cshtml" />
     <Content Include="Views\ReportsManagement\KPITracking.cshtml" />
     <Content Include="Views\ReportsManagement\PredictiveAnalytics.cshtml" />
+    <Content Include="Views\HR\Dashboard.cshtml" />
+    <Content Include="Views\HR\Attendance.cshtml" />
+    <Content Include="Views\HR\Payroll.cshtml" />
+    <Content Include="Views\HR\AttendanceReport.cshtml" />
+    <Content Include="Views\HR\LeaveManagement.cshtml" />
+    <Content Include="Views\HR\PerformanceReview.cshtml" />
+    <Content Include="Views\HR\CreatePerformanceReview.cshtml" />
+    <Content Include="Views\HR\CreateLeaveRequest.cshtml" />
+    <Content Include="Views\HR\Contracts.cshtml" />
+    <Content Include="Views\HR\CreateContract.cshtml" />
+    <Content Include="Views\HR\Schedule.cshtml" />
+    <Content Include="Views\HR\WorkShifts.cshtml" />
+    <Content Include="Views\HR\CreateWorkShift.cshtml" />
+    <Content Include="Views\HR\EmployeeStats.cshtml" />
+    <Content Include="Views\HR\PayrollDetail.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

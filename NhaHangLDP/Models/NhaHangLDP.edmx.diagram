@@ -85,6 +85,22 @@
         <AssociationConnector Association="NhaHangLDPModel.FK_QROrder_Table" />
         <AssociationConnector Association="NhaHangLDPModel.FK_QROrderDetail_QROrder" />
         <AssociationConnector Association="NhaHangLDPModel.FK_TableSession_Table" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Attendance" Width="1.5" PointX="5.25" PointY="39" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.EmployeeContract" Width="1.5" PointX="5.25" PointY="52" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.EmployeeSchedule" Width="1.5" PointX="12.25" PointY="26" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.LeaveRequest" Width="1.5" PointX="5.25" PointY="48" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Payroll" Width="1.5" PointX="5.25" PointY="42.5" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.PerformanceReview" Width="1.5" PointX="5.25" PointY="34" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.WorkShift" Width="1.5" PointX="10" PointY="38" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Attendance_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_EmployeeContract_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_EmployeeSchedule_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_LeaveRequest_Approver" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_LeaveRequest_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Payroll_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_PerformanceReview_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_PerformanceReview_Reviewer" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_EmployeeSchedule_WorkShift" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

@@ -61,5 +61,12 @@ namespace NhaHangLDP.Models
         public virtual DbSet<QROrder> QROrder { get; set; }
         public virtual DbSet<QROrderDetail> QROrderDetail { get; set; }
         public virtual DbSet<TableSession> TableSession { get; set; }
+        public virtual DbSet<Attendance> Attendance { get; set; }
+        public virtual DbSet<EmployeeContract> EmployeeContract { get; set; }
+        public virtual DbSet<EmployeeSchedule> EmployeeSchedule { get; set; }
+        public virtual DbSet<LeaveRequest> LeaveRequest { get; set; }
+        public virtual DbSet<Payroll> Payroll { get; set; }
+        public virtual DbSet<PerformanceReview> PerformanceReview { get; set; }
+        public virtual DbSet<WorkShift> WorkShift { get; set; }
     }
 }

@@ -1,0 +1,307 @@
+﻿@model NhaHangLDP.Models.PerformanceReviewViewModel
+@{
+    ViewBag.Title = "Đánh giá hiệu suất";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    var employees = ViewBag.Employees as List<NhaHangLDP.Models.Employee> ?? new List<NhaHangLDP.Models.Employee>();
+}
+
+@section styles {
+    <style>
+        .performance-page {
+            padding: 20px 0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-card .label {
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .summary-card.excellent .value { color: #2ecc71; }
+        .summary-card.good .value { color: #3498db; }
+        .summary-card.average .value { color: #f39c12; }
+        .summary-card.poor .value { color: #e74c3c; }
+
+        .performance-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .review-card {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .review-card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .employee-info h5 {
+            margin: 0 0 5px 0;
+        }
+
+        .employee-info p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+
+        .score-badge {
+            padding: 10px 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .score-badge .score {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .score-badge .level {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .score-badge.excellent { background: #d4edda; color: #155724; }
+        .score-badge.good { background: #d1ecf1; color: #0c5460; }
+        .score-badge.average { background: #fff3cd; color: #856404; }
+        .score-badge.poor { background: #f8d7da; color: #721c24; }
+
+        .rating-bars {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .rating-item {
+            text-align: center;
+        }
+
+        .rating-item .label {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .rating-item .stars {
+            color: #f39c12;
+        }
+
+        .review-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #f1f3f4;
+        }
+
+        .reviewer-info {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+    </style>
+}
+
+<div class="performance-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-chart-line me-2"></i>Đánh giá hiệu suất</h2>
+            <p class="text-muted mb-0">Theo dõi và đánh giá hiệu suất nhân viên</p>
+        </div>
+        <a href="@Url.Action("CreatePerformanceReview")" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Tạo đánh giá
+        </a>
+    </div>
+
+    <!-- Summary -->
+    @if (Model.Summary != null)
+    {
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="value">@Model.Summary.AverageScore.ToString("N1")</div>
+                <div class="label">Điểm trung bình</div>
+            </div>
+            <div class="summary-card excellent">
+                <div class="value">@Model.Summary.ExcellentCount</div>
+                <div class="label">Xuất sắc (≥4.5)</div>
+            </div>
+            <div class="summary-card good">
+                <div class="value">@Model.Summary.GoodCount</div>
+                <div class="label">Tốt (3.5-4.5)</div>
+            </div>
+            <div class="summary-card average">
+                <div class="value">@Model.Summary.AverageCount</div>
+                <div class="label">Trung bình (2.5-3.5)</div>
+            </div>
+            <div class="summary-card poor">
+                <div class="value">@(Model.Summary.BelowAverageCount + Model.Summary.PoorCount)</div>
+                <div class="label">Cần cải thiện</div>
+            </div>
+        </div>
+    }
+
+    <!-- Reviews List -->
+    <div class="performance-section">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="fas fa-list me-2"></i>Danh sách đánh giá</h4>
+            <div>
+                <select id="employeeFilter" class="form-select form-select-sm" style="width: 200px; display: inline-block;">
+                    <option value="">-- Tất cả nhân viên --</option>
+                    @foreach (var emp in employees)
+                    {
+                        <option value="@emp.Id">@emp.FullName</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        @if (Model.Reviews != null && Model.Reviews.Any())
+        {
+            foreach (var review in Model.Reviews)
+            {
+                var scoreClass = review.OverallScore >= 4.5m ? "excellent" :
+                                (review.OverallScore >= 3.5m ? "good" :
+                                (review.OverallScore >= 2.5m ? "average" : "poor"));
+
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="employee-info">
+                            <h5>@review.EmployeeName</h5>
+                            <p>
+                                <i class="fas fa-user-tag me-1"></i>@review.RoleName |
+                                <i class="fas fa-calendar me-1"></i>@review.ReviewDate.ToString("dd/MM/yyyy") |
+                                <i class="fas fa-clock me-1"></i>@review.ReviewPeriod
+                            </p>
+                        </div>
+                        <div class="score-badge @scoreClass">
+                            <div class="score">@review.OverallScore.ToString("N1")</div>
+                            <div class="level">@review.PerformanceLevel</div>
+                        </div>
+                    </div>
+
+                    <div class="rating-bars">
+                        <div class="rating-item">
+                            <div class="label">Chất lượng phục vụ</div>
+                            <div class="stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star @(i <= review.ServiceQuality ? "" : "text-muted")"></i>
+                                }
+                            </div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="label">Đúng giờ</div>
+                            <div class="stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star @(i <= review.Punctuality ? "" : "text-muted")"></i>
+                                }
+                            </div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="label">Teamwork</div>
+                            <div class="stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star @(i <= review.Teamwork ? "" : "text-muted")"></i>
+                                }
+                            </div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="label">Giao tiếp</div>
+                            <div class="stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star @(i <= review.Communication ? "" : "text-muted")"></i>
+                                }
+                            </div>
+                        </div>
+                        <div class="rating-item">
+                            <div class="label">Hiệu quả</div>
+                            <div class="stars">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="fas fa-star @(i <= review.WorkEfficiency ? "" : "text-muted")"></i>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(review.Comments))
+                    {
+                        <div class="text-muted small mb-3">
+                            <i class="fas fa-comment me-1"></i>@review.Comments
+                        </div>
+                    }
+
+                    <div class="review-footer">
+                        <div class="reviewer-info">
+                            <i class="fas fa-user-edit me-1"></i>Đánh giá bởi: @review.ReviewerName
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-chart-line fa-3x mb-3 opacity-50"></i>
+                <h5>Chưa có đánh giá nào</h5>
+                <p>Nhấn "Tạo đánh giá" để bắt đầu đánh giá nhân viên</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $('#employeeFilter').change(function () {
+            var empId = $(this).val();
+            if (empId) {
+                window.location.href = '@Url.Action("PerformanceReview", "HR")' + '?employeeId=' + empId;
+            } else {
+                window.location.href = '@Url.Action("PerformanceReview", "HR")';
+            }
+        });
+    </script>
+}

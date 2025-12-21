@@ -773,6 +773,65 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#hrSubmenu" aria-expanded="false">
+                    <i class="fas fa-users-cog"></i>
+                    <span>HR Management</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </a>
+                <div class="collapse sidebar-submenu" id="hrSubmenu">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Dashboard", "HR")">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>HR Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Attendance", "HR")">
+                                <i class="fas fa-clock"></i>
+                                <span>Chấm Công</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("LeaveManagement", "HR")">
+                                <i class="fas fa-calendar-minus"></i>
+                                <span>Nghỉ Phép</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Payroll", "HR")">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Bảng Lương</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("PerformanceReview", "HR")">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Đánh Giá Hiệu Suất</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Contracts", "HR")">
+                                <i class="fas fa-file-contract"></i>
+                                <span>Hợp Đồng</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Schedule", "HR")">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Lịch Làm Việc</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("WorkShifts", "HR")">
+                                <i class="fas fa-business-time"></i>
+                                <span>Ca Làm Việc</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="@Url.Action("Reports", "Management")">
                     <i class="fas fa-file-alt"></i>
                     <span>Báo Cáo Cơ Bản</span>

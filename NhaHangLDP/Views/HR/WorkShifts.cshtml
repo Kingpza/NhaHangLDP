@@ -1,0 +1,165 @@
+﻿@model List<NhaHangLDP.Models.WorkShift>
+@{
+    ViewBag.Title = "Ca làm việc";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .shifts-page {
+            padding: 20px 0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .shifts-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .shifts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .shift-card {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .shift-card:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .shift-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .shift-icon.morning { background: #fff3cd; color: #f39c12; }
+        .shift-icon.afternoon { background: #d1ecf1; color: #17a2b8; }
+        .shift-icon.evening { background: #d4edda; color: #28a745; }
+        .shift-icon.night { background: #e2e3e5; color: #6c757d; }
+
+        .shift-card h5 {
+            margin: 0 0 10px 0;
+            font-weight: 600;
+        }
+
+        .shift-time {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .shift-time .time {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .shift-hours {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .shift-hours .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .shift-hours .label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .shift-description {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f1f3f4;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+    </style>
+}
+
+<div class="shifts-page">
+    <div class="page-header">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-business-time me-2"></i>Ca làm việc</h2>
+            <p class="text-muted mb-0">Quản lý các ca làm việc trong nhà hàng</p>
+        </div>
+        <a href="@Url.Action("CreateWorkShift")" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Tạo ca mới
+        </a>
+    </div>
+
+    <div class="shifts-section">
+        @if (Model != null && Model.Any())
+        {
+            <div class="shifts-grid">
+                @foreach (var shift in Model)
+                {
+                    var iconClass = shift.StartTime.Hours < 12 ? "morning" :
+                                   (shift.StartTime.Hours < 17 ? "afternoon" :
+                                   (shift.StartTime.Hours < 21 ? "evening" : "night"));
+                    var icon = shift.StartTime.Hours < 12 ? "fa-sun" :
+                              (shift.StartTime.Hours < 17 ? "fa-cloud-sun" :
+                              (shift.StartTime.Hours < 21 ? "fa-moon" : "fa-star"));
+
+                    <div class="shift-card">
+                        <div class="shift-icon @iconClass">
+                            <i class="fas @icon"></i>
+                        </div>
+                        <h5>@shift.ShiftName</h5>
+                        <div class="shift-time">
+                            <i class="fas fa-clock"></i>
+                            <span class="time">@shift.StartTime.ToString(@"hh\:mm")</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="time">@shift.EndTime.ToString(@"hh\:mm")</span>
+                        </div>
+                        <div class="shift-hours">
+                            <div class="value">@shift.WorkHours</div>
+                            <div class="label">giờ làm việc</div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(shift.Description))
+                        {
+                            <div class="shift-description">
+                                <i class="fas fa-info-circle me-1"></i>@shift.Description
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-clock fa-3x mb-3 opacity-50"></i>
+                <h5>Chưa có ca làm việc nào</h5>
+                <p>Nhấn "Tạo ca mới" để thêm ca làm việc</p>
+            </div>
+        }
+    </div>
+</div>

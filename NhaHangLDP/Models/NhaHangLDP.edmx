@@ -35,6 +35,19 @@
           <Property Name="CreatedBy" Type="nvarchar" MaxLength="100" />
           <Property Name="UpdatedBy" Type="nvarchar" MaxLength="100" />
         </EntityType>
+        <EntityType Name="Attendance">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="EmployeeId" Type="int" Nullable="false" />
+          <Property Name="CheckInTime" Type="datetime" Nullable="false" />
+          <Property Name="CheckOutTime" Type="datetime" />
+          <Property Name="WorkHours" Type="decimal" Precision="5" Scale="2" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" />
+          <Property Name="Note" Type="nvarchar" MaxLength="500" />
+          <Property Name="Location" Type="nvarchar" MaxLength="100" />
+        </EntityType>
         <EntityType Name="Bill">
           <Key>
             <PropertyRef Name="Id" />
@@ -151,6 +164,32 @@
           <Property Name="HireDate" Type="datetime2" Precision="7" Nullable="false" />
           <Property Name="IsActive" Type="bit" Nullable="false" />
         </EntityType>
+        <EntityType Name="EmployeeContract">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="EmployeeId" Type="int" Nullable="false" />
+          <Property Name="ContractType" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="StartDate" Type="date" Nullable="false" />
+          <Property Name="EndDate" Type="date" />
+          <Property Name="BaseSalary" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Allowance" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" />
+          <Property Name="Notes" Type="nvarchar" MaxLength="500" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="EmployeeSchedule">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="EmployeeId" Type="int" Nullable="false" />
+          <Property Name="WorkShiftId" Type="int" Nullable="false" />
+          <Property Name="WorkDate" Type="date" Nullable="false" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" />
+          <Property Name="Note" Type="nvarchar" MaxLength="200" />
+        </EntityType>
         <EntityType Name="Ingredient">
           <Key>
             <PropertyRef Name="Id" />
@@ -214,6 +253,21 @@
           <Property Name="DisplayColor" Type="nvarchar" MaxLength="20" />
           <Property Name="DisplayOrder" Type="int" Nullable="false" />
           <Property Name="IsActive" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="LeaveRequest">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="EmployeeId" Type="int" Nullable="false" />
+          <Property Name="LeaveType" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="StartDate" Type="date" Nullable="false" />
+          <Property Name="EndDate" Type="date" Nullable="false" />
+          <Property Name="Reason" Type="nvarchar" MaxLength="500" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="ApprovedBy" Type="int" />
+          <Property Name="ApprovedDate" Type="datetime" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
         </EntityType>
         <EntityType Name="MenuCombo">
           <Key>
@@ -309,6 +363,49 @@
           <Property Name="Quantity" Type="int" Nullable="false" />
           <Property Name="PriceAtTime" Type="decimal" Precision="18" Scale="2" Nullable="false" />
           <Property Name="Notes" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="Payroll">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="EmployeeId" Type="int" Nullable="false" />
+          <Property Name="Month" Type="int" Nullable="false" />
+          <Property Name="Year" Type="int" Nullable="false" />
+          <Property Name="BaseSalary" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Allowance" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="OvertimeBonus" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="PerformanceBonus" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Deduction" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="TotalWorkDays" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="TotalWorkHours" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="LateCount" Type="int" Nullable="false" />
+          <Property Name="AbsentCount" Type="int" Nullable="false" />
+          <Property Name="NetSalary" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" />
+          <Property Name="PaymentDate" Type="datetime" />
+          <Property Name="Notes" Type="nvarchar" MaxLength="500" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="PerformanceReview">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="EmployeeId" Type="int" Nullable="false" />
+          <Property Name="ReviewerId" Type="int" Nullable="false" />
+          <Property Name="ReviewDate" Type="date" Nullable="false" />
+          <Property Name="ReviewPeriod" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="ServiceQuality" Type="int" Nullable="false" />
+          <Property Name="Punctuality" Type="int" Nullable="false" />
+          <Property Name="Teamwork" Type="int" Nullable="false" />
+          <Property Name="Communication" Type="int" Nullable="false" />
+          <Property Name="WorkEfficiency" Type="int" Nullable="false" />
+          <Property Name="OverallScore" Type="decimal" Precision="3" Scale="2" />
+          <Property Name="Strengths" Type="nvarchar" MaxLength="1000" />
+          <Property Name="AreasToImprove" Type="nvarchar" MaxLength="1000" />
+          <Property Name="Comments" Type="nvarchar" MaxLength="1000" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
         </EntityType>
         <EntityType Name="PriceHistory">
           <Key>
@@ -496,6 +593,18 @@
           <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="GuestCount" Type="int" />
         </EntityType>
+        <EntityType Name="WorkShift">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ShiftName" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="StartTime" Type="time" Precision="7" Nullable="false" />
+          <Property Name="EndTime" Type="time" Precision="7" Nullable="false" />
+          <Property Name="WorkHours" Type="decimal" Precision="5" Scale="2" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
+          <Property Name="Description" Type="nvarchar" MaxLength="200" />
+        </EntityType>
         <Association Name="FK_Account_Role">
           <End Role="Role" Type="Self.Role" Multiplicity="1" />
           <End Role="Account" Type="Self.Account" Multiplicity="*" />
@@ -505,6 +614,18 @@
             </Principal>
             <Dependent Role="Account">
               <PropertyRef Name="RoleId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Attendance_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="Attendance" Type="Self.Attendance" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Attendance">
+              <PropertyRef Name="EmployeeId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -592,6 +713,42 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_EmployeeContract_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="EmployeeContract" Type="Self.EmployeeContract" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="EmployeeContract">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_EmployeeSchedule_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="EmployeeSchedule" Type="Self.EmployeeSchedule" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="EmployeeSchedule">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_EmployeeSchedule_WorkShift">
+          <End Role="WorkShift" Type="Self.WorkShift" Multiplicity="1" />
+          <End Role="EmployeeSchedule" Type="Self.EmployeeSchedule" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="WorkShift">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="EmployeeSchedule">
+              <PropertyRef Name="WorkShiftId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_KitchenItem_MenuItem">
           <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1" />
           <End Role="KitchenOrderItem" Type="Self.KitchenOrderItem" Multiplicity="*" />
@@ -653,6 +810,30 @@
             </Principal>
             <Dependent Role="KitchenOrderTicket">
               <PropertyRef Name="TableId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_LeaveRequest_Approver">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="0..1" />
+          <End Role="LeaveRequest" Type="Self.LeaveRequest" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="LeaveRequest">
+              <PropertyRef Name="ApprovedBy" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_LeaveRequest_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="LeaveRequest" Type="Self.LeaveRequest" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="LeaveRequest">
+              <PropertyRef Name="EmployeeId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -785,6 +966,42 @@
             </Principal>
             <Dependent Role="OrderDetail">
               <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Payroll_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="Payroll" Type="Self.Payroll" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Payroll">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PerformanceReview_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="PerformanceReview" Type="Self.PerformanceReview" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PerformanceReview">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PerformanceReview_Reviewer">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
+          <End Role="PerformanceReview" Type="Self.PerformanceReview" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PerformanceReview">
+              <PropertyRef Name="ReviewerId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1057,6 +1274,7 @@
         <EntityContainer Name="NhaHangLDPModelStoreContainer">
           <EntitySet Name="Account" EntityType="Self.Account" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AppSetting" EntityType="Self.AppSetting" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Attendance" EntityType="Self.Attendance" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Bill" EntityType="Self.Bill" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Booking" EntityType="Self.Booking" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="CashierShift" EntityType="Self.CashierShift" Schema="dbo" store:Type="Tables" />
@@ -1065,10 +1283,13 @@
           <EntitySet Name="EmailLog" EntityType="Self.EmailLog" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EmailTemplate" EntityType="Self.EmailTemplate" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Employee" EntityType="Self.Employee" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="EmployeeContract" EntityType="Self.EmployeeContract" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="EmployeeSchedule" EntityType="Self.EmployeeSchedule" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Ingredient" EntityType="Self.Ingredient" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="KitchenOrderItem" EntityType="Self.KitchenOrderItem" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="KitchenOrderTicket" EntityType="Self.KitchenOrderTicket" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="KitchenStation" EntityType="Self.KitchenStation" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="LeaveRequest" EntityType="Self.LeaveRequest" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="MenuCombo" EntityType="Self.MenuCombo" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="MenuComboItem" EntityType="Self.MenuComboItem" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="MenuItem" EntityType="Self.MenuItem" Schema="dbo" store:Type="Tables" />
@@ -1076,6 +1297,8 @@
           <EntitySet Name="Notification" EntityType="Self.Notification" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Order" EntityType="Self.Order" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="OrderDetail" EntityType="Self.OrderDetail" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Payroll" EntityType="Self.Payroll" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PerformanceReview" EntityType="Self.PerformanceReview" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="PriceHistory" EntityType="Self.PriceHistory" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Promotion" EntityType="Self.Promotion" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="PromotionUsage" EntityType="Self.PromotionUsage" Schema="dbo" store:Type="Tables" />
@@ -1091,9 +1314,14 @@
           <EntitySet Name="Supplier" EntityType="Self.Supplier" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TableArea" EntityType="Self.TableArea" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TableSession" EntityType="Self.TableSession" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WorkShift" EntityType="Self.WorkShift" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_Account_Role" Association="Self.FK_Account_Role">
             <End Role="Role" EntitySet="Role" />
             <End Role="Account" EntitySet="Account" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Attendance_Employee" Association="Self.FK_Attendance_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="Attendance" EntitySet="Attendance" />
           </AssociationSet>
           <AssociationSet Name="FK_Bill_Employee_Cashier" Association="Self.FK_Bill_Employee_Cashier">
             <End Role="Employee" EntitySet="Employee" />
@@ -1123,6 +1351,18 @@
             <End Role="Role" EntitySet="Role" />
             <End Role="Employee" EntitySet="Employee" />
           </AssociationSet>
+          <AssociationSet Name="FK_EmployeeContract_Employee" Association="Self.FK_EmployeeContract_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="EmployeeContract" EntitySet="EmployeeContract" />
+          </AssociationSet>
+          <AssociationSet Name="FK_EmployeeSchedule_Employee" Association="Self.FK_EmployeeSchedule_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="EmployeeSchedule" EntitySet="EmployeeSchedule" />
+          </AssociationSet>
+          <AssociationSet Name="FK_EmployeeSchedule_WorkShift" Association="Self.FK_EmployeeSchedule_WorkShift">
+            <End Role="WorkShift" EntitySet="WorkShift" />
+            <End Role="EmployeeSchedule" EntitySet="EmployeeSchedule" />
+          </AssociationSet>
           <AssociationSet Name="FK_KitchenItem_MenuItem" Association="Self.FK_KitchenItem_MenuItem">
             <End Role="MenuItem" EntitySet="MenuItem" />
             <End Role="KitchenOrderItem" EntitySet="KitchenOrderItem" />
@@ -1142,6 +1382,14 @@
           <AssociationSet Name="FK_KitchenTicket_Table" Association="Self.FK_KitchenTicket_Table">
             <End Role="RestaurantTable" EntitySet="RestaurantTable" />
             <End Role="KitchenOrderTicket" EntitySet="KitchenOrderTicket" />
+          </AssociationSet>
+          <AssociationSet Name="FK_LeaveRequest_Approver" Association="Self.FK_LeaveRequest_Approver">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="LeaveRequest" EntitySet="LeaveRequest" />
+          </AssociationSet>
+          <AssociationSet Name="FK_LeaveRequest_Employee" Association="Self.FK_LeaveRequest_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="LeaveRequest" EntitySet="LeaveRequest" />
           </AssociationSet>
           <AssociationSet Name="FK_MenuComboItem_MenuCombo" Association="Self.FK_MenuComboItem_MenuCombo">
             <End Role="MenuCombo" EntitySet="MenuCombo" />
@@ -1182,6 +1430,18 @@
           <AssociationSet Name="FK_OrderDetail_Order" Association="Self.FK_OrderDetail_Order">
             <End Role="Order" EntitySet="Order" />
             <End Role="OrderDetail" EntitySet="OrderDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Payroll_Employee" Association="Self.FK_Payroll_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="Payroll" EntitySet="Payroll" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PerformanceReview_Employee" Association="Self.FK_PerformanceReview_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="PerformanceReview" EntitySet="PerformanceReview" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PerformanceReview_Reviewer" Association="Self.FK_PerformanceReview_Reviewer">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="PerformanceReview" EntitySet="PerformanceReview" />
           </AssociationSet>
           <AssociationSet Name="FK_PriceHistory_Employee" Association="Self.FK_PriceHistory_Employee">
             <End Role="Employee" EntitySet="Employee" />
@@ -1390,6 +1650,14 @@
           <NavigationProperty Name="KitchenOrderTicket" Relationship="NhaHangLDPModel.FK_KitchenTicket_Chef" FromRole="Employee" ToRole="KitchenOrderTicket" />
           <NavigationProperty Name="Notification" Relationship="NhaHangLDPModel.FK_Notification_Employee" FromRole="Employee" ToRole="Notification" />
           <NavigationProperty Name="QROrder" Relationship="NhaHangLDPModel.FK_QROrder_Employee" FromRole="Employee" ToRole="QROrder" />
+          <NavigationProperty Name="Attendance" Relationship="NhaHangLDPModel.FK_Attendance_Employee" FromRole="Employee" ToRole="Attendance" />
+          <NavigationProperty Name="EmployeeContract" Relationship="NhaHangLDPModel.FK_EmployeeContract_Employee" FromRole="Employee" ToRole="EmployeeContract" />
+          <NavigationProperty Name="EmployeeSchedule" Relationship="NhaHangLDPModel.FK_EmployeeSchedule_Employee" FromRole="Employee" ToRole="EmployeeSchedule" />
+          <NavigationProperty Name="LeaveRequest" Relationship="NhaHangLDPModel.FK_LeaveRequest_Approver" FromRole="Employee" ToRole="LeaveRequest" />
+          <NavigationProperty Name="LeaveRequest1" Relationship="NhaHangLDPModel.FK_LeaveRequest_Employee" FromRole="Employee" ToRole="LeaveRequest" />
+          <NavigationProperty Name="Payroll" Relationship="NhaHangLDPModel.FK_Payroll_Employee" FromRole="Employee" ToRole="Payroll" />
+          <NavigationProperty Name="PerformanceReview" Relationship="NhaHangLDPModel.FK_PerformanceReview_Employee" FromRole="Employee" ToRole="PerformanceReview" />
+          <NavigationProperty Name="PerformanceReview1" Relationship="NhaHangLDPModel.FK_PerformanceReview_Reviewer" FromRole="Employee" ToRole="PerformanceReview" />
         </EntityType>
         <EntityType Name="Ingredient">
           <Key>
@@ -2222,6 +2490,49 @@
             <End Role="RestaurantTable" EntitySet="RestaurantTable" />
             <End Role="TableSession" EntitySet="TableSession" />
           </AssociationSet>
+          <EntitySet Name="Attendance" EntityType="NhaHangLDPModel.Attendance" />
+          <EntitySet Name="EmployeeContract" EntityType="NhaHangLDPModel.EmployeeContract" />
+          <EntitySet Name="EmployeeSchedule" EntityType="NhaHangLDPModel.EmployeeSchedule" />
+          <EntitySet Name="LeaveRequest" EntityType="NhaHangLDPModel.LeaveRequest" />
+          <EntitySet Name="Payroll" EntityType="NhaHangLDPModel.Payroll" />
+          <EntitySet Name="PerformanceReview" EntityType="NhaHangLDPModel.PerformanceReview" />
+          <EntitySet Name="WorkShift" EntityType="NhaHangLDPModel.WorkShift" />
+          <AssociationSet Name="FK_Attendance_Employee" Association="NhaHangLDPModel.FK_Attendance_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="Attendance" EntitySet="Attendance" />
+          </AssociationSet>
+          <AssociationSet Name="FK_EmployeeContract_Employee" Association="NhaHangLDPModel.FK_EmployeeContract_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="EmployeeContract" EntitySet="EmployeeContract" />
+          </AssociationSet>
+          <AssociationSet Name="FK_EmployeeSchedule_Employee" Association="NhaHangLDPModel.FK_EmployeeSchedule_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="EmployeeSchedule" EntitySet="EmployeeSchedule" />
+          </AssociationSet>
+          <AssociationSet Name="FK_LeaveRequest_Approver" Association="NhaHangLDPModel.FK_LeaveRequest_Approver">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="LeaveRequest" EntitySet="LeaveRequest" />
+          </AssociationSet>
+          <AssociationSet Name="FK_LeaveRequest_Employee" Association="NhaHangLDPModel.FK_LeaveRequest_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="LeaveRequest" EntitySet="LeaveRequest" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Payroll_Employee" Association="NhaHangLDPModel.FK_Payroll_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="Payroll" EntitySet="Payroll" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PerformanceReview_Employee" Association="NhaHangLDPModel.FK_PerformanceReview_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="PerformanceReview" EntitySet="PerformanceReview" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PerformanceReview_Reviewer" Association="NhaHangLDPModel.FK_PerformanceReview_Reviewer">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="PerformanceReview" EntitySet="PerformanceReview" />
+          </AssociationSet>
+          <AssociationSet Name="FK_EmployeeSchedule_WorkShift" Association="NhaHangLDPModel.FK_EmployeeSchedule_WorkShift">
+            <End Role="WorkShift" EntitySet="WorkShift" />
+            <End Role="EmployeeSchedule" EntitySet="EmployeeSchedule" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="EmailConfig">
           <Key>
@@ -2620,6 +2931,233 @@
             </Principal>
             <Dependent Role="TableSession">
               <PropertyRef Name="TableId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Attendance">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="EmployeeId" Type="Int32" Nullable="false" />
+          <Property Name="CheckInTime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="CheckOutTime" Type="DateTime" Precision="3" />
+          <Property Name="WorkHours" Type="Decimal" Precision="5" Scale="2" />
+          <Property Name="Status" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Note" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="Location" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Employee" Relationship="NhaHangLDPModel.FK_Attendance_Employee" FromRole="Attendance" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="EmployeeContract">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="EmployeeId" Type="Int32" Nullable="false" />
+          <Property Name="ContractType" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="StartDate" Type="DateTime" Nullable="false" Precision="0" />
+          <Property Name="EndDate" Type="DateTime" Precision="0" />
+          <Property Name="BaseSalary" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="Allowance" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="Status" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Notes" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Employee" Relationship="NhaHangLDPModel.FK_EmployeeContract_Employee" FromRole="EmployeeContract" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="EmployeeSchedule">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="EmployeeId" Type="Int32" Nullable="false" />
+          <Property Name="WorkShiftId" Type="Int32" Nullable="false" />
+          <Property Name="WorkDate" Type="DateTime" Nullable="false" Precision="0" />
+          <Property Name="Status" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Note" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Employee" Relationship="NhaHangLDPModel.FK_EmployeeSchedule_Employee" FromRole="EmployeeSchedule" ToRole="Employee" />
+          <NavigationProperty Name="WorkShift" Relationship="NhaHangLDPModel.FK_EmployeeSchedule_WorkShift" FromRole="EmployeeSchedule" ToRole="WorkShift" />
+        </EntityType>
+        <EntityType Name="LeaveRequest">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="EmployeeId" Type="Int32" Nullable="false" />
+          <Property Name="LeaveType" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="StartDate" Type="DateTime" Nullable="false" Precision="0" />
+          <Property Name="EndDate" Type="DateTime" Nullable="false" Precision="0" />
+          <Property Name="Reason" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="Status" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="ApprovedBy" Type="Int32" />
+          <Property Name="ApprovedDate" Type="DateTime" Precision="3" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Employee" Relationship="NhaHangLDPModel.FK_LeaveRequest_Approver" FromRole="LeaveRequest" ToRole="Employee" />
+          <NavigationProperty Name="Employee1" Relationship="NhaHangLDPModel.FK_LeaveRequest_Employee" FromRole="LeaveRequest" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="Payroll">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="EmployeeId" Type="Int32" Nullable="false" />
+          <Property Name="Month" Type="Int32" Nullable="false" />
+          <Property Name="Year" Type="Int32" Nullable="false" />
+          <Property Name="BaseSalary" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="Allowance" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="OvertimeBonus" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="PerformanceBonus" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="Deduction" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="TotalWorkDays" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="TotalWorkHours" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="LateCount" Type="Int32" Nullable="false" />
+          <Property Name="AbsentCount" Type="Int32" Nullable="false" />
+          <Property Name="NetSalary" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="Status" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="PaymentDate" Type="DateTime" Precision="3" />
+          <Property Name="Notes" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Employee" Relationship="NhaHangLDPModel.FK_Payroll_Employee" FromRole="Payroll" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="PerformanceReview">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="EmployeeId" Type="Int32" Nullable="false" />
+          <Property Name="ReviewerId" Type="Int32" Nullable="false" />
+          <Property Name="ReviewDate" Type="DateTime" Nullable="false" Precision="0" />
+          <Property Name="ReviewPeriod" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="ServiceQuality" Type="Int32" Nullable="false" />
+          <Property Name="Punctuality" Type="Int32" Nullable="false" />
+          <Property Name="Teamwork" Type="Int32" Nullable="false" />
+          <Property Name="Communication" Type="Int32" Nullable="false" />
+          <Property Name="WorkEfficiency" Type="Int32" Nullable="false" />
+          <Property Name="OverallScore" Type="Decimal" Precision="3" Scale="2" />
+          <Property Name="Strengths" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Name="AreasToImprove" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Name="Comments" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Employee" Relationship="NhaHangLDPModel.FK_PerformanceReview_Employee" FromRole="PerformanceReview" ToRole="Employee" />
+          <NavigationProperty Name="Employee1" Relationship="NhaHangLDPModel.FK_PerformanceReview_Reviewer" FromRole="PerformanceReview" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="WorkShift">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ShiftName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="StartTime" Type="Time" Nullable="false" Precision="7" />
+          <Property Name="EndTime" Type="Time" Nullable="false" Precision="7" />
+          <Property Name="WorkHours" Type="Decimal" Precision="5" Scale="2" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <Property Name="Description" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="EmployeeSchedule" Relationship="NhaHangLDPModel.FK_EmployeeSchedule_WorkShift" FromRole="WorkShift" ToRole="EmployeeSchedule" />
+        </EntityType>
+        <Association Name="FK_Attendance_Employee">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.Attendance" Role="Attendance" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Attendance">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_EmployeeContract_Employee">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.EmployeeContract" Role="EmployeeContract" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="EmployeeContract">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_EmployeeSchedule_Employee">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.EmployeeSchedule" Role="EmployeeSchedule" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="EmployeeSchedule">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_LeaveRequest_Approver">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="0..1" />
+          <End Type="NhaHangLDPModel.LeaveRequest" Role="LeaveRequest" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="LeaveRequest">
+              <PropertyRef Name="ApprovedBy" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_LeaveRequest_Employee">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.LeaveRequest" Role="LeaveRequest" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="LeaveRequest">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Payroll_Employee">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.Payroll" Role="Payroll" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Payroll">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PerformanceReview_Employee">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.PerformanceReview" Role="PerformanceReview" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PerformanceReview">
+              <PropertyRef Name="EmployeeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_PerformanceReview_Reviewer">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.PerformanceReview" Role="PerformanceReview" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PerformanceReview">
+              <PropertyRef Name="ReviewerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_EmployeeSchedule_WorkShift">
+          <End Type="NhaHangLDPModel.WorkShift" Role="WorkShift" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.EmployeeSchedule" Role="EmployeeSchedule" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="WorkShift">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="EmployeeSchedule">
+              <PropertyRef Name="WorkShiftId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -3152,6 +3690,122 @@
                 <ScalarProperty Name="StartTime" ColumnName="StartTime" />
                 <ScalarProperty Name="SessionToken" ColumnName="SessionToken" />
                 <ScalarProperty Name="TableId" ColumnName="TableId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Attendance">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Attendance">
+              <MappingFragment StoreEntitySet="Attendance">
+                <ScalarProperty Name="Location" ColumnName="Location" />
+                <ScalarProperty Name="Note" ColumnName="Note" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="WorkHours" ColumnName="WorkHours" />
+                <ScalarProperty Name="CheckOutTime" ColumnName="CheckOutTime" />
+                <ScalarProperty Name="CheckInTime" ColumnName="CheckInTime" />
+                <ScalarProperty Name="EmployeeId" ColumnName="EmployeeId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="EmployeeContract">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.EmployeeContract">
+              <MappingFragment StoreEntitySet="EmployeeContract">
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="Notes" ColumnName="Notes" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="Allowance" ColumnName="Allowance" />
+                <ScalarProperty Name="BaseSalary" ColumnName="BaseSalary" />
+                <ScalarProperty Name="EndDate" ColumnName="EndDate" />
+                <ScalarProperty Name="StartDate" ColumnName="StartDate" />
+                <ScalarProperty Name="ContractType" ColumnName="ContractType" />
+                <ScalarProperty Name="EmployeeId" ColumnName="EmployeeId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="EmployeeSchedule">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.EmployeeSchedule">
+              <MappingFragment StoreEntitySet="EmployeeSchedule">
+                <ScalarProperty Name="Note" ColumnName="Note" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="WorkDate" ColumnName="WorkDate" />
+                <ScalarProperty Name="WorkShiftId" ColumnName="WorkShiftId" />
+                <ScalarProperty Name="EmployeeId" ColumnName="EmployeeId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="LeaveRequest">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.LeaveRequest">
+              <MappingFragment StoreEntitySet="LeaveRequest">
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="ApprovedDate" ColumnName="ApprovedDate" />
+                <ScalarProperty Name="ApprovedBy" ColumnName="ApprovedBy" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="Reason" ColumnName="Reason" />
+                <ScalarProperty Name="EndDate" ColumnName="EndDate" />
+                <ScalarProperty Name="StartDate" ColumnName="StartDate" />
+                <ScalarProperty Name="LeaveType" ColumnName="LeaveType" />
+                <ScalarProperty Name="EmployeeId" ColumnName="EmployeeId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Payroll">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Payroll">
+              <MappingFragment StoreEntitySet="Payroll">
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="Notes" ColumnName="Notes" />
+                <ScalarProperty Name="PaymentDate" ColumnName="PaymentDate" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="NetSalary" ColumnName="NetSalary" />
+                <ScalarProperty Name="AbsentCount" ColumnName="AbsentCount" />
+                <ScalarProperty Name="LateCount" ColumnName="LateCount" />
+                <ScalarProperty Name="TotalWorkHours" ColumnName="TotalWorkHours" />
+                <ScalarProperty Name="TotalWorkDays" ColumnName="TotalWorkDays" />
+                <ScalarProperty Name="Deduction" ColumnName="Deduction" />
+                <ScalarProperty Name="PerformanceBonus" ColumnName="PerformanceBonus" />
+                <ScalarProperty Name="OvertimeBonus" ColumnName="OvertimeBonus" />
+                <ScalarProperty Name="Allowance" ColumnName="Allowance" />
+                <ScalarProperty Name="BaseSalary" ColumnName="BaseSalary" />
+                <ScalarProperty Name="Year" ColumnName="Year" />
+                <ScalarProperty Name="Month" ColumnName="Month" />
+                <ScalarProperty Name="EmployeeId" ColumnName="EmployeeId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="PerformanceReview">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.PerformanceReview">
+              <MappingFragment StoreEntitySet="PerformanceReview">
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="Comments" ColumnName="Comments" />
+                <ScalarProperty Name="AreasToImprove" ColumnName="AreasToImprove" />
+                <ScalarProperty Name="Strengths" ColumnName="Strengths" />
+                <ScalarProperty Name="OverallScore" ColumnName="OverallScore" />
+                <ScalarProperty Name="WorkEfficiency" ColumnName="WorkEfficiency" />
+                <ScalarProperty Name="Communication" ColumnName="Communication" />
+                <ScalarProperty Name="Teamwork" ColumnName="Teamwork" />
+                <ScalarProperty Name="Punctuality" ColumnName="Punctuality" />
+                <ScalarProperty Name="ServiceQuality" ColumnName="ServiceQuality" />
+                <ScalarProperty Name="ReviewPeriod" ColumnName="ReviewPeriod" />
+                <ScalarProperty Name="ReviewDate" ColumnName="ReviewDate" />
+                <ScalarProperty Name="ReviewerId" ColumnName="ReviewerId" />
+                <ScalarProperty Name="EmployeeId" ColumnName="EmployeeId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WorkShift">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.WorkShift">
+              <MappingFragment StoreEntitySet="WorkShift">
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="WorkHours" ColumnName="WorkHours" />
+                <ScalarProperty Name="EndTime" ColumnName="EndTime" />
+                <ScalarProperty Name="StartTime" ColumnName="StartTime" />
+                <ScalarProperty Name="ShiftName" ColumnName="ShiftName" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
