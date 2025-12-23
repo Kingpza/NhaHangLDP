@@ -1,0 +1,893 @@
+﻿@model NhaHangLDP.Models.PaymentPageViewModel
+@{
+    ViewBag.Title = "Thanh toán";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thanh toán - @Model.Order.OrderCode</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #1a1d21;
+            --bg-card: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #a0aec0;
+            --border-color: #4a5568;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #2d3748 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .payment-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            min-height: 100vh;
+            gap: 0;
+        }
+
+        /* Left Panel - Order Details */
+        .order-panel {
+            padding: 24px;
+            background: var(--bg-dark);
+            overflow-y: auto;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .order-info {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            padding: 16px 20px;
+            border-radius: 12px;
+            flex: 1;
+        }
+
+        .info-card label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-card .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 4px;
+        }
+
+        /* Order Items */
+        .order-items {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .items-header {
+            padding: 16px 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        .order-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 16px;
+            background: var(--border-color);
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .item-notes {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .item-quantity {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: 16px;
+        }
+
+        .item-price {
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 100px;
+            text-align: right;
+        }
+
+        /* Right Panel - Payment */
+        .payment-panel {
+            background: linear-gradient(180deg, #2d3748 0%, #1a202c 100%);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .payment-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            margin-bottom: 24px;
+        }
+
+        .method-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .method-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .method-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .method-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .method-btn.active {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .method-btn i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .method-btn span {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Promotion Code */
+        .promo-section {
+            margin-bottom: 24px;
+        }
+
+        .promo-input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .promo-input {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .promo-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .promo-btn {
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .promo-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .promo-message {
+            margin-top: 8px;
+            font-size: 13px;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .promo-message.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .promo-message.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        /* Payment Summary */
+        .payment-summary {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .summary-row.discount {
+            color: var(--success);
+        }
+
+        .summary-row.total {
+            border-top: 2px solid var(--border-color);
+            margin-top: 12px;
+            padding-top: 16px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Cash Input */
+        .cash-section {
+            margin-bottom: 24px;
+        }
+
+        .cash-input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            color: var(--text-primary);
+            font-size: 24px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .cash-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .quick-amounts {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-amount {
+            flex: 1;
+            min-width: 80px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .quick-amount:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .change-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+
+        .change-label {
+            color: var(--text-secondary);
+        }
+
+        .change-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-payment {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+
+        .btn-confirm:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-confirm:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-cancel:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        /* Responsive */
+        @@media (max-width: 992px) {
+            .payment-container {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-panel {
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+            }
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            text-align: center;
+        }
+
+        .loading-spinner i {
+            font-size: 48px;
+            color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success modal */
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .success-modal.active {
+            display: flex;
+        }
+
+        .success-content {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 48px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .success-icon i {
+            font-size: 40px;
+            color: white;
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .success-message {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .success-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--success);
+            margin-bottom: 24px;
+        }
+
+        .success-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .success-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+        }
+
+        .success-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .success-btn.secondary {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <!-- Left Panel - Order Details -->
+        <div class="order-panel">
+            <div class="order-header">
+                <div>
+                    <h2>Thanh toán đơn hàng</h2>
+                    <p style="color: var(--text-secondary); margin-top: 4px;">@Model.Order.OrderCode</p>
+                </div>
+                <a href="@Url.Action("Dashboard", "Cashier")" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
+
+            <div class="order-info">
+                <div class="info-card">
+                    <label>Bàn</label>
+                    <div class="value">@Model.Order.TableNumber</div>
+                </div>
+                <div class="info-card">
+                    <label>Khu vực</label>
+                    <div class="value">@(string.IsNullOrEmpty(Model.Order.TableArea) ? "N/A" : Model.Order.TableArea)</div>
+                </div>
+                <div class="info-card">
+                    <label>Thời gian</label>
+                    <div class="value">@Model.Order.OrderTime.ToString("HH:mm")</div>
+                </div>
+                <div class="info-card">
+                    <label>Số món</label>
+                    <div class="value">@Model.Order.TotalItems</div>
+                </div>
+            </div>
+
+            <div class="order-items">
+                <div class="items-header">
+                    <i class="fas fa-utensils me-2"></i>Chi tiết đơn hàng
+                </div>
+                @foreach (var item in Model.Order.Items)
+                {
+                    <div class="order-item">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/placeholder-food.jpg" : item.ImageUrl)" 
+                             alt="@item.Name" class="item-image" 
+                             onerror="this.src='/images/placeholder-food.jpg'" />
+                        <div class="item-details">
+                            <div class="item-name">@item.Name</div>
+                            @if (!string.IsNullOrEmpty(item.Notes))
+                            {
+                                <div class="item-notes">@item.Notes</div>
+                            }
+                        </div>
+                        <span class="item-quantity">x@item.Quantity</span>
+                        <span class="item-price">@item.Total.ToString("N0")đ</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Right Panel - Payment -->
+        <div class="payment-panel">
+            <h3 class="payment-title">
+                <i class="fas fa-credit-card me-2"></i>Thanh toán
+            </h3>
+
+            <!-- Payment Methods -->
+            <div class="payment-methods">
+                <div class="method-title">Phương thức thanh toán</div>
+                <div class="method-grid">
+                    @foreach (var method in Model.PaymentMethods.Where(m => m.IsEnabled))
+                    {
+                        <div class="method-btn @(method.IsDefault ? "active" : "")" 
+                             data-method="@method.Code" onclick="selectPaymentMethod(this)">
+                            <i class="@method.Icon"></i>
+                            <span>@method.Name</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Promotion Code -->
+            <div class="promo-section">
+                <div class="method-title">Mã khuyến mãi</div>
+                <div class="promo-input-group">
+                    <input type="text" class="promo-input" id="promoCode" placeholder="Nhập mã giảm giá...">
+                    <button class="promo-btn" onclick="applyPromotion()">
+                        <i class="fas fa-tag"></i>
+                    </button>
+                </div>
+                <div id="promoMessage" class="promo-message" style="display: none;"></div>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="payment-summary">
+                <div class="summary-row">
+                    <span>Tạm tính</span>
+                    <span id="subtotal">@Model.Summary.SubTotal.ToString("N0")đ</span>
+                </div>
+                <div class="summary-row">
+                    <span>VAT (@Model.Summary.VATPercent%)</span>
+                    <span id="vatAmount">@Model.Summary.VATAmount.ToString("N0")đ</span>
+                </div>
+                <div class="summary-row discount" id="discountRow" style="display: none;">
+                    <span>Giảm giá</span>
+                    <span id="discountAmount">-0đ</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng cộng</span>
+                    <span id="totalAmount">@Model.Summary.TotalAmount.ToString("N0")đ</span>
+                </div>
+            </div>
+
+            <!-- Cash Input -->
+            <div class="cash-section" id="cashSection">
+                <div class="method-title">Tiền nhận</div>
+                <input type="text" class="cash-input" id="receivedAmount" 
+                       placeholder="0" oninput="calculateChange()">
+                <div class="quick-amounts">
+                    <button class="quick-amount" onclick="setQuickAmount('exact')">Đủ</button>
+                    <button class="quick-amount" onclick="setQuickAmount(100000)">100K</button>
+                    <button class="quick-amount" onclick="setQuickAmount(200000)">200K</button>
+                    <button class="quick-amount" onclick="setQuickAmount(500000)">500K</button>
+                    <button class="quick-amount" onclick="setQuickAmount(1000000)">1M</button>
+                </div>
+                <div class="change-display">
+                    <span class="change-label">Tiền thừa</span>
+                    <span class="change-amount" id="changeAmount">0đ</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-payment btn-confirm" id="confirmBtn" onclick="processPayment()" disabled>
+                    <i class="fas fa-check-circle me-2"></i>Xác nhận thanh toán
+                </button>
+                <button class="btn-payment btn-cancel" onclick="window.history.back()">
+                    <i class="fas fa-times me-2"></i>Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner"></i>
+            <p style="margin-top: 16px; color: var(--text-secondary);">Đang xử lý thanh toán...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="success-modal" id="successModal">
+        <div class="success-content">
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3 class="success-title">Thanh toán thành công!</h3>
+            <p class="success-message">Đơn hàng đã được thanh toán</p>
+            <div class="success-amount" id="paidAmount">0đ</div>
+            <p class="success-message">Tiền thừa: <span id="changeDisplay">0đ</span></p>
+            <div class="success-buttons">
+                <button class="success-btn secondary" onclick="goToDashboard()">
+                    <i class="fas fa-home me-2"></i>Về Dashboard
+                </button>
+                <button class="success-btn primary" onclick="printBill()">
+                    <i class="fas fa-print me-2"></i>In hóa đơn
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Variables
+        let selectedMethod = 'cash';
+        let subtotal = @Model.Summary.SubTotal;
+        let vatAmount = @Model.Summary.VATAmount;
+        let discountAmount = 0;
+        let totalAmount = @Model.Summary.TotalAmount;
+        let orderId = @Model.Order.OrderId;
+        let billId = null;
+
+        // Select payment method
+        function selectPaymentMethod(element) {
+            document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            selectedMethod = element.dataset.method;
+
+            // Show/hide cash section
+            const cashSection = document.getElementById('cashSection');
+            if (selectedMethod === 'cash') {
+                cashSection.style.display = 'block';
+                document.getElementById('receivedAmount').value = '';
+                updateConfirmButton();
+            } else {
+                cashSection.style.display = 'none';
+                document.getElementById('confirmBtn').disabled = false;
+            }
+        }
+
+        // Apply promotion
+        function applyPromotion() {
+            const code = document.getElementById('promoCode').value.trim();
+            if (!code) return;
+
+            $.post('@Url.Action("ValidatePromotion", "Payment")', {
+                Code: code,
+                OrderId: orderId,
+                OrderTotal: subtotal
+            }).done(function(result) {
+                const msgDiv = document.getElementById('promoMessage');
+                msgDiv.style.display = 'block';
+
+                if (result.IsValid) {
+                    msgDiv.className = 'promo-message success';
+                    msgDiv.innerHTML = '<i class="fas fa-check-circle me-2"></i>' + result.Message;
+                    
+                    discountAmount = result.CalculatedDiscount;
+                    document.getElementById('discountRow').style.display = 'flex';
+                    document.getElementById('discountAmount').textContent = '-' + formatNumber(discountAmount) + 'đ';
+                    
+                    totalAmount = subtotal + vatAmount - discountAmount;
+                    document.getElementById('totalAmount').textContent = formatNumber(totalAmount) + 'đ';
+                    
+                    calculateChange();
+                } else {
+                    msgDiv.className = 'promo-message error';
+                    msgDiv.innerHTML = '<i class="fas fa-times-circle me-2"></i>' + result.Message;
+                }
+            }).fail(function() {
+                const msgDiv = document.getElementById('promoMessage');
+                msgDiv.style.display = 'block';
+                msgDiv.className = 'promo-message error';
+                msgDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Lỗi kết nối!';
+            });
+        }
+
+        // Set quick amount
+        function setQuickAmount(amount) {
+            const input = document.getElementById('receivedAmount');
+            if (amount === 'exact') {
+                input.value = formatNumber(totalAmount);
+            } else {
+                input.value = formatNumber(amount);
+            }
+            calculateChange();
+        }
+
+        // Calculate change
+        function calculateChange() {
+            const input = document.getElementById('receivedAmount');
+            const received = parseNumber(input.value);
+            const change = Math.max(0, received - totalAmount);
+            
+            document.getElementById('changeAmount').textContent = formatNumber(change) + 'đ';
+            updateConfirmButton();
+        }
+
+        // Update confirm button state
+        function updateConfirmButton() {
+            const btn = document.getElementById('confirmBtn');
+            if (selectedMethod === 'cash') {
+                const received = parseNumber(document.getElementById('receivedAmount').value);
+                btn.disabled = received < totalAmount;
+            } else {
+                btn.disabled = false;
+            }
+        }
+
+        // Process payment
+        function processPayment() {
+            const received = selectedMethod === 'cash' 
+                ? parseNumber(document.getElementById('receivedAmount').value) 
+                : totalAmount;
+
+            if (selectedMethod === 'cash' && received < totalAmount) {
+                alert('Số tiền nhận không đủ!');
+                return;
+            }
+
+            document.getElementById('loadingOverlay').classList.add('active');
+
+            $.post('@Url.Action("ProcessPayment", "Payment")', {
+                OrderId: orderId,
+                PaymentMethod: selectedMethod,
+                ReceivedAmount: received,
+                PromotionCode: document.getElementById('promoCode').value.trim()
+            }).done(function(result) {
+                document.getElementById('loadingOverlay').classList.remove('active');
+
+                if (result.Success) {
+                    billId = result.BillId;
+                    document.getElementById('paidAmount').textContent = formatNumber(result.TotalPaid) + 'đ';
+                    document.getElementById('changeDisplay').textContent = formatNumber(result.ChangeAmount) + 'đ';
+                    document.getElementById('successModal').classList.add('active');
+                } else {
+                    alert('Lỗi: ' + result.Message);
+                }
+            }).fail(function() {
+                document.getElementById('loadingOverlay').classList.remove('active');
+                alert('Lỗi kết nối! Vui lòng thử lại.');
+            });
+        }
+
+        // Navigation
+        function goToDashboard() {
+            window.location.href = '@Url.Action("Dashboard", "Cashier")';
+        }
+
+        // Print bill
+        function printBill() {
+            window.open('@Url.Action("PrintBill", "Cashier")?orderId=' + orderId, '_blank');
+            goToDashboard();
+        }
+
+        // Helper functions
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('vi-VN');
+        }
+
+        function parseNumber(str) {
+            if (!str) return 0;
+            return parseInt(str.replace(/[^\d]/g, '')) || 0;
+        }
+
+        // Format input on keyup
+        document.getElementById('receivedAmount').addEventListener('keyup', function(e) {
+            if (e.key.length === 1 && !/\d/.test(e.key)) {
+                e.preventDefault();
+            }
+            // Format the number
+            let value = this.value.replace(/[^\d]/g, '');
+            if (value) {
+                this.value = parseInt(value).toLocaleString('vi-VN');
+            }
+        });
+    </script>
+</body>
+</html>

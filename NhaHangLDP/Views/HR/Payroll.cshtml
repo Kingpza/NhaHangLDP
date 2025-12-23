@@ -1,0 +1,499 @@
+﻿@model NhaHangLDP.Models.PayrollViewModel
+@{
+    ViewBag.Title = "Bảng lương";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .payroll-page {
+            padding: 20px 0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .month-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .month-selector select {
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+        }
+
+        .summary-card.total::before { background: #3498db; }
+        .summary-card.bonus::before { background: #2ecc71; }
+        .summary-card.deduction::before { background: #e74c3c; }
+        .summary-card.net::before { background: #9b59b6; }
+
+        .summary-card h4 {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .summary-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .summary-card .sub-value {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .payroll-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .payroll-table {
+            width: 100%;
+            font-size: 0.9rem;
+        }
+
+        .payroll-table th {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            white-space: nowrap;
+        }
+
+        .payroll-table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .payroll-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .employee-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .money-cell {
+            font-family: 'Roboto Mono', monospace;
+            text-align: right;
+        }
+
+        .money-cell.bonus { color: #2ecc71; }
+        .money-cell.deduction { color: #e74c3c; }
+        .money-cell.net { font-weight: 700; color: #9b59b6; }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.success { background: #d4edda; color: #155724; }
+        .status-badge.info { background: #d1ecf1; color: #0c5460; }
+        .status-badge.warning { background: #fff3cd; color: #856404; }
+
+        .work-stats {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .work-stats span {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+
+        .calculate-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .calculate-section h5 {
+            margin: 0;
+        }
+
+        .calculate-section p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            opacity: 0.3;
+            margin-bottom: 20px;
+        }
+    </style>
+}
+
+<div class="payroll-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-money-bill-wave me-2"></i>Bảng lương</h2>
+            <p class="text-muted mb-0">Quản lý lương tháng @Model.Month/@Model.Year</p>
+        </div>
+
+        <div class="month-selector">
+            <label><i class="fas fa-calendar me-2"></i>Tháng:</label>
+            <select id="monthSelect">
+                @for (int m = 1; m <= 12; m++)
+                {
+                    <option value="@m" @(m == Model.Month ? "selected" : "")>Tháng @m</option>
+                }
+            </select>
+            <select id="yearSelect">
+                @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
+                {
+                    <option value="@y" @(y == Model.Year ? "selected" : "")>@y</option>
+                }
+            </select>
+            <button class="btn btn-primary" onclick="loadPayroll()">
+                <i class="fas fa-search"></i> Xem
+            </button>
+        </div>
+    </div>
+
+    <!-- Calculate Payroll Section -->
+    <div class="calculate-section">
+        <div>
+            <h5><i class="fas fa-calculator me-2"></i>Tính lương tháng @Model.Month/@Model.Year</h5>
+            <p>Tự động tính lương dựa trên chấm công, hợp đồng và đánh giá hiệu suất</p>
+        </div>
+        <button class="btn btn-light btn-lg" onclick="calculatePayroll()">
+            <i class="fas fa-cogs me-2"></i>Tính lương
+        </button>
+    </div>
+
+    @if (Model.PayrollItems != null && Model.PayrollItems.Any())
+    {
+        <!-- Summary Grid -->
+        <div class="summary-grid">
+            <div class="summary-card total">
+                <h4><i class="fas fa-users me-2"></i>Tổng nhân viên</h4>
+                <div class="value">@Model.Summary.TotalEmployees</div>
+                <div class="sub-value">
+                    <span class="text-success">@Model.Summary.PaidCount đã thanh toán</span>
+                </div>
+            </div>
+            <div class="summary-card bonus">
+                <h4><i class="fas fa-gift me-2"></i>Tổng thưởng</h4>
+                <div class="value">@Model.Summary.TotalBonus.ToString("N0")đ</div>
+                <div class="sub-value">OT + Hiệu suất</div>
+            </div>
+            <div class="summary-card deduction">
+                <h4><i class="fas fa-minus-circle me-2"></i>Tổng khấu trừ</h4>
+                <div class="value">@Model.Summary.TotalDeduction.ToString("N0")đ</div>
+                <div class="sub-value">Đi trễ + Vắng</div>
+            </div>
+            <div class="summary-card net">
+                <h4><i class="fas fa-wallet me-2"></i>Tổng chi trả</h4>
+                <div class="value">@Model.Summary.TotalNetSalary.ToString("N0")đ</div>
+                <div class="sub-value">Thực lĩnh</div>
+            </div>
+        </div>
+
+        <!-- Payroll Table -->
+        <div class="payroll-section">
+            <div class="section-header">
+                <h4><i class="fas fa-table me-2"></i>Chi tiết bảng lương</h4>
+                <div>
+                    <button class="btn btn-success btn-sm" onclick="approveAllPayroll()">
+                        <i class="fas fa-check-double me-1"></i>Duyệt tất cả
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="exportPayroll()">
+                        <i class="fas fa-file-excel me-1"></i>Xuất Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="payroll-table">
+                    <thead>
+                        <tr>
+                            <th>Nhân viên</th>
+                            <th>Lương cơ bản</th>
+                            <th>Phụ cấp</th>
+                            <th>Thưởng</th>
+                            <th>Khấu trừ</th>
+                            <th>Thực lĩnh</th>
+                            <th>Thống kê</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.PayrollItems)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="employee-cell">
+                                        <div class="employee-avatar">
+                                            @item.EmployeeName.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <div>
+                                            <strong>@item.EmployeeName</strong>
+                                            <div class="text-muted small">@item.RoleName</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="money-cell">@item.BaseSalary.ToString("N0")</td>
+                                <td class="money-cell">@item.Allowance.ToString("N0")</td>
+                                <td class="money-cell bonus">+@item.TotalBonus.ToString("N0")</td>
+                                <td class="money-cell deduction">-@item.Deduction.ToString("N0")</td>
+                                <td class="money-cell net">@item.NetSalary.ToString("N0")</td>
+                                <td>
+                                    <div class="work-stats">
+                                        <span><i class="fas fa-calendar-check me-1"></i>@item.TotalWorkDays ngày</span>
+                                        <span><i class="fas fa-clock me-1"></i>@item.TotalWorkHours.ToString("N0")h</span>
+                                        @if (item.LateCount > 0)
+                                        {
+                                            <span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>@item.LateCount trễ</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="status-badge @item.StatusClass">
+                                        @switch (item.Status)
+                                        {
+                                            case "Paid":
+                                                <i class="fas fa-check-circle me-1"></i>@:Đã trả
+                                                break;
+                                            case "Approved":
+                                                <i class="fas fa-thumbs-up me-1"></i>@:Đã duyệt
+                                                break;
+                                            default:
+                                                <i class="fas fa-clock me-1"></i>@:Chờ duyệt
+                                                break;
+                                        }
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        @if (item.Status == "Draft")
+                                        {
+                                            <button class="action-btn btn btn-info btn-sm"
+                                                    onclick="approvePayroll(@item.Id)"
+                                                    title="Duyệt">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        }
+                                        @if (item.Status == "Approved")
+                                        {
+                                            <button class="action-btn btn btn-success btn-sm"
+                                                    onclick="markAsPaid(@item.Id)"
+                                                    title="Đã thanh toán">
+                                                <i class="fas fa-money-bill"></i>
+                                            </button>
+                                        }
+                                        <button class="action-btn btn btn-outline-secondary btn-sm"
+                                                onclick="viewPayrollDetail(@item.Id)"
+                                                title="Chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="payroll-section">
+            <div class="empty-state">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <h4>Chưa có dữ liệu bảng lương</h4>
+                <p class="text-muted">Nhấn "Tính lương" để tạo bảng lương tháng @Model.Month/@Model.Year</p>
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        // Load payroll by month/year
+        function loadPayroll() {
+            var month = $('#monthSelect').val();
+            var year = $('#yearSelect').val();
+            window.location.href = '@Url.Action("Payroll", "HR")' + '?month=' + month + '&year=' + year;
+        }
+
+        // Calculate payroll
+        function calculatePayroll() {
+            var month = @Model.Month;
+            var year = @Model.Year;
+
+            Swal.fire({
+                title: 'Tính lương tháng ' + month + '/' + year + '?',
+                text: 'Hệ thống sẽ tự động tính lương dựa trên chấm công và hợp đồng',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Tính lương',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showLoading('Đang tính lương...');
+                    $.post('@Url.Action("CalculatePayroll", "HR")', { month: month, year: year }, function (response) {
+                        closeLoading();
+                        if (response.Success) {
+                            showSuccess('Thành công!', response.Message);
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            showError('Lỗi', response.Message);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Approve single payroll
+        function approvePayroll(payrollId) {
+            $.post('@Url.Action("ApprovePayroll", "HR")', { payrollId: payrollId }, function (response) {
+                if (response.Success) {
+                    showSuccess('Thành công', response.Message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showError('Lỗi', response.Message);
+                }
+            });
+        }
+
+        // Mark as paid
+        function markAsPaid(payrollId) {
+            Swal.fire({
+                title: 'Xác nhận thanh toán?',
+                text: 'Đánh dấu bảng lương này đã được thanh toán',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("MarkPayrollAsPaid", "HR")', { payrollId: payrollId }, function (response) {
+                        if (response.Success) {
+                            showSuccess('Thành công', response.Message);
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            showError('Lỗi', response.Message);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Approve all
+        function approveAllPayroll() {
+            showInfo('Thông báo', 'Tính năng đang phát triển');
+        }
+
+        // Export to Excel
+        function exportPayroll() {
+            showInfo('Thông báo', 'Tính năng đang phát triển');
+        }
+
+        // View detail
+        function viewPayrollDetail(payrollId) {
+            window.location.href = '@Url.Action("PayrollDetail", "HR")' + '?id=' + payrollId;
+        }
+    </script>
+}

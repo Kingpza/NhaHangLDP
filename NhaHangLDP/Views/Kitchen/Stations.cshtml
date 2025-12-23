@@ -1,0 +1,430 @@
+﻿@model NhaHangLDP.Models.StationManagementViewModel
+@{
+    ViewBag.Title = "Quản Lý Trạm Bếp";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .station-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .station-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .station-header {
+            padding: 20px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .station-header h5 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .station-code {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: monospace;
+        }
+        .station-body {
+            padding: 20px;
+        }
+        .station-stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .station-stat-row:last-child { border-bottom: none; }
+        .station-stat-label { color: #64748b; }
+        .station-stat-value { font-weight: 600; color: #1e3a5f; }
+        .station-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .category-tag {
+            background: #f1f5f9;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            color: #64748b;
+        }
+        .station-footer {
+            padding: 15px 20px;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        .chef-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .chef-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            margin-right: 12px;
+        }
+        .chef-info { flex: 1; }
+        .chef-name { font-weight: 600; color: #1e3a5f; }
+        .chef-tasks { font-size: 12px; color: #64748b; }
+    </style>
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-sitemap me-2"></i>Quản Lý Trạm Bếp</h2>
+            <p>Cấu hình các trạm chế biến trong bếp</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Dashboard", "Kitchen")" class="btn btn-outline-light">
+                <i class="fas fa-chart-pie me-2"></i>Dashboard
+            </a>
+            <button class="btn btn-light" onclick="showCreateModal()">
+                <i class="fas fa-plus me-2"></i>Tạo Trạm Mới
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <h5 class="mb-3"><i class="fas fa-sitemap text-primary me-2"></i>Danh Sách Trạm Bếp</h5>
+        
+        @if (Model.Stations.Any())
+        {
+            <div class="row">
+                @foreach (var station in Model.Stations)
+                {
+                    <div class="col-md-6">
+                        <div class="station-card">
+                            <div class="station-header" style="background: @station.DisplayColor;">
+                                <div>
+                                    <h5>@station.Name</h5>
+                                    @if (!string.IsNullOrEmpty(station.Description))
+                                    {
+                                        <small style="opacity: 0.8;">@station.Description</small>
+                                    }
+                                </div>
+                                <span class="station-code">@station.Code</span>
+                            </div>
+                            <div class="station-body">
+                                <div class="station-stat-row">
+                                    <span class="station-stat-label">Đơn đang chờ</span>
+                                    <span class="station-stat-value">
+                                        <span class="badge bg-warning">@station.PendingTicketCount</span>
+                                    </span>
+                                </div>
+                                <div class="station-stat-row">
+                                    <span class="station-stat-label">Đơn đang làm</span>
+                                    <span class="station-stat-value">
+                                        <span class="badge bg-info">@station.PreparingTicketCount</span>
+                                    </span>
+                                </div>
+                                <div class="station-stat-row">
+                                    <span class="station-stat-label">Thứ tự hiển thị</span>
+                                    <span class="station-stat-value">@station.DisplayOrder</span>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(station.HandledCategories))
+                                {
+                                    <div class="station-categories">
+                                        @foreach (var cat in station.CategoryList)
+                                        {
+                                            <span class="category-tag">@cat</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            <div class="station-footer">
+                                <div>
+                                    @if (station.IsActive)
+                                    {
+                                        <span class="badge bg-success">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Tạm dừng</span>
+                                    }
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editStation(@station.Id)">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <a href="@Url.Action("Display", "Kitchen", new { station = station.Code })" 
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-desktop"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteStation(@station.Id)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 bg-white rounded">
+                <i class="fas fa-sitemap fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Chưa có trạm bếp nào</h4>
+                <p class="text-muted">Tạo trạm bếp để phân chia công việc</p>
+                <button class="btn btn-primary mt-2" onclick="showCreateModal()">
+                    <i class="fas fa-plus me-2"></i>Tạo trạm đầu tiên
+                </button>
+            </div>
+        }
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Chefs -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-chef text-primary me-2"></i>Đầu Bếp</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.AvailableChefs.Any())
+                {
+                    foreach (var chef in Model.AvailableChefs)
+                    {
+                        <div class="chef-item">
+                            <div class="chef-avatar">@chef.FullName.Substring(0, 1)</div>
+                            <div class="chef-info">
+                                <div class="chef-name">@chef.FullName</div>
+                                <div class="chef-tasks">@chef.ActiveTicketCount đơn đang xử lý</div>
+                            </div>
+                            @if (chef.ActiveTicketCount > 0)
+                            {
+                                <span class="badge bg-warning">Đang làm</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Rảnh</span>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted text-center py-3">Chưa có nhân viên bếp</p>
+                }
+            </div>
+        </div>
+        
+        <!-- Categories -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list text-primary me-2"></i>Danh Mục Món Ăn</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var cat in Model.AvailableCategories)
+                    {
+                        <span class="badge bg-light text-dark">@cat</span>
+                    }
+                </div>
+                <small class="text-muted d-block mt-3">
+                    Các danh mục này có thể được gán cho từng trạm bếp
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal fade" id="stationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Tạo Trạm Bếp Mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="stationForm">
+                    <input type="hidden" id="stationId" name="Id" value="0">
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Mã <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control text-uppercase" id="stationCode" name="Code" 
+                                       maxlength="10" placeholder="VD: HOT" required>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">Tên trạm <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="stationName" name="Name" 
+                                       placeholder="VD: Bếp nóng" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <input type="text" class="form-control" id="stationDesc" name="Description" 
+                               placeholder="Mô tả ngắn về trạm bếp">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Danh mục xử lý</label>
+                        <div class="d-flex flex-wrap gap-2" id="categoryCheckboxes">
+                            @foreach (var cat in Model.AvailableCategories)
+                            {
+                                <label class="btn btn-outline-secondary btn-sm">
+                                    <input type="checkbox" name="Categories" value="@cat" style="display:none;">
+                                    @cat
+                                </label>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Màu hiển thị</label>
+                                <input type="color" class="form-control form-control-color w-100" 
+                                       id="stationColor" name="DisplayColor" value="#3b82f6">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Thứ tự</label>
+                                <input type="number" class="form-control" id="stationOrder" 
+                                       name="DisplayOrder" value="0" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="stationActive" name="IsActive" checked>
+                        <label class="form-check-label">Kích hoạt</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="saveStation()">
+                    <i class="fas fa-save me-2"></i>Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        var stationModal;
+        
+        $(document).ready(function() {
+            stationModal = new bootstrap.Modal(document.getElementById('stationModal'));
+            
+            // Category button toggle
+            $('#categoryCheckboxes label').click(function() {
+                var checkbox = $(this).find('input');
+                checkbox.prop('checked', !checkbox.prop('checked'));
+                $(this).toggleClass('btn-secondary btn-outline-secondary');
+                $(this).toggleClass('active', checkbox.prop('checked'));
+            });
+        });
+        
+        function showCreateModal() {
+            $('#modalTitle').text('Tạo Trạm Bếp Mới');
+            $('#stationForm')[0].reset();
+            $('#stationId').val(0);
+            $('#stationColor').val('#3b82f6');
+            $('#categoryCheckboxes label').removeClass('btn-secondary active').addClass('btn-outline-secondary');
+            $('#categoryCheckboxes input').prop('checked', false);
+            stationModal.show();
+        }
+        
+        function editStation(id) {
+            // Load station data via AJAX and populate form
+            showInfo('Đang tải...', 'Vui lòng chờ');
+            // For now, just show the modal
+            $('#modalTitle').text('Sửa Trạm Bếp');
+            stationModal.show();
+        }
+        
+        function saveStation() {
+            var categories = [];
+            $('#categoryCheckboxes input:checked').each(function() {
+                categories.push($(this).val());
+            });
+            
+            var data = {
+                Id: parseInt($('#stationId').val()),
+                Code: $('#stationCode').val(),
+                Name: $('#stationName').val(),
+                Description: $('#stationDesc').val(),
+                HandledCategories: categories.join(','),
+                DisplayColor: $('#stationColor').val(),
+                DisplayOrder: parseInt($('#stationOrder').val()),
+                IsActive: $('#stationActive').is(':checked')
+            };
+            
+            var url = data.Id > 0 ? '@Url.Action("UpdateStation", "Kitchen")' : '@Url.Action("CreateStation", "Kitchen")';
+            
+            $.post(url, data, function(result) {
+                if (result.success) {
+                    stationModal.hide();
+                    showSuccess('Thành công', result.message, function() {
+                        location.reload();
+                    });
+                } else {
+                    showError('Lỗi', result.message);
+                }
+            });
+        }
+        
+        function deleteStation(id) {
+            showDeleteConfirm('Xóa trạm bếp', 'Bạn có chắc muốn xóa trạm bếp này?', function() {
+                $.post('@Url.Action("DeleteStation", "Kitchen")', { id: id }, function(result) {
+                    if (result.success) {
+                        showSuccess('Thành công', result.message, function() {
+                            location.reload();
+                        });
+                    } else {
+                        showError('Lỗi', result.message);
+                    }
+                });
+            });
+        }
+    </script>
+}

@@ -1,0 +1,1406 @@
+﻿@model NhaHangLDP.Models.SplitBillViewModel
+@{
+    ViewBag.Title = "Tách bill";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title:Tách bill - @Model.OrderCode</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #1a1d21;
+            --bg-card: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #a0aec0;
+            --border-color: #4a5568;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #2d3748 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .split-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 100vh;
+            gap: 0;
+        }
+
+        /* Header */
+        .page-header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--primary), #764ba2);
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .order-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        /* Left Panel - Order Items */
+        .items-panel {
+            padding: 24px;
+            background: var(--bg-dark);
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-title i {
+            color: var(--primary);
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .order-item {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: grab;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .order-item:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .order-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .order-item.selected {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .item-price {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .qty-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .qty-value {
+            min-width: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .item-total {
+            font-weight: 600;
+            color: var(--primary);
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .add-to-part-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .add-to-part-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .add-to-part-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Right Panel - Split Parts */
+        .parts-panel {
+            padding: 24px;
+            background: #1e2328;
+            overflow-y: auto;
+        }
+
+        .split-type-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .split-type-btn {
+            flex: 1;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .split-type-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .split-type-btn.active {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .split-type-btn i {
+            font-size: 24px;
+            margin-bottom: 8px;
+            color: var(--primary);
+            display: block;
+        }
+
+        .split-type-btn span {
+            font-size: 13px;
+        }
+
+        .parts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .bill-part {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .bill-part.drop-target {
+            border-color: var(--primary);
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .bill-part.active-part {
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .part-header {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .part-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .part-title input {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 6px;
+            width: 150px;
+        }
+
+        .part-title input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .part-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .part-action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+
+        .part-action-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .part-action-btn.delete:hover {
+            color: var(--danger);
+        }
+
+        .part-items {
+            min-height: 80px;
+            padding: 12px;
+        }
+
+        .part-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--bg-dark);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .part-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .part-item-info {
+            flex: 1;
+        }
+
+        .part-item-name {
+            font-size: 14px;
+        }
+
+        .part-item-qty {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .part-item-price {
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .remove-item-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .remove-item-btn:hover {
+            color: var(--danger);
+        }
+
+        .part-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .part-footer {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .part-total {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .part-pay-btn {
+            background: var(--success);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .part-pay-btn:hover:not(:disabled) {
+            background: #059669;
+        }
+
+        .part-pay-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .part-pay-btn.paid {
+            background: var(--text-secondary);
+        }
+
+        .add-part-btn {
+            width: 100%;
+            padding: 16px;
+            background: transparent;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .add-part-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Summary Footer */
+        .summary-footer {
+            grid-column: 1 / -1;
+            background: var(--bg-card);
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .summary-info {
+            display: flex;
+            gap: 32px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .summary-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .summary-value.remaining {
+            color: var(--warning);
+        }
+
+        .summary-value.assigned {
+            color: var(--success);
+        }
+
+        .summary-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-cancel:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-complete {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+
+        .btn-complete:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-complete:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Equal split input */
+        .equal-split-input {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .equal-split-input.active {
+            display: block;
+        }
+
+        .equal-split-input label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .equal-split-input input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .equal-split-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .apply-split-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+
+        .apply-split-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Custom SweetAlert2 */
+        .swal2-popup {
+            background: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .swal2-title {
+            color: var(--text-primary) !important;
+        }
+
+        .swal2-html-container {
+            color: var(--text-secondary) !important;
+        }
+
+        @@media (max-width: 992px) {
+            .split-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .items-panel {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="split-container">
+        <!-- Header -->
+        <div class="page-header">
+            <div>
+                <h2><i class="fas fa-divide me-2"></i>Tách bill</h2>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <span class="order-badge">
+                    <i class="fas fa-receipt me-2"></i>@Model.OrderCode
+                </span>
+                <span class="order-badge">
+                    <i class="fas fa-chair me-2"></i>Bàn @Model.TableNumber
+                </span>
+                <a href="@Url.Action("Orders", "Cashier")" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+
+        <!-- Left Panel - Order Items -->
+        <div class="items-panel">
+            <div class="panel-title">
+                <i class="fas fa-utensils"></i>
+                Danh sách món (@Model.Items.Count món)
+            </div>
+            <div class="item-list" id="itemList">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="order-item" data-id="@item.Id" data-name="@item.Name" 
+                         data-price="@item.UnitPrice" data-max="@item.Quantity" draggable="true">
+                        <div class="item-info">
+                            <div class="item-name">@item.Name</div>
+                            <div class="item-price">@String.Format("{0:N0}", item.UnitPrice)đ x @item.Quantity</div>
+                        </div>
+                        <div class="item-quantity">
+                            <button class="qty-btn" onclick="changeQty(this, -1); event.stopPropagation();">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span class="qty-value" data-remaining="@item.Quantity">@item.Quantity</span>
+                            <button class="qty-btn" onclick="changeQty(this, 1); event.stopPropagation();">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="item-total">@String.Format("{0:N0}", item.UnitPrice * item.Quantity)đ</div>
+                        <button class="add-to-part-btn" onclick="addToPart(this); event.stopPropagation();">
+                            <i class="fas fa-plus"></i> Thêm
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Right Panel - Split Parts -->
+        <div class="parts-panel">
+            <div class="panel-title">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Các phần bill
+            </div>
+
+            <!-- Split Type Selector -->
+            <div class="split-type-selector">
+                <div class="split-type-btn active" data-type="items" onclick="selectSplitType(this)">
+                    <i class="fas fa-list"></i>
+                    <span>Theo món</span>
+                </div>
+                <div class="split-type-btn" data-type="equal" onclick="selectSplitType(this)">
+                    <i class="fas fa-equals"></i>
+                    <span>Chia đều</span>
+                </div>
+                <div class="split-type-btn" data-type="amount" onclick="selectSplitType(this)">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Theo số tiền</span>
+                </div>
+            </div>
+
+            <!-- Equal Split Input -->
+            <div class="equal-split-input" id="equalSplitInput">
+                <label>Số người chia:</label>
+                <input type="number" id="numberOfPeople" min="2" max="20" value="2" placeholder="Nhập số người...">
+                <button class="apply-split-btn" onclick="applyEqualSplit()">
+                    <i class="fas fa-check me-2"></i>Chia đều
+                </button>
+            </div>
+
+            <!-- Parts Container -->
+            <div class="parts-container" id="partsContainer">
+                <!-- Part 1 -->
+                <div class="bill-part active-part" data-part="1">
+                    <div class="part-header">
+                        <div class="part-title">
+                            <i class="fas fa-user"></i>
+                            <input type="text" value="Khách 1" placeholder="Tên khách...">
+                        </div>
+                        <div class="part-actions">
+                            <button class="part-action-btn delete" onclick="deletePart(this)" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="part-items" ondragover="allowDrop(event)" ondrop="dropItem(event, 1)">
+                        <div class="part-empty">
+                            <i class="fas fa-hand-pointer"></i><br>
+                            Kéo thả hoặc nhấn "Thêm" để thêm món
+                        </div>
+                    </div>
+                    <div class="part-footer">
+                        <div class="part-total">0đ</div>
+                        <button class="part-pay-btn" onclick="payPart(1)" disabled>
+                            <i class="fas fa-credit-card me-1"></i>Thanh toán
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Part 2 -->
+                <div class="bill-part" data-part="2">
+                    <div class="part-header">
+                        <div class="part-title">
+                            <i class="fas fa-user"></i>
+                            <input type="text" value="Khách 2" placeholder="Tên khách...">
+                        </div>
+                        <div class="part-actions">
+                            <button class="part-action-btn delete" onclick="deletePart(this)" title="Xóa">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="part-items" ondragover="allowDrop(event)" ondrop="dropItem(event, 2)">
+                        <div class="part-empty">
+                            <i class="fas fa-hand-pointer"></i><br>
+                            Kéo thả hoặc nhấn "Thêm" để thêm món
+                        </div>
+                    </div>
+                    <div class="part-footer">
+                        <div class="part-total">0đ</div>
+                        <button class="part-pay-btn" onclick="payPart(2)" disabled>
+                            <i class="fas fa-credit-card me-1"></i>Thanh toán
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Part Button -->
+            <button class="add-part-btn" onclick="addNewPart()">
+                <i class="fas fa-plus"></i> Thêm phần bill mới
+            </button>
+        </div>
+
+        <!-- Summary Footer -->
+        <div class="summary-footer">
+            <div class="summary-info">
+                <div class="summary-item">
+                    <div class="summary-label">Tổng đơn hàng</div>
+                    <div class="summary-value">@String.Format("{0:N0}", Model.TotalAmount)đ</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Đã phân bổ</div>
+                    <div class="summary-value assigned" id="assignedAmount">0đ</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Còn lại</div>
+                    <div class="summary-value remaining" id="remainingAmount">@String.Format("{0:N0}", Model.TotalAmount)đ</div>
+                </div>
+            </div>
+            <div class="summary-actions">
+                <button class="action-btn btn-cancel" onclick="cancelSplit()">
+                    <i class="fas fa-times me-2"></i>Hủy
+                </button>
+                <button class="action-btn btn-complete" id="completeBtn" onclick="completeSplit()" disabled>
+                    <i class="fas fa-check me-2"></i>Hoàn tất tách bill
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Data
+        const orderId = @Model.OrderId;
+        const totalOrderAmount = @Model.TotalAmount;
+        let partCount = 2;
+        let currentPart = 1;
+        let splitType = 'items';
+        let paidParts = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.order-item').forEach(item => {
+                item.addEventListener('dragstart', dragStart);
+                item.addEventListener('dragend', dragEnd);
+            });
+
+            // Set current part on click
+            document.querySelectorAll('.bill-part').forEach(part => {
+                part.addEventListener('click', function() {
+                    setCurrentPart(parseInt(this.dataset.part));
+                });
+            });
+        });
+
+        function setCurrentPart(partNumber) {
+            currentPart = partNumber;
+            document.querySelectorAll('.bill-part').forEach(p => p.classList.remove('active-part'));
+            const part = document.querySelector(`.bill-part[data-part="${partNumber}"]`);
+            if (part) part.classList.add('active-part');
+        }
+
+        // Select split type
+        function selectSplitType(element) {
+            document.querySelectorAll('.split-type-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            splitType = element.dataset.type;
+
+            document.getElementById('equalSplitInput').classList.toggle('active', splitType === 'equal');
+        }
+
+        // Drag and drop
+        function dragStart(e) {
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.id);
+        }
+
+        function dragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.bill-part').forEach(p => p.classList.remove('drop-target'));
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+            e.currentTarget.closest('.bill-part').classList.add('drop-target');
+        }
+
+        function dropItem(e, partNumber) {
+            e.preventDefault();
+            e.currentTarget.closest('.bill-part').classList.remove('drop-target');
+            
+            const itemId = e.dataTransfer.getData('text/plain');
+            const itemElement = document.querySelector(`.order-item[data-id="${itemId}"]`);
+            
+            if (itemElement) {
+                addItemToPart(itemElement, partNumber);
+            }
+        }
+
+        // Change quantity
+        function changeQty(btn, delta) {
+            const qtySpan = btn.parentElement.querySelector('.qty-value');
+            const max = parseInt(qtySpan.dataset.remaining);
+            let current = parseInt(qtySpan.textContent);
+            
+            current = Math.max(1, Math.min(max, current + delta));
+            qtySpan.textContent = current;
+
+            // Update total
+            const item = btn.closest('.order-item');
+            const price = parseFloat(item.dataset.price);
+            item.querySelector('.item-total').textContent = formatNumber(current * price) + 'đ';
+        }
+
+        // Add to part
+        function addToPart(btn) {
+            const item = btn.closest('.order-item');
+            addItemToPart(item, currentPart);
+        }
+
+        function addItemToPart(itemElement, partNumber) {
+            const partItems = document.querySelector(`.bill-part[data-part="${partNumber}"] .part-items`);
+            if (!partItems) return;
+
+            const qtySpan = itemElement.querySelector('.qty-value');
+            const qty = parseInt(qtySpan.textContent);
+            const remaining = parseInt(qtySpan.dataset.remaining);
+
+            if (qty > remaining || qty <= 0) {
+                showToast('warning', 'Số lượng không hợp lệ!');
+                return;
+            }
+
+            // Remove empty message
+            const emptyMsg = partItems.querySelector('.part-empty');
+            if (emptyMsg) emptyMsg.remove();
+
+            // Check if item already exists
+            const existingItem = partItems.querySelector(`.part-item[data-id="${itemElement.dataset.id}"]`);
+            if (existingItem) {
+                const existingQty = parseInt(existingItem.querySelector('.part-item-qty').dataset.qty);
+                const newQty = existingQty + qty;
+                existingItem.querySelector('.part-item-qty').textContent = `x${newQty}`;
+                existingItem.querySelector('.part-item-qty').dataset.qty = newQty;
+                existingItem.querySelector('.part-item-price').textContent = 
+                    formatNumber(newQty * parseFloat(itemElement.dataset.price)) + 'đ';
+            } else {
+                // Add new item
+                const partItem = document.createElement('div');
+                partItem.className = 'part-item';
+                partItem.dataset.id = itemElement.dataset.id;
+                partItem.innerHTML = `
+                    <div class="part-item-info">
+                        <div class="part-item-name">${itemElement.dataset.name}</div>
+                        <div class="part-item-qty" data-qty="${qty}">x${qty}</div>
+                    </div>
+                    <span class="part-item-price">${formatNumber(qty * parseFloat(itemElement.dataset.price))}đ</span>
+                    <button class="remove-item-btn" onclick="removeItemFromPart(this, ${partNumber})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                partItems.appendChild(partItem);
+            }
+
+            // Update remaining quantity
+            qtySpan.dataset.remaining = remaining - qty;
+            qtySpan.textContent = Math.min(parseInt(qtySpan.textContent), remaining - qty);
+            
+            // Update item total display
+            const price = parseFloat(itemElement.dataset.price);
+            const newRemaining = parseInt(qtySpan.dataset.remaining);
+            if (newRemaining > 0) {
+                itemElement.querySelector('.item-total').textContent = formatNumber(newRemaining * price) + 'đ';
+            }
+            
+            if (newRemaining <= 0) {
+                itemElement.classList.add('selected');
+                itemElement.querySelector('.add-to-part-btn').disabled = true;
+                qtySpan.textContent = '0';
+            }
+
+            updatePartTotal(partNumber);
+            updateSummary();
+            showToast('success', `Đã thêm ${qty} ${itemElement.dataset.name} vào Khách ${partNumber}`);
+        }
+
+        function removeItemFromPart(btn, partNumber) {
+            const partItem = btn.closest('.part-item');
+            const itemId = partItem.dataset.id;
+            const qty = parseInt(partItem.querySelector('.part-item-qty').dataset.qty);
+
+            // Return quantity to original item
+            const originalItem = document.querySelector(`.order-item[data-id="${itemId}"]`);
+            if (originalItem) {
+                const qtySpan = originalItem.querySelector('.qty-value');
+                const newRemaining = parseInt(qtySpan.dataset.remaining) + qty;
+                qtySpan.dataset.remaining = newRemaining;
+                qtySpan.textContent = newRemaining;
+                
+                // Update item total
+                const price = parseFloat(originalItem.dataset.price);
+                originalItem.querySelector('.item-total').textContent = formatNumber(newRemaining * price) + 'đ';
+                
+                originalItem.classList.remove('selected');
+                originalItem.querySelector('.add-to-part-btn').disabled = false;
+            }
+
+            partItem.remove();
+
+            // Add empty message if no items
+            const partItems = document.querySelector(`.bill-part[data-part="${partNumber}"] .part-items`);
+            if (partItems.querySelectorAll('.part-item').length === 0) {
+                partItems.innerHTML = `
+                    <div class="part-empty">
+                        <i class="fas fa-hand-pointer"></i><br>
+                        Kéo thả hoặc nhấn "Thêm" để thêm món
+                    </div>
+                `;
+            }
+
+            updatePartTotal(partNumber);
+            updateSummary();
+        }
+
+        function updatePartTotal(partNumber) {
+            const part = document.querySelector(`.bill-part[data-part="${partNumber}"]`);
+            if (!part) return;
+
+            const items = part.querySelectorAll('.part-item');
+            let total = 0;
+
+            items.forEach(item => {
+                const priceText = item.querySelector('.part-item-price').textContent;
+                total += parseNumber(priceText);
+            });
+
+            part.querySelector('.part-total').textContent = formatNumber(total) + 'đ';
+            
+            // Enable pay button if has items and not paid yet
+            const payBtn = part.querySelector('.part-pay-btn');
+            if (!paidParts.includes(partNumber)) {
+                payBtn.disabled = total <= 0;
+            }
+        }
+
+        function updateSummary() {
+            let assignedTotal = 0;
+            document.querySelectorAll('.bill-part').forEach(part => {
+                const totalText = part.querySelector('.part-total').textContent;
+                assignedTotal += parseNumber(totalText);
+            });
+
+            document.getElementById('assignedAmount').textContent = formatNumber(assignedTotal) + 'đ';
+            document.getElementById('remainingAmount').textContent = formatNumber(totalOrderAmount - assignedTotal) + 'đ';
+
+            // Enable complete button if all assigned and all paid
+            const allPaid = paidParts.length === document.querySelectorAll('.bill-part').length;
+            const allAssigned = assignedTotal >= totalOrderAmount;
+            document.getElementById('completeBtn').disabled = !(allPaid && allAssigned);
+        }
+
+        // Add new part
+        function addNewPart() {
+            partCount++;
+            const container = document.getElementById('partsContainer');
+            const newPart = document.createElement('div');
+            newPart.className = 'bill-part';
+            newPart.dataset.part = partCount;
+            newPart.innerHTML = `
+                <div class="part-header">
+                    <div class="part-title">
+                        <i class="fas fa-user"></i>
+                        <input type="text" value="Khách ${partCount}" placeholder="Tên khách...">
+                    </div>
+                    <div class="part-actions">
+                        <button class="part-action-btn delete" onclick="deletePart(this)" title="Xóa">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="part-items" ondragover="allowDrop(event)" ondrop="dropItem(event, ${partCount})">
+                    <div class="part-empty">
+                        <i class="fas fa-hand-pointer"></i><br>
+                        Kéo thả hoặc nhấn "Thêm" để thêm món
+                    </div>
+                </div>
+                <div class="part-footer">
+                    <div class="part-total">0đ</div>
+                    <button class="part-pay-btn" onclick="payPart(${partCount})" disabled>
+                        <i class="fas fa-credit-card me-1"></i>Thanh toán
+                    </button>
+                </div>
+            `;
+            container.appendChild(newPart);
+
+            // Add click event for new part
+            newPart.addEventListener('click', function() {
+                setCurrentPart(parseInt(this.dataset.part));
+            });
+
+            setCurrentPart(partCount);
+            showToast('success', `Đã thêm phần bill mới: Khách ${partCount}`);
+        }
+
+        // Delete part
+        function deletePart(btn) {
+            const part = btn.closest('.bill-part');
+            const partNumber = parseInt(part.dataset.part);
+
+            if (document.querySelectorAll('.bill-part').length <= 2) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không thể xóa!',
+                    text: 'Cần ít nhất 2 phần bill để tách!',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+
+            if (paidParts.includes(partNumber)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Không thể xóa!',
+                    text: 'Phần bill này đã được thanh toán!',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: 'Các món trong phần này sẽ được trả lại danh sách!',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Return all items
+                    part.querySelectorAll('.part-item').forEach(partItem => {
+                        const itemId = partItem.dataset.id;
+                        const qty = parseInt(partItem.querySelector('.part-item-qty').dataset.qty);
+                        
+                        const originalItem = document.querySelector(`.order-item[data-id="${itemId}"]`);
+                        if (originalItem) {
+                            const qtySpan = originalItem.querySelector('.qty-value');
+                            const newRemaining = parseInt(qtySpan.dataset.remaining) + qty;
+                            qtySpan.dataset.remaining = newRemaining;
+                            qtySpan.textContent = newRemaining;
+                            
+                            const price = parseFloat(originalItem.dataset.price);
+                            originalItem.querySelector('.item-total').textContent = formatNumber(newRemaining * price) + 'đ';
+                            
+                            originalItem.classList.remove('selected');
+                            originalItem.querySelector('.add-to-part-btn').disabled = false;
+                        }
+                    });
+
+                    part.remove();
+                    updateSummary();
+                    
+                    // Set first part as current
+                    const firstPart = document.querySelector('.bill-part');
+                    if (firstPart) {
+                        setCurrentPart(parseInt(firstPart.dataset.part));
+                    }
+
+                    showToast('success', 'Đã xóa phần bill!');
+                }
+            });
+        }
+
+        // Apply equal split
+        function applyEqualSplit() {
+            const numberOfPeople = parseInt(document.getElementById('numberOfPeople').value);
+            if (numberOfPeople < 2) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không hợp lệ!',
+                    text: 'Số người phải từ 2 trở lên!',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Chia đều bill?',
+                text: `Chia bill thành ${numberOfPeople} phần bằng nhau?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#667eea',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Chia đều',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Clear existing parts
+                    document.getElementById('partsContainer').innerHTML = '';
+                    partCount = 0;
+                    paidParts = [];
+
+                    // Create new parts
+                    const amountPerPerson = Math.round(totalOrderAmount / numberOfPeople);
+                    for (let i = 1; i <= numberOfPeople; i++) {
+                        addNewPartSilent(i);
+                        const part = document.querySelector(`.bill-part[data-part="${i}"]`);
+                        const isLast = i === numberOfPeople;
+                        const amount = isLast ? totalOrderAmount - (amountPerPerson * (numberOfPeople - 1)) : amountPerPerson;
+                        
+                        part.querySelector('.part-total').textContent = formatNumber(amount) + 'đ';
+                        part.querySelector('.part-pay-btn').disabled = false;
+                        part.querySelector('.part-items').innerHTML = `
+                            <div class="part-item" data-id="equal-${i}">
+                                <div class="part-item-info">
+                                    <div class="part-item-name">Phần chia đều</div>
+                                    <div class="part-item-qty" data-qty="1">1/${numberOfPeople}</div>
+                                </div>
+                                <span class="part-item-price">${formatNumber(amount)}đ</span>
+                            </div>
+                        `;
+                    }
+
+                    // Mark all items as used
+                    document.querySelectorAll('.order-item').forEach(item => {
+                        item.classList.add('selected');
+                        item.querySelector('.add-to-part-btn').disabled = true;
+                        item.querySelector('.qty-value').dataset.remaining = '0';
+                        item.querySelector('.qty-value').textContent = '0';
+                    });
+
+                    updateSummary();
+                    setCurrentPart(1);
+                    showToast('success', `Đã chia đều thành ${numberOfPeople} phần!`);
+                }
+            });
+        }
+
+        function addNewPartSilent(num) {
+            partCount = num;
+            const container = document.getElementById('partsContainer');
+            const newPart = document.createElement('div');
+            newPart.className = 'bill-part';
+            newPart.dataset.part = num;
+            newPart.innerHTML = `
+                <div class="part-header">
+                    <div class="part-title">
+                        <i class="fas fa-user"></i>
+                        <input type="text" value="Khách ${num}" placeholder="Tên khách...">
+                    </div>
+                    <div class="part-actions">
+                        <button class="part-action-btn delete" onclick="deletePart(this)" title="Xóa">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="part-items" ondragover="allowDrop(event)" ondrop="dropItem(event, ${num})">
+                    <div class="part-empty">
+                        <i class="fas fa-hand-pointer"></i><br>
+                        Kéo thả hoặc nhấn "Thêm" để thêm món
+                    </div>
+                </div>
+                <div class="part-footer">
+                    <div class="part-total">0đ</div>
+                    <button class="part-pay-btn" onclick="payPart(${num})" disabled>
+                        <i class="fas fa-credit-card me-1"></i>Thanh toán
+                    </button>
+                </div>
+            `;
+            container.appendChild(newPart);
+
+            newPart.addEventListener('click', function() {
+                setCurrentPart(parseInt(this.dataset.part));
+            });
+        }
+
+        // Pay part
+        function payPart(partNumber) {
+            const part = document.querySelector(`.bill-part[data-part="${partNumber}"]`);
+            const total = parseNumber(part.querySelector('.part-total').textContent);
+            const customerName = part.querySelector('.part-title input').value;
+
+            if (total <= 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Không có món!',
+                    text: 'Vui lòng thêm món vào phần này trước khi thanh toán!',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+            
+            Swal.fire({
+                title: 'Xác nhận thanh toán',
+                html: `
+                    <div style="text-align: left; margin-bottom: 15px;">
+                        <p><strong>Khách:</strong> ${customerName}</p>
+                        <p><strong>Tổng tiền:</strong> <span style="color: #10b981; font-weight: bold;">${formatNumber(total)}đ</span></p>
+                    </div>
+                    <div style="text-align: left;">
+                        <label style="display: block; margin-bottom: 8px;">Phương thức thanh toán:</label>
+                        <select id="paymentMethod" class="swal2-input" style="margin: 0; width: 100%;">
+                            <option value="cash">Tiền mặt</option>
+                            <option value="card">Thẻ</option>
+                            <option value="transfer">Chuyển khoản</option>
+                        </select>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-check"></i> Thanh toán',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const paymentMethod = document.getElementById('paymentMethod').value;
+
+                    // Mark as paid
+                    paidParts.push(partNumber);
+                    
+                    const payBtn = part.querySelector('.part-pay-btn');
+                    payBtn.classList.add('paid');
+                    payBtn.innerHTML = '<i class="fas fa-check me-1"></i>Đã thanh toán';
+                    payBtn.disabled = true;
+                    
+                    // Disable delete button
+                    part.querySelector('.part-action-btn.delete').style.display = 'none';
+                    
+                    // Add paid indicator
+                    part.style.borderColor = '#10b981';
+                    part.querySelector('.part-header').style.background = 'rgba(16, 185, 129, 0.2)';
+
+                    updateSummary();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thanh toán thành công!',
+                        text: `${customerName} - ${formatNumber(total)}đ`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            });
+        }
+
+        // Cancel split
+        function cancelSplit() {
+            Swal.fire({
+                title: 'Hủy tách bill?',
+                text: 'Tất cả thay đổi sẽ không được lưu!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Hủy tách bill',
+                cancelButtonText: 'Tiếp tục'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '@Url.Action("Orders", "Cashier")';
+                }
+            });
+        }
+
+        // Complete split
+        function completeSplit() {
+            const allPaid = paidParts.length === document.querySelectorAll('.bill-part').length;
+            
+            if (!allPaid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Chưa thanh toán hết!',
+                    text: 'Vui lòng thanh toán tất cả các phần trước khi hoàn tất!',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+
+            // Collect data and submit
+            const parts = [];
+            document.querySelectorAll('.bill-part').forEach(part => {
+                const partData = {
+                    PartNumber: parseInt(part.dataset.part),
+                    CustomerName: part.querySelector('.part-title input').value,
+                    Items: []
+                };
+
+                part.querySelectorAll('.part-item').forEach(item => {
+                    if (item.dataset.id && !item.dataset.id.startsWith('equal-')) {
+                        partData.Items.push({
+                            OrderDetailId: parseInt(item.dataset.id),
+                            Quantity: parseInt(item.querySelector('.part-item-qty').dataset.qty)
+                        });
+                    }
+                });
+
+                parts.push(partData);
+            });
+
+            Swal.fire({
+                title: 'Hoàn tất tách bill?',
+                text: 'Xác nhận hoàn tất và lưu thông tin tách bill!',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-check"></i> Hoàn tất',
+                cancelButtonText: 'Hủy',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return $.post('@Url.Action("ProcessSplitBill", "Payment")', {
+                        OrderId: orderId,
+                        SplitType: splitType,
+                        Parts: parts
+                    }).then(response => {
+                        return response;
+                    }).catch(error => {
+                        Swal.showValidationMessage(`Lỗi: ${error.statusText}`);
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (result.value.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Tách bill thành công!',
+                            text: 'Đơn hàng đã được tách và thanh toán hoàn tất.',
+                            confirmButtonColor: '#10b981'
+                        }).then(() => {
+                            window.location.href = '@Url.Action("Orders", "Cashier")';
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi!',
+                            text: result.value.message || 'Có lỗi xảy ra!',
+                            confirmButtonColor: '#667eea'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Helper functions
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('vi-VN');
+        }
+
+        function parseNumber(str) {
+            return parseInt(str.replace(/[^\d]/g, '')) || 0;
+        }
+
+        // Toast notification
+        function showToast(icon, title) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true
+            });
+
+            Toast.fire({
+                icon: icon,
+                title: title
+            });
+        }
+    </script>
+</body>
+</html>

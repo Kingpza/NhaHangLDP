@@ -49,5 +49,24 @@ namespace NhaHangLDP.Models
         public virtual DbSet<StockInboundDetail> StockInboundDetail { get; set; }
         public virtual DbSet<Supplier> Supplier { get; set; }
         public virtual DbSet<TableArea> TableArea { get; set; }
+        public virtual DbSet<EmailConfig> EmailConfig { get; set; }
+        public virtual DbSet<EmailLog> EmailLog { get; set; }
+        public virtual DbSet<EmailTemplate> EmailTemplate { get; set; }
+        public virtual DbSet<KitchenOrderItem> KitchenOrderItem { get; set; }
+        public virtual DbSet<KitchenOrderTicket> KitchenOrderTicket { get; set; }
+        public virtual DbSet<KitchenStation> KitchenStation { get; set; }
+        public virtual DbSet<Notification> Notification { get; set; }
+        public virtual DbSet<Promotion> Promotion { get; set; }
+        public virtual DbSet<PromotionUsage> PromotionUsage { get; set; }
+        public virtual DbSet<QROrder> QROrder { get; set; }
+        public virtual DbSet<QROrderDetail> QROrderDetail { get; set; }
+        public virtual DbSet<TableSession> TableSession { get; set; }
+        public virtual DbSet<Attendance> Attendance { get; set; }
+        public virtual DbSet<EmployeeContract> EmployeeContract { get; set; }
+        public virtual DbSet<EmployeeSchedule> EmployeeSchedule { get; set; }
+        public virtual DbSet<LeaveRequest> LeaveRequest { get; set; }
+        public virtual DbSet<Payroll> Payroll { get; set; }
+        public virtual DbSet<PerformanceReview> PerformanceReview { get; set; }
+        public virtual DbSet<WorkShift> WorkShift { get; set; }
     }
 }

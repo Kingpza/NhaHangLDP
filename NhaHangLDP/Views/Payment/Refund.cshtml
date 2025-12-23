@@ -1,0 +1,553 @@
+﻿@model NhaHangLDP.Models.BillDetailViewModel
+@{
+    ViewBag.Title = "Hoàn tiền";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<style>
+    .refund-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        padding: 24px 32px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+    }
+
+    .bill-info-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+    }
+
+    .info-item {
+        text-align: center;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .info-item .label {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
+
+    .info-item .value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .items-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .items-header {
+        padding: 16px 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        font-weight: 600;
+    }
+
+    .item-row {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .item-row:last-child {
+        border-bottom: none;
+    }
+
+    .item-checkbox {
+        margin-right: 16px;
+    }
+
+    .item-checkbox input {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .item-info {
+        flex: 1;
+    }
+
+    .item-name {
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+
+    .item-price {
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    .item-total {
+        font-weight: 600;
+        color: #333;
+        min-width: 100px;
+        text-align: right;
+    }
+
+    .refund-form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .refund-type-options {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .refund-type {
+        flex: 1;
+        padding: 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .refund-type:hover {
+        border-color: #ef4444;
+    }
+
+    .refund-type.active {
+        border-color: #ef4444;
+        background: #fef2f2;
+    }
+
+    .refund-type i {
+        font-size: 32px;
+        color: #ef4444;
+        margin-bottom: 8px;
+    }
+
+    .refund-type h5 {
+        margin: 0 0 4px 0;
+        font-size: 16px;
+    }
+
+    .refund-type p {
+        margin: 0;
+        font-size: 13px;
+        color: #6c757d;
+    }
+
+    .summary-card {
+        background: #fef2f2;
+        border: 2px solid #fecaca;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+    }
+
+    .summary-row.total {
+        font-size: 20px;
+        font-weight: 700;
+        border-top: 2px solid #fecaca;
+        margin-top: 8px;
+        padding-top: 12px;
+        color: #dc2626;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 16px;
+    }
+
+    .btn-refund {
+        flex: 1;
+        padding: 16px 24px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-confirm-refund {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .btn-confirm-refund:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-confirm-refund:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-cancel {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .btn-cancel:hover {
+        background: #dee2e6;
+    }
+
+    .warning-box {
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .warning-box i {
+        color: #856404;
+        font-size: 20px;
+    }
+
+    .warning-box p {
+        margin: 0;
+        color: #856404;
+        font-size: 14px;
+    }
+</style>
+
+<div class="refund-container">
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1"><i class="fas fa-undo me-2"></i>Hoàn tiền hóa đơn</h2>
+                <p class="mb-0 opacity-75">@Model.InvoiceNumber</p>
+            </div>
+            <a href="@Url.Action("Bills", "Payment")" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+
+    <!-- Bill Info -->
+    <div class="bill-info-card">
+        <h5 class="mb-3"><i class="fas fa-file-invoice me-2"></i>Thông tin hóa đơn</h5>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="label">Mã đơn hàng</div>
+                <div class="value">@Model.OrderCode</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Bàn</div>
+                <div class="value">@Model.TableNumber</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Ngày lập</div>
+                <div class="value">@Model.BillDate.ToString("dd/MM/yyyy")</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Thu ngân</div>
+                <div class="value">@Model.CashierName</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Tổng tiền</div>
+                <div class="value text-primary">@Model.FinalAmount.ToString("N0")đ</div>
+            </div>
+            <div class="info-item">
+                <div class="label">Thanh toán</div>
+                <div class="value">@Model.PaymentMethodDisplay</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning -->
+    <div class="warning-box">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+            <p><strong>Lưu ý:</strong> Hoàn tiền là thao tác không thể hoàn tác. Vui lòng kiểm tra kỹ thông tin trước khi xác nhận.</p>
+            <p class="mt-2">Hóa đơn sau khi hoàn tiền sẽ được ghi nhận trong lịch sử và ảnh hưởng đến doanh thu của ca làm việc.</p>
+        </div>
+    </div>
+
+    <!-- Refund Type -->
+    <div class="refund-form-card">
+        <h5 class="mb-3"><i class="fas fa-hand-holding-usd me-2"></i>Loại hoàn tiền</h5>
+        <div class="refund-type-options">
+            <div class="refund-type active" data-type="full" onclick="selectRefundType(this)">
+                <i class="fas fa-undo-alt"></i>
+                <h5>Hoàn toàn bộ</h5>
+                <p>Hoàn lại toàn bộ số tiền</p>
+            </div>
+            <div class="refund-type" data-type="partial" onclick="selectRefundType(this)">
+                <i class="fas fa-percentage"></i>
+                <h5>Hoàn một phần</h5>
+                <p>Chọn món hoặc nhập số tiền</p>
+            </div>
+        </div>
+
+        <!-- Partial Refund Options -->
+        <div id="partialRefundOptions" style="display: none;">
+            <h6 class="mb-3">Chọn món để hoàn tiền:</h6>
+            <div class="items-card">
+                <div class="items-header">
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                    <label for="selectAll" class="ms-2">Chọn tất cả</label>
+                </div>
+                @foreach (var item in Model.Items)
+                {
+                    <div class="item-row">
+                        <div class="item-checkbox">
+                            <input type="checkbox" class="item-select" data-id="@item.Id" 
+                                   data-amount="@item.Total" onchange="calculateRefund()">
+                        </div>
+                        <div class="item-info">
+                            <div class="item-name">@item.Name</div>
+                            <div class="item-price">@item.UnitPrice.ToString("N0")đ x @item.Quantity</div>
+                        </div>
+                        <div class="item-total">@item.Total.ToString("N0")đ</div>
+                    </div>
+                }
+            </div>
+
+            <div class="mt-3">
+                <label class="form-label">Hoặc nhập số tiền cụ thể:</label>
+                <input type="number" class="form-control" id="customAmount" 
+                       placeholder="Nhập số tiền..." max="@Model.FinalAmount" 
+                       onchange="calculateRefund()">
+            </div>
+        </div>
+
+        <!-- Reason -->
+        <div class="mt-4">
+            <label class="form-label"><i class="fas fa-comment me-2"></i>Lý do hoàn tiền <span class="text-danger">*</span></label>
+            <select class="form-select mb-2" id="refundReasonSelect" onchange="updateReasonText()">
+                <option value="">-- Chọn lý do --</option>
+                <option value="Khách hàng yêu cầu">Khách hàng yêu cầu</option>
+                <option value="Món ăn không đạt chất lượng">Món ăn không đạt chất lượng</option>
+                <option value="Phục vụ chậm">Phục vụ chậm</option>
+                <option value="Sai món">Sai món</option>
+                <option value="Khách hàng hủy đơn">Khách hàng hủy đơn</option>
+                <option value="other">Lý do khác...</option>
+            </select>
+            <textarea class="form-control" id="refundReason" rows="3" 
+                      placeholder="Nhập chi tiết lý do hoàn tiền..."></textarea>
+        </div>
+
+        <!-- Refund Method -->
+        <div class="mt-4">
+            <label class="form-label"><i class="fas fa-wallet me-2"></i>Hình thức hoàn tiền</label>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="refundMethod" 
+                               id="refundCash" value="cash" checked>
+                        <label class="form-check-label" for="refundCash">
+                            <i class="fas fa-money-bill me-2"></i>Tiền mặt
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="refundMethod" 
+                               id="refundTransfer" value="transfer">
+                        <label class="form-check-label" for="refundTransfer">
+                            <i class="fas fa-university me-2"></i>Chuyển khoản
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="refundMethod" 
+                               id="refundOriginal" value="original">
+                        <label class="form-check-label" for="refundOriginal">
+                            <i class="fas fa-redo me-2"></i>Hoàn theo PTTT gốc
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-card">
+        <h5 class="mb-3"><i class="fas fa-calculator me-2"></i>Tổng hợp hoàn tiền</h5>
+        <div class="summary-row">
+            <span>Tổng hóa đơn:</span>
+            <span>@Model.FinalAmount.ToString("N0")đ</span>
+        </div>
+        <div class="summary-row" id="selectedItemsRow" style="display: none;">
+            <span>Món đã chọn:</span>
+            <span id="selectedItemsAmount">0đ</span>
+        </div>
+        <div class="summary-row total">
+            <span>Số tiền hoàn:</span>
+            <span id="refundAmount">@Model.FinalAmount.ToString("N0")đ</span>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-buttons">
+        <a href="@Url.Action("Bills", "Payment")" class="btn-refund btn-cancel">
+            <i class="fas fa-times me-2"></i>Hủy
+        </a>
+        <button class="btn-refund btn-confirm-refund" id="confirmRefundBtn" onclick="processRefund()">
+            <i class="fas fa-check me-2"></i>Xác nhận hoàn tiền
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let refundType = 'full';
+        let totalBillAmount = @Model.FinalAmount;
+        let refundAmount = totalBillAmount;
+
+        // Select refund type
+        function selectRefundType(element) {
+            document.querySelectorAll('.refund-type').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            refundType = element.dataset.type;
+
+            const partialOptions = document.getElementById('partialRefundOptions');
+            const selectedRow = document.getElementById('selectedItemsRow');
+
+            if (refundType === 'partial') {
+                partialOptions.style.display = 'block';
+                selectedRow.style.display = 'flex';
+                calculateRefund();
+            } else {
+                partialOptions.style.display = 'none';
+                selectedRow.style.display = 'none';
+                refundAmount = totalBillAmount;
+                document.getElementById('refundAmount').textContent = formatNumber(refundAmount) + 'đ';
+            }
+        }
+
+        // Toggle select all
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll').checked;
+            document.querySelectorAll('.item-select').forEach(cb => {
+                cb.checked = selectAll;
+            });
+            calculateRefund();
+        }
+
+        // Calculate refund amount
+        function calculateRefund() {
+            const customAmount = parseFloat(document.getElementById('customAmount').value) || 0;
+
+            if (customAmount > 0) {
+                refundAmount = Math.min(customAmount, totalBillAmount);
+                document.querySelectorAll('.item-select').forEach(cb => cb.checked = false);
+            } else {
+                let selectedTotal = 0;
+                document.querySelectorAll('.item-select:checked').forEach(cb => {
+                    selectedTotal += parseFloat(cb.dataset.amount);
+                });
+                refundAmount = selectedTotal;
+                document.getElementById('selectedItemsAmount').textContent = formatNumber(selectedTotal) + 'đ';
+            }
+
+            document.getElementById('refundAmount').textContent = formatNumber(refundAmount) + 'đ';
+        }
+
+        // Update reason text
+        function updateReasonText() {
+            const select = document.getElementById('refundReasonSelect');
+            const textarea = document.getElementById('refundReason');
+            
+            if (select.value && select.value !== 'other') {
+                textarea.value = select.value;
+            } else if (select.value === 'other') {
+                textarea.value = '';
+                textarea.focus();
+            }
+        }
+
+        // Process refund
+        function processRefund() {
+            const reason = document.getElementById('refundReason').value.trim();
+            if (!reason) {
+                alert('Vui lòng nhập lý do hoàn tiền!');
+                return;
+            }
+
+            if (refundAmount <= 0) {
+                alert('Số tiền hoàn phải lớn hơn 0!');
+                return;
+            }
+
+            if (!confirm(`Xác nhận hoàn ${formatNumber(refundAmount)}đ cho hóa đơn @Model.InvoiceNumber?`)) {
+                return;
+            }
+
+            const btn = document.getElementById('confirmRefundBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+
+            // Get selected items
+            const selectedItems = [];
+            document.querySelectorAll('.item-select:checked').forEach(cb => {
+                selectedItems.push({
+                    OrderDetailId: parseInt(cb.dataset.id),
+                    Quantity: 1
+                });
+            });
+
+            $.post('@Url.Action("ProcessRefund", "Payment")', {
+                BillId: @Model.BillId,
+                Reason: reason,
+                RefundAmount: refundType === 'partial' ? refundAmount : null,
+                IsFullRefund: refundType === 'full',
+                Items: selectedItems,
+                RefundMethod: $('input[name="refundMethod"]:checked').val()
+            }).done(function(result) {
+                if (result.Success) {
+                    alert('Hoàn tiền thành công!\nSố tiền: ' + formatNumber(result.RefundAmount) + 'đ');
+                    window.location.href = '@Url.Action("Bills", "Payment")';
+                } else {
+                    alert('Lỗi: ' + result.Message);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check me-2"></i>Xác nhận hoàn tiền';
+                }
+            }).fail(function() {
+                alert('Lỗi kết nối! Vui lòng thử lại.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check me-2"></i>Xác nhận hoàn tiền';
+            });
+        }
+
+        // Format number
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('vi-VN');
+        }
+    </script>
+}

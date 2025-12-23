@@ -1,0 +1,277 @@
+﻿@model NhaHangLDP.Models.AttendanceReportViewModel
+@{
+    ViewBag.Title = "Báo cáo chấm công";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .report-page {
+            padding: 20px 0;
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-form {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .summary-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            color: white;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-item .value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-item .label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .report-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .report-table {
+            width: 100%;
+        }
+
+        .report-table th {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #6c757d;
+        }
+
+        .report-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.success { background: #d4edda; color: #155724; }
+        .status-badge.warning { background: #fff3cd; color: #856404; }
+        .status-badge.danger { background: #f8d7da; color: #721c24; }
+        .status-badge.info { background: #d1ecf1; color: #0c5460; }
+    </style>
+}
+
+<div class="report-page">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-chart-bar me-2"></i>Báo cáo chấm công</h2>
+            <p class="text-muted mb-0">Thống kê chi tiết chấm công nhân viên</p>
+        </div>
+        <a href="@Url.Action("Attendance")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại
+        </a>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="get" class="filter-form">
+            <div class="filter-group">
+                <label><i class="fas fa-calendar me-1"></i>Từ ngày</label>
+                <input type="date" name="startDate" value="@Model.StartDate.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-calendar me-1"></i>Đến ngày</label>
+                <input type="date" name="endDate" value="@Model.EndDate.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-user me-1"></i>Nhân viên</label>
+                <select name="employeeId">
+                    <option value="">-- Tất cả --</option>
+                    @if (Model.Employees != null)
+                    {
+                        foreach (var emp in Model.Employees)
+                        {
+                            <option value="@emp.Id" @(Model.EmployeeId == emp.Id ? "selected" : "")>
+                                @emp.FullName
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i>Lọc
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Section -->
+    @if (Model.Summary != null)
+    {
+        <div class="summary-section">
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="value">@Model.Summary.TotalDays</div>
+                    <div class="label">Tổng ngày</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">@Model.Summary.PresentDays</div>
+                    <div class="label">Có mặt</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">@Model.Summary.LateDays</div>
+                    <div class="label">Đi trễ</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">@Model.Summary.AbsentDays</div>
+                    <div class="label">Vắng mặt</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">@Model.Summary.TotalWorkHours.ToString("N1")h</div>
+                    <div class="label">Tổng giờ làm</div>
+                </div>
+                <div class="summary-item">
+                    <div class="value">@Model.Summary.AttendanceRate.ToString("N1")%</div>
+                    <div class="label">Tỷ lệ chuyên cần</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Report Table -->
+    <div class="report-section">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4><i class="fas fa-list me-2"></i>Chi tiết chấm công</h4>
+            <button class="btn btn-success btn-sm">
+                <i class="fas fa-file-excel me-1"></i>Xuất Excel
+            </button>
+        </div>
+
+        @if (Model.AttendanceRecords != null && Model.AttendanceRecords.Any())
+        {
+            <div class="table-responsive">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày</th>
+                            <th>Nhân viên</th>
+                            <th>Chức vụ</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th>Giờ làm</th>
+                            <th>Trạng thái</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var record in Model.AttendanceRecords)
+                        {
+                            var statusClass = record.Status == "OnTime" ? "success" :
+                                              (record.Status == "Late" ? "warning" : "danger");
+                            <tr>
+                                <td><strong>@record.Date.ToString("dd/MM/yyyy")</strong></td>
+                                <td>@record.EmployeeName</td>
+                                <td>@record.RoleName</td>
+                                <td>
+                                    @if (record.CheckInTime.HasValue)
+                                    {
+                                        <span class="text-success">@record.CheckInTime.Value.ToString("HH:mm")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--:--</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (record.CheckOutTime.HasValue)
+                                    {
+                                        <span class="text-danger">@record.CheckOutTime.Value.ToString("HH:mm")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">--:--</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (record.WorkHours.HasValue)
+                                    {
+                                        <strong>@record.WorkHours.Value.ToString("N1")h</strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="status-badge @statusClass">@record.Status</span>
+                                </td>
+                                <td><small class="text-muted">@record.Note</small></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                <p>Không có dữ liệu trong khoảng thời gian này</p>
+            </div>
+        }
+    </div>
+</div>

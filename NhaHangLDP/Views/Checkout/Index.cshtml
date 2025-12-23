@@ -1,0 +1,722 @@
+﻿@model NhaHangLDP.Models.CheckoutViewModel
+@{
+    ViewBag.Title = "Thanh toán";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Thanh toán - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007bff",
+                        "primary-dark": "#0056b3",
+                        background: "#f8f9fa",
+                        surface: "#ffffff",
+                        "text-primary": "#212529",
+                        "text-secondary": "#6c757d",
+                        border: "#e0e0e0",
+                        success: "#28a745",
+                        danger: "#dc3545"
+                    },
+                    fontFamily: {
+                        display: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @@keyframes borderPulse {
+            0%, 100% { border-color: #28a745; }
+            50% { border-color: #20c997; }
+        }
+        
+        .border-success {
+            animation: borderPulse 1s ease-in-out 2;
+            border-width: 2px;
+        }
+        
+        /* Marker bounce animation */
+        @@keyframes markerBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        /* Custom Leaflet marker styles */
+        .custom-marker-restaurant, .custom-marker-delivery {
+            background: transparent;
+            border: none;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            font-family: 'Manrope', sans-serif;
+        }
+        
+        .leaflet-popup-content {
+            margin: 12px 16px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body class="bg-background font-display text-text-primary min-h-screen">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-surface shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="@Url.Action("Index", "Cart")" class="flex items-center gap-3 text-text-secondary hover:text-primary">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    <span>Quay lại giỏ hàng</span>
+                </a>
+                <h1 class="text-xl font-bold">
+                    <span class="material-symbols-outlined text-primary align-middle">shopping_cart_checkout</span>
+                    Thanh toán
+                </h1>
+                <div class="w-40"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <form id="checkoutForm">
+            @Html.AntiForgeryToken()
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- Left Column - Customer Info & Delivery -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Customer Information -->
+                    <section class="bg-surface rounded-2xl shadow-sm p-6">
+                        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">person</span>
+                            Thông tin khách hàng
+                        </h2>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Họ tên <span class="text-danger">*</span></label>
+                                <input type="text" name="CustomerName" id="customerName" required
+                                       value="@Model.Form.CustomerName"
+                                       class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                       placeholder="Nhập họ tên" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="tel" name="CustomerPhone" id="customerPhone" required
+                                       value="@Model.Form.CustomerPhone"
+                                       class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                       placeholder="Nhập số điện thoại" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium mb-2">Email (để nhận thông báo)</label>
+                                <input type="email" name="CustomerEmail" id="customerEmail"
+                                       value="@Model.Form.CustomerEmail"
+                                       class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                       placeholder="example@email.com" />
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Order Type -->
+                    <section class="bg-surface rounded-2xl shadow-sm p-6">
+                        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">local_shipping</span>
+                            Hình thức nhận hàng
+                        </h2>
+                        <div class="grid grid-cols-3 gap-4">
+                            <label class="order-type-option cursor-pointer">
+                                <input type="radio" name="OrderType" value="Delivery" checked class="sr-only" onchange="toggleDeliveryAddress()" />
+                                <div class="border-2 border-border rounded-xl p-4 text-center transition-all hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5">
+                                    <span class="material-symbols-outlined text-3xl text-primary mb-2">delivery_dining</span>
+                                    <p class="font-semibold">Giao hàng</p>
+                                    <p class="text-xs text-text-secondary">30-45 phút</p>
+                                </div>
+                            </label>
+                            <label class="order-type-option cursor-pointer">
+                                <input type="radio" name="OrderType" value="TakeAway" class="sr-only" onchange="toggleDeliveryAddress()" />
+                                <div class="border-2 border-border rounded-xl p-4 text-center transition-all hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5">
+                                    <span class="material-symbols-outlined text-3xl text-primary mb-2">takeout_dining</span>
+                                    <p class="font-semibold">Tự đến lấy</p>
+                                    <p class="text-xs text-text-secondary">20-30 phút</p>
+                                </div>
+                            </label>
+                            <label class="order-type-option cursor-pointer">
+                                <input type="radio" name="OrderType" value="DineIn" class="sr-only" onchange="toggleDeliveryAddress()" />
+                                <div class="border-2 border-border rounded-xl p-4 text-center transition-all hover:border-primary peer-checked:border-primary peer-checked:bg-primary/5">
+                                    <span class="material-symbols-outlined text-3xl text-primary mb-2">restaurant</span>
+                                    <p class="font-semibold">Ăn tại quán</p>
+                                    <p class="text-xs text-text-secondary">Tại nhà hàng</p>
+                                </div>
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- Delivery Address -->
+                    <section id="deliveryAddressSection" class="bg-surface rounded-2xl shadow-sm p-6">
+                        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">location_on</span>
+                            Địa chỉ giao hàng
+                        </h2>
+
+                        @if (Model.SavedAddresses != null && Model.SavedAddresses.Any())
+                        {
+                            <div class="mb-4">
+                                <p class="text-sm font-medium mb-3">Địa chỉ đã lưu:</p>
+                                <div class="space-y-2">
+                                    @foreach (var addr in Model.SavedAddresses)
+                                    {
+                                        <label class="flex items-start gap-3 p-3 border border-border rounded-xl cursor-pointer hover:border-primary">
+                                            <input type="radio" name="AddressId" value="@addr.Id" class="mt-1" onchange="selectSavedAddress(this)" 
+                                                   data-address="@addr.AddressLine" data-ward="@addr.Ward" data-district="@addr.District" data-city="@addr.City" />
+                                            <div class="flex-1">
+                                                <p class="font-medium">@addr.ReceiverName - @addr.ReceiverPhone</p>
+                                                <p class="text-sm text-text-secondary">@addr.FullAddress</p>
+                                            </div>
+                                            @if (addr.IsDefault)
+                                            {
+                                                <span class="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Mặc định</span>
+                                            }
+                                        </label>
+                                    }
+                                </div>
+                                <button type="button" onclick="toggleNewAddress()" class="mt-3 text-primary text-sm font-medium">
+                                    + Thêm địa chỉ mới
+                                </button>
+                            </div>
+                        }
+
+                        <div id="newAddressForm" class="@(Model.SavedAddresses?.Any() == true ? "hidden" : "")">
+                            <div class="space-y-4">
+                                <!-- Leaflet Map Section -->
+                                <div class="border border-border rounded-xl overflow-hidden">
+                                    <div class="bg-gradient-to-r from-primary/10 to-primary/5 p-3 flex items-center justify-between border-b border-border">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-primary">map</span>
+                                            <span class="text-sm font-semibold">Chọn vị trí trên bản đồ</span>
+                                        </div>
+                                        <button type="button" onclick="getCurrentLocation()" class="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium flex items-center gap-1 hover:bg-primary-dark transition-colors">
+                                            <span class="material-symbols-outlined text-sm">my_location</span>
+                                            Vị trí hiện tại
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Leaflet Map Container -->
+                                    <div id="deliveryMap" class="h-80 w-full bg-gray-100"></div>
+                                    
+                                    <div class="bg-blue-50 p-3 text-xs text-blue-700">
+                                        <span class="material-symbols-outlined text-sm align-middle">info</span>
+                                        <strong>Hướng dẫn:</strong> Click trên bản đồ hoặc kéo marker màu đỏ để chọn địa chỉ. Địa chỉ sẽ tự động điền vào form bên dưới.
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">
+                                        Địa chỉ chi tiết <span class="text-danger">*</span>
+                                        <span class="text-xs text-text-secondary font-normal">(Số nhà, tên đường)</span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="text" name="DeliveryAddress" id="deliveryAddress"
+                                               class="w-full px-4 py-3 pr-10 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                               placeholder="Ví dụ: 123 Nguyễn Huệ" />
+                                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">home</span>
+                                    </div>
+                                    <p class="text-xs text-text-secondary mt-1 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-xs">tips_and_updates</span>
+                                        Hoặc nhập địa chỉ để tìm kiếm trên bản đồ
+                                    </p>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Phường/Xã</label>
+                                        <input type="text" name="Ward" id="ward"
+                                               class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                               placeholder="Phường/Xã" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Quận/Huyện</label>
+                                        <input type="text" name="District" id="district"
+                                               class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                               placeholder="Quận/Huyện" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">Tỉnh/TP</label>
+                                        <input type="text" name="City" id="city" value="TP. Hồ Chí Minh"
+                                               class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                                    </div>
+                                </div>
+                                
+                                <!-- Hidden fields for coordinates -->
+                                <input type="hidden" name="Latitude" id="latitude" />
+                                <input type="hidden" name="Longitude" id="longitude" />
+                                
+                                @if (Model.CustomerInfo?.IsLoggedIn == true)
+                                {
+                                    <label class="flex items-center gap-2 cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        <input type="checkbox" name="SaveAddress" value="true" class="w-5 h-5 text-primary rounded focus:ring-primary" />
+                                        <span class="text-sm flex items-center gap-1">
+                                            <span class="material-symbols-outlined text-sm">bookmark</span>
+                                            Lưu địa chỉ này cho lần sau
+                                        </span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Payment Method -->
+                    <section class="bg-surface rounded-2xl shadow-sm p-6">
+                        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">payments</span>
+                            Phương thức thanh toán
+                        </h2>
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-4 p-4 border-2 border-border rounded-xl cursor-pointer hover:border-primary transition-all">
+                                <input type="radio" name="PaymentMethod" value="COD" checked class="w-5 h-5 text-primary" />
+                                <span class="material-symbols-outlined text-2xl text-success">payments</span>
+                                <div class="flex-1">
+                                    <p class="font-semibold">Thanh toán khi nhận hàng (COD)</p>
+                                    <p class="text-sm text-text-secondary">Thanh toán bằng tiền mặt khi nhận đơn</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-4 p-4 border-2 border-border rounded-xl cursor-pointer hover:border-primary transition-all">
+                                <input type="radio" name="PaymentMethod" value="VNPay" class="w-5 h-5 text-primary" />
+                                <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/6/0oxhzjmxbksr1686814746087.png" alt="VNPay" class="h-8" />
+                                <div class="flex-1">
+                                    <p class="font-semibold">VNPay</p>
+                                    <p class="text-sm text-text-secondary">Thanh toán qua VNPay QR, ATM, Visa...</p>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-4 p-4 border-2 border-border rounded-xl cursor-pointer hover:border-primary transition-all opacity-50">
+                                <input type="radio" name="PaymentMethod" value="MoMo" disabled class="w-5 h-5" />
+                                <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" class="h-8" />
+                                <div class="flex-1">
+                                    <p class="font-semibold">Ví MoMo</p>
+                                    <p class="text-sm text-text-secondary">Sắp ra mắt</p>
+                                </div>
+                            </label>
+                        </div>
+                    </section>
+
+                    <!-- Note -->
+                    <section class="bg-surface rounded-2xl shadow-sm p-6">
+                        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">note</span>
+                            Ghi chú
+                        </h2>
+                        <textarea name="Note" rows="3" 
+                                  class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                  placeholder="Ghi chú cho đơn hàng (ví dụ: giao giờ nào, không cay...)"></textarea>
+                    </section>
+                </div>
+
+                <!-- Right Column - Order Summary -->
+                <div class="lg:col-span-1">
+                    <div class="bg-surface rounded-2xl shadow-sm p-6 sticky top-24">
+                        <h2 class="text-lg font-bold mb-4">Đơn hàng của bạn</h2>
+
+                        <!-- Order Items -->
+                        <div class="space-y-3 max-h-64 overflow-y-auto mb-4">
+                            @foreach (var item in Model.Cart.Items)
+                            {
+                                <div class="flex items-center gap-3">
+                                    <div class="relative">
+                                        <div class="w-16 h-16 rounded-lg bg-cover bg-center" 
+                                             style='background-image: url("@Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl))")'></div>
+                                        <span class="absolute -top-2 -right-2 w-6 h-6 bg-primary text-white text-xs rounded-full flex items-center justify-center font-bold">
+                                            @item.Quantity
+                                        </span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-medium truncate">@item.Name</p>
+                                        <p class="text-sm text-text-secondary">@item.UnitPrice.ToString("N0")đ</p>
+                                    </div>
+                                    <p class="font-semibold">@item.Subtotal.ToString("N0")đ</p>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Voucher Applied -->
+                        @if (!string.IsNullOrEmpty(Model.Cart.VoucherCode))
+                        {
+                            <div class="flex items-center gap-2 p-3 bg-success/10 rounded-lg mb-4">
+                                <span class="material-symbols-outlined text-success">local_offer</span>
+                                <span class="text-sm text-success font-medium">Mã @Model.Cart.VoucherCode đã được áp dụng</span>
+                            </div>
+                        }
+
+                        <!-- Price Breakdown -->
+                        <div class="border-t border-border pt-4 space-y-3">
+                            <div class="flex justify-between text-text-secondary">
+                                <span>Tạm tính</span>
+                                <span>@Model.Cart.SubTotal.ToString("N0")đ</span>
+                            </div>
+                            <div class="flex justify-between text-text-secondary">
+                                <span>Phí giao hàng</span>
+                                <span id="checkoutDeliveryFee">
+                                    @if (Model.Cart.DeliveryFee == 0)
+                                    {
+                                        <span class="text-success">Miễn phí</span>
+                                    }
+                                    else
+                                    {
+                                        @Model.Cart.DeliveryFee.ToString("N0")@:đ
+                                    }
+                                </span>
+                            </div>
+                            @if (Model.Cart.Discount > 0)
+                            {
+                                <div class="flex justify-between text-success">
+                                    <span>Giảm giá</span>
+                                    <span>-@Model.Cart.Discount.ToString("N0")đ</span>
+                                </div>
+                            }
+                            <div class="flex justify-between text-xl font-bold pt-3 border-t border-border">
+                                <span>Tổng cộng</span>
+                                <span class="text-primary">@Model.Cart.TotalAmount.ToString("N0")đ</span>
+                            </div>
+                        </div>
+
+                        <!-- Place Order Button -->
+                        <button type="submit" id="placeOrderBtn"
+                                class="mt-6 w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            Đặt hàng
+                        </button>
+
+                        <p class="text-xs text-text-secondary text-center mt-4">
+                            Bằng việc đặt hàng, bạn đồng ý với 
+                            <a href="#" class="text-primary hover:underline">Điều khoản dịch vụ</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Leaflet Map variables
+        var map;
+        var marker;
+        var restaurantMarker;
+        var restaurantLocation = [10.8231, 106.6297]; // Coordinates for Ho Chi Minh City
+        
+        // Initialize Leaflet Map on page load
+        $(document).ready(function() {
+            initLeafletMap();
+        });
+        
+        // Initialize Leaflet Map
+        function initLeafletMap() {
+            // Create map centered on restaurant location
+            map = L.map('deliveryMap').setView(restaurantLocation, 13);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            // Add restaurant marker (blue)
+            var restaurantIcon = L.divIcon({
+                className: 'custom-marker-restaurant',
+                html: '<div style="background-color: #007bff; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"><div style="transform: rotate(45deg); color: white; text-align: center; line-height: 24px; font-size: 16px;">🏠</div></div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+            });
+            
+            restaurantMarker = L.marker(restaurantLocation, {
+                icon: restaurantIcon,
+                title: 'Nhà Hàng LDP'
+            }).addTo(map);
+            
+            restaurantMarker.bindPopup('<b>Nhà Hàng LDP</b><br>Vị trí nhà hàng').openPopup();
+            
+            // Add delivery marker (red, draggable)
+            var deliveryIcon = L.divIcon({
+                className: 'custom-marker-delivery',
+                html: '<div style="background-color: #dc3545; width: 40px; height: 40px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 4px solid white; box-shadow: 0 3px 15px rgba(220,53,69,0.5);"><div style="transform: rotate(45deg); color: white; text-align: center; line-height: 32px; font-size: 20px;">📍</div></div>',
+                iconSize: [40, 40],
+                iconAnchor: [20, 40]
+            });
+            
+            marker = L.marker(restaurantLocation, {
+                icon: deliveryIcon,
+                draggable: true,
+                title: 'Kéo để chọn địa chỉ giao hàng'
+            }).addTo(map);
+            
+            marker.bindPopup('Kéo tôi đến địa chỉ giao hàng!').openPopup();
+            
+            // Click on map to move marker
+            map.on('click', function(e) {
+                marker.setLatLng(e.latlng);
+                marker.bounce();
+                geocodePosition(e.latlng.lat, e.latlng.lng);
+            });
+            
+            // Drag marker to update position
+            marker.on('dragend', function(e) {
+                var position = marker.getLatLng();
+                geocodePosition(position.lat, position.lng);
+            });
+        }
+        
+        // Add bounce animation to marker
+        L.Marker.prototype.bounce = function() {
+            var marker = this;
+            var icon = marker._icon;
+            if (icon) {
+                icon.style.animation = 'markerBounce 0.5s ease-out';
+                setTimeout(() => {
+                    icon.style.animation = '';
+                }, 500);
+            }
+        };
+        
+        // Geocode position using Nominatim (OpenStreetMap)
+        function geocodePosition(lat, lng) {
+            // Store coordinates
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            
+            // Show loading in popup
+            marker.getPopup().setContent('🔄 Đang tìm địa chỉ...').update();
+            
+            // Reverse geocoding with Nominatim
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.address) {
+                        var addr = data.address;
+                        var streetAddress = '';
+                        
+                        // Build street address
+                        if (addr.house_number) streetAddress += addr.house_number + ' ';
+                        if (addr.road) streetAddress += addr.road;
+                        else if (addr.pedestrian) streetAddress += addr.pedestrian;
+                        
+                        if (!streetAddress.trim() && data.display_name) {
+                            streetAddress = data.display_name.split(',')[0];
+                        }
+                        
+                        // Fill form fields
+                        document.getElementById('deliveryAddress').value = streetAddress.trim();
+                        document.getElementById('ward').value = addr.suburb || addr.quarter || addr.neighbourhood || '';
+                        document.getElementById('district').value = addr.city_district || addr.county || addr.town || '';
+                        
+                        var city = addr.city || addr.province || addr.state || '';
+                        if (city) {
+                            // Normalize city name
+                            if (city.toLowerCase().includes('hồ chí minh') || city.toLowerCase().includes('ho chi minh')) {
+                                city = 'TP. Hồ Chí Minh';
+                            }
+                            document.getElementById('city').value = city;
+                        }
+                        
+                        // Update marker popup
+                        marker.getPopup().setContent(`<b>📍 Địa chỉ giao hàng</b><br>${streetAddress.trim() || data.display_name}`).update();
+                        
+                        // Visual feedback
+                        highlightFilledFields();
+                        showAddressUpdated();
+                    } else {
+                        marker.getPopup().setContent('❌ Không tìm thấy địa chỉ').update();
+                    }
+                })
+                .catch(error => {
+                    console.error('Geocoding error:', error);
+                    marker.getPopup().setContent('❌ Lỗi tìm địa chỉ').update();
+                });
+        }
+        
+        // Get current location using browser Geolocation API
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                Swal.fire({
+                    title: 'Đang lấy vị trí...',
+                    html: 'Vui lòng cho phép truy cập vị trí của bạn',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        Swal.close();
+                        var lat = position.coords.latitude;
+                        var lng = position.coords.longitude;
+                        
+                        // Move map and marker to current location
+                        map.setView([lat, lng], 17);
+                        marker.setLatLng([lat, lng]);
+                        marker.bounce();
+                        
+                        // Geocode the position
+                        geocodePosition(lat, lng);
+                    },
+                    function(error) {
+                        Swal.close();
+                        var errorMsg = 'Không thể lấy vị trí của bạn.';
+                        if (error.code === error.PERMISSION_DENIED) {
+                            errorMsg = 'Bạn đã từ chối quyền truy cập vị trí. Vui lòng cho phép trong cài đặt trình duyệt.';
+                        }
+                        Swal.fire('Lỗi', errorMsg, 'error');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                Swal.fire('Lỗi', 'Trình duyệt của bạn không hỗ trợ định vị.', 'error');
+            }
+        }
+        
+        // Show notification when address is updated
+        function showAddressUpdated() {
+            var notification = document.createElement('div');
+            notification.className = 'fixed top-24 right-4 bg-success text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-fade-in';
+            notification.innerHTML = '<span class="material-symbols-outlined">check_circle</span>Đã cập nhật địa chỉ!';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+        
+        // Highlight filled fields with animation
+        function highlightFilledFields() {
+            ['deliveryAddress', 'ward', 'district', 'city'].forEach(function(fieldId) {
+                var field = document.getElementById(fieldId);
+                if (field && field.value) {
+                    field.classList.add('border-success');
+                    setTimeout(() => field.classList.remove('border-success'), 2000);
+                }
+            });
+        }
+
+        // Style selected radio options
+        document.querySelectorAll('.order-type-option input').forEach(input => {
+            input.addEventListener('change', function() {
+                document.querySelectorAll('.order-type-option > div').forEach(div => {
+                    div.classList.remove('border-primary', 'bg-primary/5');
+                    div.classList.add('border-border');
+                });
+                if (this.checked) {
+                    this.nextElementSibling.classList.remove('border-border');
+                    this.nextElementSibling.classList.add('border-primary', 'bg-primary/5');
+                }
+            });
+        });
+
+        // Initialize first option as selected
+        if (document.querySelector('.order-type-option input:checked')) {
+            document.querySelector('.order-type-option input:checked').dispatchEvent(new Event('change'));
+        }
+
+        // Toggle delivery address section
+        function toggleDeliveryAddress() {
+            var orderType = document.querySelector('input[name="OrderType"]:checked').value;
+            var section = document.getElementById('deliveryAddressSection');
+            
+            if (orderType === 'Delivery') {
+                section.style.display = 'block';
+                document.getElementById('deliveryAddress').required = true;
+            } else {
+                section.style.display = 'none';
+                document.getElementById('deliveryAddress').required = false;
+            }
+        }
+
+        // Toggle new address form
+        function toggleNewAddress() {
+            var form = document.getElementById('newAddressForm');
+            form.classList.toggle('hidden');
+            document.querySelectorAll('input[name="AddressId"]').forEach(r => r.checked = false);
+            
+            // Refresh map size when showing
+            if (!form.classList.contains('hidden')) {
+                setTimeout(() => {
+                    if (map) map.invalidateSize();
+                }, 100);
+            }
+        }
+
+        // Select saved address
+        function selectSavedAddress(radio) {
+            document.getElementById('deliveryAddress').value = radio.dataset.address;
+            document.getElementById('ward').value = radio.dataset.ward;
+            document.getElementById('district').value = radio.dataset.district;
+            document.getElementById('city').value = radio.dataset.city;
+            document.getElementById('newAddressForm').classList.add('hidden');
+            highlightFilledFields();
+        }
+
+        // Form submit
+        $('#checkoutForm').submit(function(e) {
+            e.preventDefault();
+            
+            // Validate address if delivery
+            var orderType = $('input[name="OrderType"]:checked').val();
+            if (orderType === 'Delivery') {
+                var address = $('#deliveryAddress').val().trim();
+                if (!address) {
+                    Swal.fire('Lỗi', 'Vui lòng nhập địa chỉ giao hàng!', 'error');
+                    $('#deliveryAddress').focus();
+                    return;
+                }
+            }
+            
+            var btn = $('#placeOrderBtn');
+            var originalText = btn.html();
+            btn.prop('disabled', true).html('<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang xử lý...');
+
+            var formData = $(this).serialize();
+
+            $.post('@Url.Action("PlaceOrder", "Checkout")', formData)
+                .done(function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Đặt hàng thành công!',
+                            text: 'Mã đơn hàng: ' + response.orderCode,
+                            confirmButtonText: 'Xem đơn hàng',
+                            confirmButtonColor: '#007bff'
+                        }).then(() => {
+                            window.location.href = response.redirectUrl;
+                        });
+                    } else {
+                        btn.prop('disabled', false).html(originalText);
+                        Swal.fire('Lỗi', response.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    btn.prop('disabled', false).html(originalText);
+                    Swal.fire('Lỗi', 'Có lỗi xảy ra, vui lòng thử lại!', 'error');
+                });
+        });
+    </script>
+</body>
+</html>

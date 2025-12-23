@@ -1,0 +1,506 @@
+﻿@{
+    ViewBag.Title = "Menu Engineering";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    var period = ViewBag.Period ?? "month";
+}
+
+@section styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+        }
+
+        .period-selector {
+            display: flex;
+            gap: 10px;
+        }
+
+        .period-btn {
+            padding: 8px 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: transparent;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .period-btn:hover, .period-btn.active {
+            background: white;
+            color: #6d28d9;
+        }
+
+        /* Matrix Grid */
+        .matrix-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .matrix-quadrant {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            min-height: 300px;
+        }
+
+        .matrix-quadrant.star {
+            border-top: 4px solid #22c55e;
+        }
+
+        .matrix-quadrant.plow-horse {
+            border-top: 4px solid #3b82f6;
+        }
+
+        .matrix-quadrant.puzzle {
+            border-top: 4px solid #f59e0b;
+        }
+
+        .matrix-quadrant.dog {
+            border-top: 4px solid #ef4444;
+        }
+
+        .quadrant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .quadrant-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quadrant-title h5 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .quadrant-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .star .quadrant-icon { background: #dcfce7; }
+        .plow-horse .quadrant-icon { background: #dbeafe; }
+        .puzzle .quadrant-icon { background: #fef3c7; }
+        .dog .quadrant-icon { background: #fee2e2; }
+
+        .quadrant-count {
+            background: #f1f5f9;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .dish-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .dish-item:hover {
+            background: #f1f5f9;
+            transform: translateX(5px);
+        }
+
+        .dish-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .dish-info {
+            flex: 1;
+        }
+
+        .dish-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 3px;
+        }
+
+        .dish-stats {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .dish-profit {
+            text-align: right;
+        }
+
+        .dish-profit-value {
+            font-weight: 700;
+            color: #22c55e;
+        }
+
+        .dish-profit-margin {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .summary-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+        }
+
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Recommendations */
+        .recommendations-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .recommendation-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+
+        .recommendation-content h6 {
+            margin: 0 0 5px 0;
+            font-weight: 600;
+        }
+
+        .recommendation-content p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @@media (max-width: 992px) {
+            .matrix-container {
+                grid-template-columns: 1fr;
+            }
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h2 class="mb-1">🧩 Menu Engineering Analysis</h2>
+            <p class="mb-0 opacity-75">Phân tích BCG Matrix cho menu nhà hàng</p>
+        </div>
+        <div class="period-selector">
+            <button class="period-btn @(period == "week" ? "active" : "")" data-period="week">Tuần</button>
+            <button class="period-btn @(period == "month" ? "active" : "")" data-period="month">Tháng</button>
+            <button class="period-btn @(period == "quarter" ? "active" : "")" data-period="quarter">Quý</button>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="summary-grid" id="summaryGrid">
+    <div class="summary-card">
+        <div class="summary-icon" style="background: #dcfce7;">⭐</div>
+        <div class="summary-value text-success" id="starCount">0</div>
+        <div class="summary-label">Star (Ngôi sao)</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-icon" style="background: #dbeafe;">🐴</div>
+        <div class="summary-value text-primary" id="plowHorseCount">0</div>
+        <div class="summary-label">Plow Horse (Ngựa kéo)</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-icon" style="background: #fef3c7;">🧩</div>
+        <div class="summary-value text-warning" id="puzzleCount">0</div>
+        <div class="summary-label">Puzzle (Câu đố)</div>
+    </div>
+    <div class="summary-card">
+        <div class="summary-icon" style="background: #fee2e2;">🐕</div>
+        <div class="summary-value text-danger" id="dogCount">0</div>
+        <div class="summary-label">Dog (Chó)</div>
+    </div>
+</div>
+
+<!-- Matrix Grid -->
+<div class="matrix-container">
+    <!-- Star Quadrant -->
+    <div class="matrix-quadrant star">
+        <div class="quadrant-header">
+            <div class="quadrant-title">
+                <div class="quadrant-icon">⭐</div>
+                <div>
+                    <h5>Star - Ngôi sao</h5>
+                    <small class="text-muted">Phổ biến cao, Lợi nhuận cao</small>
+                </div>
+            </div>
+            <span class="quadrant-count" id="starCountBadge">0 món</span>
+        </div>
+        <div id="starDishes">
+            <p class="text-muted text-center py-4">Đang tải...</p>
+        </div>
+    </div>
+
+    <!-- Plow Horse Quadrant -->
+    <div class="matrix-quadrant plow-horse">
+        <div class="quadrant-header">
+            <div class="quadrant-title">
+                <div class="quadrant-icon">🐴</div>
+                <div>
+                    <h5>Plow Horse - Ngựa kéo</h5>
+                    <small class="text-muted">Phổ biến cao, Lợi nhuận thấp</small>
+                </div>
+            </div>
+            <span class="quadrant-count" id="plowHorseCountBadge">0 món</span>
+        </div>
+        <div id="plowHorseDishes">
+            <p class="text-muted text-center py-4">Đang tải...</p>
+        </div>
+    </div>
+
+    <!-- Puzzle Quadrant -->
+    <div class="matrix-quadrant puzzle">
+        <div class="quadrant-header">
+            <div class="quadrant-title">
+                <div class="quadrant-icon">🧩</div>
+                <div>
+                    <h5>Puzzle - Câu đố</h5>
+                    <small class="text-muted">Phổ biến thấp, Lợi nhuận cao</small>
+                </div>
+            </div>
+            <span class="quadrant-count" id="puzzleCountBadge">0 món</span>
+        </div>
+        <div id="puzzleDishes">
+            <p class="text-muted text-center py-4">Đang tải...</p>
+        </div>
+    </div>
+
+    <!-- Dog Quadrant -->
+    <div class="matrix-quadrant dog">
+        <div class="quadrant-header">
+            <div class="quadrant-title">
+                <div class="quadrant-icon">🐕</div>
+                <div>
+                    <h5>Dog - Chó</h5>
+                    <small class="text-muted">Phổ biến thấp, Lợi nhuận thấp</small>
+                </div>
+            </div>
+            <span class="quadrant-count" id="dogCountBadge">0 món</span>
+        </div>
+        <div id="dogDishes">
+            <p class="text-muted text-center py-4">Đang tải...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Recommendations Panel -->
+<div class="recommendations-panel">
+    <h5 class="mb-4">💡 Khuyến nghị hành động</h5>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="recommendation-item">
+                <div class="recommendation-icon" style="background: #dcfce7; color: #22c55e;">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="recommendation-content">
+                    <h6>Star (Ngôi sao)</h6>
+                    <p>Giữ nguyên, đẩy mạnh marketing và đặt vị trí nổi bật trong menu.</p>
+                </div>
+            </div>
+            <div class="recommendation-item">
+                <div class="recommendation-icon" style="background: #dbeafe; color: #3b82f6;">
+                    <i class="fas fa-horse"></i>
+                </div>
+                <div class="recommendation-content">
+                    <h6>Plow Horse (Ngựa kéo)</h6>
+                    <p>Tăng giá từ từ hoặc giảm chi phí nguyên liệu để cải thiện biên lợi nhuận.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="recommendation-item">
+                <div class="recommendation-icon" style="background: #fef3c7; color: #f59e0b;">
+                    <i class="fas fa-puzzle-piece"></i>
+                </div>
+                <div class="recommendation-content">
+                    <h6>Puzzle (Câu đố)</h6>
+                    <p>Đẩy mạnh quảng bá, đào tạo nhân viên giới thiệu, giảm giá khuyến mãi.</p>
+                </div>
+            </div>
+            <div class="recommendation-item">
+                <div class="recommendation-icon" style="background: #fee2e2; color: #ef4444;">
+                    <i class="fas fa-dog"></i>
+                </div>
+                <div class="recommendation-content">
+                    <h6>Dog (Chó)</h6>
+                    <p>Xem xét loại bỏ khỏi menu hoặc làm mới công thức/cách trình bày.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        let currentPeriod = '@period';
+
+        $(document).ready(function() {
+            loadMenuEngineering(currentPeriod);
+
+            $('.period-btn').click(function() {
+                currentPeriod = $(this).data('period');
+                $('.period-btn').removeClass('active');
+                $(this).addClass('active');
+                loadMenuEngineering(currentPeriod);
+            });
+        });
+
+        function loadMenuEngineering(period) {
+            $.post('@Url.Action("GetMenuEngineeringData")', { period: period }, function(response) {
+                if (response.success) {
+                    renderMatrix(response.data);
+                    updateSummary(response.summary);
+                }
+            });
+        }
+
+        function renderMatrix(data) {
+            const classifications = {
+                'Star': { container: '#starDishes', badge: '#starCountBadge', count: '#starCount' },
+                'Plow Horse': { container: '#plowHorseDishes', badge: '#plowHorseCountBadge', count: '#plowHorseCount' },
+                'Puzzle': { container: '#puzzleDishes', badge: '#puzzleCountBadge', count: '#puzzleCount' },
+                'Dog': { container: '#dogDishes', badge: '#dogCountBadge', count: '#dogCount' }
+            };
+
+            Object.keys(classifications).forEach(cls => {
+                const items = data.filter(d => d.Classification === cls);
+                const config = classifications[cls];
+
+                if (items.length === 0) {
+                    $(config.container).html('<p class="text-muted text-center py-4">Không có món</p>');
+                } else {
+                    let html = items.slice(0, 5).map(item => {
+                        // Xử lý đường dẫn hình ảnh
+                        let imageUrl = '/images/menu/default-food.jpg';
+                        
+                        if (item.ImageUrl) {
+                            // Nếu đã có đường dẫn đầy đủ
+                            if (item.ImageUrl.startsWith('/') || item.ImageUrl.startsWith('http')) {
+                                imageUrl = item.ImageUrl;
+                            } else {
+                                // Nếu chỉ là tên file
+                                imageUrl = '/images/menu/' + item.ImageUrl;
+                            }
+                        }
+                        
+                        return `
+                            <div class="dish-item">
+                                <img src="${imageUrl}" 
+                                     alt="${item.DishName}"
+                                     class="dish-image" 
+                                     onerror="this.src='/images/menu/default-food.jpg'">
+                                <div class="dish-info">
+                                    <div class="dish-name">${item.DishName}</div>
+                                    <div class="dish-stats">
+                                        Bán: ${item.SoldQuantity} | Giá: ${formatCurrency(item.Price)}
+                                    </div>
+                                </div>
+                                <div class="dish-profit">
+                                    <div class="dish-profit-value">${formatCurrency(item.Profit)}</div>
+                                    <div class="dish-profit-margin">${item.ProfitMargin.toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    if (items.length > 5) {
+                        html += `<p class="text-center text-muted mt-2">+${items.length - 5} món khác</p>`;
+                    }
+
+                    $(config.container).html(html);
+                }
+
+                $(config.badge).text(items.length + ' món');
+                $(config.count).text(items.length);
+            });
+        }
+
+        function updateSummary(summary) {
+            if (!summary) return;
+
+            summary.forEach(s => {
+                const countId = s.Classification === 'Star' ? '#starCount' :
+                               s.Classification === 'Plow Horse' ? '#plowHorseCount' :
+                               s.Classification === 'Puzzle' ? '#puzzleCount' : '#dogCount';
+                $(countId).text(s.Count);
+            });
+        }
+
+        function formatCurrency(value) {
+            if (!value) return '0đ';
+            return new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+        }
+    </script>
+}

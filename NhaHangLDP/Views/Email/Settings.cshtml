@@ -1,0 +1,456 @@
+﻿@model NhaHangLDP.Models.EmailSettingsViewModel
+@{
+    ViewBag.Title = "Cài Đặt Email";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .email-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .email-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 20px 25px;
+        }
+        .email-card .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: #1e3a5f;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .email-card .card-header h5 i {
+            color: #3b82f6;
+        }
+        .email-card .card-body {
+            padding: 25px;
+        }
+        .stat-mini {
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 12px;
+        }
+        .stat-mini h3 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 5px;
+        }
+        .stat-mini p {
+            color: #64748b;
+            margin: 0;
+            font-size: 13px;
+        }
+        .template-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .template-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 2px 10px rgba(59,130,246,0.1);
+        }
+        .template-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        .template-info {
+            flex: 1;
+        }
+        .template-name {
+            font-weight: 600;
+            color: #1e3a5f;
+            margin-bottom: 3px;
+        }
+        .template-code {
+            font-size: 12px;
+            color: #64748b;
+            font-family: monospace;
+        }
+        .log-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .log-item:last-child {
+            border-bottom: none;
+        }
+        .log-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        .log-status.sent { background: #22c55e; }
+        .log-status.failed { background: #ef4444; }
+        .log-status.pending { background: #f59e0b; }
+        .log-info {
+            flex: 1;
+        }
+        .log-email {
+            font-weight: 500;
+            color: #1e3a5f;
+        }
+        .log-time {
+            font-size: 12px;
+            color: #64748b;
+        }
+        .test-result {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+        .test-result.success {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .test-result.error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-envelope me-2"></i>Cài Đặt Email</h2>
+            <p>Quản lý cấu hình SMTP và các mẫu email</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Templates", "Email")" class="btn btn-outline-light">
+                <i class="fas fa-file-alt me-2"></i>Quản lý Templates
+            </a>
+            <a href="@Url.Action("Logs", "Email")" class="btn btn-light">
+                <i class="fas fa-history me-2"></i>Xem Logs
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-mini">
+            <h3>@Model.Stats.TotalSentToday</h3>
+            <p>Đã gửi hôm nay</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini">
+            <h3>@Model.Stats.TotalSentThisWeek</h3>
+            <p>Đã gửi tuần này</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini">
+            <h3>@Model.Stats.FailedToday</h3>
+            <p>Thất bại hôm nay</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini">
+            <h3>@Model.Stats.SuccessRate.ToString("F1")%</h3>
+            <p>Tỷ lệ thành công</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- SMTP Config -->
+    <div class="col-lg-6">
+        <div class="email-card">
+            <div class="card-header">
+                <h5><i class="fas fa-server"></i> Cấu Hình SMTP</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="@Url.Action("SaveConfig", "Email")">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="Id" value="@Model.Config.Id" />
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">SMTP Server</label>
+                                <input type="text" name="SmtpServer" class="form-control" value="@Model.Config.SmtpServer" placeholder="smtp.gmail.com" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Port</label>
+                                <input type="number" name="SmtpPort" class="form-control" value="@Model.Config.SmtpPort" placeholder="587" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Username (Email)</label>
+                        <input type="text" name="SmtpUsername" class="form-control" value="@Model.Config.SmtpUsername" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="SmtpPassword" class="form-control" placeholder="@(Model.Config.Id > 0 ? "••••••••" : "Nhập mật khẩu")">
+                        @if (Model.Config.Id > 0)
+                        {
+                            <small class="text-muted">Để trống nếu không thay đổi</small>
+                        }
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">From Email</label>
+                                <input type="email" name="FromEmail" class="form-control" value="@Model.Config.FromEmail" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">From Name</label>
+                                <input type="text" name="FromName" class="form-control" value="@Model.Config.FromName" placeholder="Nhà Hàng LDP" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">CC mặc định</label>
+                        <input type="text" name="DefaultCc" class="form-control" value="@Model.Config.DefaultCc" placeholder="email1@domain.com, email2@domain.com">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="EnableSsl" value="true" @(Model.Config.EnableSsl ? "checked" : "")>
+                            <label class="form-check-label">Sử dụng SSL/TLS</label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="IsActive" value="true" @(Model.Config.IsActive ? "checked" : "")>
+                            <label class="form-check-label">Kích hoạt cấu hình này</label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Lưu cấu hình
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="showTestEmailModal()">
+                            <i class="fas fa-paper-plane me-2"></i>Gửi email test
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Recent Logs -->
+        <div class="email-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-history"></i> Email gần đây</h5>
+                <a href="@Url.Action("Logs", "Email")" class="btn btn-sm btn-outline-primary">Xem tất cả</a>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentLogs.Logs.Any())
+                {
+                    foreach (var log in Model.RecentLogs.Logs.Take(5))
+                    {
+                        <div class="log-item">
+                            <div class="log-status @log.Status.ToLower()"></div>
+                            <div class="log-info">
+                                <div class="log-email">@log.ToEmail</div>
+                                <div class="log-time">@log.Subject • @log.CreatedDate.ToString("HH:mm dd/MM")</div>
+                            </div>
+                            <span class="badge bg-@log.StatusClass">@log.StatusText</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted text-center py-3">Chưa có email nào được gửi</p>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <!-- Templates -->
+    <div class="col-lg-6">
+        <div class="email-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-file-alt"></i> Mẫu Email</h5>
+                <a href="@Url.Action("CreateTemplate", "Email")" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i>Tạo mới
+                </a>
+            </div>
+            <div class="card-body">
+                @{
+                    var templateIcons = new Dictionary<string, Tuple<string, string>>
+                    {
+                        { "BOOKING_CONFIRMATION", Tuple.Create("fa-calendar-check", "#22c55e") },
+                        { "BOOKING_REMINDER", Tuple.Create("fa-bell", "#f59e0b") },
+                        { "ORDER_CONFIRMATION", Tuple.Create("fa-receipt", "#3b82f6") },
+                        { "PROMOTION_NOTIFICATION", Tuple.Create("fa-tags", "#e94560") },
+                        { "INVOICE", Tuple.Create("fa-file-invoice", "#8b5cf6") },
+                        { "WELCOME", Tuple.Create("fa-hand-wave", "#06b6d4") }
+                    };
+                }
+                
+                @if (Model.Templates.Any())
+                {
+                    foreach (var template in Model.Templates)
+                    {
+                        var iconInfo = templateIcons.ContainsKey(template.TemplateCode) 
+                            ? templateIcons[template.TemplateCode] 
+                            : Tuple.Create("fa-envelope", "#64748b");
+                        
+                        <div class="template-item">
+                            <div class="template-icon" style="background: @(iconInfo.Item2)15; color: @iconInfo.Item2;">
+                                <i class="fas @iconInfo.Item1"></i>
+                            </div>
+                            <div class="template-info">
+                                <div class="template-name">@template.Name</div>
+                                <div class="template-code">@template.TemplateCode</div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                @if (template.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                                <a href="@Url.Action("EditTemplate", "Email", new { id = template.Id })" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Chưa có template nào</p>
+                        <a href="@Url.Action("CreateTemplate", "Email")" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Tạo template đầu tiên
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+        
+        <!-- Quick Send -->
+        <div class="email-card">
+            <div class="card-header">
+                <h5><i class="fas fa-paper-plane"></i> Gửi Email Nhanh</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Chọn loại email</label>
+                    <select class="form-select" id="quickEmailType">
+                        <option value="">-- Chọn loại --</option>
+                        <option value="booking">Xác nhận đặt bàn</option>
+                        <option value="promotion">Thông báo khuyến mãi</option>
+                        <option value="invoice">Gửi hóa đơn</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email người nhận</label>
+                    <input type="email" class="form-control" id="quickEmailTo" placeholder="customer@email.com">
+                </div>
+                <button class="btn btn-primary w-100" onclick="sendQuickEmail()">
+                    <i class="fas fa-paper-plane me-2"></i>Gửi Email
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Email Modal -->
+<div class="modal fade" id="testEmailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-flask me-2"></i>Gửi Email Test</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Email nhận test</label>
+                    <input type="email" class="form-control" id="testEmailAddress" placeholder="your@email.com">
+                </div>
+                <div class="test-result" id="testResult"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="sendTestEmail()">
+                    <i class="fas fa-paper-plane me-2"></i>Gửi Test
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function showTestEmailModal() {
+            $('#testResult').hide();
+            new bootstrap.Modal(document.getElementById('testEmailModal')).show();
+        }
+        
+        function sendTestEmail() {
+            var email = $('#testEmailAddress').val();
+            if (!email) {
+                alert('Vui lòng nhập email');
+                return;
+            }
+            
+            showLoading('Đang gửi...', 'Vui lòng chờ');
+            
+            $.post('@Url.Action("SendTestEmail", "Email")', { testEmail: email }, function(result) {
+                closeLoading();
+                
+                var resultDiv = $('#testResult');
+                resultDiv.removeClass('success error');
+                
+                if (result.success) {
+                    resultDiv.addClass('success').html('<i class="fas fa-check-circle me-2"></i>' + result.message);
+                } else {
+                    resultDiv.addClass('error').html('<i class="fas fa-times-circle me-2"></i>' + result.message);
+                }
+                resultDiv.show();
+            });
+        }
+        
+        function sendQuickEmail() {
+            var type = $('#quickEmailType').val();
+            var email = $('#quickEmailTo').val();
+            
+            if (!type || !email) {
+                showWarning('Thiếu thông tin', 'Vui lòng chọn loại email và nhập địa chỉ người nhận');
+                return;
+            }
+            
+            showInfo('Chức năng đang phát triển', 'Tính năng này sẽ sớm được hoàn thiện');
+        }
+    </script>
+}

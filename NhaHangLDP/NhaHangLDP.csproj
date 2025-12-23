@@ -131,23 +131,39 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
+    <Compile Include="Controllers\CartController.cs" />
     <Compile Include="Controllers\CashierController.cs" />
+    <Compile Include="Controllers\CheckoutController.cs" />
+    <Compile Include="Controllers\CustomerAccountController.cs" />
+    <Compile Include="Controllers\EmailController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\HRController.cs" />
+    <Compile Include="Controllers\KitchenController.cs" />
     <Compile Include="Controllers\ManagementController.cs" />
+    <Compile Include="Controllers\PaymentController.cs" />
+    <Compile Include="Controllers\PromotionController.cs" />
     <Compile Include="Controllers\PublicController.cs" />
+    <Compile Include="Controllers\QROrderController.cs" />
     <Compile Include="Controllers\ReportsManagementController.cs" />
     <Compile Include="Controllers\ReportsManagementController.DetailedShiftReport.cs" />
+    <Compile Include="Controllers\ReservationController.cs" />
     <Compile Include="Controllers\ReturnManagementController.cs" />
     <Compile Include="Controllers\SettingsController.cs" />
     <Compile Include="Filters\CustomAuthorizeAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\AuthorizationHelper.cs" />
     <Compile Include="Helpers\SettingsHelper.cs" />
+    <Compile Include="Helpers\StatusTextHelper.cs" />
     <Compile Include="Models\Account.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\AdvancedReportsModels.cs" />
     <Compile Include="Models\AppSetting.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Attendance.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\Bill.cs">
@@ -161,18 +177,51 @@
     <Compile Include="Models\CashierShift.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\ChatbotModels.cs" />
+    <Compile Include="Models\CustomerModels.cs" />
+    <Compile Include="Models\CustomerViewModels.cs" />
     <Compile Include="Models\DamagedStock.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DishProfitViewModels.cs" />
+    <Compile Include="Models\EmailConfig.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EmailLog.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EmailTemplate.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EmailViewModels.cs" />
     <Compile Include="Models\Employee.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\EmployeeContract.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EmployeeSchedule.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\HRModels.cs" />
     <Compile Include="Models\Ingredient.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\IngredientHistoryViewModel.cs" />
     <Compile Include="Models\IngredientWithLatestSupplierViewModel.cs" />
+    <Compile Include="Models\KitchenOrderItem.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\KitchenOrderTicket.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\KitchenStation.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\KitchenViewModels.cs" />
+    <Compile Include="Models\LeaveRequest.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\ManagementDashboardViewModel.cs" />
     <Compile Include="Models\MenuCombo.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
@@ -204,16 +253,40 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>NhaHangLDP.edmx</DependentUpon>
     </Compile>
+    <Compile Include="Models\Notification.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\Order.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\OrderDetail.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\PaymentModels.cs" />
+    <Compile Include="Models\Payroll.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PerformanceReview.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\PriceHistory.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\PriceUpdateViewModel.cs" />
+    <Compile Include="Models\Promotion.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PromotionUsage.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\PromotionViewModels.cs" />
+    <Compile Include="Models\QROrder.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\QROrderDetail.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\QROrderViewModels.cs" />
     <Compile Include="Models\ReportsModels.cs" />
     <Compile Include="Models\RestaurantTable.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
@@ -248,7 +321,42 @@
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\TableAreaViewModel.cs" />
+    <Compile Include="Models\TableSession.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\WorkShift.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\AdvancedAnalyticsService.cs" />
+    <Compile Include="Services\AIChatbotService.cs" />
+    <Compile Include="Services\DashboardService.cs" />
+    <Compile Include="Services\EmailService.cs" />
+    <Compile Include="Services\EmployeeManagementService.cs" />
+    <Compile Include="Services\HR\HRManagementService.cs" />
+    <Compile Include="Services\InvoiceService.cs" />
+    <Compile Include="Services\Management\EmployeeAdminService.cs" />
+    <Compile Include="Services\Management\InventoryService.cs" />
+    <Compile Include="Services\Management\ManagementDashboardDataService.cs" />
+    <Compile Include="Services\Management\MenuAdminService.cs" />
+    <Compile Include="Services\Management\TableAdminService.cs" />
+    <Compile Include="Services\MenuService.cs" />
+    <Compile Include="Services\OrderManagementService.cs" />
+    <Compile Include="Services\OrderQueryService.cs" />
+    <Compile Include="Services\PaymentService.cs" />
+    <Compile Include="Services\ReportService.cs" />
+    <Compile Include="Services\Reports\BookingAnalyticsService.cs" />
+    <Compile Include="Services\Reports\DashboardReportService.cs" />
+    <Compile Include="Services\Reports\DateRangeHelper.cs" />
+    <Compile Include="Services\Reports\DetailedShiftReportService.cs" />
+    <Compile Include="Services\Reports\DishProfitAnalysisService.cs" />
+    <Compile Include="Services\Reports\RevenueAnalyticsService.cs" />
+    <Compile Include="Services\Reports\SalesAnalyticsService.cs" />
+    <Compile Include="Services\Reports\ShiftManagementService.cs" />
+    <Compile Include="Services\RequestHandlerService.cs" />
+    <Compile Include="Services\ShiftManagementService.cs" />
+    <Compile Include="Services\TableManagementService.cs" />
+    <Compile Include="Services\TableOperationService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap-grid.css" />
@@ -273,6 +381,7 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
+    <Content Include="images\menu\default-food.jpg" />
     <Content Include="images\logo.jpg" />
     <Content Include="images\menu\bachitheothailat.jpg" />
     <Content Include="images\menu\banhpho.png" />
@@ -355,7 +464,6 @@
     </Content>
     <Content Include="Views\Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
-    <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Account\Login.cshtml" />
@@ -411,7 +519,6 @@
     <Content Include="Views\Management\StockOutboundList.cshtml" />
     <Content Include="Views\Management\EditIngredient.cshtml" />
     <Content Include="Views\Management\IngredientHistory.cshtml" />
-    <Content Include="Views\Home\Booking.cshtml" />
     <Content Include="Views\ReportsManagement\LiveShiftMonitor.cshtml" />
     <Content Include="Views\ReportsManagement\Debug.cshtml" />
     <Content Include="Views\ReportsManagement\DebugDishProfit.cshtml" />
@@ -428,6 +535,65 @@
     <Content Include="Views\ReportsManagement\SalesAnalytics.cshtml" />
     <Content Include="Views\Management\StockInboundDetail.cshtml" />
     <Content Include="Views\Management\StockOutboundDetail.cshtml" />
+    <Content Include="Views\Promotion\Index.cshtml" />
+    <Content Include="Views\Promotion\Create.cshtml" />
+    <Content Include="Views\Kitchen\Display.cshtml" />
+    <Content Include="Views\Kitchen\_TicketCard.cshtml" />
+    <Content Include="Views\QROrder\Menu.cshtml" />
+    <Content Include="Views\Email\Settings.cshtml" />
+    <Content Include="Views\QROrder\Cart.cshtml" />
+    <Content Include="Views\QROrder\PendingOrders.cshtml" />
+    <Content Include="Views\Promotion\UsageReport.cshtml" />
+    <Content Include="Views\QROrder\TrackOrder.cshtml" />
+    <Content Include="Views\QROrder\GenerateQR.cshtml" />
+    <Content Include="Views\Kitchen\Dashboard.cshtml" />
+    <Content Include="Views\Kitchen\FullScreen.cshtml" />
+    <Content Include="Views\Kitchen\Stations.cshtml" />
+    <Content Include="Views\Email\Templates.cshtml" />
+    <Content Include="Views\Email\CreateTemplate.cshtml" />
+    <Content Include="Views\Email\Logs.cshtml" />
+    <Content Include="Views\Email\LogDetail.cshtml" />
+    <Content Include="Views\QROrder\Error.cshtml" />
+    <Content Include="Views\ReportsManagement\AdvancedDashboard.cshtml" />
+    <Content Include="Views\ReportsManagement\MenuEngineering.cshtml" />
+    <Content Include="Views\ReportsManagement\KPITracking.cshtml" />
+    <Content Include="Views\ReportsManagement\PredictiveAnalytics.cshtml" />
+    <Content Include="Views\HR\Dashboard.cshtml" />
+    <Content Include="Views\HR\Attendance.cshtml" />
+    <Content Include="Views\HR\Payroll.cshtml" />
+    <Content Include="Views\HR\AttendanceReport.cshtml" />
+    <Content Include="Views\HR\LeaveManagement.cshtml" />
+    <Content Include="Views\HR\PerformanceReview.cshtml" />
+    <Content Include="Views\HR\CreatePerformanceReview.cshtml" />
+    <Content Include="Views\HR\CreateLeaveRequest.cshtml" />
+    <Content Include="Views\HR\Contracts.cshtml" />
+    <Content Include="Views\HR\CreateContract.cshtml" />
+    <Content Include="Views\HR\Schedule.cshtml" />
+    <Content Include="Views\HR\WorkShifts.cshtml" />
+    <Content Include="Views\HR\CreateWorkShift.cshtml" />
+    <Content Include="Views\HR\EmployeeStats.cshtml" />
+    <Content Include="Views\HR\PayrollDetail.cshtml" />
+    <Content Include="Views\Cart\Index.cshtml" />
+    <Content Include="Views\Checkout\Index.cshtml" />
+    <Content Include="Views\Checkout\Confirmation.cshtml" />
+    <Content Include="Views\Reservation\Index.cshtml" />
+    <Content Include="Views\Reservation\Confirmation.cshtml" />
+    <Content Include="Views\CustomerAccount\Login.cshtml" />
+    <Content Include="Views\CustomerAccount\Register.cshtml" />
+    <Content Include="Views\CustomerAccount\Profile.cshtml" />
+    <Content Include="Views\CustomerAccount\Orders.cshtml" />
+    <Content Include="Views\Checkout\TrackOrder.cshtml" />
+    <Content Include="Views\Cart\_MiniCart.cshtml" />
+    <Content Include="Views\Checkout\TrackOrderSearch.cshtml" />
+    <Content Include="Views\CustomerAccount\Wishlist.cshtml" />
+    <Content Include="Views\CustomerAccount\ForgotPassword.cshtml" />
+    <Content Include="Views\Payment\Process.cshtml" />
+    <Content Include="Views\Payment\Bills.cshtml" />
+    <Content Include="Views\Payment\PrintInvoice.cshtml" />
+    <Content Include="Views\Payment\Refund.cshtml" />
+    <Content Include="Views\Payment\DailySummary.cshtml" />
+    <Content Include="Views\Payment\SplitBill.cshtml" />
+    <Content Include="Views\Payment\BillDetail.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

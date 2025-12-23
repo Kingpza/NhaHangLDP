@@ -1,0 +1,660 @@
+﻿@model NhaHangLDP.Models.CustomerProfileViewModel
+@{
+    ViewBag.Title = "Tài khoản";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Tài khoản - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007bff",
+                        success: "#28a745",
+                        warning: "#ffc107",
+                        danger: "#dc3545"
+                    },
+                    fontFamily: {
+                        display: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .nav-link.active {
+            border-left-color: #007bff !important;
+            background: rgba(0, 123, 255, 0.05);
+            color: #007bff;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-display min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="@Url.Action("Menu", "Public")" class="flex items-center gap-2 text-gray-600 hover:text-primary">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span class="font-medium">Quay lại</span>
+            </a>
+            <h1 class="text-xl font-bold">Tài khoản</h1>
+            <a href="@Url.Action("Logout")" class="text-danger hover:underline flex items-center gap-1">
+                <span class="material-symbols-outlined">logout</span>
+                Đăng xuất
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <div class="grid lg:grid-cols-4 gap-8">
+            <!-- Sidebar -->
+            <aside class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-sm p-6 text-center mb-6">
+                    <div class="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                        @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                        {
+                            <img src="@Model.AvatarUrl" alt="Avatar" class="w-full h-full rounded-full object-cover" />
+                        }
+                        else
+                        {
+                            <span class="text-4xl font-bold text-primary">@Model.FullName.Substring(0, 1).ToUpper()</span>
+                        }
+                    </div>
+                    <h2 class="text-xl font-bold">@Model.FullName</h2>
+                    <p class="text-gray-500 text-sm">@Model.Email</p>
+                    
+                    <!-- Membership Badge -->
+                    <div class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full 
+                         @(Model.MembershipLevel == "Platinum" ? "bg-purple-100 text-purple-700" : 
+                           Model.MembershipLevel == "Gold" ? "bg-yellow-100 text-yellow-700" :
+                           Model.MembershipLevel == "Silver" ? "bg-gray-100 text-gray-700" : "bg-orange-100 text-orange-700")">
+                        <span class="material-symbols-outlined text-lg">workspace_premium</span>
+                        <span class="font-semibold">@Model.MembershipLevel</span>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-primary/5 rounded-xl">
+                        <p class="text-2xl font-bold text-primary">@Model.LoyaltyPoints.ToString("N0")</p>
+                        <p class="text-sm text-gray-500">Điểm tích lũy</p>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <a href="#profile" class="nav-link flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-transparent active" onclick="showSection('profile')">
+                        <span class="material-symbols-outlined">person</span>
+                        Thông tin cá nhân
+                    </a>
+                    <a href="@Url.Action("Orders")" class="nav-link flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-transparent">
+                        <span class="material-symbols-outlined">receipt_long</span>
+                        Đơn hàng (@Model.TotalOrders)
+                    </a>
+                    <a href="@Url.Action("Wishlist")" class="nav-link flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-transparent">
+                        <span class="material-symbols-outlined">favorite</span>
+                        Yêu thích
+                    </a>
+                    <a href="#addresses" class="nav-link flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-transparent" onclick="showSection('addresses')">
+                        <span class="material-symbols-outlined">location_on</span>
+                        Địa chỉ
+                    </a>
+                    <a href="#security" class="nav-link flex items-center gap-3 p-4 hover:bg-gray-50 border-l-4 border-transparent" onclick="showSection('security')">
+                        <span class="material-symbols-outlined">lock</span>
+                        Bảo mật
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-2xl font-bold text-primary">@Model.TotalOrders</p>
+                        <p class="text-sm text-gray-500">Đơn hàng</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-2xl font-bold text-success">@Model.TotalSpent.ToString("N0")đ</p>
+                        <p class="text-sm text-gray-500">Tổng chi tiêu</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 text-center shadow-sm">
+                        <p class="text-2xl font-bold text-warning">@Model.LoyaltyPoints</p>
+                        <p class="text-sm text-gray-500">Điểm thưởng</p>
+                    </div>
+                </div>
+
+                <!-- Profile Form -->
+                <section id="profile" class="bg-white rounded-2xl shadow-sm p-6 section-content">
+                    <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">edit</span>
+                        Thông tin cá nhân
+                    </h3>
+                    <form id="profileForm" class="space-y-4">
+                        @Html.AntiForgeryToken()
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Họ tên</label>
+                                <input type="text" name="fullName" value="@Model.FullName" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Số điện thoại</label>
+                                <input type="tel" name="phone" value="@Model.Phone" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Email</label>
+                                <input type="email" value="@Model.Email" disabled
+                                       class="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Ngày sinh</label>
+                                <input type="date" name="dateOfBirth" value="@Model.DateOfBirth?.ToString("yyyy-MM-dd")" 
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Giới tính</label>
+                                <select name="gender" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="Male" @(Model.Gender == "Male" ? "selected" : "")>Nam</option>
+                                    <option value="Female" @(Model.Gender == "Female" ? "selected" : "")>Nữ</option>
+                                    <option value="Other" @(Model.Gender == "Other" ? "selected" : "")>Khác</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors">
+                            <span class="material-symbols-outlined align-middle mr-1">save</span>
+                            Lưu thay đổi
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Addresses Section -->
+                <section id="addresses" class="bg-white rounded-2xl shadow-sm p-6 section-content hidden">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-bold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">location_on</span>
+                            Địa chỉ giao hàng
+                        </h3>
+                        <button onclick="openAddAddressModal()" class="px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2">
+                            <span class="material-symbols-outlined">add</span>
+                            Thêm địa chỉ
+                        </button>
+                    </div>
+                    
+                    <div id="addressList" class="space-y-4">
+                        @if (Model.Addresses != null && Model.Addresses.Count > 0)
+                        {
+                            foreach (var address in Model.Addresses)
+                            {
+                                <div class="border border-gray-200 rounded-xl p-4 @(address.IsDefault ? "border-primary bg-primary/5" : "")" data-address-id="@address.Id">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="font-semibold">@address.ReceiverName</span>
+                                                <span class="text-gray-400">|</span>
+                                                <span class="text-gray-600">@address.ReceiverPhone</span>
+                                                @if (address.IsDefault)
+                                                {
+                                                    <span class="px-2 py-0.5 bg-primary text-white text-xs rounded-full">Mặc định</span>
+                                                }
+                                                @if (!string.IsNullOrEmpty(address.AddressType))
+                                                {
+                                                    <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                                                        @(address.AddressType == "Home" ? "Nhà riêng" : address.AddressType == "Office" ? "Văn phòng" : address.AddressType)
+                                                    </span>
+                                                }
+                                            </div>
+                                            <p class="text-gray-600 text-sm">@address.FullAddress</p>
+                                        </div>
+                                        <div class="flex items-center gap-2 ml-4">
+                                            <button onclick="editAddress(@address.Id)" class="p-2 text-gray-500 hover:text-primary hover:bg-gray-100 rounded-lg transition-colors">
+                                                <span class="material-symbols-outlined">edit</span>
+                                            </button>
+                                            @if (!address.IsDefault)
+                                            {
+                                                <button onclick="setDefaultAddress(@address.Id)" class="p-2 text-gray-500 hover:text-success hover:bg-gray-100 rounded-lg transition-colors" title="Đặt làm mặc định">
+                                                    <span class="material-symbols-outlined">check_circle</span>
+                                                </button>
+                                                <button onclick="deleteAddress(@address.Id)" class="p-2 text-gray-500 hover:text-danger hover:bg-gray-100 rounded-lg transition-colors">
+                                                    <span class="material-symbols-outlined">delete</span>
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center py-8">
+                                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                                    <span class="material-symbols-outlined text-3xl text-gray-400">location_off</span>
+                                </div>
+                                <p class="text-gray-500 mb-4">Bạn chưa có địa chỉ nào</p>
+                                <button onclick="openAddAddressModal()" class="px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:bg-blue-600">
+                                    Thêm địa chỉ đầu tiên
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </section>
+
+                <!-- Security Section -->
+                <section id="security" class="bg-white rounded-2xl shadow-sm p-6 section-content hidden">
+                    <h3 class="text-lg font-bold mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">lock</span>
+                        Bảo mật tài khoản
+                    </h3>
+                    
+                    <!-- Change Password -->
+                    <div class="mb-8">
+                        <h4 class="font-semibold mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-gray-500">vpn_key</span>
+                            Đổi mật khẩu
+                        </h4>
+                        <form id="passwordForm" class="space-y-4">
+                            @Html.AntiForgeryToken()
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Mật khẩu hiện tại</label>
+                                    <div class="relative">
+                                        <input type="password" name="currentPassword" required id="currentPassword"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary pr-10" />
+                                        <button type="button" onclick="togglePassword('currentPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary">
+                                            <span class="material-symbols-outlined">visibility</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Mật khẩu mới</label>
+                                    <div class="relative">
+                                        <input type="password" name="newPassword" required minlength="6" id="newPassword"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary pr-10" />
+                                        <button type="button" onclick="togglePassword('newPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary">
+                                            <span class="material-symbols-outlined">visibility</span>
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">Tối thiểu 6 ký tự</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">Xác nhận mật khẩu</label>
+                                    <div class="relative">
+                                        <input type="password" name="confirmPassword" required id="confirmPassword"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary pr-10" />
+                                        <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary">
+                                            <span class="material-symbols-outlined">visibility</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="px-6 py-3 bg-warning text-gray-800 rounded-xl font-semibold hover:bg-yellow-400 transition-colors">
+                                <span class="material-symbols-outlined align-middle mr-1">vpn_key</span>
+                                Đổi mật khẩu
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Two-Factor Authentication -->
+                    <div class="mb-8 border-t border-gray-200 pt-6">
+                        <h4 class="font-semibold mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-gray-500">phonelink_lock</span>
+                            Xác thực hai yếu tố (2FA)
+                        </h4>
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                            <div>
+                                <p class="font-medium">Xác thực qua SMS</p>
+                                <p class="text-sm text-gray-500">Nhận mã OTP qua số điện thoại khi đăng nhập</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="twoFactorToggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Login History -->
+                    <div class="mb-8 border-t border-gray-200 pt-6">
+                        <h4 class="font-semibold mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-gray-500">history</span>
+                            Lịch sử đăng nhập
+                        </h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-success">check_circle</span>
+                                    <div>
+                                        <p class="font-medium text-sm">Phiên hiện tại</p>
+                                        <p class="text-xs text-gray-500">Windows - Chrome</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-500">Đang hoạt động</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="border-t border-gray-200 pt-6">
+                        <h4 class="font-semibold mb-4 flex items-center gap-2 text-danger">
+                            <span class="material-symbols-outlined">warning</span>
+                            Vùng nguy hiểm
+                        </h4>
+                        <div class="p-4 border border-red-200 bg-red-50 rounded-xl">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-medium text-danger">Xóa tài khoản</p>
+                                    <p class="text-sm text-gray-600">Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu</p>
+                                </div>
+                                <button onclick="confirmDeleteAccount()" class="px-4 py-2 border border-danger text-danger rounded-xl font-semibold hover:bg-danger hover:text-white transition-colors">
+                                    Xóa tài khoản
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Member Since -->
+                <div class="text-center text-gray-500 text-sm">
+                    <p>Thành viên từ @Model.CreatedDate.ToString("dd/MM/yyyy")</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Address Modal -->
+    <div id="addressModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold" id="addressModalTitle">Thêm địa chỉ mới</h3>
+                    <button onclick="closeAddressModal()" class="p-2 hover:bg-gray-100 rounded-full">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+            </div>
+            <form id="addressForm" class="p-6 space-y-4">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="addressId" id="addressId" value="0" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Họ tên người nhận</label>
+                        <input type="text" name="receiverName" id="receiverName" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Số điện thoại</label>
+                        <input type="tel" name="receiverPhone" id="receiverPhone" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Địa chỉ cụ thể</label>
+                    <input type="text" name="addressLine" id="addressLine" required placeholder="Số nhà, tên đường..."
+                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Phường/Xã</label>
+                        <input type="text" name="ward" id="ward" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Quận/Huyện</label>
+                        <input type="text" name="district" id="district" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Tỉnh/Thành phố</label>
+                        <input type="text" name="city" id="city" required value="TP. Hồ Chí Minh"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Loại địa chỉ</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="addressType" value="Home" checked class="text-primary focus:ring-primary" />
+                            <span>Nhà riêng</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="addressType" value="Office" class="text-primary focus:ring-primary" />
+                            <span>Văn phòng</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="addressType" value="Other" class="text-primary focus:ring-primary" />
+                            <span>Khác</span>
+                        </label>
+                    </div>
+                </div>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="isDefault" id="isDefault" class="w-5 h-5 text-primary rounded focus:ring-primary" />
+                    <span>Đặt làm địa chỉ mặc định</span>
+                </label>
+                <div class="flex gap-4 pt-4">
+                    <button type="button" onclick="closeAddressModal()" class="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50">
+                        Hủy
+                    </button>
+                    <button type="submit" class="flex-1 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-blue-600">
+                        Lưu địa chỉ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Section navigation
+        function showSection(sectionId) {
+            event.preventDefault();
+            
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
+            
+            // Show target section
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // Update nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + sectionId) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            var input = document.getElementById(inputId);
+            var icon = event.currentTarget.querySelector('.material-symbols-outlined');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        // Update profile
+        $('#profileForm').submit(function(e) {
+            e.preventDefault();
+            $.post('@Url.Action("UpdateProfile")', $(this).serialize())
+                .done(function(response) {
+                    if (response.success) {
+                        Swal.fire('Thành công!', response.message, 'success');
+                    } else {
+                        Swal.fire('Lỗi', response.message, 'error');
+                    }
+                });
+        });
+
+        // Change password
+        $('#passwordForm').submit(function(e) {
+            e.preventDefault();
+            var newPass = $('input[name="newPassword"]').val();
+            var confirmPass = $('input[name="confirmPassword"]').val();
+
+            if (newPass !== confirmPass) {
+                Swal.fire('Lỗi', 'Mật khẩu xác nhận không khớp!', 'error');
+                return;
+            }
+
+            if (newPass.length < 6) {
+                Swal.fire('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự!', 'error');
+                return;
+            }
+
+            $.post('@Url.Action("ChangePassword")', $(this).serialize())
+                .done(function(response) {
+                    if (response.success) {
+                        Swal.fire('Thành công!', response.message, 'success');
+                        $('#passwordForm')[0].reset();
+                    } else {
+                        Swal.fire('Lỗi', response.message, 'error');
+                    }
+                });
+        });
+
+        // Address Modal Functions
+        function openAddAddressModal() {
+            $('#addressModalTitle').text('Thêm địa chỉ mới');
+            $('#addressForm')[0].reset();
+            $('#addressId').val(0);
+            $('#city').val('TP. Hồ Chí Minh');
+            $('#addressModal').removeClass('hidden');
+        }
+
+        function closeAddressModal() {
+            $('#addressModal').addClass('hidden');
+        }
+
+        function editAddress(id) {
+            // Load address data and open modal
+            $.get('@Url.Action("GetAddress")', { id: id })
+                .done(function(response) {
+                    if (response.success) {
+                        var addr = response.data;
+                        $('#addressModalTitle').text('Sửa địa chỉ');
+                        $('#addressId').val(addr.Id);
+                        $('#receiverName').val(addr.ReceiverName);
+                        $('#receiverPhone').val(addr.ReceiverPhone);
+                        $('#addressLine').val(addr.AddressLine);
+                        $('#ward').val(addr.Ward);
+                        $('#district').val(addr.District);
+                        $('#city').val(addr.City);
+                        $('input[name="addressType"][value="' + addr.AddressType + '"]').prop('checked', true);
+                        $('#isDefault').prop('checked', addr.IsDefault);
+                        $('#addressModal').removeClass('hidden');
+                    }
+                });
+        }
+
+        function setDefaultAddress(id) {
+            $.post('@Url.Action("SetDefaultAddress")', { id: id })
+                .done(function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        Swal.fire('Lỗi', response.message, 'error');
+                    }
+                });
+        }
+
+        function deleteAddress(id) {
+            Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: 'Bạn có chắc chắn muốn xóa địa chỉ này?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("DeleteAddress")', { id: id })
+                        .done(function(response) {
+                            if (response.success) {
+                                $('[data-address-id="' + id + '"]').fadeOut(300, function() {
+                                    $(this).remove();
+                                });
+                                Swal.fire('Đã xóa!', 'Địa chỉ đã được xóa.', 'success');
+                            } else {
+                                Swal.fire('Lỗi', response.message, 'error');
+                            }
+                        });
+                }
+            });
+        }
+
+        // Save address
+        $('#addressForm').submit(function(e) {
+            e.preventDefault();
+            $.post('@Url.Action("SaveAddress")', $(this).serialize())
+                .done(function(response) {
+                    if (response.success) {
+                        closeAddressModal();
+                        Swal.fire('Thành công!', response.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Lỗi', response.message, 'error');
+                    }
+                });
+        });
+
+        // Delete account confirmation
+        function confirmDeleteAccount() {
+            Swal.fire({
+                title: 'Xóa tài khoản?',
+                html: 'Hành động này <strong>không thể hoàn tác</strong>. Toàn bộ dữ liệu của bạn sẽ bị xóa vĩnh viễn.<br><br>Nhập <strong>XOA TAI KHOAN</strong> để xác nhận:',
+                icon: 'warning',
+                input: 'text',
+                inputPlaceholder: 'XOA TAI KHOAN',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xóa tài khoản',
+                cancelButtonText: 'Hủy',
+                preConfirm: (value) => {
+                    if (value !== 'XOA TAI KHOAN') {
+                        Swal.showValidationMessage('Vui lòng nhập đúng để xác nhận!');
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Call delete account API
+                    $.post('@Url.Action("DeleteAccount")')
+                        .done(function(response) {
+                            if (response.success) {
+                                Swal.fire('Đã xóa!', 'Tài khoản của bạn đã bị xóa.', 'success').then(() => {
+                                    window.location.href = '@Url.Action("Index", "Home")';
+                                });
+                            } else {
+                                Swal.fire('Lỗi', response.message, 'error');
+                            }
+                        });
+                }
+            });
+        }
+
+        // Check hash on load
+        $(document).ready(function() {
+            var hash = window.location.hash.replace('#', '');
+            if (hash && document.getElementById(hash)) {
+                showSection(hash);
+            }
+        });
+    </script>
+</body>
+</html>

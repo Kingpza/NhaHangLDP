@@ -43,7 +43,7 @@
         /* ========== SIDEBAR STYLES ========== */
         .management-sidebar {
             background: linear-gradient(180deg, var(--primary-dark) 0%, #0d1b2a 100%);
-            min-height: 100vh;
+            height: 100vh;
             position: fixed;
             left: 0;
             top: 0;
@@ -51,6 +51,26 @@
             z-index: 1000;
             padding: 0;
             box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar scrollbar styling */
+        .management-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .management-sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .management-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.5);
+            border-radius: 3px;
+        }
+
+        .management-sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.7);
         }
 
         .sidebar-header {
@@ -753,16 +773,199 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="@Url.Action("Reports", "Management")">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Báo Cáo</span>
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#hrSubmenu" aria-expanded="false">
+                    <i class="fas fa-users-cog"></i>
+                    <span>HR Management</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
                 </a>
+                <div class="collapse sidebar-submenu" id="hrSubmenu">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Dashboard", "HR")">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>HR Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Attendance", "HR")">
+                                <i class="fas fa-clock"></i>
+                                <span>Chấm Công</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("LeaveManagement", "HR")">
+                                <i class="fas fa-calendar-minus"></i>
+                                <span>Nghỉ Phép</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Payroll", "HR")">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <span>Bảng Lương</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("PerformanceReview", "HR")">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Đánh Giá Hiệu Suất</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Contracts", "HR")">
+                                <i class="fas fa-file-contract"></i>
+                                <span>Hợp Đồng</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Schedule", "HR")">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Lịch Làm Việc</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("WorkShifts", "HR")">
+                                <i class="fas fa-business-time"></i>
+                                <span>Ca Làm Việc</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="@Url.Action("Reports", "Management")">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Báo Cáo Cơ Bản</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#analyticsSubmenu" aria-expanded="false">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Phân Tích Nâng Cao</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </a>
+                <div class="collapse sidebar-submenu" id="analyticsSubmenu">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("AdvancedDashboard", "ReportsManagement")">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard Nâng Cao</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("KPITracking", "ReportsManagement")">
+                                <i class="fas fa-bullseye"></i>
+                                <span>Theo Dõi KPI</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("MenuEngineering", "ReportsManagement")">
+                                <i class="fas fa-puzzle-piece"></i>
+                                <span>Menu Engineering</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("PredictiveAnalytics", "ReportsManagement")">
+                                <i class="fas fa-brain"></i>
+                                <span>Dự Đoán & Xu Hướng</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("DishProfitAnalysis", "ReportsManagement")">
+                                <i class="fas fa-coins"></i>
+                                <span>Phân Tích Lợi Nhuận</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("BookingAnalytics", "ReportsManagement")">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Phân Tích Đặt Bàn</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("SalesAnalytics", "ReportsManagement")">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Phân Tích Bán Hàng</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("RevenueAnalytics", "ReportsManagement")">
+                                <i class="fas fa-dollar-sign"></i>
+                                <span>Phân Tích Doanh Thu</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="@Url.Action("Index", "ReturnManagement")">
                     <i class="fas fa-undo-alt"></i>
                     <span>Quản Lý Trả Hàng</span>
                 </a>
+            </li>
+        </ul>
+
+        <p class="sidebar-section-title">MARKETING</p>
+        <ul class="nav flex-column sidebar-menu">
+            <li class="nav-item">
+                <a class="nav-link" href="@Url.Action("Index", "Promotion")">
+                    <i class="fas fa-tags"></i>
+                    <span>Khuyến Mãi</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="@Url.Action("Settings", "Email")">
+                    <i class="fas fa-envelope"></i>
+                    <span>Email Marketing</span>
+                </a>
+            </li>
+        </ul>
+
+        <p class="sidebar-section-title">VẬN HÀNH</p>
+        <ul class="nav flex-column sidebar-menu">
+            <li class="nav-item">
+                <a class="nav-link" href="@Url.Action("Display", "Kitchen")" target="_blank">
+                    <i class="fas fa-fire-burner"></i>
+                    <span>Kitchen Display</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="@Url.Action("Stations", "Kitchen")">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Quản Lý Bếp</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="@Url.Action("PendingOrders", "QROrder")">
+                    <i class="fas fa-qrcode"></i>
+                    <span>Đơn QR Code</span>
+                </a>
+            </li>
+        </ul>
+
+        <p class="sidebar-section-title">THANH TOÁN</p>
+        <ul class="nav flex-column sidebar-menu">
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#paymentSubmenu" aria-expanded="false">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Thanh Toán & Hóa Đơn</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </a>
+                <div class="collapse sidebar-submenu" id="paymentSubmenu">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Bills", "Payment")">
+                                <i class="fas fa-receipt"></i>
+                                <span>Danh Sách Hóa Đơn</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("DailySummary", "Payment")">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Tổng Kết Thanh Toán</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </li>
         </ul>
 

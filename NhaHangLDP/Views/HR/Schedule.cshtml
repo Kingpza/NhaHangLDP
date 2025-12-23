@@ -1,0 +1,306 @@
+﻿@model NhaHangLDP.Models.ScheduleViewModel
+@{
+    ViewBag.Title = "Lịch làm việc";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .schedule-page {
+            padding: 20px 0;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .week-navigation {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .week-navigation button {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #667eea;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .week-navigation button:hover {
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .week-label {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .schedule-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .day-column {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .day-header {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .day-header.today {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .day-header.weekend {
+            background: #fff3cd;
+        }
+
+        .day-header .day-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .day-header .day-date {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .day-body {
+            padding: 10px;
+            min-height: 300px;
+        }
+
+        .schedule-slot {
+            background: #e8f4fd;
+            border-left: 3px solid #3498db;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .schedule-slot .employee-name {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .schedule-slot .shift-info {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+
+        .add-schedule-btn {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #dee2e6;
+            background: transparent;
+            border-radius: 8px;
+            color: #6c757d;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-schedule-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .empty-day {
+            text-align: center;
+            padding: 20px;
+            color: #adb5bd;
+        }
+    </style>
+}
+
+<div class="schedule-page">
+    <div class="page-header">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-calendar-alt me-2"></i>Lịch làm việc</h2>
+            <p class="text-muted mb-0">Xem và quản lý lịch làm việc nhân viên</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("WorkShifts")" class="btn btn-outline-primary">
+                <i class="fas fa-clock me-1"></i>Quản lý ca
+            </a>
+        </div>
+    </div>
+
+    <div class="week-navigation mb-4">
+        <button onclick="changeWeek(-1)"><i class="fas fa-chevron-left"></i></button>
+        <span class="week-label">
+            @Model.StartDate.ToString("dd/MM") - @Model.EndDate.ToString("dd/MM/yyyy")
+        </span>
+        <button onclick="changeWeek(1)"><i class="fas fa-chevron-right"></i></button>
+        <button class="btn btn-sm btn-primary ms-3" onclick="goToToday()">Hôm nay</button>
+    </div>
+
+    <div class="schedule-section">
+        <div class="schedule-grid">
+            @if (Model.Days != null)
+            {
+                foreach (var day in Model.Days)
+                {
+                    var headerClass = day.IsToday ? "today" : (day.IsWeekend ? "weekend" : "");
+
+                    <div class="day-column">
+                        <div class="day-header @headerClass">
+                            <div class="day-name">@day.DayName</div>
+                            <div class="day-date">@day.Date.Day</div>
+                        </div>
+                        <div class="day-body">
+                            @if (day.Slots != null && day.Slots.Any())
+                            {
+                                foreach (var slot in day.Slots)
+                                {
+                                    <div class="schedule-slot">
+                                        <div class="employee-name">@slot.EmployeeName</div>
+                                        <div class="shift-info">
+                                            <i class="fas fa-clock me-1"></i>
+                                            @slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")
+                                        </div>
+                                        <div class="shift-info">@slot.ShiftName</div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="empty-day">
+                                    <i class="fas fa-calendar-times"></i>
+                                    <p class="small mb-0">Trống</p>
+                                </div>
+                            }
+                            <button class="add-schedule-btn" onclick="openAssignModal('@day.Date.ToString("yyyy-MM-dd")')">
+                                <i class="fas fa-plus"></i> Thêm
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Assign Schedule Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-calendar-plus me-2"></i>Xếp lịch làm việc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="workDate">
+                <div class="mb-3">
+                    <label class="form-label">Ngày làm việc</label>
+                    <input type="text" id="workDateDisplay" class="form-control" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nhân viên</label>
+                    <select id="assignEmployee" class="form-select">
+                        <option value="">-- Chọn nhân viên --</option>
+                        @if (Model.Employees != null)
+                        {
+                            foreach (var emp in Model.Employees)
+                            {
+                                <option value="@emp.Id">@emp.FullName</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ca làm việc</label>
+                    <select id="assignShift" class="form-select">
+                        <option value="">-- Chọn ca --</option>
+                        @if (Model.Shifts != null)
+                        {
+                            foreach (var shift in Model.Shifts)
+                            {
+                                <option value="@shift.Id">
+                                    @shift.ShiftName (@shift.StartTime.ToString(@"hh\:mm") - @shift.EndTime.ToString(@"hh\:mm"))
+                                </option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="saveSchedule()">
+                    <i class="fas fa-save me-1"></i>Lưu
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function changeWeek(offset) {
+            var currentStart = new Date('@Model.StartDate.ToString("yyyy-MM-dd")');
+            currentStart.setDate(currentStart.getDate() + (offset * 7));
+            var newStart = currentStart.toISOString().split('T')[0];
+            window.location.href = '@Url.Action("Schedule", "HR")' + '?weekStart=' + newStart;
+        }
+
+        function goToToday() {
+            window.location.href = '@Url.Action("Schedule", "HR")';
+        }
+
+        function openAssignModal(date) {
+            $('#workDate').val(date);
+            $('#workDateDisplay').val(new Date(date).toLocaleDateString('vi-VN'));
+            $('#assignModal').modal('show');
+        }
+
+        function saveSchedule() {
+            var data = {
+                employeeId: $('#assignEmployee').val(),
+                shiftId: $('#assignShift').val(),
+                workDate: $('#workDate').val()
+            };
+
+            if (!data.employeeId || !data.shiftId) {
+                showWarning('Thiếu thông tin', 'Vui lòng chọn nhân viên và ca làm việc!');
+                return;
+            }
+
+            $.post('@Url.Action("AssignSchedule", "HR")', data, function (response) {
+                if (response.Success) {
+                    $('#assignModal').modal('hide');
+                    showSuccess('Thành công', response.Message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showError('Lỗi', response.Message);
+                }
+            });
+        }
+    </script>
+}

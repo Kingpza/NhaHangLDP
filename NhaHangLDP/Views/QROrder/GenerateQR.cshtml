@@ -1,0 +1,158 @@
+﻿@{
+    ViewBag.Title = "QR Code Bàn " + ViewBag.Table.TableNumber;
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    var table = ViewBag.Table as NhaHangLDP.Models.RestaurantTable;
+    var qrUrl = ViewBag.QRUrl as string;
+}
+
+@section styles {
+    <style>
+        .qr-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .qr-header {
+            margin-bottom: 30px;
+        }
+        .qr-header h2 {
+            color: #1e3a5f;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .table-number {
+            font-size: 48px;
+            font-weight: 800;
+            color: #667eea;
+            display: block;
+            margin: 20px 0;
+        }
+        .qr-image-wrapper {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #667eea;
+            display: inline-block;
+            margin: 20px 0;
+        }
+        .qr-image {
+            width: 250px;
+            height: 250px;
+        }
+        .qr-url {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #64748b;
+            word-break: break-all;
+            margin: 20px 0;
+        }
+        .qr-footer {
+            margin-top: 30px;
+        }
+        .btn-download {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            border: none;
+            margin: 5px;
+        }
+        .btn-print {
+            background: #1e3a5f;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            border: none;
+            margin: 5px;
+        }
+        .print-template {
+            display: none;
+        }
+        @@media print {
+            body * { visibility: hidden; }
+            .print-template, .print-template * { visibility: visible; }
+            .print-template {
+                display: block;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-qrcode me-2"></i>Tạo QR Code</h2>
+            <p>QR Code cho khách quét đặt món</p>
+        </div>
+        <a href="@Url.Action("Index", "Management")" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="qr-container">
+    <div class="qr-header">
+        <h2>Quét mã để đặt món</h2>
+        <span class="table-number">Bàn @table.TableNumber</span>
+        @if (table.TableArea != null)
+        {
+            <span class="badge bg-info">@table.TableArea.Name</span>
+        }
+    </div>
+    
+    <div class="qr-image-wrapper">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=@Uri.EscapeDataString(qrUrl)" 
+             alt="QR Code" class="qr-image" id="qrImage">
+    </div>
+    
+    <div class="qr-url">@qrUrl</div>
+    
+    <div class="qr-footer">
+        <button class="btn-download" onclick="downloadQR()">
+            <i class="fas fa-download me-2"></i>Tải xuống
+        </button>
+        <button class="btn-print" onclick="printQR()">
+            <i class="fas fa-print me-2"></i>In QR Code
+        </button>
+    </div>
+</div>
+
+<!-- Print Template -->
+<div class="print-template">
+    <div style="text-align: center; padding: 30px;">
+        <h1 style="font-size: 24px; margin-bottom: 10px;">Nhà Hàng LDP</h1>
+        <h2 style="font-size: 48px; font-weight: 800; color: #333; margin: 20px 0;">Bàn @table.TableNumber</h2>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=@Uri.EscapeDataString(qrUrl)" 
+             style="width: 300px; height: 300px; margin: 20px 0;">
+        <p style="font-size: 18px; font-weight: 600;">Quét mã QR để xem menu và đặt món</p>
+        <p style="font-size: 14px; color: #666;">Scan QR code to order</p>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function downloadQR() {
+            var link = document.createElement('a');
+            link.download = 'QR-Ban-@(table.TableNumber).png';
+            link.href = 'https://api.qrserver.com/v1/create-qr-code/?size=500x500&format=png&data=@Uri.EscapeDataString(qrUrl)';
+            link.click();
+        }
+        
+        function printQR() {
+            window.print();
+        }
+    </script>
+}

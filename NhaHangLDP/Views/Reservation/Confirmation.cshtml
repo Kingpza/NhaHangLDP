@@ -1,0 +1,157 @@
+﻿@model NhaHangLDP.Models.ReservationViewModel
+@{
+    ViewBag.Title = "Xác nhận đặt bàn";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Đặt bàn thành công - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007bff",
+                        success: "#28a745",
+                        warning: "#ffc107",
+                        danger: "#dc3545"
+                    },
+                    fontFamily: {
+                        display: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-display min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-lg w-full">
+        <!-- Success Card -->
+        <div class="bg-white rounded-3xl shadow-xl p-8 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-success/20 mb-6">
+                <span class="material-symbols-outlined text-5xl text-success">check_circle</span>
+            </div>
+
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Đặt bàn thành công!</h1>
+            <p class="text-gray-600 mb-6">Chúng tôi sẽ liên hệ xác nhận trong vòng 15 phút</p>
+
+            <!-- Reservation Code -->
+            <div class="bg-gray-100 rounded-2xl p-6 mb-6">
+                <p class="text-sm text-gray-500 mb-1">Mã đặt bàn</p>
+                <p class="text-3xl font-bold text-primary">@Model.ReservationCode</p>
+            </div>
+
+            <!-- Reservation Details -->
+            <div class="space-y-4 text-left mb-6">
+                <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                    <span class="material-symbols-outlined text-primary text-2xl">calendar_month</span>
+                    <div>
+                        <p class="text-sm text-gray-500">Ngày & Giờ</p>
+                        <p class="font-semibold">@Model.ReservationDate.ToString("dddd, dd/MM/yyyy")</p>
+                        <p class="text-primary font-bold">@Model.ReservationTime.ToString(@"hh\:mm")</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                    <span class="material-symbols-outlined text-primary text-2xl">group</span>
+                    <div>
+                        <p class="text-sm text-gray-500">Số khách</p>
+                        <p class="font-semibold">@Model.NumberOfGuests người</p>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.TableInfo))
+                {
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                        <span class="material-symbols-outlined text-primary text-2xl">table_restaurant</span>
+                        <div>
+                            <p class="text-sm text-gray-500">Khu vực</p>
+                            <p class="font-semibold">@Model.TableInfo</p>
+                        </div>
+                    </div>
+                }
+
+                <div class="flex items-center gap-4 p-4 bg-warning/10 rounded-xl">
+                    <span class="material-symbols-outlined text-warning text-2xl">schedule</span>
+                    <div>
+                        <p class="text-sm text-gray-500">Trạng thái</p>
+                        <p class="font-semibold text-warning">@Model.StatusText</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex flex-col gap-3">
+                <a href="@Url.Action("Menu", "Public")" 
+                   class="py-3 bg-primary text-white rounded-xl font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">restaurant_menu</span>
+                    Xem thực đơn
+                </a>
+
+                @if (Model.CanCancel)
+                {
+                    <button onclick="cancelReservation('@Model.ReservationCode')"
+                            class="py-3 border-2 border-danger text-danger rounded-xl font-bold hover:bg-danger hover:text-white transition-colors flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">cancel</span>
+                        Hủy đặt bàn
+                    </button>
+                }
+            </div>
+
+            <!-- Note -->
+            <div class="mt-6 p-4 bg-blue-50 rounded-xl text-sm text-blue-800">
+                <p><strong>Lưu ý:</strong></p>
+                <ul class="list-disc list-inside mt-2 space-y-1 text-left">
+                    <li>Vui lòng đến trước giờ đặt 10 phút</li>
+                    <li>Đặt bàn sẽ được giữ trong 15 phút</li>
+                    <li>Nếu cần thay đổi, vui lòng gọi hotline</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="text-center mt-6 text-gray-500 text-sm">
+            <p>Cần hỗ trợ? Liên hệ: <strong class="text-primary">1900 1234</strong></p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function cancelReservation(code) {
+            Swal.fire({
+                title: 'Hủy đặt bàn?',
+                input: 'textarea',
+                inputLabel: 'Lý do hủy (tùy chọn)',
+                inputPlaceholder: 'Nhập lý do...',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận hủy',
+                cancelButtonText: 'Không',
+                confirmButtonColor: '#dc3545'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("Cancel", "Reservation")', {
+                        code: code,
+                        reason: result.value
+                    }).done(function(response) {
+                        if (response.success) {
+                            Swal.fire('Đã hủy!', response.message, 'success')
+                                .then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi', response.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

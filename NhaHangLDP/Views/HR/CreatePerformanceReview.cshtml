@@ -1,0 +1,331 @@
+﻿@model NhaHangLDP.Models.PerformanceReview
+@{
+    ViewBag.Title = "Tạo đánh giá";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .review-form-page {
+            padding: 20px 0;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-title {
+            font-weight: 600;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+
+        .form-group .form-control,
+        .form-group .form-select {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group .form-control:focus,
+        .form-group .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .rating-group {
+            margin-bottom: 25px;
+        }
+
+        .rating-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .rating-group .rating-description {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 10px;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            cursor: pointer;
+            font-size: 2rem;
+            color: #ddd;
+            transition: all 0.2s;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #f39c12;
+        }
+
+        .rating-value {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .overall-score-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .overall-score-preview .score {
+            font-size: 4rem;
+            font-weight: 700;
+        }
+
+        .overall-score-preview .label {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .overall-score-preview .level {
+            font-size: 1rem;
+            margin-top: 10px;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            padding-top: 20px;
+            border-top: 2px solid #f8f9fa;
+        }
+    </style>
+}
+
+<div class="review-form-page">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-star me-2"></i>Tạo đánh giá hiệu suất</h2>
+            <p class="text-muted mb-0">Đánh giá hiệu suất làm việc của nhân viên</p>
+        </div>
+        <a href="@Url.Action("PerformanceReview")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại
+        </a>
+    </div>
+
+    @using (Html.BeginForm("CreatePerformanceReview", "HR", FormMethod.Post, new { @class = "review-form" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ReviewerId)
+
+        <!-- Basic Info -->
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-info-circle me-2"></i>Thông tin cơ bản</h4>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label><i class="fas fa-user me-2"></i>Nhân viên được đánh giá</label>
+                        @Html.DropDownListFor(m => m.EmployeeId, (SelectList)ViewBag.Employees,
+                            "-- Chọn nhân viên --", new { @class = "form-select", required = "required" })
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar me-2"></i>Ngày đánh giá</label>
+                        @Html.TextBoxFor(m => m.ReviewDate, "{0:yyyy-MM-dd}",
+                            new { @class = "form-control", type = "date", required = "required" })
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label><i class="fas fa-clock me-2"></i>Kỳ đánh giá</label>
+                        @Html.DropDownListFor(m => m.ReviewPeriod, (SelectList)ViewBag.Periods,
+                            new { @class = "form-select", required = "required" })
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Section -->
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-star-half-alt me-2"></i>Đánh giá chi tiết (1-5 sao)</h4>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="rating-group">
+                        <label>1. Chất lượng phục vụ</label>
+                        <div class="rating-description">Thái độ, kỹ năng phục vụ khách hàng</div>
+                        <div class="star-rating" data-rating="ServiceQuality">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <input type="radio" name="ServiceQuality" value="@i" id="sq@i" @(i == 3 ? "checked" : "")>
+                                <label for="sq@i"><i class="fas fa-star"></i></label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="rating-group">
+                        <label>2. Đúng giờ</label>
+                        <div class="rating-description">Chấp hành giờ giấc, đi làm đúng giờ</div>
+                        <div class="star-rating" data-rating="Punctuality">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <input type="radio" name="Punctuality" value="@i" id="pt@i" @(i == 3 ? "checked" : "")>
+                                <label for="pt@i"><i class="fas fa-star"></i></label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="rating-group">
+                        <label>3. Làm việc nhóm</label>
+                        <div class="rating-description">Phối hợp, hỗ trợ đồng nghiệp</div>
+                        <div class="star-rating" data-rating="Teamwork">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <input type="radio" name="Teamwork" value="@i" id="tw@i" @(i == 3 ? "checked" : "")>
+                                <label for="tw@i"><i class="fas fa-star"></i></label>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="rating-group">
+                        <label>4. Giao tiếp</label>
+                        <div class="rating-description">Khả năng giao tiếp, truyền đạt thông tin</div>
+                        <div class="star-rating" data-rating="Communication">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <input type="radio" name="Communication" value="@i" id="cm@i" @(i == 3 ? "checked" : "")>
+                                <label for="cm@i"><i class="fas fa-star"></i></label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="rating-group">
+                        <label>5. Hiệu quả công việc</label>
+                        <div class="rating-description">Năng suất, chất lượng hoàn thành công việc</div>
+                        <div class="star-rating" data-rating="WorkEfficiency">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <input type="radio" name="WorkEfficiency" value="@i" id="we@i" @(i == 3 ? "checked" : "")>
+                                <label for="we@i"><i class="fas fa-star"></i></label>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Overall Score Preview -->
+                    <div class="overall-score-preview">
+                        <div class="score" id="overallScore">3.0</div>
+                        <div class="label">Điểm tổng</div>
+                        <div class="level" id="performanceLevel">Trung bình</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="form-section">
+            <h4 class="section-title"><i class="fas fa-comment me-2"></i>Nhận xét</h4>
+
+            <div class="form-group">
+                <label>Điểm mạnh</label>
+                @Html.TextAreaFor(m => m.Strengths, new { @class = "form-control", rows = 3,
+                    placeholder = "Những điểm mạnh của nhân viên..." })
+            </div>
+
+            <div class="form-group">
+                <label>Cần cải thiện</label>
+                @Html.TextAreaFor(m => m.AreasToImprove, new { @class = "form-control", rows = 3,
+                    placeholder = "Những điểm cần cải thiện..." })
+            </div>
+
+            <div class="form-group">
+                <label>Nhận xét chung</label>
+                @Html.TextAreaFor(m => m.Comments, new { @class = "form-control", rows = 3,
+                    placeholder = "Nhận xét tổng quan về hiệu suất nhân viên..." })
+            </div>
+
+            <div class="form-actions">
+                <a href="@Url.Action("PerformanceReview")" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-times me-1"></i>Hủy
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-1"></i>Lưu đánh giá
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        // Calculate overall score
+        function calculateOverallScore() {
+            var scores = [];
+            $('input[type="radio"]:checked').each(function () {
+                scores.push(parseInt($(this).val()));
+            });
+
+            if (scores.length === 5) {
+                var avg = scores.reduce((a, b) => a + b, 0) / 5;
+                $('#overallScore').text(avg.toFixed(1));
+
+                var level = '';
+                if (avg >= 4.5) level = 'Xuất sắc';
+                else if (avg >= 3.5) level = 'Tốt';
+                else if (avg >= 2.5) level = 'Trung bình';
+                else if (avg >= 1.5) level = 'Dưới trung bình';
+                else level = 'Yếu';
+
+                $('#performanceLevel').text(level);
+            }
+        }
+
+        // Update on rating change
+        $('input[type="radio"]').change(function () {
+            calculateOverallScore();
+        });
+
+        // Initial calculation
+        calculateOverallScore();
+    </script>
+}

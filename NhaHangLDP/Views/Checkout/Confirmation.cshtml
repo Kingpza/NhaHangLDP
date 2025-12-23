@@ -1,0 +1,161 @@
+﻿@model NhaHangLDP.Models.OrderConfirmationViewModel
+@{
+    ViewBag.Title = "Xác nhận đơn hàng";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Đặt hàng thành công - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007bff",
+                        success: "#28a745",
+                        warning: "#ffc107"
+                    },
+                    fontFamily: {
+                        display: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-display min-h-screen">
+    <div class="max-w-3xl mx-auto px-4 py-8">
+        <!-- Success Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-success/20 mb-4">
+                <span class="material-symbols-outlined text-5xl text-success">check_circle</span>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Đặt hàng thành công!</h1>
+            <p class="text-gray-600">Cảm ơn bạn đã đặt hàng tại Nhà Hàng LDP</p>
+        </div>
+
+        <!-- Order Info Card -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between pb-4 border-b border-gray-100">
+                <div>
+                    <p class="text-sm text-gray-500">Mã đơn hàng</p>
+                    <p class="text-2xl font-bold text-primary">@Model.OrderCode</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Trạng thái</p>
+                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-warning/20 text-warning rounded-full text-sm font-semibold">
+                        <span class="material-symbols-outlined text-sm">schedule</span>
+                        Đang chờ xác nhận
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 py-4">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Người nhận</p>
+                    <p class="font-semibold">@Model.CustomerName</p>
+                    <p class="text-gray-600">@Model.CustomerPhone</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Địa chỉ giao hàng</p>
+                    <p class="text-gray-800">@Model.DeliveryAddress</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Phương thức thanh toán</p>
+                    <p class="font-semibold">@Model.PaymentMethod</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Thời gian dự kiến</p>
+                    <p class="font-semibold text-primary">
+                        @if (Model.EstimatedDeliveryTime.HasValue)
+                        {
+                            @Model.EstimatedDeliveryTime.Value.ToString("HH:mm dd/MM/yyyy")
+                        }
+                        else
+                        {
+                            @:30-45 phút
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Chi tiết đơn hàng</h2>
+            <div class="space-y-4">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-xl bg-cover bg-center bg-gray-100"
+                             style='background-image: url("@Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl))")'></div>
+                        <div class="flex-1">
+                            <p class="font-semibold">@item.Name</p>
+                            <p class="text-sm text-gray-500">@item.UnitPrice.ToString("N0")đ x @item.Quantity</p>
+                        </div>
+                        <p class="font-semibold">@item.Subtotal.ToString("N0")đ</p>
+                    </div>
+                }
+            </div>
+
+            <div class="border-t border-gray-100 mt-4 pt-4 space-y-2">
+                <div class="flex justify-between text-gray-600">
+                    <span>Tạm tính</span>
+                    <span>@Model.SubTotal.ToString("N0")đ</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
+                    <span>Phí giao hàng</span>
+                    <span>
+                        @if (Model.DeliveryFee == 0)
+                        {
+                            <span class="text-success">Miễn phí</span>
+                        }
+                        else
+                        {
+                            @Model.DeliveryFee.ToString("N0")@:đ
+                        }
+                    </span>
+                </div>
+                @if (Model.Discount > 0)
+                {
+                    <div class="flex justify-between text-success">
+                        <span>Giảm giá</span>
+                        <span>-@Model.Discount.ToString("N0")đ</span>
+                    </div>
+                }
+                <div class="flex justify-between text-xl font-bold pt-2 border-t border-gray-100">
+                    <span>Tổng cộng</span>
+                    <span class="text-primary">@Model.TotalAmount.ToString("N0")đ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row gap-4">
+            <a href="@Url.Action("TrackOrder", "Checkout", new { code = Model.OrderCode })" 
+               class="flex-1 py-4 bg-primary text-white rounded-xl font-bold text-center hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">local_shipping</span>
+                Theo dõi đơn hàng
+            </a>
+            <a href="@Url.Action("Menu", "Public")" 
+               class="flex-1 py-4 border-2 border-primary text-primary rounded-xl font-bold text-center hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">restaurant_menu</span>
+                Tiếp tục mua sắm
+            </a>
+        </div>
+
+        <!-- Support Info -->
+        <div class="mt-8 text-center text-gray-500 text-sm">
+            <p>Có thắc mắc? Liên hệ hotline: <strong class="text-primary">1900 1234</strong></p>
+            <p class="mt-1">Hoặc email: support@nhahangldp.com</p>
+        </div>
+    </div>
+</body>
+</html>

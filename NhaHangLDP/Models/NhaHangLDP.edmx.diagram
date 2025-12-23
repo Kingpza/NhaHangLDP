@@ -59,6 +59,48 @@
         <AssociationConnector Association="NhaHangLDPModel.FK_ReturnBillDetail_ReturnBill" ManuallyRouted="false" />
         <AssociationConnector Association="NhaHangLDPModel.FK_StockInbound_Supplier" ManuallyRouted="false" />
         <AssociationConnector Association="NhaHangLDPModel.FK_StockInboundDetail_StockInbound" ManuallyRouted="false" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.EmailConfig" Width="1.5" PointX="8.375" PointY="0.75" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.EmailLog" Width="1.5" PointX="10.375" PointY="0.75" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.EmailTemplate" Width="1.5" PointX="12.375" PointY="0.75" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.KitchenOrderItem" Width="1.5" PointX="17" PointY="17.5" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.KitchenOrderTicket" Width="1.5" PointX="9.75" PointY="25.5" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.KitchenStation" Width="1.5" PointX="13.375" PointY="4.75" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Notification" Width="1.5" PointX="5.25" PointY="28.625" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Promotion" Width="1.5" PointX="10.25" PointY="31.5" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.PromotionUsage" Width="1.5" PointX="12.5" PointY="22" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.QROrder" Width="1.5" PointX="14.75" PointY="19.5" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.QROrderDetail" Width="1.5" PointX="17" PointY="13" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.TableSession" Width="1.5" PointX="7.5" PointY="28.875" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_PromotionUsage_Bill" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_KitchenTicket_Chef" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Notification_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_QROrder_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_KitchenItem_MenuItem" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_KitchenItem_Ticket" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_KitchenTicket_Order" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_KitchenTicket_Table" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_QROrderDetail_MenuItem" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_QROrder_Order" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_PromotionUsage_Promotion" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_QROrder_Table" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_QROrderDetail_QROrder" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_TableSession_Table" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Attendance" Width="1.5" PointX="5.25" PointY="39" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.EmployeeContract" Width="1.5" PointX="5.25" PointY="52" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.EmployeeSchedule" Width="1.5" PointX="12.25" PointY="26" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.LeaveRequest" Width="1.5" PointX="5.25" PointY="48" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.Payroll" Width="1.5" PointX="5.25" PointY="42.5" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.PerformanceReview" Width="1.5" PointX="5.25" PointY="34" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.WorkShift" Width="1.5" PointX="10" PointY="38" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Attendance_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_EmployeeContract_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_EmployeeSchedule_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_LeaveRequest_Approver" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_LeaveRequest_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_Payroll_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_PerformanceReview_Employee" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_PerformanceReview_Reviewer" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_EmployeeSchedule_WorkShift" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

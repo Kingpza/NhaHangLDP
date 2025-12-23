@@ -1,0 +1,48 @@
+﻿@model NhaHangLDP.Models.CartViewModel
+
+<div class="mini-cart-dropdown">
+    @if (Model.Items != null && Model.Items.Any())
+    {
+        <div class="p-4 max-h-80 overflow-y-auto">
+            @foreach (var item in Model.Items.Take(5))
+            {
+                var imageUrl = Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl));
+                <div class="flex items-center gap-3 mb-3 last:mb-0">
+                    <div class="w-12 h-12 rounded-lg bg-cover bg-center flex-shrink-0" 
+                         style='background-image: url("@imageUrl")'></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-sm truncate">@item.Name</p>
+                        <p class="text-xs text-gray-500">x@item.Quantity</p>
+                    </div>
+                    <p class="font-semibold text-sm text-primary">@item.Subtotal.ToString("N0")đ</p>
+                </div>
+            }
+            @if (Model.Items.Count > 5)
+            {
+                <p class="text-center text-sm text-gray-500 mt-2">
+                    ... và @(Model.Items.Count - 5) món khác
+                </p>
+            }
+        </div>
+        <div class="border-t border-gray-100 p-4">
+            <div class="flex justify-between mb-3">
+                <span class="font-medium">Tổng cộng:</span>
+                <span class="font-bold text-primary">@Model.TotalAmount.ToString("N0")đ</span>
+            </div>
+            <a href="@Url.Action("Index", "Cart")" 
+               class="block w-full py-2 bg-primary text-white text-center rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                Xem giỏ hàng (@Model.TotalItems món)
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="p-8 text-center">
+            <span class="material-symbols-outlined text-4xl text-gray-300 mb-2">shopping_cart</span>
+            <p class="text-gray-500">Giỏ hàng trống</p>
+            <a href="@Url.Action("Menu", "Public")" class="text-primary text-sm hover:underline mt-2 inline-block">
+                Xem thực đơn
+            </a>
+        </div>
+    }
+</div>

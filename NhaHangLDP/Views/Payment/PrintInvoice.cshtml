@@ -1,0 +1,412 @@
+﻿@model NhaHangLDP.Models.BillDetailViewModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Hóa đơn @Model.InvoiceNumber</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 10pt;
+            color: #000;
+            background-color: #f4f4f4;
+        }
+
+        .invoice-box {
+            width: 76mm;
+            padding: 3mm;
+            margin: 10px auto;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #000;
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #667eea;
+        }
+
+        .header p {
+            font-size: 8pt;
+            margin: 2px 0;
+            color: #666;
+        }
+
+        /* Title */
+        .title {
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            padding: 8px 0;
+            border-bottom: 1px dashed #000;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Info Section */
+        .info {
+            font-size: 9pt;
+            margin-bottom: 12px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .info-row .label {
+            color: #666;
+        }
+
+        .info-divider {
+            border-top: 1px dashed #ccc;
+            margin: 8px 0;
+        }
+
+        /* Items Table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+            margin-bottom: 12px;
+        }
+
+        .items-table th {
+            text-align: left;
+            padding: 6px 4px;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            font-weight: bold;
+            background: #f9f9f9;
+        }
+
+        .items-table td {
+            padding: 6px 4px;
+            border-bottom: 1px dashed #ddd;
+            vertical-align: top;
+        }
+
+        .item-name {
+            font-weight: 500;
+        }
+
+        .item-note {
+            font-size: 8pt;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* Totals */
+        .totals {
+            font-size: 10pt;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #000;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        .total-row.discount {
+            color: #28a745;
+        }
+
+        .total-row.grand-total {
+            font-size: 14pt;
+            font-weight: bold;
+            border-top: 2px solid #000;
+            margin-top: 8px;
+            padding-top: 8px;
+        }
+
+        .total-row.payment-info {
+            font-size: 9pt;
+            color: #666;
+            border-top: 1px dashed #ccc;
+            margin-top: 8px;
+            padding-top: 8px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 2px dashed #000;
+        }
+
+        .thank-you {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .footer p {
+            font-size: 8pt;
+            color: #666;
+            margin: 2px 0;
+        }
+
+        .qr-code {
+            margin: 12px auto;
+            text-align: center;
+        }
+
+        .qr-code img {
+            width: 60px;
+            height: 60px;
+        }
+
+        .tax-info {
+            font-size: 7pt;
+            color: #999;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #ddd;
+        }
+
+        /* Print Styles */
+        @@media print {
+            body {
+                background-color: #fff;
+                margin: 0;
+                padding: 0;
+            }
+
+            .invoice-box {
+                width: 100%;
+                margin: 0;
+                padding: 2mm;
+                box-shadow: none;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* Action Buttons (hidden on print) */
+        .action-buttons {
+            text-align: center;
+            margin: 20px auto;
+            max-width: 300px;
+        }
+
+        .action-buttons button {
+            padding: 12px 24px;
+            margin: 4px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-print {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background: #5a67d8;
+        }
+
+        .btn-close {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-close:hover {
+            background: #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Action Buttons -->
+    <div class="action-buttons no-print">
+        <button class="btn-print" onclick="window.print();">
+            <i class="fas fa-print"></i> In hóa đơn
+        </button>
+        <button class="btn-close" onclick="window.close();">Đóng</button>
+    </div>
+
+    <div class="invoice-box">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">@Model.RestaurantName</div>
+            <p>@Model.RestaurantAddress</p>
+            <p>ĐT: @Model.RestaurantPhone</p>
+            @if (!string.IsNullOrEmpty(Model.RestaurantTaxCode))
+            {
+                <p>MST: @Model.RestaurantTaxCode</p>
+            }
+        </div>
+
+        <!-- Title -->
+        <div class="title">Hóa Đơn Thanh Toán</div>
+
+        <!-- Invoice Info -->
+        <div class="info">
+            <div class="info-row">
+                <span class="label">Số HĐ:</span>
+                <span><strong>@Model.InvoiceNumber</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="label">Ngày:</span>
+                <span>@Model.BillDate.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+            <div class="info-divider"></div>
+            <div class="info-row">
+                <span class="label">Mã đơn:</span>
+                <span>@Model.OrderCode</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Bàn:</span>
+                <span>@Model.TableNumber @(!string.IsNullOrEmpty(Model.TableArea) ? $"({Model.TableArea})" : "")</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Thu ngân:</span>
+                <span>@Model.CashierName</span>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.CustomerName))
+            {
+                <div class="info-divider"></div>
+                <div class="info-row">
+                    <span class="label">Khách hàng:</span>
+                    <span>@Model.CustomerName</span>
+                </div>
+                if (!string.IsNullOrEmpty(Model.CustomerPhone))
+                {
+                    <div class="info-row">
+                        <span class="label">SĐT:</span>
+                        <span>@Model.CustomerPhone</span>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Items -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 50%">Tên món</th>
+                    <th class="text-center" style="width: 10%">SL</th>
+                    <th class="text-right" style="width: 20%">Đ.Giá</th>
+                    <th class="text-right" style="width: 20%">T.Tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <div class="item-name">@item.Name</div>
+                            @if (!string.IsNullOrEmpty(item.Notes))
+                            {
+                                <div class="item-note">@item.Notes</div>
+                            }
+                        </td>
+                        <td class="text-center">@item.Quantity</td>
+                        <td class="text-right">@item.UnitPrice.ToString("#,##0")</td>
+                        <td class="text-right">@item.Total.ToString("#,##0")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Totals -->
+        <div class="totals">
+            <div class="total-row">
+                <span>Tạm tính:</span>
+                <span>@Model.SubTotal.ToString("#,##0") đ</span>
+            </div>
+            <div class="total-row">
+                <span>VAT (@Model.VATPercent%):</span>
+                <span>@Model.VATAmount.ToString("#,##0") đ</span>
+            </div>
+            @if (Model.DiscountAmount > 0)
+            {
+                <div class="total-row discount">
+                    <span>Giảm giá @(!string.IsNullOrEmpty(Model.DiscountCode) ? $"({Model.DiscountCode})" : ""):</span>
+                    <span>-@Model.DiscountAmount.ToString("#,##0") đ</span>
+                </div>
+            }
+            <div class="total-row grand-total">
+                <span>TỔNG CỘNG:</span>
+                <span>@Model.FinalAmount.ToString("#,##0") đ</span>
+            </div>
+            <div class="total-row payment-info">
+                <span>Hình thức TT:</span>
+                <span>@Model.PaymentMethodDisplay</span>
+            </div>
+            @if (Model.ReceivedAmount > 0)
+            {
+                <div class="total-row payment-info">
+                    <span>Tiền nhận:</span>
+                    <span>@Model.ReceivedAmount.ToString("#,##0") đ</span>
+                </div>
+                <div class="total-row payment-info">
+                    <span>Tiền thừa:</span>
+                    <span>@Model.ChangeAmount.ToString("#,##0") đ</span>
+                </div>
+            }
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="thank-you">Cảm ơn Quý Khách!</div>
+            <p>Hẹn gặp lại!</p>
+            <p>Hotline: @Model.RestaurantPhone</p>
+            
+            @if (Model.EarnedPoints.HasValue && Model.EarnedPoints > 0)
+            {
+                <p style="margin-top: 8px; color: #667eea;">
+                    <strong>+@Model.EarnedPoints điểm tích lũy</strong>
+                </p>
+            }
+
+            <div class="tax-info">
+                Hóa đơn được lập vào @Model.BillDate.ToString("HH:mm dd/MM/yyyy")
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto print when page loads (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

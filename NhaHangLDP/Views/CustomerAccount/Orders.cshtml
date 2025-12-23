@@ -1,0 +1,137 @@
+﻿@model NhaHangLDP.Models.OrderListViewModel
+@{
+    ViewBag.Title = "Đơn hàng";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Đơn hàng của tôi - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007bff",
+                        success: "#28a745",
+                        warning: "#ffc107",
+                        danger: "#dc3545",
+                        info: "#17a2b8"
+                    },
+                    fontFamily: {
+                        display: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-display min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="@Url.Action("Profile")" class="flex items-center gap-2 text-gray-600 hover:text-primary">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span class="font-medium">Tài khoản</span>
+            </a>
+            <h1 class="text-xl font-bold">Đơn hàng của tôi</h1>
+            <div class="w-20"></div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        @if (Model.Orders != null && Model.Orders.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var order in Model.Orders)
+                {
+                    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                        <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+                            <div>
+                                <p class="font-bold text-primary">@order.OrderCode</p>
+                                <p class="text-sm text-gray-500">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                            </div>
+                            @{
+                                var statusBgClass = order.StatusClass == "success" ? "bg-success/10 text-success" :
+                                                    order.StatusClass == "warning" ? "bg-warning/10 text-warning" :
+                                                    order.StatusClass == "danger" ? "bg-danger/10 text-danger" :
+                                                    order.StatusClass == "info" ? "bg-info/10 text-info" : "bg-gray-100 text-gray-600";
+                            }
+                            <span class="px-3 py-1 rounded-full text-sm font-semibold @statusBgClass">
+                                @order.StatusText
+                            </span>
+                        </div>
+                        <div class="p-4 flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                @if (!string.IsNullOrEmpty(order.FirstItemImage))
+                                {
+                                    <div class="w-16 h-16 rounded-xl bg-cover bg-center bg-gray-100"
+                                         style='background-image: url("@Url.Content("~/images/menu/" + order.FirstItemImage)")'></div>
+                                }
+                                else
+                                {
+                                    <div class="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-gray-400">restaurant</span>
+                                    </div>
+                                }
+                                <div>
+                                    <p class="font-medium">@order.ItemCount món</p>
+                                    <p class="text-lg font-bold text-primary">@order.TotalAmount.ToString("N0")đ</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="@Url.Action("OrderDetail", new { code = order.OrderCode })" 
+                                   class="px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-colors font-medium text-sm">
+                                    Chi tiết
+                                </a>
+                                @if (order.CanReview)
+                                {
+                                    <button class="px-4 py-2 bg-warning text-gray-800 rounded-lg hover:bg-yellow-400 transition-colors font-medium text-sm">
+                                        Đánh giá
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            if (Model.TotalPages > 1)
+            {
+                <div class="flex justify-center mt-8 gap-2">
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        var pageClass = i == Model.CurrentPage ? "bg-primary text-white" : "bg-white text-gray-600 hover:bg-gray-100";
+                        <a href="@Url.Action("Orders", new { page = i })" 
+                           class="w-10 h-10 flex items-center justify-center rounded-lg @pageClass">
+                            @i
+                        </a>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-16">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-4">
+                    <span class="material-symbols-outlined text-4xl text-gray-400">receipt_long</span>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Chưa có đơn hàng</h2>
+                <p class="text-gray-500 mb-6">Bạn chưa đặt đơn hàng nào</p>
+                <a href="@Url.Action("Menu", "Public")" 
+                   class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors">
+                    <span class="material-symbols-outlined">restaurant_menu</span>
+                    Xem thực đơn
+                </a>
+            </div>
+        }
+    </main>
+</body>
+</html>

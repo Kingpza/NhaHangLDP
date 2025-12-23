@@ -1,0 +1,190 @@
+﻿@model NhaHangLDP.Models.OrderTrackingViewModel
+@{
+    ViewBag.Title = "Theo dõi đơn hàng";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Theo dõi đơn hàng @Model.OrderCode - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007bff",
+                        success: "#28a745",
+                        warning: "#ffc107",
+                        danger: "#dc3545"
+                    },
+                    fontFamily: {
+                        display: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-display min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="@Url.Action("Menu", "Public")" class="flex items-center gap-2 text-gray-600 hover:text-primary">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span>Trang chủ</span>
+            </a>
+            <h1 class="text-lg font-bold">Theo dõi đơn hàng</h1>
+            <div class="w-20"></div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-8">
+        <!-- Order Code -->
+        <div class="text-center mb-8">
+            <p class="text-gray-500 text-sm">Mã đơn hàng</p>
+            <p class="text-3xl font-bold text-primary">@Model.OrderCode</p>
+        </div>
+
+        <!-- Tracking Steps -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <div class="relative">
+                @{
+                    var steps = Model.Steps;
+                    var completedCount = steps.Count(s => s.IsCompleted);
+                }
+                
+                <!-- Progress Bar Background -->
+                <div class="absolute top-6 left-6 right-6 h-1 bg-gray-200 rounded"></div>
+                <!-- Progress Bar Fill -->
+                <div class="absolute top-6 left-6 h-1 bg-success rounded transition-all duration-500" 
+                     style="width: calc((100% - 48px) * @((completedCount - 1) / (float)(steps.Count - 1)))"></div>
+
+                <div class="relative flex justify-between">
+                    @foreach (var step in steps)
+                    {
+                        <div class="flex flex-col items-center" style="width: 60px;">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center z-10 transition-all
+                                        @(step.IsCompleted ? "bg-success text-white" : 
+                                          step.IsCurrent ? "bg-primary text-white animate-pulse" : "bg-gray-200 text-gray-400")">
+                                <span class="material-symbols-outlined">@step.Icon</span>
+                            </div>
+                            <p class="text-xs font-medium mt-2 text-center @(step.IsCompleted || step.IsCurrent ? "text-gray-800" : "text-gray-400")">
+                                @step.Title
+                            </p>
+                            @if (step.CompletedAt.HasValue)
+                            {
+                                <p class="text-xs text-gray-400">@step.CompletedAt.Value.ToString("HH:mm")</p>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Current Status Message -->
+            <div class="mt-8 p-4 bg-primary/5 rounded-xl text-center">
+                @{
+                    var currentStep = steps.FirstOrDefault(s => s.IsCurrent);
+                }
+                @if (currentStep != null)
+                {
+                    <span class="material-symbols-outlined text-primary text-3xl mb-2">@currentStep.Icon</span>
+                    <p class="font-semibold text-gray-800">@currentStep.Title</p>
+                    <p class="text-gray-600">@currentStep.Description</p>
+                }
+            </div>
+        </div>
+
+        <!-- Order Details -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Chi tiết đơn hàng</h2>
+            
+            <div class="space-y-4">
+                @foreach (var item in Model.OrderInfo.Items)
+                {
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-xl bg-cover bg-center bg-gray-100"
+                             style='background-image: url("@Url.Content("~/images/menu/" + (string.IsNullOrEmpty(item.ImageUrl) ? "default-food.jpg" : item.ImageUrl))")'></div>
+                        <div class="flex-1">
+                            <p class="font-medium">@item.Name</p>
+                            <p class="text-sm text-gray-500">x@(item.Quantity)</p>
+                        </div>
+                        <p class="font-semibold">@item.Subtotal.ToString("N0")đ</p>
+                    </div>
+                }
+            </div>
+
+            <div class="border-t border-gray-100 mt-4 pt-4 space-y-2">
+                <div class="flex justify-between text-gray-600">
+                    <span>Tạm tính</span>
+                    <span>@Model.OrderInfo.SubTotal.ToString("N0")đ</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
+                    <span>Phí giao hàng</span>
+                    <span>
+                        @if (Model.OrderInfo.DeliveryFee == 0)
+                        {
+                            <span class="text-success">Miễn phí</span>
+                        }
+                        else
+                        {
+                            @Model.OrderInfo.DeliveryFee.ToString("N0")@:đ
+                        }
+                    </span>
+                </div>
+                @if (Model.OrderInfo.Discount > 0)
+                {
+                    <div class="flex justify-between text-success">
+                        <span>Giảm giá</span>
+                        <span>-@Model.OrderInfo.Discount.ToString("N0")đ</span>
+                    </div>
+                }
+                <div class="flex justify-between text-lg font-bold pt-2 border-t border-gray-100">
+                    <span>Tổng cộng</span>
+                    <span class="text-primary">@Model.OrderInfo.TotalAmount.ToString("N0")đ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Info -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-bold mb-4">Thông tin giao hàng</h2>
+            <div class="space-y-3">
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-primary">person</span>
+                    <div>
+                        <p class="font-medium">@Model.OrderInfo.CustomerName</p>
+                        <p class="text-gray-500 text-sm">@Model.OrderInfo.CustomerPhone</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-primary">location_on</span>
+                    <p class="text-gray-600">@Model.OrderInfo.DeliveryAddress</p>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-primary">payments</span>
+                    <p class="text-gray-600">@Model.OrderInfo.PaymentMethod</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-4">
+            <a href="@Url.Action("Menu", "Public")" 
+               class="flex-1 py-3 border-2 border-primary text-primary rounded-xl font-semibold text-center hover:bg-primary hover:text-white transition-colors">
+                Tiếp tục mua sắm
+            </a>
+            <a href="tel:19001234" 
+               class="flex-1 py-3 bg-primary text-white rounded-xl font-semibold text-center hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">call</span>
+                Liên hệ hỗ trợ
+            </a>
+        </div>
+    </main>
+</body>
+</html>

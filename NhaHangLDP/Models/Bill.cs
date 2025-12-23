@@ -18,6 +18,7 @@ namespace NhaHangLDP.Models
         public Bill()
         {
             this.ReturnBill = new HashSet<ReturnBill>();
+            this.PromotionUsage = new HashSet<PromotionUsage>();
         }
     
         public int Id { get; set; }
@@ -34,5 +35,7 @@ namespace NhaHangLDP.Models
         public virtual Order Order { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<ReturnBill> ReturnBill { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<PromotionUsage> PromotionUsage { get; set; }
     }
 }

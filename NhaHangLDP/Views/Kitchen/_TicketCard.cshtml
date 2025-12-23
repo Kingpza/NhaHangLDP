@@ -1,0 +1,88 @@
+﻿@model NhaHangLDP.Models.KitchenTicketViewModel
+
+<div class="ticket-card status-@Model.Status.ToLower() @(Model.IsOverdue ? "overdue" : "")">
+    <div class="ticket-header">
+        <div>
+            <span class="ticket-table">@Model.TableNumber</span>
+            <span class="ticket-code">@Model.TicketCode</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="priority-badge priority-@Model.Priority">@Model.PriorityText</span>
+            <div class="ticket-time @(Model.IsOverdue ? "overdue" : "")" data-created="@Model.CreatedTime.ToString("o")">
+                <i class="far fa-clock"></i>
+                <span class="wait-time">@Model.WaitingMinutes phút</span>
+                @if (Model.IsOverdue)
+                {
+                    <i class="fas fa-exclamation-triangle ms-1"></i>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="ticket-body">
+        @foreach (var item in Model.Items)
+        {
+            <div class="ticket-item" data-item-id="@item.Id">
+                <div class="item-qty">@item.Quantity</div>
+                <div class="item-info">
+                    <div class="item-name">@item.ItemName</div>
+                    @if (!string.IsNullOrEmpty(item.CustomerNotes))
+                    {
+                        <div class="item-notes">
+                            <i class="fas fa-sticky-note me-1"></i>@item.CustomerNotes
+                        </div>
+                    }
+                </div>
+                @if (Model.Status == "Preparing")
+                {
+                    <button class="btn btn-sm @(item.IsCompleted ? "btn-success" : "btn-outline-success")" 
+                            onclick="completeItem(@item.Id)" 
+                            @(item.IsCompleted ? "disabled" : "")>
+                        <i class="fas fa-check"></i>
+                    </button>
+                }
+                else
+                {
+                    <span class="item-status @item.Status.ToLower()">@item.StatusText</span>
+                }
+            </div>
+        }
+        
+        @if (!string.IsNullOrEmpty(Model.SpecialNotes))
+        {
+            <div class="alert alert-warning mt-3 mb-0 py-2 px-3" style="background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3);">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong>Ghi chú:</strong> @Model.SpecialNotes
+            </div>
+        }
+        
+        @if (Model.Status == "Preparing")
+        {
+            <div class="ticket-progress">
+                <div class="ticket-progress-bar" style="width: @Model.ProgressPercent%"></div>
+            </div>
+            <small class="text-muted d-block text-end mt-1">@Model.CompletedItemCount / @Model.TotalItemCount món</small>
+        }
+    </div>
+    
+    <div class="ticket-footer">
+        @switch (Model.Status.ToLower())
+        {
+            case "pending":
+                <button class="ticket-btn btn-start" onclick="startTicket(@Model.Id)">
+                    <i class="fas fa-play me-2"></i>BẮT ĐẦU
+                </button>
+                break;
+            case "preparing":
+                <button class="ticket-btn btn-complete" onclick="completeTicket(@Model.Id)">
+                    <i class="fas fa-check me-2"></i>HOÀN THÀNH TẤT CẢ
+                </button>
+                break;
+            case "ready":
+                <button class="ticket-btn btn-serve" onclick="serveTicket(@Model.Id)">
+                    <i class="fas fa-utensils me-2"></i>ĐÃ PHỤC VỤ
+                </button>
+                break;
+        }
+    </div>
+</div>

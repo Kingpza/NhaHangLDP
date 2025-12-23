@@ -1,0 +1,253 @@
+﻿@model NhaHangLDP.Models.EmailLogViewModel
+@{
+    ViewBag.Title = "Chi Tiết Log Email #" + Model.Id;
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .detail-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .detail-card h5 {
+            color: #1e3a5f;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .detail-card h5 i {
+            color: #3b82f6;
+            margin-right: 10px;
+        }
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            width: 150px;
+            color: #64748b;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        .detail-value {
+            color: #1e3a5f;
+            flex: 1;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+        .status-badge.sent {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .status-badge.failed {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .email-content-frame {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+        .email-content-frame iframe {
+            width: 100%;
+            border: none;
+            min-height: 300px;
+        }
+        .error-box {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            padding: 15px;
+            color: #dc2626;
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-envelope me-2"></i>Chi Tiết Log Email</h2>
+            <p>Xem thông tin chi tiết của email đã gửi</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Logs", "Email")" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+            @if (Model.Status == "Failed")
+            {
+                <button class="btn btn-warning" onclick="retryEmail(@Model.Id)">
+                    <i class="fas fa-redo me-2"></i>Gửi lại
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="detail-card">
+            <h5><i class="fas fa-info-circle"></i>Thông Tin Chung</h5>
+            
+            <div class="detail-row">
+                <div class="detail-label">ID</div>
+                <div class="detail-value">#@Model.Id</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Loại Email</div>
+                <div class="detail-value"><span class="badge bg-secondary">@Model.EmailType</span></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Trạng thái</div>
+                <div class="detail-value">
+                    <span class="status-badge @Model.Status.ToLower()">
+                        @if (Model.Status == "Sent")
+                        {
+                            <i class="fas fa-check-circle"></i>
+                        }
+                        else if (Model.Status == "Failed")
+                        {
+                            <i class="fas fa-times-circle"></i>
+                        }
+                        else
+                        {
+                            <i class="fas fa-clock"></i>
+                        }
+                        @Model.StatusText
+                    </span>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Số lần thử</div>
+                <div class="detail-value">@Model.RetryCount</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Tạo lúc</div>
+                <div class="detail-value">@Model.CreatedDate.ToString("HH:mm:ss dd/MM/yyyy")</div>
+            </div>
+            @if (Model.SentDate.HasValue)
+            {
+                <div class="detail-row">
+                    <div class="detail-label">Gửi lúc</div>
+                    <div class="detail-value">@Model.SentDate.Value.ToString("HH:mm:ss dd/MM/yyyy")</div>
+                </div>
+            }
+            @if (Model.ReferenceId.HasValue)
+            {
+                <div class="detail-row">
+                    <div class="detail-label">Reference</div>
+                    <div class="detail-value">@Model.ReferenceType #@Model.ReferenceId</div>
+                </div>
+            }
+        </div>
+        
+        <div class="detail-card">
+            <h5><i class="fas fa-user"></i>Người Nhận</h5>
+            
+            <div class="detail-row">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">
+                    <i class="fas fa-envelope text-primary me-2"></i>@Model.ToEmail
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.ToName))
+            {
+                <div class="detail-row">
+                    <div class="detail-label">Tên</div>
+                    <div class="detail-value">@Model.ToName</div>
+                </div>
+            }
+        </div>
+        
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="detail-card">
+                <h5><i class="fas fa-exclamation-triangle text-danger"></i>Lỗi</h5>
+                <div class="error-box">
+                    <i class="fas fa-times-circle me-2"></i>@Model.ErrorMessage
+                </div>
+            </div>
+        }
+    </div>
+    
+    <div class="col-lg-7">
+        <div class="detail-card">
+            <h5><i class="fas fa-envelope-open-text"></i>Nội Dung Email</h5>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tiêu đề:</label>
+                <div class="p-3 bg-light rounded">@Model.Subject</div>
+            </div>
+            
+            <div>
+                <label class="form-label fw-bold">Nội dung:</label>
+                <div class="email-content-frame">
+                    @if (!string.IsNullOrEmpty(Model.Body))
+                    {
+                        <iframe id="emailContent" srcdoc="@Model.Body"></iframe>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>Không có nội dung</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        function retryEmail(logId) {
+            showConfirm('Gửi lại email', 'Bạn có chắc muốn gửi lại email này?', function() {
+                showLoading('Đang gửi...', 'Vui lòng chờ');
+                $.post('@Url.Action("RetryEmail", "Email")', { logId: logId }, function(result) {
+                    closeLoading();
+                    if (result.success) {
+                        showSuccess('Thành công', result.message, function() {
+                            location.reload();
+                        });
+                    } else {
+                        showError('Lỗi', result.message);
+                    }
+                });
+            });
+        }
+        
+        // Auto-resize iframe
+        $(document).ready(function() {
+            var iframe = document.getElementById('emailContent');
+            if (iframe) {
+                iframe.onload = function() {
+                    try {
+                        iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 50 + 'px';
+                    } catch(e) {}
+                };
+            }
+        });
+    </script>
+}

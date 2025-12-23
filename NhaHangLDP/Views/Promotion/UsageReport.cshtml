@@ -1,0 +1,183 @@
+﻿@model NhaHangLDP.Models.PromotionUsageReportViewModel
+@{
+    ViewBag.Title = "Báo Cáo Sử Dụng - " + Model.PromotionCode;
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .report-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .promo-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+        }
+        .promo-highlight .code {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 24px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-box h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #1e3a5f;
+        }
+        .stat-box p {
+            color: #64748b;
+            margin: 0;
+            font-size: 13px;
+        }
+        .usage-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+        .usage-table td {
+            vertical-align: middle;
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-chart-bar me-2"></i>Báo Cáo Sử Dụng Khuyến Mãi</h2>
+            <p>Chi tiết lượt sử dụng của mã khuyến mãi</p>
+        </div>
+        <a href="@Url.Action("Index", "Promotion")" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="promo-highlight">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <span class="code">@Model.PromotionCode</span>
+            <h3 class="mb-0">@Model.PromotionName</h3>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="text-white-50">Tổng giảm giá đã áp dụng</div>
+            <div style="font-size: 32px; font-weight: 700;">@Model.TotalDiscountGiven.ToString("N0")đ</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-box">
+            <h3>@Model.TotalUsageCount</h3>
+            <p>Tổng lượt sử dụng</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-box">
+            <h3>@(Model.TotalUsageCount > 0 ? (Model.TotalDiscountGiven / Model.TotalUsageCount).ToString("N0") : "0")đ</h3>
+            <p>Giảm TB/lượt</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-box">
+            <h3>@(Model.FirstUsageDate?.ToString("dd/MM") ?? "-")</h3>
+            <p>Lần đầu sử dụng</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-box">
+            <h3>@(Model.LastUsageDate?.ToString("dd/MM") ?? "-")</h3>
+            <p>Lần cuối sử dụng</p>
+        </div>
+    </div>
+</div>
+
+<div class="report-card">
+    <h5 class="mb-4"><i class="fas fa-list text-primary me-2"></i>Chi Tiết Lượt Sử Dụng</h5>
+    
+    @if (Model.Usages.Any())
+    {
+        <div class="table-responsive">
+            <table class="table usage-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Mã Hóa Đơn</th>
+                        <th>SĐT Khách Hàng</th>
+                        <th>Số Tiền Giảm</th>
+                        <th>Thời Gian</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ var index = 1; }
+                    @foreach (var usage in Model.Usages)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>
+                                @if (usage.BillId.HasValue)
+                                {
+                                    <a href="@Url.Action("BillDetail", "Cashier", new { id = usage.BillId })">
+                                        @usage.BillCode
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(usage.CustomerPhone))
+                                {
+                                    <i class="fas fa-phone text-success me-1"></i>@usage.CustomerPhone
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không có</span>
+                                }
+                            </td>
+                            <td class="text-danger fw-bold">-@usage.DiscountApplied.ToString("N0")đ</td>
+                            <td>@usage.UsedDate.ToString("HH:mm dd/MM/yyyy")</td>
+                        </tr>
+                        index++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
+            <h5 class="text-muted">Chưa có lượt sử dụng nào</h5>
+            <p class="text-muted">Mã khuyến mãi này chưa được áp dụng cho hóa đơn nào</p>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        // Export to Excel function if needed
+        function exportToExcel() {
+            showInfo('Đang phát triển', 'Tính năng xuất Excel sẽ sớm được hoàn thiện');
+        }
+    </script>
+}
