@@ -1,0 +1,664 @@
+﻿@model NhaHangLDP.Models.BillListViewModel
+@{
+    ViewBag.Title = "Quản lý hóa đơn";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 24px 32px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-card .label {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .stat-card .value.success { color: #10b981; }
+    .stat-card .value.warning { color: #f59e0b; }
+    .stat-card .value.danger { color: #ef4444; }
+    .stat-card .value.primary { color: #667eea; }
+
+    .filter-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .bills-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .bills-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .bills-table th {
+        background: #f8f9fa;
+        padding: 14px 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .bills-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f3f4;
+        vertical-align: middle;
+    }
+
+    .bills-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .invoice-number {
+        font-weight: 600;
+        color: #667eea;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-badge.paid { background: #d1fae5; color: #059669; }
+    .status-badge.refunded { background: #fee2e2; color: #dc2626; }
+    .status-badge.partial { background: #fef3c7; color: #d97706; }
+
+    .payment-method {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .payment-method i {
+        width: 24px;
+        text-align: center;
+        color: #6c757d;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .action-btn.view { background: #e0e7ff; color: #667eea; }
+    .action-btn.print { background: #d1fae5; color: #059669; }
+    .action-btn.refund { background: #fee2e2; color: #dc2626; }
+
+    .action-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        background: #f8f9fa;
+    }
+
+    .pagination-info {
+        color: #6c757d;
+        font-size: 14px;
+    }
+
+    .pagination-buttons {
+        display: flex;
+        gap: 4px;
+    }
+
+    .page-btn {
+        padding: 8px 14px;
+        border: 1px solid #e9ecef;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .page-btn:hover:not(:disabled) {
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .page-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+    }
+
+    /* Modal styles */
+    .bill-detail-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .bill-detail-modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 16px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6c757d;
+    }
+</style>
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-file-invoice-dollar me-2"></i>Quản lý Hóa đơn</h2>
+            <p class="mb-0 opacity-75">Xem và quản lý tất cả hóa đơn thanh toán</p>
+        </div>
+        <div>
+            <button class="btn btn-light me-2" onclick="exportExcel()">
+                <i class="fas fa-file-excel me-2"></i>Xuất Excel
+            </button>
+            <a href="@Url.Action("DailySummary", "Payment")" class="btn btn-outline-light">
+                <i class="fas fa-chart-bar me-2"></i>Báo cáo
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="label">Tổng hóa đơn</div>
+        <div class="value primary">@Model.Statistics.TotalBills</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Đã thanh toán</div>
+        <div class="value success">@Model.Statistics.PaidBills</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Tổng doanh thu</div>
+        <div class="value success">@Model.Statistics.TotalRevenue.ToString("N0")đ</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Giảm giá</div>
+        <div class="value warning">@Model.Statistics.TotalDiscount.ToString("N0")đ</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Trung bình/đơn</div>
+        <div class="value">@Model.Statistics.AverageOrderValue.ToString("N0")đ</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-card">
+    <form id="filterForm" class="row g-3">
+        <div class="col-md-2">
+            <label class="form-label">Từ ngày</label>
+            <input type="date" class="form-control" id="fromDate" name="fromDate" 
+                   value="@(Model.Filter.FromDate?.ToString("yyyy-MM-dd") ?? DateTime.Today.AddDays(-7).ToString("yyyy-MM-dd"))">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Đến ngày</label>
+            <input type="date" class="form-control" id="toDate" name="toDate" 
+                   value="@(Model.Filter.ToDate?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Trạng thái</label>
+            <select class="form-select" id="status" name="status">
+                <option value="">Tất cả</option>
+                <option value="Paid">Đã thanh toán</option>
+                <option value="Refunded">Đã hoàn tiền</option>
+                <option value="PartialRefund">Hoàn một phần</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Phương thức</label>
+            <select class="form-select" id="paymentMethod" name="paymentMethod">
+                <option value="">Tất cả</option>
+                <option value="cash">Tiền mặt</option>
+                <option value="card">Thẻ</option>
+                <option value="transfer">Chuyển khoản</option>
+                <option value="momo">MoMo</option>
+                <option value="vnpay">VNPay</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Tìm kiếm</label>
+            <input type="text" class="form-control" id="search" name="search" 
+                   placeholder="Mã HĐ, bàn, NV..." value="@Model.Filter.Search">
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-search me-2"></i>Lọc
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Bills Table -->
+<div class="bills-table">
+    @if (Model.Bills.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Số hóa đơn</th>
+                    <th>Mã đơn</th>
+                    <th>Bàn</th>
+                    <th>Ngày giờ</th>
+                    <th>Số tiền</th>
+                    <th>Giảm giá</th>
+                    <th>Thanh toán</th>
+                    <th>Trạng thái</th>
+                    <th>Thu ngân</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody id="billsTableBody">
+                @foreach (var bill in Model.Bills)
+                {
+                    <tr>
+                        <td>
+                            <span class="invoice-number">@bill.InvoiceNumber</span>
+                        </td>
+                        <td>@bill.OrderCode</td>
+                        <td>@bill.TableNumber</td>
+                        <td>
+                            <div>@bill.BillDate.ToString("dd/MM/yyyy")</div>
+                            <small class="text-muted">@bill.BillDate.ToString("HH:mm")</small>
+                        </td>
+                        <td><strong>@bill.FinalAmount.ToString("N0")đ</strong></td>
+                        <td>
+                            @if (bill.DiscountAmount > 0)
+                            {
+                                <span class="text-success">-@bill.DiscountAmount.ToString("N0")đ</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="payment-method">
+                                <i class="@GetPaymentIcon(bill.PaymentMethod)"></i>
+                                <span>@bill.PaymentMethod</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge @GetStatusClass(bill.Status)">
+                                @GetStatusText(bill.Status)
+                            </span>
+                        </td>
+                        <td>@bill.CashierName</td>
+                        <td class="text-center">
+                            <button class="action-btn view" onclick="viewBill(@bill.Id)" title="Xem chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <a href="@Url.Action("PrintInvoice", "Payment", new { billId = bill.Id })" 
+                               class="action-btn print" target="_blank" title="In hóa đơn">
+                                <i class="fas fa-print"></i>
+                            </a>
+                            @if (bill.Status == "Paid")
+                            {
+                                <a href="@Url.Action("Refund", "Payment", new { billId = bill.Id })" 
+                                   class="action-btn refund" title="Hoàn tiền">
+                                    <i class="fas fa-undo"></i>
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Hiển thị @((Model.CurrentPage - 1) * Model.Filter.PageSize + 1) - 
+                @Math.Min(Model.CurrentPage * Model.Filter.PageSize, Model.TotalRecords) 
+                trong tổng số @Model.TotalRecords hóa đơn
+            </div>
+            <div class="pagination-buttons">
+                <button class="page-btn" onclick="changePage(@(Model.CurrentPage - 1))" 
+                        @(Model.CurrentPage <= 1 ? "disabled" : "")>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <button class="page-btn @(i == Model.CurrentPage ? "active" : "")" 
+                            onclick="changePage(@i)">@i</button>
+                }
+                <button class="page-btn" onclick="changePage(@(Model.CurrentPage + 1))" 
+                        @(Model.CurrentPage >= Model.TotalPages ? "disabled" : "")>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fas fa-file-invoice"></i>
+            <h4>Không có hóa đơn nào</h4>
+            <p>Không tìm thấy hóa đơn nào phù hợp với bộ lọc</p>
+        </div>
+    }
+</div>
+
+<!-- Bill Detail Modal -->
+<div class="bill-detail-modal" id="billDetailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5><i class="fas fa-file-invoice me-2"></i>Chi tiết hóa đơn</h5>
+            <button class="modal-close" onclick="closeBillModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="billDetailContent">
+            <!-- Content loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetPaymentIcon(string method)
+    {
+        if (method == null) return "fas fa-question";
+        switch (method.ToLower())
+        {
+            case "tiền mặt":
+            case "cash":
+                return "fas fa-money-bill";
+            case "thẻ":
+            case "thẻ tín dụng":
+            case "card":
+                return "fas fa-credit-card";
+            case "chuyển khoản":
+            case "transfer":
+                return "fas fa-university";
+            case "momo":
+                return "fas fa-mobile-alt";
+            case "vnpay":
+                return "fas fa-qrcode";
+            default:
+                return "fas fa-wallet";
+        }
+    }
+
+    string GetStatusClass(string status)
+    {
+        switch (status?.ToLower())
+        {
+            case "paid": return "paid";
+            case "refunded": return "refunded";
+            case "partialrefund": return "partial";
+            default: return "";
+        }
+    }
+
+    string GetStatusText(string status)
+    {
+        switch (status?.ToLower())
+        {
+            case "paid": return "Đã thanh toán";
+            case "refunded": return "Đã hoàn tiền";
+            case "partialrefund": return "Hoàn một phần";
+            default: return status;
+        }
+    }
+}
+
+@section Scripts {
+    <script>
+        let currentPage = @Model.CurrentPage;
+
+        // Filter form submit
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            loadBills(1);
+        });
+
+        // Change page
+        function changePage(page) {
+            if (page < 1 || page > @Model.TotalPages) return;
+            currentPage = page;
+            loadBills(page);
+        }
+
+        // Load bills via AJAX
+        function loadBills(page) {
+            const params = {
+                fromDate: $('#fromDate').val(),
+                toDate: $('#toDate').val(),
+                status: $('#status').val(),
+                paymentMethod: $('#paymentMethod').val(),
+                search: $('#search').val(),
+                page: page,
+                pageSize: @Model.Filter.PageSize
+            };
+
+            window.location.href = '@Url.Action("Bills", "Payment")?' + $.param(params);
+        }
+
+        // View bill detail
+        function viewBill(billId) {
+            $.get('@Url.Action("GetBillDetail", "Payment")', { billId: billId })
+                .done(function(result) {
+                    if (result.success) {
+                        renderBillDetail(result.bill);
+                        $('#billDetailModal').addClass('active');
+                    } else {
+                        alert('Không thể tải chi tiết hóa đơn!');
+                    }
+                });
+        }
+
+        // Render bill detail
+        function renderBillDetail(bill) {
+            let html = `
+                <div class="mb-3 p-3 bg-light rounded">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted">Số hóa đơn</small>
+                            <div class="fw-bold text-primary">${bill.InvoiceNumber}</div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <small class="text-muted">Ngày lập</small>
+                            <div>${new Date(bill.BillDate).toLocaleString('vi-VN')}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-4">
+                        <small class="text-muted">Bàn</small>
+                        <div class="fw-bold">${bill.TableNumber}</div>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted">Thu ngân</small>
+                        <div>${bill.CashierName}</div>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted">Thanh toán</small>
+                        <div>${bill.PaymentMethodDisplay}</div>
+                    </div>
+                </div>
+                
+                <h6 class="mb-2">Chi tiết món</h6>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Món</th>
+                            <th class="text-center">SL</th>
+                            <th class="text-end">Đơn giá</th>
+                            <th class="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            bill.Items.forEach(item => {
+                html += `
+                    <tr>
+                        <td>${item.Name}</td>
+                        <td class="text-center">${item.Quantity}</td>
+                        <td class="text-end">${item.UnitPrice.toLocaleString('vi-VN')}đ</td>
+                        <td class="text-end">${item.Total.toLocaleString('vi-VN')}đ</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+                
+                <div class="border-top pt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tạm tính:</span>
+                        <span>${bill.SubTotal.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>VAT (${bill.VATPercent}%):</span>
+                        <span>${bill.VATAmount.toLocaleString('vi-VN')}đ</span>
+                    </div>
+            `;
+
+            if (bill.DiscountAmount > 0) {
+                html += `
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>Giảm giá${bill.DiscountCode ? ' (' + bill.DiscountCode + ')' : ''}:</span>
+                        <span>-${bill.DiscountAmount.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                `;
+            }
+
+            html += `
+                    <div class="d-flex justify-content-between fw-bold fs-5 border-top pt-2">
+                        <span>Tổng cộng:</span>
+                        <span class="text-primary">${bill.FinalAmount.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                </div>
+                
+                <div class="mt-3 d-flex gap-2">
+                    <a href="@Url.Action("PrintInvoice", "Payment")?billId=${bill.BillId}" 
+                       class="btn btn-primary flex-fill" target="_blank">
+                        <i class="fas fa-print me-2"></i>In hóa đơn
+                    </a>
+                    <button class="btn btn-secondary" onclick="closeBillModal()">Đóng</button>
+                </div>
+            `;
+
+            $('#billDetailContent').html(html);
+        }
+
+        // Close modal
+        function closeBillModal() {
+            $('#billDetailModal').removeClass('active');
+        }
+
+        // Export Excel
+        function exportExcel() {
+            const params = {
+                fromDate: $('#fromDate').val(),
+                toDate: $('#toDate').val(),
+                status: $('#status').val(),
+                paymentMethod: $('#paymentMethod').val()
+            };
+            // TODO: Implement export
+            alert('Chức năng xuất Excel đang phát triển!');
+        }
+
+        // Close modal on outside click
+        $('#billDetailModal').on('click', function(e) {
+            if (e.target === this) {
+                closeBillModal();
+            }
+        });
+    </script>
+}

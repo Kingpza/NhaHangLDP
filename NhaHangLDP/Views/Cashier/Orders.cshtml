@@ -195,6 +195,11 @@
             color: white;
         }
 
+        .btn-order.btn-warning {
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: white;
+        }
+
         .btn-order:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -998,6 +1003,9 @@
 
         if (order.status === 'ready' && order.paymentStatus !== 'paid') {
             actionsHtml = `
+                <button class="btn btn-warning" onclick="window.location.href='@Url.Action("SplitBill", "Payment")?orderId=${order.id}'">
+                    <i class="fas fa-divide me-1"></i>Tách Bill
+                </button>
                 <button class="btn btn-invoice" onclick="showInvoiceModal('${order.id}')">
                     <i class="fas fa-file-invoice me-1"></i>Tạo Hóa Đơn
                 </button>
@@ -1244,6 +1252,9 @@
             case 'ready':
                 console.log('Creating payment button for order:', orderId);
                 return `
+                    <button class="btn-order btn-warning" onclick="window.location.href='@Url.Action("SplitBill", "Payment")?orderId=${orderId}'">
+                        <i class="fas fa-divide me-1"></i>Tách Bill
+                    </button>
                     <button class="btn-order btn-success" onclick="console.log('Payment button clicked for order: ${orderId}'); showPaymentModal('${orderId}'); return false;">
                         <i class="fas fa-credit-card me-1"></i>Thanh Toán
                     </button>

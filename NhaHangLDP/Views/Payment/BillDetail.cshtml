@@ -1,0 +1,659 @@
+﻿@model NhaHangLDP.Models.BillDetailViewModel
+@{
+    ViewBag.Title = "Chi tiết hóa đơn";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 24px 32px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+    }
+
+    .bill-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+    }
+
+    .bill-main {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .bill-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .info-card h5 {
+        margin-bottom: 16px;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-card h5 i {
+        color: #667eea;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #6c757d;
+        font-size: 14px;
+    }
+
+    .info-value {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .bill-header {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 24px;
+        text-align: center;
+    }
+
+    .bill-header .invoice-number {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .bill-header .bill-date {
+        opacity: 0.9;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        margin-top: 12px;
+    }
+
+    .status-badge.paid {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+    }
+
+    .status-badge.refunded {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+    }
+
+    .status-badge.partial {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+    }
+
+    .bill-body {
+        padding: 24px;
+    }
+
+    .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #667eea;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-title i {
+        color: #667eea;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 24px;
+    }
+
+    .items-table th {
+        background: #f8f9fa;
+        padding: 12px;
+        text-align: left;
+        font-size: 13px;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .items-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .items-table tbody tr:hover {
+        background: #fafafa;
+    }
+
+    .item-name {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .item-note {
+        font-size: 12px;
+        color: #6c757d;
+        font-style: italic;
+        margin-top: 4px;
+    }
+
+    .totals-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 24px;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+    }
+
+    .total-row.discount {
+        color: #10b981;
+    }
+
+    .total-row.grand-total {
+        font-size: 20px;
+        font-weight: 700;
+        border-top: 2px solid #dee2e6;
+        padding-top: 16px;
+        margin-top: 8px;
+        color: #667eea;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: 14px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+        text-decoration: none;
+        border: none;
+    }
+
+    .btn-print {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-print:hover {
+        background: #5a67d8;
+        color: white;
+    }
+
+    .btn-refund {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+
+    .btn-refund:hover {
+        background: #fecaca;
+        color: #dc2626;
+    }
+
+    .btn-back {
+        background: #e9ecef;
+        color: #495057;
+    }
+
+    .btn-back:hover {
+        background: #dee2e6;
+        color: #333;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 24px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e9ecef;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 16px;
+    }
+
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 4px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #667eea;
+    }
+
+    .timeline-item.success::before {
+        background: #10b981;
+    }
+
+    .timeline-item.warning::before {
+        background: #f59e0b;
+    }
+
+    .timeline-time {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .timeline-content {
+        font-size: 14px;
+        color: #333;
+    }
+
+    .payment-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: #f0f7ff;
+        border-radius: 10px;
+        margin-top: 16px;
+    }
+
+    .payment-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #667eea;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .payment-details {
+        flex: 1;
+    }
+
+    .payment-method {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .payment-time {
+        font-size: 13px;
+        color: #6c757d;
+    }
+
+    @@media (max-width: 992px) {
+        .bill-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-file-invoice-dollar me-2"></i>Chi tiết hóa đơn</h2>
+            <p class="mb-0 opacity-75">@Model.InvoiceNumber</p>
+        </div>
+        <a href="@Url.Action("Bills", "Payment")" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="bill-container">
+    <!-- Main Content -->
+    <div class="bill-main">
+        <div class="bill-header">
+            <div class="invoice-number">@Model.InvoiceNumber</div>
+            <div class="bill-date">
+                <i class="fas fa-calendar-alt me-1"></i>
+                @Model.BillDate.ToString("dddd, dd/MM/yyyy HH:mm", new System.Globalization.CultureInfo("vi-VN"))
+            </div>
+            <span class="status-badge @GetStatusClass(Model.Status)">
+                <i class="fas fa-@GetStatusIcon(Model.Status) me-1"></i>
+                @GetStatusText(Model.Status)
+            </span>
+        </div>
+
+        <div class="bill-body">
+            <!-- Order Info -->
+            <div class="section-title">
+                <i class="fas fa-info-circle"></i>
+                Thông tin đơn hàng
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="info-row">
+                        <span class="info-label">Mã đơn hàng</span>
+                        <span class="info-value">@Model.OrderCode</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="info-row">
+                        <span class="info-label">Bàn</span>
+                        <span class="info-value">@Model.TableNumber @(!string.IsNullOrEmpty(Model.TableArea) ? $"({Model.TableArea})" : "")</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="info-row">
+                        <span class="info-label">Thời gian đặt</span>
+                        <span class="info-value">@Model.OrderTime.ToString("HH:mm dd/MM")</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items -->
+            <div class="section-title">
+                <i class="fas fa-utensils"></i>
+                Chi tiết món ăn (@Model.Items.Count món)
+            </div>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 5%">#</th>
+                        <th style="width: 45%">Tên món</th>
+                        <th class="text-center" style="width: 10%">SL</th>
+                        <th class="text-end" style="width: 20%">Đơn giá</th>
+                        <th class="text-end" style="width: 20%">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{int index = 1;}
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>
+                                <div class="item-name">@item.Name</div>
+                                @if (!string.IsNullOrEmpty(item.Category))
+                                {
+                                    <span class="badge bg-light text-secondary">@item.Category</span>
+                                }
+                                @if (!string.IsNullOrEmpty(item.Notes))
+                                {
+                                    <div class="item-note">
+                                        <i class="fas fa-sticky-note me-1"></i>@item.Notes
+                                    </div>
+                                }
+                            </td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-end">@item.UnitPrice.ToString("N0")đ</td>
+                            <td class="text-end"><strong>@item.Total.ToString("N0")đ</strong></td>
+                        </tr>
+                        index++;
+                    }
+                </tbody>
+            </table>
+
+            <!-- Totals -->
+            <div class="totals-section">
+                <div class="total-row">
+                    <span>Tạm tính:</span>
+                    <span>@Model.SubTotal.ToString("N0")đ</span>
+                </div>
+                <div class="total-row">
+                    <span>VAT (@Model.VATPercent%):</span>
+                    <span>@Model.VATAmount.ToString("N0")đ</span>
+                </div>
+                @if (Model.DiscountAmount > 0)
+                {
+                    <div class="total-row discount">
+                        <span>
+                            <i class="fas fa-tag me-1"></i>Giảm giá
+                            @if (!string.IsNullOrEmpty(Model.DiscountCode))
+                            {
+                                <span class="badge bg-success ms-1">@Model.DiscountCode</span>
+                            }
+                        </span>
+                        <span>-@Model.DiscountAmount.ToString("N0")đ</span>
+                    </div>
+                }
+                <div class="total-row grand-total">
+                    <span>TỔNG CỘNG:</span>
+                    <span>@Model.FinalAmount.ToString("N0")đ</span>
+                </div>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="payment-info">
+                <div class="payment-icon">
+                    <i class="fas fa-@GetPaymentIcon(Model.PaymentMethod)"></i>
+                </div>
+                <div class="payment-details">
+                    <div class="payment-method">@Model.PaymentMethodDisplay</div>
+                    <div class="payment-time">Thanh toán lúc @Model.BillDate.ToString("HH:mm dd/MM/yyyy")</div>
+                </div>
+                @if (Model.ReceivedAmount > 0)
+                {
+                    <div class="text-end">
+                        <div class="text-muted small">Nhận: @Model.ReceivedAmount.ToString("N0")đ</div>
+                        <div class="text-success fw-bold">Thừa: @Model.ChangeAmount.ToString("N0")đ</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="bill-sidebar">
+        <!-- Staff Info -->
+        <div class="info-card">
+            <h5><i class="fas fa-user-tie"></i>Nhân viên</h5>
+            <div class="info-row">
+                <span class="info-label">Thu ngân</span>
+                <span class="info-value">@Model.CashierName</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Phục vụ</span>
+                <span class="info-value">@(Model.WaiterName ?? "N/A")</span>
+            </div>
+        </div>
+
+        <!-- Customer Info -->
+        @if (!string.IsNullOrEmpty(Model.CustomerName) || !string.IsNullOrEmpty(Model.CustomerPhone))
+        {
+            <div class="info-card">
+                <h5><i class="fas fa-user"></i>Khách hàng</h5>
+                @if (!string.IsNullOrEmpty(Model.CustomerName))
+                {
+                    <div class="info-row">
+                        <span class="info-label">Tên</span>
+                        <span class="info-value">@Model.CustomerName</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.CustomerPhone))
+                {
+                    <div class="info-row">
+                        <span class="info-label">SĐT</span>
+                        <span class="info-value">@Model.CustomerPhone</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.CustomerEmail))
+                {
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">@Model.CustomerEmail</span>
+                    </div>
+                }
+                @if (Model.EarnedPoints.HasValue && Model.EarnedPoints > 0)
+                {
+                    <div class="info-row">
+                        <span class="info-label">Điểm tích lũy</span>
+                        <span class="info-value text-success">+@Model.EarnedPoints điểm</span>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Timeline -->
+        <div class="info-card">
+            <h5><i class="fas fa-history"></i>Lịch sử</h5>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-time">@Model.OrderTime.ToString("HH:mm")</div>
+                    <div class="timeline-content">Tạo đơn hàng</div>
+                </div>
+                <div class="timeline-item success">
+                    <div class="timeline-time">@Model.BillDate.ToString("HH:mm")</div>
+                    <div class="timeline-content">Thanh toán thành công</div>
+                </div>
+                @if (Model.Status == "Refunded" || Model.Status == "PartialRefund")
+                {
+                    <div class="timeline-item warning">
+                        <div class="timeline-time">N/A</div>
+                        <div class="timeline-content">Hoàn tiền</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="info-card">
+            <h5><i class="fas fa-cog"></i>Thao tác</h5>
+            <div class="action-buttons flex-column">
+                <a href="@Url.Action("PrintInvoice", "Payment", new { billId = Model.BillId })" 
+                   class="action-btn btn-print" target="_blank">
+                    <i class="fas fa-print"></i> In hóa đơn
+                </a>
+                @if (Model.Status == "Paid")
+                {
+                    <a href="@Url.Action("Refund", "Payment", new { billId = Model.BillId })" 
+                       class="action-btn btn-refund">
+                        <i class="fas fa-undo"></i> Hoàn tiền
+                    </a>
+                }
+                <a href="@Url.Action("Bills", "Payment")" class="action-btn btn-back">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+
+        <!-- Restaurant Info -->
+        <div class="info-card">
+            <h5><i class="fas fa-store"></i>Nhà hàng</h5>
+            <div class="text-center mb-3">
+                <strong class="text-primary">@Model.RestaurantName</strong>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="fas fa-map-marker-alt me-1"></i>Địa chỉ</span>
+                <span class="info-value small">@Model.RestaurantAddress</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="fas fa-phone me-1"></i>Hotline</span>
+                <span class="info-value">@Model.RestaurantPhone</span>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.RestaurantTaxCode))
+            {
+                <div class="info-row">
+                    <span class="info-label"><i class="fas fa-file-alt me-1"></i>MST</span>
+                    <span class="info-value">@Model.RestaurantTaxCode</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusClass(string status)
+    {
+        switch (status?.ToLower())
+        {
+            case "paid": return "paid";
+            case "refunded": return "refunded";
+            case "partialrefund": return "partial";
+            default: return "";
+        }
+    }
+
+    string GetStatusText(string status)
+    {
+        switch (status?.ToLower())
+        {
+            case "paid": return "Đã thanh toán";
+            case "refunded": return "Đã hoàn tiền";
+            case "partialrefund": return "Hoàn một phần";
+            default: return status ?? "N/A";
+        }
+    }
+
+    string GetStatusIcon(string status)
+    {
+        switch (status?.ToLower())
+        {
+            case "paid": return "check-circle";
+            case "refunded": return "undo";
+            case "partialrefund": return "exclamation-circle";
+            default: return "question-circle";
+        }
+    }
+
+    string GetPaymentIcon(string method)
+    {
+        if (string.IsNullOrEmpty(method)) return "wallet";
+        switch (method.ToLower())
+        {
+            case "cash": return "money-bill";
+            case "card": return "credit-card";
+            case "transfer": return "university";
+            case "momo": return "mobile-alt";
+            case "vnpay": return "qrcode";
+            default: return "wallet";
+        }
+    }
+}

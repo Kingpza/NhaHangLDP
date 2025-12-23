@@ -201,6 +201,7 @@ namespace NhaHangLDP.Models
         public decimal DiscountValue { get; set; }
         public decimal? MaxDiscountAmount { get; set; }
         public decimal CalculatedDiscount { get; set; }
+        public decimal NewTotal { get; set; }
     }
 
     /// <summary>
