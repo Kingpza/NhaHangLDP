@@ -224,7 +224,7 @@
                 <div class="hidden md:flex items-center gap-6">
                     <a href="@Url.Action("Index", "Home")" class="text-primary font-semibold border-b-2 border-primary pb-1">Trang chủ</a>
                     <a href="@Url.Action("Menu", "Public")" class="text-text-primary hover:text-primary transition-colors">Thực đơn</a>
-                    <a href="@Url.Action("Booking", "Home")" class="text-text-primary hover:text-primary transition-colors">Đặt bàn</a>
+                    <a href="@Url.Action("Index", "Reservation")" class="text-text-primary hover:text-primary transition-colors">Đặt bàn</a>
                     <a href="#services" class="text-text-primary hover:text-primary transition-colors">Dịch vụ</a>
                     <a href="#contact" class="text-text-primary hover:text-primary transition-colors">Liên hệ</a>
                 </div>
@@ -330,14 +330,14 @@
                     </a>
                     @if (Session["Username"] == null)
                     {
-                        <a href="@Url.Action("Booking", "Home")" class="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
+                        <a href="@Url.Action("Index", "Reservation")" class="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
                             <span class="material-symbols-outlined">event</span>
                             Đặt bàn ngay
                         </a>
                     }
                     else
                     {
-                        <a href="@Url.Action("Booking", "Home")" class="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
+                        <a href="@Url.Action("Index", "Reservation")" class="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
                             <span class="material-symbols-outlined">event</span>
                             Đặt bàn ngay
                         </a>

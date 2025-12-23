@@ -516,7 +516,6 @@
     <Content Include="Views\Management\StockOutboundList.cshtml" />
     <Content Include="Views\Management\EditIngredient.cshtml" />
     <Content Include="Views\Management\IngredientHistory.cshtml" />
-    <Content Include="Views\Home\Booking.cshtml" />
     <Content Include="Views\ReportsManagement\LiveShiftMonitor.cshtml" />
     <Content Include="Views\ReportsManagement\Debug.cshtml" />
     <Content Include="Views\ReportsManagement\DebugDishProfit.cshtml" />
