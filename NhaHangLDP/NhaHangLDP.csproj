@@ -498,7 +498,6 @@
     <Content Include="Views\ReportsManagement\BookingAnalytics.cshtml" />
     <Content Include="Views\ReportsManagement\RevenueAnalytics.cshtml" />
     <Content Include="Views\ReportsManagement\DishProfitAnalysis.cshtml" />
-    <Content Include="Views\Management\Reports.cshtml" />
     <Content Include="Views\Cashier\PrintInvoice.cshtml" />
     <Content Include="Views\Cashier\ShiftDetails.cshtml" />
     <Content Include="Views\Cashier\PrintShiftRevenueReport.cshtml" />

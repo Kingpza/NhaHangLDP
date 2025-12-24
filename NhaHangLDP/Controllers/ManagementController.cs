@@ -1093,14 +1093,6 @@ namespace NhaHangLDP.Controllers
 
         #region Reports
 
-        public ActionResult Reports()
-        {
-            if (!IsAuthorized())
-                return RedirectUnauthorized();
-
-            return RedirectToAction("Dashboard", "ReportsManagement");
-        }
-
         public ActionResult InventoryReport()
         {
             if (!IsAuthorized())
