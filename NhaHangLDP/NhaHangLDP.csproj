@@ -135,6 +135,7 @@
     <Compile Include="Controllers\CashierController.cs" />
     <Compile Include="Controllers\CheckoutController.cs" />
     <Compile Include="Controllers\CustomerAccountController.cs" />
+    <Compile Include="Controllers\DeliveryController.cs" />
     <Compile Include="Controllers\EmailController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\HRController.cs" />
@@ -173,14 +174,44 @@
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\BookingViewModel.cs" />
+    <Compile Include="Models\Cart.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\CartItem.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\CashierDashboardViewModel.cs" />
     <Compile Include="Models\CashierShift.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\ChatbotModels.cs" />
-    <Compile Include="Models\CustomerModels.cs" />
+    <Compile Include="Models\Customer.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\CustomerAddress.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\CustomerNotification.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\CustomerOrder.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\CustomerOrderDetail.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\CustomerViewModels.cs" />
     <Compile Include="Models\DamagedStock.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeliveryAssignment.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeliveryModels.cs" />
+    <Compile Include="Models\DeliverySettings.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\DeliveryZone.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\DishProfitViewModels.cs" />
@@ -288,6 +319,9 @@
     </Compile>
     <Compile Include="Models\QROrderViewModels.cs" />
     <Compile Include="Models\ReportsModels.cs" />
+    <Compile Include="Models\Reservation.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\RestaurantTable.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -298,6 +332,9 @@
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\ReturnManagementModels.cs" />
+    <Compile Include="Models\Review.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\Role.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -305,6 +342,9 @@
     <Compile Include="Models\ShiftDetailsViewModel.cs" />
     <Compile Include="Models\ShiftRevenueReportViewModel.cs" />
     <Compile Include="Models\ShiftSupportStaff.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Shipper.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\StockInbound.cs">
@@ -324,6 +364,15 @@
     <Compile Include="Models\TableSession.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\Voucher.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\VoucherUsage.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\Wishlist.cs">
+      <DependentUpon>NhaHangLDP.tt</DependentUpon>
+    </Compile>
     <Compile Include="Models\WorkShift.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -331,6 +380,7 @@
     <Compile Include="Services\AdvancedAnalyticsService.cs" />
     <Compile Include="Services\AIChatbotService.cs" />
     <Compile Include="Services\DashboardService.cs" />
+    <Compile Include="Services\DeliveryService.cs" />
     <Compile Include="Services\EmailService.cs" />
     <Compile Include="Services\EmployeeManagementService.cs" />
     <Compile Include="Services\HR\HRManagementService.cs" />
@@ -593,6 +643,15 @@
     <Content Include="Views\Payment\DailySummary.cshtml" />
     <Content Include="Views\Payment\SplitBill.cshtml" />
     <Content Include="Views\Payment\BillDetail.cshtml" />
+    <Content Include="Views\Delivery\Index.cshtml" />
+    <Content Include="Views\Delivery\Orders.cshtml" />
+    <Content Include="Views\Delivery\Shippers.cshtml" />
+    <Content Include="Views\Delivery\CreateShipper.cshtml" />
+    <Content Include="Views\Delivery\EditShipper.cshtml" />
+    <Content Include="Views\Delivery\OrderDetail.cshtml" />
+    <Content Include="Views\Delivery\Tracking.cshtml" />
+    <Content Include="Views\Delivery\Zones.cshtml" />
+    <Content Include="Views\Delivery\Statistics.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

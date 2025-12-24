@@ -184,6 +184,7 @@ namespace NhaHangLDP.Models
         public string Description { get; set; }
         public string Icon { get; set; }
         public DateTime? CompletedAt { get; set; }
+        public DateTime? Time { get { return CompletedAt; } set { CompletedAt = value; } }
         public bool IsCompleted { get; set; }
         public bool IsCurrent { get; set; }
     }

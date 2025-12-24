@@ -1,0 +1,396 @@
+﻿@model NhaHangLDP.Models.DeliveryStatisticsViewModel
+@{
+    ViewBag.Title = "Thống Kê Giao Hàng";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewBag.Title - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0"
+                    },
+                    fontFamily: { "display": ["Manrope", "sans-serif"] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .chart-container { min-height: 300px; }
+    </style>
+</head>
+<body class="bg-sidebar-surface font-display text-text-primary min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 border-b border-border-light bg-white/95 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="@Url.Action("Index", "Delivery")" class="flex items-center gap-3">
+                        <div class="h-12 w-12 rounded-full bg-purple-500 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-2xl">analytics</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-black text-text-primary">THỐNG KÊ</h1>
+                            <p class="text-xs text-text-secondary">Delivery Statistics</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="@Url.Action("Index", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Dashboard</a>
+                    <a href="@Url.Action("Orders", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Đơn hàng</a>
+                    <a href="@Url.Action("Shippers", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Shipper</a>
+                    <a href="@Url.Action("Statistics", "Delivery")" class="text-primary font-semibold border-b-2 border-primary pb-1">Thống kê</a>
+                </div>
+                <a href="@Url.Action("Index", "Delivery")" class="flex items-center gap-2 px-4 py-2 rounded-full border-2 border-gray-300 text-text-secondary hover:bg-gray-100 transition-all font-semibold">
+                    <span class="material-symbols-outlined text-lg">arrow_back</span>
+                    Quay lại
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <section class="bg-gradient-to-r from-purple-500 to-indigo-600 py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <h1 class="text-3xl md:text-4xl font-black text-white mb-2">
+                <span class="material-symbols-outlined text-4xl align-middle mr-2">bar_chart</span>
+                Thống Kê Giao Hàng
+            </h1>
+            <p class="text-white/80">
+                Phân tích dữ liệu từ @Model.FromDate.ToString("dd/MM/yyyy") đến @Model.ToDate.ToString("dd/MM/yyyy")
+            </p>
+        </div>
+    </section>
+
+    <!-- Date Filter -->
+    <section class="py-6 bg-white border-b border-border-light">
+        <div class="max-w-7xl mx-auto px-6">
+            <form method="get" class="flex flex-wrap items-end gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-text-primary mb-2">Từ ngày</label>
+                    <input type="date" name="fromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" 
+                           class="px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary focus:outline-none transition-colors">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-text-primary mb-2">Đến ngày</label>
+                    <input type="date" name="toDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" 
+                           class="px-4 py-3 rounded-xl border-2 border-border-light focus:border-primary focus:outline-none transition-colors">
+                </div>
+                <button type="submit" class="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-blue-700 transition-all">
+                    <span class="material-symbols-outlined">filter_alt</span>
+                    Lọc
+                </button>
+                <a href="@Url.Action("Statistics", "Delivery")" class="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-text-secondary rounded-xl font-semibold hover:bg-gray-100 transition-all">
+                    <span class="material-symbols-outlined">restart_alt</span>
+                    Reset
+                </a>
+            </form>
+        </div>
+    </section>
+
+    <!-- Statistics Cards -->
+    <section class="py-8">
+        <div class="max-w-7xl mx-auto px-6">
+            <!-- Row 1 - Main stats -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                <div class="stat-card bg-white rounded-2xl p-5 shadow-lg text-center border-t-4 border-purple-500">
+                    <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-outlined text-purple-600 text-2xl">shopping_bag</span>
+                    </div>
+                    <h3 class="text-3xl font-black text-purple-600">@Model.TotalOrders</h3>
+                    <p class="text-text-secondary text-sm">Tổng đơn</p>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-5 shadow-lg text-center border-t-4 border-green-500">
+                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-outlined text-green-600 text-2xl">check_circle</span>
+                    </div>
+                    <h3 class="text-3xl font-black text-green-600">@Model.CompletedOrders</h3>
+                    <p class="text-text-secondary text-sm">Hoàn thành</p>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-5 shadow-lg text-center border-t-4 border-red-500">
+                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-outlined text-red-600 text-2xl">cancel</span>
+                    </div>
+                    <h3 class="text-3xl font-black text-red-600">@Model.FailedOrders</h3>
+                    <p class="text-text-secondary text-sm">Thất bại</p>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-5 shadow-lg text-center border-t-4 border-yellow-500">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-outlined text-yellow-600 text-2xl">block</span>
+                    </div>
+                    <h3 class="text-3xl font-black text-yellow-600">@Model.CancelledOrders</h3>
+                    <p class="text-text-secondary text-sm">Đã hủy</p>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-5 shadow-lg text-center border-t-4 border-blue-500">
+                    <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-outlined text-blue-600 text-2xl">percent</span>
+                    </div>
+                    <h3 class="text-3xl font-black text-blue-600">@Model.SuccessRate.ToString("F1")%</h3>
+                    <p class="text-text-secondary text-sm">Tỷ lệ thành công</p>
+                </div>
+                <div class="stat-card bg-white rounded-2xl p-5 shadow-lg text-center border-t-4 border-emerald-500">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-outlined text-emerald-600 text-2xl">payments</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-emerald-600">@Model.TotalRevenue.ToString("N0")đ</h3>
+                    <p class="text-text-secondary text-sm">Doanh thu</p>
+                </div>
+            </div>
+
+            <!-- Row 2 - Secondary stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="stat-card bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl p-6 shadow-xl text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                            <span class="material-symbols-outlined text-3xl">local_shipping</span>
+                        </div>
+                        <span class="material-symbols-outlined text-5xl opacity-20">local_shipping</span>
+                    </div>
+                    <h3 class="text-3xl font-black mb-1">@Model.TotalDeliveryFees.ToString("N0")đ</h3>
+                    <p class="text-white/80">Tổng phí giao hàng</p>
+                </div>
+                <div class="stat-card bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl p-6 shadow-xl text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                            <span class="material-symbols-outlined text-3xl">receipt_long</span>
+                        </div>
+                        <span class="material-symbols-outlined text-5xl opacity-20">receipt_long</span>
+                    </div>
+                    <h3 class="text-3xl font-black mb-1">@(Model.CompletedOrders > 0 ? (Model.TotalRevenue / Model.CompletedOrders).ToString("N0") : "0")đ</h3>
+                    <p class="text-white/80">Giá trị đơn trung bình</p>
+                </div>
+                <div class="stat-card bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-6 shadow-xl text-white">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                            <span class="material-symbols-outlined text-3xl">schedule</span>
+                        </div>
+                        <span class="material-symbols-outlined text-5xl opacity-20">schedule</span>
+                    </div>
+                    <h3 class="text-3xl font-black mb-1">@Model.AverageDeliveryTime.ToString("F0") phút</h3>
+                    <p class="text-white/80">Thời gian giao TB</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="py-8 bg-white">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Daily Orders Chart -->
+                <div class="lg:col-span-2 bg-sidebar-surface rounded-3xl p-6 shadow-lg">
+                    <h3 class="text-xl font-bold text-text-primary mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">trending_up</span>
+                        Biểu Đồ Đơn Hàng Theo Ngày
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Status Distribution Chart -->
+                <div class="bg-sidebar-surface rounded-3xl p-6 shadow-lg">
+                    <h3 class="text-xl font-bold text-text-primary mb-6 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-green-500">pie_chart</span>
+                        Phân Bổ Trạng Thái
+                    </h3>
+                    <div class="chart-container flex items-center justify-center">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Info -->
+    <section class="py-8">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
+                <div class="bg-gradient-to-r from-primary to-purple-600 p-6 text-white">
+                    <h3 class="text-xl font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined">summarize</span>
+                        Tóm Tắt Thống Kê
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <h4 class="font-bold text-text-primary flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">date_range</span>
+                                Thông tin chung
+                            </h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-3 border-b border-border-light">
+                                    <span class="text-text-secondary">Khoảng thời gian:</span>
+                                    <span class="font-bold text-text-primary">@((Model.ToDate - Model.FromDate).Days + 1) ngày</span>
+                                </div>
+                                <div class="flex justify-between items-center py-3 border-b border-border-light">
+                                    <span class="text-text-secondary">Trung bình đơn/ngày:</span>
+                                    <span class="font-bold text-primary">@((Model.TotalOrders / Math.Max((Model.ToDate - Model.FromDate).Days + 1, 1)).ToString("F1")) đơn</span>
+                                </div>
+                                <div class="flex justify-between items-center py-3">
+                                    <span class="text-text-secondary">Doanh thu/ngày:</span>
+                                    <span class="font-bold text-green-600">@((Model.TotalRevenue / Math.Max((Model.ToDate - Model.FromDate).Days + 1, 1)).ToString("N0"))đ</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="font-bold text-text-primary flex items-center gap-2">
+                                <span class="material-symbols-outlined text-green-500">assignment_turned_in</span>
+                                Kết quả giao hàng
+                            </h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-3 border-b border-border-light">
+                                    <span class="text-text-secondary">Đơn thành công:</span>
+                                    <span class="font-bold text-green-600">@Model.CompletedOrders / @Model.TotalOrders đơn</span>
+                                </div>
+                                <div class="flex justify-between items-center py-3 border-b border-border-light">
+                                    <span class="text-text-secondary">Đơn thất bại:</span>
+                                    <span class="font-bold text-red-500">@Model.FailedOrders đơn</span>
+                                </div>
+                                <div class="flex justify-between items-center py-3">
+                                    <span class="text-text-secondary">Đơn bị hủy:</span>
+                                    <span class="font-bold text-yellow-600">@Model.CancelledOrders đơn</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="mt-8 pt-6 border-t border-border-light">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-bold text-text-primary">Tỷ lệ hoàn thành tổng thể</span>
+                            <span class="font-bold text-primary text-xl">@Model.SuccessRate.ToString("F1")%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                            <div class="h-4 rounded-full bg-gradient-to-r from-green-400 to-green-600 transition-all" style="width: @Model.SuccessRate%"></div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-sm text-text-secondary">
+                            <span>0%</span>
+                            <span>50%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-text-primary text-white py-8">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <p class="text-white/70 text-sm">© 2024 Nhà Hàng LDP - Hệ thống thống kê giao hàng</p>
+        </div>
+    </footer>
+
+    <script>
+        // Daily Orders Chart
+        var dailyCtx = document.getElementById('dailyChart').getContext('2d');
+        new Chart(dailyCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                    Model.DailyStats != null ? Model.DailyStats.Select(d => d.Date.ToString("dd/MM")).ToList() : new List<string>())),
+                datasets: [{
+                    label: 'Tổng đơn',
+                    data: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                        Model.DailyStats != null ? Model.DailyStats.Select(d => d.OrderCount).ToList() : new List<int>())),
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: '#667eea',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }, {
+                    label: 'Hoàn thành',
+                    data: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                        Model.DailyStats != null ? Model.DailyStats.Select(d => d.CompletedCount).ToList() : new List<int>())),
+                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                    borderColor: '#22c55e',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: { family: 'Manrope', weight: '600' }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // Status Distribution Chart
+        var statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Hoàn thành', 'Thất bại', 'Đã hủy', 'Đang xử lý'],
+                datasets: [{
+                    data: [
+                        @Model.CompletedOrders, 
+                        @Model.FailedOrders, 
+                        @Model.CancelledOrders, 
+                        @(Model.TotalOrders - Model.CompletedOrders - Model.FailedOrders - Model.CancelledOrders)
+                    ],
+                    backgroundColor: [
+                        '#22c55e',
+                        '#ef4444',
+                        '#f59e0b',
+                        '#6b7280'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: { family: 'Manrope', weight: '600' }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    </script>
+</body>
+</html>

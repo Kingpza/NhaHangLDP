@@ -24,6 +24,10 @@ namespace NhaHangLDP.Models
             this.ReturnBillDetail = new HashSet<ReturnBillDetail>();
             this.KitchenOrderItem = new HashSet<KitchenOrderItem>();
             this.QROrderDetail = new HashSet<QROrderDetail>();
+            this.CartItem = new HashSet<CartItem>();
+            this.CustomerOrderDetail = new HashSet<CustomerOrderDetail>();
+            this.Review = new HashSet<Review>();
+            this.Wishlist = new HashSet<Wishlist>();
         }
     
         public int Id { get; set; }
@@ -58,5 +62,13 @@ namespace NhaHangLDP.Models
         public virtual ICollection<KitchenOrderItem> KitchenOrderItem { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<QROrderDetail> QROrderDetail { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<CartItem> CartItem { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<CustomerOrderDetail> CustomerOrderDetail { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Review> Review { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Wishlist> Wishlist { get; set; }
     }
 }

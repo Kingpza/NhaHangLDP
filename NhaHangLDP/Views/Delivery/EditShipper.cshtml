@@ -1,0 +1,156 @@
+﻿@model NhaHangLDP.Models.ShipperFormViewModel
+@{
+    ViewBag.Title = "Sửa Shipper";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewBag.Title - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0"
+                    },
+                    fontFamily: { "display": ["Manrope", "sans-serif"] }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-sidebar-surface font-display text-text-primary min-h-screen flex items-center justify-center p-6">
+
+    <div class="w-full max-w-2xl">
+        <!-- Back link -->
+        <a href="@Url.Action("Shippers", "Delivery")" class="inline-flex items-center gap-2 text-text-secondary hover:text-primary mb-6 transition-colors">
+            <span class="material-symbols-outlined">arrow_back</span>
+            Quay lại danh sách shipper
+        </a>
+
+        <!-- Form Card -->
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-primary to-purple-600 p-8 text-center">
+                <div class="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border-4 border-white/30">
+                    <span class="text-white text-4xl font-black">@Model.FullName?.Substring(0, 1).ToUpper()</span>
+                </div>
+                <h1 class="text-3xl font-black text-white">Sửa Shipper</h1>
+                <p class="text-white/80 mt-2">Cập nhật thông tin shipper</p>
+            </div>
+
+            <!-- Form -->
+            <div class="p-8">
+                @using (Html.BeginForm("EditShipper", "Delivery", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.Id)
+
+                    <div class="space-y-6">
+                        <!-- Full Name -->
+                        <div>
+                            <label class="flex items-center gap-2 text-sm font-bold text-text-primary mb-2">
+                                <span class="material-symbols-outlined text-primary text-lg">person</span>
+                                Họ tên <span class="text-red-500">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.FullName, new { 
+                                @class = "w-full px-5 py-4 rounded-2xl border-2 border-border-light focus:border-primary focus:outline-none transition-colors text-lg",
+                                placeholder = "Nhập họ tên shipper"
+                            })
+                            @Html.ValidationMessageFor(m => m.FullName, "", new { @class = "text-red-500 text-sm mt-1" })
+                        </div>
+
+                        <!-- Phone & Email -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="flex items-center gap-2 text-sm font-bold text-text-primary mb-2">
+                                    <span class="material-symbols-outlined text-green-500 text-lg">call</span>
+                                    Số điện thoại <span class="text-red-500">*</span>
+                                </label>
+                                @Html.TextBoxFor(m => m.Phone, new { 
+                                    @class = "w-full px-5 py-4 rounded-2xl border-2 border-border-light focus:border-primary focus:outline-none transition-colors",
+                                    placeholder = "0901234567"
+                                })
+                                @Html.ValidationMessageFor(m => m.Phone, "", new { @class = "text-red-500 text-sm mt-1" })
+                            </div>
+                            <div>
+                                <label class="flex items-center gap-2 text-sm font-bold text-text-primary mb-2">
+                                    <span class="material-symbols-outlined text-blue-500 text-lg">mail</span>
+                                    Email
+                                </label>
+                                @Html.TextBoxFor(m => m.Email, new { 
+                                    @class = "w-full px-5 py-4 rounded-2xl border-2 border-border-light focus:border-primary focus:outline-none transition-colors",
+                                    placeholder = "email@example.com",
+                                    type = "email"
+                                })
+                                @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-red-500 text-sm mt-1" })
+                            </div>
+                        </div>
+
+                        <!-- Vehicle Type & License Plate -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="flex items-center gap-2 text-sm font-bold text-text-primary mb-2">
+                                    <span class="material-symbols-outlined text-yellow-500 text-lg">two_wheeler</span>
+                                    Loại xe
+                                </label>
+                                @Html.DropDownListFor(m => m.VehicleType, new List<SelectListItem>
+                                {
+                                    new SelectListItem { Text = "Xe máy", Value = "Xe máy" },
+                                    new SelectListItem { Text = "Xe đạp", Value = "Xe đạp" },
+                                    new SelectListItem { Text = "Ô tô", Value = "Ô tô" }
+                                }, new { @class = "w-full px-5 py-4 rounded-2xl border-2 border-border-light focus:border-primary focus:outline-none transition-colors bg-white" })
+                            </div>
+                            <div>
+                                <label class="flex items-center gap-2 text-sm font-bold text-text-primary mb-2">
+                                    <span class="material-symbols-outlined text-gray-500 text-lg">confirmation_number</span>
+                                    Biển số xe
+                                </label>
+                                @Html.TextBoxFor(m => m.LicensePlate, new { 
+                                    @class = "w-full px-5 py-4 rounded-2xl border-2 border-border-light focus:border-primary focus:outline-none transition-colors",
+                                    placeholder = "59-A1 12345"
+                                })
+                            </div>
+                        </div>
+
+                        <!-- Is Active -->
+                        <div class="flex items-center gap-4 p-4 bg-sidebar-surface rounded-2xl">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                @Html.CheckBoxFor(m => m.IsActive, new { @class = "sr-only peer", id = "isActive" })
+                                <div class="w-14 h-7 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                            <div>
+                                <span class="font-bold text-text-primary">Đang hoạt động</span>
+                                <p class="text-sm text-text-secondary">Shipper có thể nhận đơn giao hàng</p>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex gap-4 pt-6">
+                            <a href="@Url.Action("Shippers", "Delivery")" class="flex-1 py-4 rounded-full border-2 border-gray-300 text-text-secondary font-bold text-center hover:bg-gray-100 transition-all">
+                                <span class="material-symbols-outlined align-middle mr-2">close</span>
+                                Hủy
+                            </a>
+                            <button type="submit" class="flex-1 py-4 rounded-full bg-primary text-white font-bold hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined">save</span>
+                                Cập nhật
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</body>
+</html>
