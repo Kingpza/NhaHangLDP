@@ -413,21 +413,257 @@ namespace NhaHangLDP.Controllers
         }
 
         /// <summary>
-        /// API xử lý tách bill
+        /// API xử lý tách bill - Tạo nhiều hóa đơn từ 1 đơn hàng
         /// </summary>
         [HttpPost]
         [CustomAuthorize("Admin", "Manager", "Cashier")]
         public JsonResult ProcessSplitBill(SplitBillRequest request)
         {
-            try
+            // Nếu request null, thử đọc từ Request.InputStream (JSON)
+            if (request == null || request.OrderId == 0)
             {
-                // TODO: Implement split bill logic
-                // Tạm thời trả về success
-                return Json(new { success = true, message = "Tách bill thành công!" });
+                try
+                {
+                    Request.InputStream.Position = 0;
+                    using (var reader = new System.IO.StreamReader(Request.InputStream))
+                    {
+                        var json = reader.ReadToEnd();
+                        if (!string.IsNullOrEmpty(json))
+                        {
+                            request = Newtonsoft.Json.JsonConvert.DeserializeObject<SplitBillRequest>(json);
+                        }
+                    }
+                }
+                catch { }
             }
-            catch (Exception ex)
+
+            if (request == null || request.OrderId == 0)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+                return Json(new { success = false, message = "Dữ liệu không hợp lệ!" });
+            }
+
+            using (var transaction = db.Database.BeginTransaction())
+            {
+                try
+                {
+                    // Lấy thông tin đơn hàng
+                    var order = db.Order
+                        .Include(o => o.OrderDetail)
+                        .Include(o => o.RestaurantTable)
+                        .FirstOrDefault(o => o.Id == request.OrderId);
+
+                    if (order == null)
+                    {
+                        return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+                    }
+
+                    if (order.Status == "Completed")
+                    {
+                        return Json(new { success = false, message = "Đơn hàng đã được thanh toán!" });
+                    }
+
+                    // Lấy cashier ID hợp lệ
+                    var cashierId = GetCurrentCashierId();
+                    
+                    // Kiểm tra cashier có tồn tại không
+                    var cashierExists = db.Employee.Any(e => e.Id == cashierId);
+                    if (!cashierExists)
+                    {
+                        // Lấy bất kỳ employee nào có role Cashier hoặc Admin
+                        var defaultCashier = db.Employee
+                            .Include(e => e.Role)
+                            .FirstOrDefault(e => e.Role.RoleName == "Cashier" || e.Role.RoleName == "Admin");
+                        if (defaultCashier != null)
+                        {
+                            cashierId = defaultCashier.Id;
+                        }
+                        else
+                        {
+                            // Lấy employee đầu tiên có IsActive = true
+                            var anyEmployee = db.Employee.FirstOrDefault(e => e.IsActive);
+                            if (anyEmployee != null)
+                            {
+                                cashierId = anyEmployee.Id;
+                            }
+                            else
+                            {
+                                // Lấy employee bất kỳ
+                                var firstEmployee = db.Employee.FirstOrDefault();
+                                if (firstEmployee != null)
+                                {
+                                    cashierId = firstEmployee.Id;
+                                }
+                                else
+                                {
+                                    return Json(new { success = false, message = "Không tìm thấy nhân viên thu ngân!" });
+                                }
+                            }
+                        }
+                    }
+
+                    var shiftId = GetCurrentShiftId();
+                    var now = DateTime.Now;
+                    var createdBillIds = new List<int>();
+                    decimal totalPaid = 0;
+                    var totalOrderAmount = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+
+                    // Xử lý từng phần bill
+                    if (request.Parts != null && request.Parts.Count > 0)
+                    {
+                        int partIndex = 0;
+                        foreach (var part in request.Parts)
+                        {
+                            decimal partTotal = 0;
+
+                            // Tính tổng tiền cho phần này
+                            if (request.SplitType == "equal")
+                            {
+                                // Chia đều: tổng / số phần
+                                partTotal = Math.Round(totalOrderAmount / request.Parts.Count, 0);
+                                
+                                // Phần cuối cùng lấy phần còn lại để tránh sai số làm tròn
+                                if (partIndex == request.Parts.Count - 1)
+                                {
+                                    partTotal = totalOrderAmount - totalPaid;
+                                }
+                            }
+                            else if (part.FixedAmount.HasValue && part.FixedAmount.Value > 0)
+                            {
+                                // Sử dụng FixedAmount nếu có
+                                partTotal = part.FixedAmount.Value;
+                            }
+                            else
+                            {
+                                // Theo món: tính dựa trên items
+                                if (part.Items != null && part.Items.Count > 0)
+                                {
+                                    foreach (var item in part.Items)
+                                    {
+                                        var orderDetail = order.OrderDetail.FirstOrDefault(od => od.Id == item.OrderDetailId);
+                                        if (orderDetail != null)
+                                        {
+                                            partTotal += orderDetail.PriceAtTime * item.Quantity;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    // Nếu không có items, chia đều
+                                    partTotal = Math.Round(totalOrderAmount / request.Parts.Count, 0);
+                                    if (partIndex == request.Parts.Count - 1)
+                                    {
+                                        partTotal = totalOrderAmount - totalPaid;
+                                    }
+                                }
+                            }
+
+                            if (partTotal <= 0)
+                            {
+                                partIndex++;
+                                continue; // Bỏ qua phần không có giá trị
+                            }
+
+                            // Tạo Bill cho phần này
+                            var bill = new Bill
+                            {
+                                OrderId = order.Id,
+                                CashierId = cashierId,
+                                BillDate = now,
+                                TotalAmount = partTotal,
+                                DiscountAmount = 0,
+                                FinalAmount = partTotal,
+                                PaymentMethod = "cash", // Default
+                                Status = "Paid"
+                            };
+
+                            db.Bill.Add(bill);
+                            db.SaveChanges();
+                            createdBillIds.Add(bill.Id);
+                            totalPaid += partTotal;
+
+                            // Cập nhật doanh thu ca
+                            if (shiftId.HasValue)
+                            {
+                                var activeShift = db.CashierShift.FirstOrDefault(s => s.Id == shiftId.Value);
+                                if (activeShift != null)
+                                {
+                                    activeShift.TotalRevenue = (activeShift.TotalRevenue ?? 0) + partTotal;
+                                }
+                            }
+
+                            partIndex++;
+                        }
+                    }
+                    else
+                    {
+                        // Nếu không có parts, tạo 1 bill duy nhất
+                        var bill = new Bill
+                        {
+                            OrderId = order.Id,
+                            CashierId = cashierId,
+                            BillDate = now,
+                            TotalAmount = totalOrderAmount,
+                            DiscountAmount = 0,
+                            FinalAmount = totalOrderAmount,
+                            PaymentMethod = "cash",
+                            Status = "Paid"
+                        };
+
+                        db.Bill.Add(bill);
+                        db.SaveChanges();
+                        createdBillIds.Add(bill.Id);
+                        totalPaid = totalOrderAmount;
+                    }
+
+                    // Cập nhật trạng thái đơn hàng
+                    order.Status = "Completed";
+
+                    // Giải phóng bàn
+                    if (order.RestaurantTable != null)
+                    {
+                        order.RestaurantTable.Status = "Available";
+                    }
+
+                    // Cập nhật số lượng bán của món ăn
+                    foreach (var detail in order.OrderDetail)
+                    {
+                        var menuItem = db.MenuItem.Find(detail.MenuItemId);
+                        if (menuItem != null)
+                        {
+                            menuItem.SoldCount = menuItem.SoldCount + detail.Quantity;
+                        }
+                    }
+
+                    db.SaveChanges();
+                    transaction.Commit();
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = $"Tách bill thành công! Đã tạo {createdBillIds.Count} hóa đơn với tổng {totalPaid:N0}đ.",
+                        billIds = createdBillIds,
+                        totalPaid = totalPaid
+                    });
+                }
+                catch (System.Data.Entity.Validation.DbEntityValidationException ex)
+                {
+                    transaction.Rollback();
+                    var errors = ex.EntityValidationErrors
+                        .SelectMany(e => e.ValidationErrors)
+                        .Select(e => e.ErrorMessage);
+                    return Json(new { success = false, message = "Lỗi validation: " + string.Join(", ", errors) });
+                }
+                catch (System.Data.Entity.Infrastructure.DbUpdateException ex)
+                {
+                    transaction.Rollback();
+                    var innerMessage = ex.InnerException?.InnerException?.Message ?? ex.InnerException?.Message ?? ex.Message;
+                    return Json(new { success = false, message = "Lỗi cập nhật DB: " + innerMessage });
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    return Json(new { success = false, message = "Lỗi: " + ex.Message });
+                }
             }
         }
 
