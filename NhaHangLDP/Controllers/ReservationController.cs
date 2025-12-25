@@ -34,7 +34,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Book(ReservationFormModel model)
+        public ActionResult Book(ReservationFormModel model, int? selectedTableId)
         {
             try
             {
@@ -59,8 +59,12 @@ namespace NhaHangLDP.Controllers
                 // Generate reservation code
                 var reservationCode = "RES" + DateTime.Now.ToString("yyMMddHHmm") + new Random().Next(100, 999);
 
-                // Find available table
-                int? tableId = FindAvailableTable(reservationDate, reservationTime, model.NumberOfGuests, model.TablePreference);
+                // Sử dụng bàn đã chọn nếu có, nếu không tự động tìm bàn
+                int? tableId = selectedTableId;
+                if (!tableId.HasValue || tableId == 0)
+                {
+                    tableId = FindAvailableTable(reservationDate, reservationTime, model.NumberOfGuests, model.TablePreference);
+                }
 
                 // Get customer ID if logged in
                 var customerId = Session["CustomerId"] as int?;
@@ -203,6 +207,60 @@ namespace NhaHangLDP.Controllers
                 {
                     return Json(new { success = false, message = "Không thể hủy đặt bàn này!" });
                 }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách bàn trống cho thời gian cụ thể (AJAX)
+        /// </summary>
+        [HttpPost]
+        public JsonResult GetAvailableTables(DateTime date, string time, int guests)
+        {
+            try
+            {
+                if (!TimeSpan.TryParse(time, out TimeSpan reservationTime))
+                {
+                    return Json(new { success = false, message = "Giờ không hợp lệ" });
+                }
+
+                var timeMinutes = (int)reservationTime.TotalMinutes;
+
+                // Lấy danh sách bàn phù hợp
+                var sql = @"
+                    SELECT t.Id, t.TableNumber, t.Capacity, ta.Name as AreaName,
+                           CASE 
+                               WHEN EXISTS (
+                                   SELECT 1 FROM Reservation r 
+                                   WHERE r.TableId = t.Id 
+                                     AND r.ReservationDate = @p1
+                                     AND r.Status IN ('Pending', 'Confirmed')
+                                     AND ABS(DATEDIFF(MINUTE, '00:00:00', r.ReservationTime) - @p2) < 120
+                               ) THEN 0 
+                               ELSE 1 
+                           END as IsAvailable
+                    FROM RestaurantTable t
+                    LEFT JOIN TableArea ta ON t.TableAreaId = ta.Id
+                    WHERE t.Capacity >= @p0
+                    ORDER BY t.Capacity, t.TableNumber";
+
+                var tables = _db.Database.SqlQuery<AvailableTableInfo>(sql, guests, date, timeMinutes).ToList();
+
+                return Json(new
+                {
+                    success = true,
+                    tables = tables.Select(t => new
+                    {
+                        id = t.Id,
+                        tableNumber = t.TableNumber,
+                        capacity = t.Capacity,
+                        areaName = t.AreaName ?? "Chính",
+                        isAvailable = t.IsAvailable
+                    })
+                });
             }
             catch (Exception ex)
             {
@@ -366,6 +424,15 @@ namespace NhaHangLDP.Controllers
             public string Status { get; set; }
             public DateTime CreatedDate { get; set; }
             public string TableName { get; set; }
+        }
+
+        private class AvailableTableInfo
+        {
+            public int Id { get; set; }
+            public string TableNumber { get; set; }
+            public int Capacity { get; set; }
+            public string AreaName { get; set; }
+            public int IsAvailable { get; set; } // 1: Có sẵn, 0: Không có sẵn
         }
 
         #endregion

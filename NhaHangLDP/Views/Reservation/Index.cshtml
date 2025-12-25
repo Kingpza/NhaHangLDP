@@ -469,10 +469,45 @@
                         </div>
                     </div>
 
+                    <!-- Table Selection -->
+                    <div class="mb-8" id="tableSelectionSection" style="display: none;">
+                        <h3 class="text-2xl font-bold text-text-primary mb-6 flex items-center gap-3">
+                            <span class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center">3</span>
+                            Chọn bàn
+                        </h3>
+                        <p class="text-text-secondary mb-4">Chọn bàn bạn muốn hoặc để trống để hệ thống tự động sắp xếp</p>
+                        
+                        <div id="tableLoadingIndicator" class="text-center py-8 hidden">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+                            <p class="mt-2 text-text-secondary">Đang tải danh sách bàn...</p>
+                        </div>
+                        
+                        <div id="tableGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            <!-- Tables will be loaded here via AJAX -->
+                        </div>
+                        
+                        <input type="hidden" name="selectedTableId" id="selectedTableId" value="" />
+                        
+                        <div class="mt-4 flex items-center gap-4 text-sm">
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 rounded bg-green-100 border-2 border-green-500"></div>
+                                <span class="text-text-secondary">Trống</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 rounded bg-gray-200 border-2 border-gray-400"></div>
+                                <span class="text-text-secondary">Đã đặt</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 rounded bg-primary border-2 border-primary"></div>
+                                <span class="text-text-secondary">Đang chọn</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Table Preference -->
                     <div class="mb-8">
                         <h3 class="text-2xl font-bold text-text-primary mb-6 flex items-center gap-3">
-                            <span class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center">3</span>
+                            <span class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center">4</span>
                             Khu vực ưa thích
                         </h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -510,7 +545,7 @@
                     <!-- Special Requests -->
                     <div class="mb-8">
                         <h3 class="text-2xl font-bold text-text-primary mb-6 flex items-center gap-3">
-                            <span class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center">4</span>
+                            <span class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center">5</span>
                             Yêu cầu đặc biệt
                         </h3>
                         <textarea name="SpecialRequests" rows="4"
@@ -592,6 +627,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let selectedPartySize = 0;
+        let selectedTableId = null;
 
         // Select party size
         function selectPartySize(size) {
@@ -618,7 +654,10 @@
             var time = $('#reservationTime').val();
             var guests = selectedPartySize;
 
-            if (!date || !time || !guests) return;
+            if (!date || !time || !guests) {
+                $('#tableSelectionSection').hide();
+                return;
+            }
 
             var status = $('#availabilityStatus');
             status.removeClass('hidden');
@@ -637,13 +676,88 @@
                     icon.text('check_circle');
                     text.text(response.message || 'Còn bàn trống');
                     $('#submitBtn').prop('disabled', false);
+                    
+                    // Load available tables
+                    loadTables();
                 } else {
                     statusDiv.removeClass('bg-green-50 text-green-600').addClass('bg-red-50 text-red-600');
                     icon.text('error');
                     text.text(response.message || 'Không còn bàn trống');
                     $('#submitBtn').prop('disabled', true);
+                    $('#tableSelectionSection').hide();
                 }
             });
+        }
+
+        // Load tables for selection
+        function loadTables() {
+            var date = $('#reservationDate').val();
+            var time = $('#reservationTime').val();
+            var guests = selectedPartySize;
+
+            if (!date || !time || !guests) return;
+
+            $('#tableSelectionSection').show();
+            $('#tableLoadingIndicator').removeClass('hidden');
+            $('#tableGrid').empty();
+            selectedTableId = null;
+            $('#selectedTableId').val('');
+
+            $.post('@Url.Action("GetAvailableTables", "Reservation")', {
+                date: date,
+                time: time,
+                guests: guests
+            }).done(function(response) {
+                $('#tableLoadingIndicator').addClass('hidden');
+
+                if (response.success && response.tables && response.tables.length > 0) {
+                    response.tables.forEach(function(table) {
+                        var isAvailable = table.isAvailable == 1;
+                        var statusClass = isAvailable 
+                            ? 'bg-green-50 border-green-300 hover:border-green-500 cursor-pointer' 
+                            : 'bg-gray-100 border-gray-300 opacity-60 cursor-not-allowed';
+                        var iconColor = isAvailable ? 'text-green-600' : 'text-gray-400';
+                        var clickHandler = isAvailable ? `onclick="selectTable(${table.id}, this)"` : '';
+                        
+                        var tableHtml = `
+                            <div class="table-card border-2 rounded-xl p-4 flex flex-col items-center justify-center text-center transition-all ${statusClass}" 
+                                 data-table-id="${table.id}" ${clickHandler}>
+                                <span class="material-symbols-outlined text-3xl mb-2 ${iconColor}">table_restaurant</span>
+                                <span class="font-bold text-lg">Bàn ${table.tableNumber}</span>
+                                <span class="text-sm text-gray-500">${table.capacity} chỗ</span>
+                                <span class="text-xs mt-1 ${isAvailable ? 'text-green-600' : 'text-red-500'}">
+                                    ${isAvailable ? '✓ Còn trống' : '✗ Đã đặt'}
+                                </span>
+                                <span class="text-xs text-gray-400 mt-1">${table.areaName}</span>
+                            </div>
+                        `;
+                        $('#tableGrid').append(tableHtml);
+                    });
+                } else {
+                    $('#tableGrid').html('<p class="col-span-full text-center text-gray-500 py-4">Không tìm thấy bàn phù hợp</p>');
+                }
+            }).fail(function() {
+                $('#tableLoadingIndicator').addClass('hidden');
+                $('#tableGrid').html('<p class="col-span-full text-center text-red-500 py-4">Lỗi tải danh sách bàn</p>');
+            });
+        }
+
+        // Select table
+        function selectTable(tableId, element) {
+            // Deselect all tables
+            $('.table-card').removeClass('border-primary bg-primary/10').addClass('border-green-300 bg-green-50');
+            
+            // If clicking on the same table, deselect it
+            if (selectedTableId === tableId) {
+                selectedTableId = null;
+                $('#selectedTableId').val('');
+                return;
+            }
+            
+            // Mark this table as selected
+            selectedTableId = tableId;
+            $('#selectedTableId').val(tableId);
+            $(element).removeClass('border-green-300 bg-green-50').addClass('border-primary bg-primary/10');
         }
 
         // Form submit
