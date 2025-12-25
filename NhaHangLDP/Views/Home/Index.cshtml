@@ -1,6 +1,13 @@
 ﻿@{
     ViewBag.Title = "Trang Chủ - Nhà Hàng";
     Layout = null;
+    
+    // Kiểm tra đăng nhập - hỗ trợ cả nhân viên và khách hàng
+    var isLoggedIn = Session["Username"] != null || Session["CustomerId"] != null;
+    var displayName = Session["FullName"]?.ToString() ?? Session["CustomerName"]?.ToString() ?? Session["Username"]?.ToString() ?? "User";
+    var userRole = Session["Role"]?.ToString() ?? Session["UserRole"]?.ToString();
+    var isEmployee = Session["Username"] != null && (userRole == "Admin" || userRole == "Manager" || userRole == "Cashier" || userRole == "Staff");
+    var isCustomer = Session["CustomerId"] != null;
 }
 
 <!DOCTYPE html>
@@ -229,31 +236,33 @@
                     <a href="#contact" class="text-text-primary hover:text-primary transition-colors">Liên hệ</a>
                 </div>
                 <div class="flex items-center gap-3">
-                    @if (Session["Username"] != null)
+                    @if (isLoggedIn)
                     {
                         <!-- User Menu Dropdown -->
                         <div class="dropdown">
                             <button class="user-menu-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <div class="user-avatar">
                                     @{
-                                        var fullName = Session["FullName"]?.ToString() ?? Session["Username"]?.ToString() ?? "U";
-                                        var initial = !string.IsNullOrEmpty(fullName) ? fullName[0].ToString().ToUpper() : "U";
+                                        var initial = !string.IsNullOrEmpty(displayName) ? displayName[0].ToString().ToUpper() : "U";
                                     }
                                     @initial
                                 </div>
                                 <div class="user-info hidden sm:flex">
-                                    <span class="user-name">@(Session["FullName"] ?? Session["Username"])</span>
+                                    <span class="user-name">@displayName</span>
                                     <span class="user-role">
                                         @{
-                                            var role = Session["Role"]?.ToString();
                                             var roleText = "Khách hàng";
-                                            if (role == "Admin" || role == "Manager")
+                                            if (userRole == "Admin" || userRole == "Manager")
                                             {
                                                 roleText = "Quản lý";
                                             }
-                                            else if (role == "Cashier")
+                                            else if (userRole == "Cashier")
                                             {
                                                 roleText = "Thu ngân";
+                                            }
+                                            else if (userRole == "Staff")
+                                            {
+                                                roleText = "Nhân viên";
                                             }
                                         }
                                         @roleText
@@ -262,30 +271,52 @@
                                 <i class="fas fa-chevron-down text-primary text-sm"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
+                                @if (isEmployee)
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("Dashboard", "Management")">
+                                            <i class="fas fa-tachometer-alt text-primary"></i>
+                                            Dashboard
+                                        </a>
+                                    </li>
+                                }
                                 <li>
-                                    <a class="dropdown-item" href="@Url.Action("Dashboard", "Management")">
-                                        <i class="fas fa-tachometer-alt text-primary"></i>
-                                        Dashboard
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="@Url.Action("Booking", "Home")">
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Reservation")">
                                         <i class="fas fa-calendar-check text-success"></i>
-                                        Đặt bàn của tôi
+                                        Đặt bàn
                                     </a>
                                 </li>
-                                <li>
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-user-circle text-info"></i>
-                                        Thông tin cá nhân
-                                    </a>
-                                </li>
+                                @if (isCustomer)
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("Profile", "CustomerAccount")">
+                                            <i class="fas fa-user-circle text-info"></i>
+                                            Thông tin cá nhân
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("Orders", "CustomerAccount")">
+                                            <i class="fas fa-shopping-bag text-warning"></i>
+                                            Đơn hàng của tôi
+                                        </a>
+                                    </li>
+                                }
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <a class="dropdown-item text-danger" href="@Url.Action("LogOut", "Account")">
-                                        <i class="fas fa-sign-out-alt"></i>
-                                        Đăng xuất
-                                    </a>
+                                    @if (isCustomer)
+                                    {
+                                        <a class="dropdown-item text-danger" href="@Url.Action("Logout", "CustomerAccount")">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                            Đăng xuất
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <a class="dropdown-item text-danger" href="@Url.Action("LogOut", "Account")">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                            Đăng xuất
+                                        </a>
+                                    }
                                 </li>
                             </ul>
                         </div>

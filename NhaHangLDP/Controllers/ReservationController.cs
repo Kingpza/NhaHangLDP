@@ -228,22 +228,26 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
+                // Convert TimeSpan to total minutes for SQL comparison
+                var timeMinutes = (int)time.TotalMinutes;
+                
                 // Find tables that can accommodate the guests and are not reserved
+                // Note: RestaurantTable uses 'Status' column (Available/Occupied/Reserved) instead of 'IsActive'
                 var sql = @"
                     SELECT TOP 1 t.Id
-                    FROM [Table] t
-                    WHERE t.IsActive = 1 
+                    FROM RestaurantTable t
+                    WHERE t.Status = 'Available'
                       AND t.Capacity >= @p0
                       AND NOT EXISTS (
                           SELECT 1 FROM Reservation r 
                           WHERE r.TableId = t.Id 
                             AND r.ReservationDate = @p1
                             AND r.Status IN ('Pending', 'Confirmed')
-                            AND ABS(DATEDIFF(MINUTE, r.ReservationTime, @p2)) < 120
+                            AND ABS(DATEDIFF(MINUTE, '00:00:00', r.ReservationTime) - @p2) < 120
                       )
                     ORDER BY t.Capacity";
 
-                var tableId = _db.Database.SqlQuery<int?>(sql, guests, date, time).FirstOrDefault();
+                var tableId = _db.Database.SqlQuery<int?>(sql, guests, date, timeMinutes).FirstOrDefault();
                 return tableId;
             }
             catch
@@ -256,20 +260,24 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
+                // Convert TimeSpan to total minutes for SQL comparison
+                var timeMinutes = (int)time.TotalMinutes;
+                
+                // Note: RestaurantTable uses 'Status' column (Available/Occupied/Reserved) instead of 'IsActive'
                 var sql = @"
                     SELECT COUNT(*)
-                    FROM [Table] t
-                    WHERE t.IsActive = 1 
+                    FROM RestaurantTable t
+                    WHERE t.Status IN ('Available', 'Occupied')
                       AND t.Capacity >= @p0
                       AND NOT EXISTS (
                           SELECT 1 FROM Reservation r 
                           WHERE r.TableId = t.Id 
                             AND r.ReservationDate = @p1
                             AND r.Status IN ('Pending', 'Confirmed')
-                            AND ABS(DATEDIFF(MINUTE, r.ReservationTime, @p2)) < 120
+                            AND ABS(DATEDIFF(MINUTE, '00:00:00', r.ReservationTime) - @p2) < 120
                       )";
 
-                return _db.Database.SqlQuery<int>(sql, guests, date, time).FirstOrDefault();
+                return _db.Database.SqlQuery<int>(sql, guests, date, timeMinutes).FirstOrDefault();
             }
             catch
             {

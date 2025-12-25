@@ -67,10 +67,11 @@ namespace NhaHangLDP.Controllers
                     return View(model);
                 }
 
-                // Set session
+                // Set session - lưu đầy đủ thông tin khách hàng
                 Session["CustomerId"] = customer.Id;
                 Session["CustomerName"] = customer.FullName;
                 Session["CustomerEmail"] = customer.Email;
+                Session["CustomerPhone"] = customer.Phone;
 
                 // Update last login
                 _db.Database.ExecuteSqlCommand(
@@ -172,10 +173,11 @@ namespace NhaHangLDP.Controllers
                     model.Phone,
                     passwordHash).FirstOrDefault();
 
-                // Auto login
+                // Auto login - lưu đầy đủ thông tin khách hàng
                 Session["CustomerId"] = (int)customerId;
                 Session["CustomerName"] = model.FullName;
                 Session["CustomerEmail"] = model.Email;
+                Session["CustomerPhone"] = model.Phone;
 
                 TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà Hàng LDP.";
                 return RedirectToAction("Menu", "Public");
