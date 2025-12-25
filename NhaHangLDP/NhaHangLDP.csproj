@@ -662,6 +662,8 @@
     <Content Include="Views\ShipperApp\Profile.cshtml" />
     <Content Include="Views\ShipperApp\OrderDetail.cshtml" />
     <Content Include="Views\ShipperApp\Index.cshtml" />
+    <Content Include="Views\Cashier\OnlineOrders.cshtml" />
+    <Content Include="Views\Management\OnlineOrders.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

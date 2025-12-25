@@ -22,6 +22,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -51,6 +53,26 @@
         .pulse-dot { animation: pulse-dot 2s infinite; }
         @@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        
+        /* Custom SweetAlert2 styles */
+        .swal2-popup {
+            border-radius: 1.5rem !important;
+            font-family: "Manrope", sans-serif !important;
+        }
+        .swal2-title {
+            font-weight: 800 !important;
+            font-size: 1.5rem !important;
+        }
+        .swal2-confirm {
+            border-radius: 9999px !important;
+            padding: 0.75rem 2rem !important;
+            font-weight: 700 !important;
+        }
+        .swal2-cancel {
+            border-radius: 9999px !important;
+            padding: 0.75rem 2rem !important;
+            font-weight: 700 !important;
+        }
     </style>
 </head>
 <body class="bg-sidebar-surface font-display text-text-primary min-h-screen pb-24">
@@ -297,72 +319,224 @@
     </nav>
 
     <script>
+        // SweetAlert2 Toast configuration
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
         function toggleStatus() {
-            fetch('@Url.Action("ToggleStatus")', { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.message);
-                    }
-                });
+            Swal.fire({
+                title: '@(Model.Shipper.Status == "Available" ? "Tắt nhận đơn?" : "Bật nhận đơn?")',
+                text: '@(Model.Shipper.Status == "Available" ? "Bạn sẽ không nhận được đơn hàng mới" : "Bạn sẽ bắt đầu nhận đơn hàng mới")',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#007bff',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('@Url.Action("ToggleStatus")', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Toast.fire({
+                                    icon: 'success',
+                                    title: data.message || 'Đã cập nhật trạng thái'
+                                });
+                                setTimeout(() => location.reload(), 1000);
+                            } else {
+                                Swal.fire('Lỗi!', data.message, 'error');
+                            }
+                        });
+                }
+            });
         }
 
         function acceptOrder(assignmentId) {
-            if (!confirm('Nhận đơn hàng này?')) return;
-            fetch('@Url.Action("AcceptOrder")', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'assignmentId=' + assignmentId
-            })
-            .then(r => r.json())
-            .then(data => {
-                alert(data.message);
-                if (data.success) location.reload();
+            Swal.fire({
+                title: 'Nhận đơn hàng này?',
+                text: 'Bạn sẽ bắt đầu giao đơn hàng này',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="material-symbols-outlined mr-1">check_circle</i> Nhận đơn',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Đang xử lý...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    fetch('@Url.Action("AcceptOrder")', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'assignmentId=' + assignmentId
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công!',
+                                text: data.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi!', data.message, 'error');
+                        }
+                    });
+                }
             });
         }
 
         function rejectOrder(assignmentId) {
-            var reason = prompt('Lý do từ chối đơn:');
-            if (!reason) return;
-            fetch('@Url.Action("RejectOrder")', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'assignmentId=' + assignmentId + '&reason=' + encodeURIComponent(reason)
-            })
-            .then(r => r.json())
-            .then(data => {
-                alert(data.message);
-                if (data.success) location.reload();
+            Swal.fire({
+                title: 'Từ chối đơn hàng',
+                input: 'textarea',
+                inputLabel: 'Lý do từ chối',
+                inputPlaceholder: 'Nhập lý do từ chối đơn hàng...',
+                inputAttributes: {
+                    'aria-label': 'Nhập lý do từ chối'
+                },
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Từ chối',
+                cancelButtonText: 'Hủy',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'Vui lòng nhập lý do!'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Đang xử lý...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    fetch('@Url.Action("RejectOrder")', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'assignmentId=' + assignmentId + '&reason=' + encodeURIComponent(result.value)
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Toast.fire({
+                                icon: 'success',
+                                title: data.message
+                            });
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            Swal.fire('Lỗi!', data.message, 'error');
+                        }
+                    });
+                }
             });
         }
 
         function pickupOrder(assignmentId) {
-            if (!confirm('Xác nhận đã lấy hàng?')) return;
-            fetch('@Url.Action("PickupOrder")', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'assignmentId=' + assignmentId
-            })
-            .then(r => r.json())
-            .then(data => {
-                alert(data.message);
-                if (data.success) location.reload();
+            Swal.fire({
+                title: 'Xác nhận đã lấy hàng?',
+                text: 'Đơn hàng đã được lấy từ nhà hàng',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#007bff',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="material-symbols-outlined mr-1">inventory</i> Đã lấy',
+                cancelButtonText: 'Chưa'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Đang xử lý...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    fetch('@Url.Action("PickupOrder")', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'assignmentId=' + assignmentId
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công!',
+                                text: data.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi!', data.message, 'error');
+                        }
+                    });
+                }
             });
         }
 
         function completeDelivery(assignmentId) {
-            if (!confirm('Xác nhận đã giao hàng thành công?')) return;
-            fetch('@Url.Action("CompleteDelivery")', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'assignmentId=' + assignmentId
-            })
-            .then(r => r.json())
-            .then(data => {
-                alert(data.message);
-                if (data.success) location.reload();
+            Swal.fire({
+                title: 'Xác nhận đã giao hàng?',
+                text: 'Khách hàng đã nhận được hàng và thanh toán',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="material-symbols-outlined mr-1">check_circle</i> Hoàn thành',
+                cancelButtonText: 'Chưa'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Đang xử lý...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    
+                    fetch('@Url.Action("CompleteDelivery")', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'assignmentId=' + assignmentId
+                    })
+                    .then r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '🎉 Hoàn thành!',
+                                html: '<p class="text-lg mb-2">' + data.message + '</p><p class="text-2xl font-bold text-green-600">+' + data.earning + 'đ</p>',
+                                confirmButtonText: 'Tuyệt vời!',
+                                confirmButtonColor: '#28a745'
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Lỗi!', data.message, 'error');
+                        }
+                    });
+                }
             });
         }
 

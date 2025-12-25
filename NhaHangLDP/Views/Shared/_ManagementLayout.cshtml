@@ -917,6 +917,13 @@
         <p class="sidebar-section-title">VẬN HÀNH</p>
         <ul class="nav flex-column sidebar-menu">
             <li class="nav-item">
+                <a class="nav-link" href="@Url.Action("OnlineOrders", "Management")">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Đơn Hàng Online</span>
+                    <span class="badge bg-danger ms-auto" id="onlineOrderBadge" style="display:none;">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#deliverySubmenu" aria-expanded="false">
                     <i class="fas fa-shipping-fast"></i>
                     <span>Giao Hàng</span>
@@ -1106,7 +1113,7 @@
             });
         }
 
-        // Helper function for confirmation dialog
+        // Helper function for confirmation dialog - USE THIS INSTEAD OF confirm()
         function showConfirm(title, text, confirmCallback, cancelCallback) {
             Swal.fire({
                 title: title || 'Xác nhận',
@@ -1181,28 +1188,8 @@
             });
         }
 
-        // Override default alert
-        window.alert = function(message) {
-            Swal.fire({
-                title: 'Thông báo',
-                text: message,
-                icon: 'info',
-                confirmButtonText: 'Đóng'
-            });
-        };
-
-        // Override default confirm - returns Promise
-        window.confirm = function(message) {
-            return Swal.fire({
-                title: 'Xác nhận',
-                text: message,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Xác nhận',
-                cancelButtonText: 'Hủy',
-                reverseButtons: true
-            }).then((result) => result.isConfirmed);
-        };
+        // KHÔNG override window.confirm vì gây bug - giữ native confirm
+        // Nếu cần confirm đẹp, dùng showConfirm() hoặc Swal.fire() trực tiếp
     </script>
 
     <script>

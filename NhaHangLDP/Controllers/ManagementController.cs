@@ -1,8 +1,10 @@
 ﻿using NhaHangLDP.Models;
 using NhaHangLDP.Services.Management;
+using NhaHangLDP.Services;
 using NhaHangLDP.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -19,6 +21,7 @@ namespace NhaHangLDP.Controllers
         private readonly MenuAdminService menuService;
         private readonly InventoryService inventoryService;
         private readonly ManagementDashboardDataService dashboardService;
+        private readonly OrderQueryService orderQueryService;
 
         public ManagementController()
         {
@@ -27,6 +30,7 @@ namespace NhaHangLDP.Controllers
             menuService = new MenuAdminService(db);
             inventoryService = new InventoryService(db);
             dashboardService = new ManagementDashboardDataService(db);
+            orderQueryService = new OrderQueryService(db);
         }
 
         #region Authorization Helper
@@ -1107,6 +1111,187 @@ namespace NhaHangLDP.Controllers
             {
                 TempData["Error"] = "Có lỗi xảy ra khi tải báo cáo kho: " + ex.Message;
                 return RedirectToAction("Inventory");
+            }
+        }
+
+        #endregion
+
+        #region Online Orders Management (for Manager)
+
+        /// <summary>
+        /// Trang quản lý đơn hàng online dành cho quản lý
+        /// </summary>
+        public ActionResult OnlineOrders(string status = "all", string orderType = "all", string dateFrom = "", string dateTo = "")
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            ViewBag.StatusCounts = orderQueryService.GetOnlineOrderCounts();
+            ViewBag.SelectedStatus = status;
+            ViewBag.SelectedOrderType = orderType;
+            ViewBag.DateFrom = dateFrom;
+            ViewBag.DateTo = dateTo;
+
+            var orders = orderQueryService.GetOnlineOrders(status, orderType);
+
+            // Filter by date range if provided
+            if (!string.IsNullOrEmpty(dateFrom))
+            {
+                DateTime fromDate;
+                if (DateTime.TryParse(dateFrom, out fromDate))
+                {
+                    orders = orders.Where(o => o.OrderDate >= fromDate).ToList();
+                }
+            }
+            if (!string.IsNullOrEmpty(dateTo))
+            {
+                DateTime toDate;
+                if (DateTime.TryParse(dateTo, out toDate))
+                {
+                    orders = orders.Where(o => o.OrderDate <= toDate.AddDays(1)).ToList();
+                }
+            }
+
+            // Calculate statistics for management
+            ViewBag.TotalRevenue = orders.Where(o => o.Status == "Completed").Sum(o => o.TotalAmount);
+            ViewBag.TotalOrders = orders.Count;
+            ViewBag.CompletedOrders = orders.Count(o => o.Status == "Completed");
+            ViewBag.CancelledOrders = orders.Count(o => o.Status == "Cancelled");
+            ViewBag.DeliveryOrders = orders.Count(o => o.OrderType == "Delivery");
+            ViewBag.PickupOrders = orders.Count(o => o.OrderType == "Pickup" || o.OrderType == "TakeAway");
+            ViewBag.DineInOrders = orders.Count(o => o.OrderType == "DineIn");
+
+            return View(orders);
+        }
+
+        /// <summary>
+        /// API lấy chi tiết đơn hàng online cho quản lý
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetOnlineOrderDetail(int orderId)
+        {
+            if (!IsAuthorized())
+                return Json(new { success = false, message = "Không có quyền truy cập!" }, JsonRequestBehavior.AllowGet);
+
+            try
+            {
+                var order = orderQueryService.GetOnlineOrderDetail(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);
+
+                return Json(new { success = true, order }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Xuất báo cáo đơn hàng online
+        /// </summary>
+        public ActionResult ExportOnlineOrdersReport(string dateFrom, string dateTo)
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            var orders = orderQueryService.GetOnlineOrders("all", "all");
+
+            if (!string.IsNullOrEmpty(dateFrom))
+            {
+                DateTime fromDate;
+                if (DateTime.TryParse(dateFrom, out fromDate))
+                {
+                    orders = orders.Where(o => o.OrderDate >= fromDate).ToList();
+                }
+            }
+            if (!string.IsNullOrEmpty(dateTo))
+            {
+                DateTime toDate;
+                if (DateTime.TryParse(dateTo, out toDate))
+                {
+                    orders = orders.Where(o => o.OrderDate <= toDate.AddDays(1)).ToList();
+                }
+            }
+
+            // Generate CSV content
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Mã đơn,Ngày đặt,Khách hàng,SĐT,Loại,Trạng thái,Thanh toán,Tổng tiền");
+
+            foreach (var order in orders)
+            {
+                csv.AppendLine($"{order.OrderCode},{order.OrderDateText},{order.CustomerName},{order.CustomerPhone},{order.OrderTypeText},{order.StatusText},{order.PaymentStatusText},{order.TotalAmount}");
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+            var fileName = $"DonHangOnline_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            return File(bytes, "text/csv", fileName);
+        }
+
+        /// <summary>
+        /// Thống kê đơn hàng online theo thời gian
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetOnlineOrderStats(string period = "week")
+        {
+            if (!IsAuthorized())
+                return Json(new { success = false, message = "Không có quyền truy cập!" }, JsonRequestBehavior.AllowGet);
+
+            try
+            {
+                var startDate = DateTime.Today;
+                switch (period.ToLower())
+                {
+                    case "today":
+                        startDate = DateTime.Today;
+                        break;
+                    case "week":
+                        startDate = DateTime.Today.AddDays(-7);
+                        break;
+                    case "month":
+                        startDate = DateTime.Today.AddDays(-30);
+                        break;
+                    case "year":
+                        startDate = DateTime.Today.AddDays(-365);
+                        break;
+                }
+
+                var orders = db.CustomerOrder
+                    .Where(o => o.OrderDate >= startDate)
+                    .ToList();
+
+                var stats = new
+                {
+                    totalOrders = orders.Count,
+                    completedOrders = orders.Count(o => o.Status == "Completed"),
+                    cancelledOrders = orders.Count(o => o.Status == "Cancelled"),
+                    totalRevenue = orders.Where(o => o.Status == "Completed").Sum(o => o.TotalAmount),
+                    averageOrderValue = orders.Where(o => o.Status == "Completed").Any() 
+                        ? orders.Where(o => o.Status == "Completed").Average(o => o.TotalAmount) 
+                        : 0,
+                    byType = new
+                    {
+                        delivery = orders.Count(o => o.OrderType == "Delivery"),
+                        pickup = orders.Count(o => o.OrderType == "Pickup" || o.OrderType == "TakeAway"),
+                        dineIn = orders.Count(o => o.OrderType == "DineIn")
+                    },
+                    byStatus = new
+                    {
+                        pending = orders.Count(o => o.Status == "Pending"),
+                        confirmed = orders.Count(o => o.Status == "Confirmed"),
+                        preparing = orders.Count(o => o.Status == "Preparing"),
+                        ready = orders.Count(o => o.Status == "Ready"),
+                        delivering = orders.Count(o => o.Status == "Delivering"),
+                        completed = orders.Count(o => o.Status == "Completed"),
+                        cancelled = orders.Count(o => o.Status == "Cancelled")
+                    }
+                };
+
+                return Json(new { success = true, stats }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
             }
         }
 

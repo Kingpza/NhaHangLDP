@@ -778,5 +778,333 @@ namespace NhaHangLDP.Controllers
         }
 
         #endregion
+
+        #region Online Orders Management
+
+        /// <summary>
+        /// Trang quản lý đơn hàng online
+        /// </summary>
+        public ActionResult OnlineOrders(string status = "all", string orderType = "all")
+        {
+            if (shiftService.GetActiveShift() == null)
+                return RedirectToAction("OpenShift");
+
+            ViewBag.StatusCounts = orderQueryService.GetOnlineOrderCounts();
+            ViewBag.SelectedStatus = status;
+            ViewBag.SelectedOrderType = orderType;
+
+            var orders = orderQueryService.GetOnlineOrders(status, orderType);
+            return View(orders);
+        }
+
+        /// <summary>
+        /// API lấy danh sách đơn hàng online
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetOnlineOrdersData(string status = "all", string orderType = "all")
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" }, JsonRequestBehavior.AllowGet);
+
+                var orders = orderQueryService.GetOnlineOrders(status, orderType);
+                var counts = orderQueryService.GetOnlineOrderCounts();
+
+                return Json(new { success = true, orders, counts }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// API lấy chi tiết đơn hàng online
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetOnlineOrderDetail(int orderId)
+        {
+            try
+            {
+                var order = orderQueryService.GetOnlineOrderDetail(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);
+
+                return Json(new { success = true, order }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Xác nhận đơn hàng online
+        /// </summary>
+        [HttpPost]
+        public JsonResult ConfirmOnlineOrder(int orderId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                string errorMessage;
+                if (orderQueryService.UpdateOnlineOrderStatus(orderId, "Confirmed", out errorMessage))
+                {
+                    return Json(new { success = true, message = "Đã xác nhận đơn hàng!" });
+                }
+                return Json(new { success = false, message = errorMessage });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Bắt đầu chuẩn bị đơn hàng online
+        /// </summary>
+        [HttpPost]
+        public JsonResult StartPreparingOnlineOrder(int orderId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                string errorMessage;
+                if (orderQueryService.UpdateOnlineOrderStatus(orderId, "Preparing", out errorMessage))
+                {
+                    return Json(new { success = true, message = "Đã bắt đầu chuẩn bị!" });
+                }
+                return Json(new { success = false, message = errorMessage });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Đánh dấu đơn hàng sẵn sàng
+        /// </summary>
+        [HttpPost]
+        public JsonResult MarkOnlineOrderReady(int orderId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                string errorMessage;
+                if (orderQueryService.UpdateOnlineOrderStatus(orderId, "Ready", out errorMessage))
+                {
+                    return Json(new { success = true, message = "Đơn hàng đã sẵn sàng!" });
+                }
+                return Json(new { success = false, message = errorMessage });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Hoàn thành đơn hàng online (cho đơn tự đến lấy hoặc không giao hàng)
+        /// </summary>
+        [HttpPost]
+        public JsonResult CompleteOnlineOrder(int orderId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var order = db.CustomerOrder.Find(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+
+                // Log để debug
+                System.Diagnostics.Debug.WriteLine($"CompleteOnlineOrder - OrderId: {orderId}, OrderType: '{order.OrderType}', Status: '{order.Status}'");
+
+                // Cho phép hoàn thành đơn không phải Delivery khi đã Ready
+                // OrderType có thể là "Pickup", "pickup", "TakeAway", "DineIn" hoặc bất kỳ giá trị nào không phải "Delivery"
+                bool isNotDelivery = string.IsNullOrEmpty(order.OrderType) || 
+                                     !order.OrderType.Equals("Delivery", StringComparison.OrdinalIgnoreCase);
+                
+                if (isNotDelivery && order.Status == "Ready")
+                {
+                    order.Status = "Completed";
+                    order.CompletedDate = DateTime.Now;
+                    order.PaymentStatus = "Paid";
+                    db.SaveChanges();
+                    return Json(new { success = true, message = "Đã hoàn thành đơn hàng!" });
+                }
+
+                // Nếu đơn đang Delivering và cần hoàn thành thủ công
+                if (order.Status == "Delivering")
+                {
+                    order.Status = "Completed";
+                    order.CompletedDate = DateTime.Now;
+                    order.PaymentStatus = "Paid";
+
+                    // Cập nhật shipper status
+                    var assignment = db.DeliveryAssignment
+                        .FirstOrDefault(a => a.OrderId == orderId && (a.Status == "Assigned" || a.Status == "PickedUp"));
+                    if (assignment != null)
+                    {
+                        assignment.Status = "Delivered";
+                        var shipper = db.Shipper.Find(assignment.ShipperId);
+                        if (shipper != null)
+                        {
+                            shipper.Status = "Available";
+                            shipper.TotalDeliveries = shipper.TotalDeliveries + 1;
+                        }
+                    }
+
+                    db.SaveChanges();
+                    return Json(new { success = true, message = "Đã hoàn thành đơn hàng!" });
+                }
+
+                return Json(new { 
+                    success = false, 
+                    message = $"Không thể hoàn thành đơn hàng này! (OrderType: {order.OrderType}, Status: {order.Status})" 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Hủy đơn hàng online
+        /// </summary>
+        [HttpPost]
+        public JsonResult CancelOnlineOrder(int orderId, string reason)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var order = db.CustomerOrder.Find(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+
+                // Không cho hủy đơn đang giao hoặc đã hoàn thành
+                if (order.Status == "Delivering" || order.Status == "Completed")
+                    return Json(new { success = false, message = "Không thể hủy đơn hàng này!" });
+
+                order.Status = "Cancelled";
+                order.CancelledDate = DateTime.Now;
+                order.CancelReason = reason;
+
+                // Hủy assignment nếu có
+                var assignment = db.DeliveryAssignment
+                    .FirstOrDefault(a => a.OrderId == orderId && a.Status != "Cancelled" && a.Status != "Delivered");
+                if (assignment != null)
+                {
+                    assignment.Status = "Cancelled";
+                    var shipper = db.Shipper.Find(assignment.ShipperId);
+                    if (shipper != null) shipper.Status = "Available";
+                }
+
+                db.SaveChanges();
+                return Json(new { success = true, message = "Đã hủy đơn hàng!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gán shipper cho đơn hàng online
+        /// </summary>
+        [HttpPost]
+        public JsonResult AssignShipperToOnlineOrder(int orderId, int shipperId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var order = db.CustomerOrder.Find(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+
+                if (order.OrderType != "Delivery")
+                    return Json(new { success = false, message = "Đơn hàng này không phải đơn giao hàng!" });
+
+                if (order.Status != "Ready")
+                    return Json(new { success = false, message = "Đơn hàng chưa sẵn sàng để giao!" });
+
+                var shipper = db.Shipper.Find(shipperId);
+                if (shipper == null || !shipper.IsActive)
+                    return Json(new { success = false, message = "Shipper không hợp lệ!" });
+
+                if (shipper.Status == "Busy")
+                    return Json(new { success = false, message = "Shipper đang bận!" });
+
+                // Tạo assignment
+                var assignment = new DeliveryAssignment
+                {
+                    OrderId = orderId,
+                    ShipperId = shipperId,
+                    AssignedTime = DateTime.Now,
+                    Status = "Assigned",
+                    DeliveryFee = order.DeliveryFee,
+                    ShipperEarning = order.DeliveryFee * 0.8m // 80% phí ship
+                };
+
+                db.DeliveryAssignment.Add(assignment);
+                shipper.Status = "Busy";
+                order.Status = "Delivering";
+                order.DeliveringDate = DateTime.Now;
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = $"Đã gán shipper {shipper.FullName} cho đơn hàng!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách shipper khả dụng
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetAvailableShippersForOrder()
+        {
+            try
+            {
+                var shippers = db.Shipper
+                    .Where(s => s.IsActive && s.Status == "Available")
+                    .Select(s => new
+                    {
+                        s.Id,
+                        s.FullName,
+                        s.Phone,
+                        s.VehicleType,
+                        s.Rating,
+                        s.TotalDeliveries
+                    })
+                    .OrderByDescending(s => s.Rating)
+                    .ToList();
+
+                return Json(new { success = true, shippers }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        #endregion
     }
 }
