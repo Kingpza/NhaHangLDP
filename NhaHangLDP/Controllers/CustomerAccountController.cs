@@ -744,6 +744,144 @@ public JsonResult DeleteAccount()
 
 #endregion
 
+#region My Reservations
+
+/// <summary>
+/// Trang danh sách đặt bàn của tôi
+/// </summary>
+public ActionResult MyReservations()
+{
+    var customerId = GetCustomerId();
+    if (customerId == null)
+    {
+        return RedirectToAction("Login", new { returnUrl = Url.Action("MyReservations") });
+    }
+
+    var reservations = _db.Database.SqlQuery<MyReservationInfo>(
+        @"SELECT r.Id, r.ReservationCode, r.CustomerName, r.CustomerPhone, r.CustomerEmail,
+                 r.ReservationDate, r.ReservationTime, r.NumberOfGuests, r.TablePreference,
+                 r.SpecialRequests, r.Status, r.CreatedDate, t.TableNumber as TableName
+          FROM Reservation r
+          LEFT JOIN RestaurantTable t ON r.TableId = t.Id
+          WHERE r.CustomerId = @p0
+          ORDER BY r.ReservationDate DESC, r.ReservationTime DESC",
+        customerId).ToList();
+
+    var viewModel = reservations.Select(r => new MyReservationViewModel
+    {
+        Id = r.Id,
+        ReservationCode = r.ReservationCode,
+        CustomerName = r.CustomerName,
+        CustomerPhone = r.CustomerPhone,
+        ReservationDate = r.ReservationDate,
+        ReservationTime = r.ReservationTime,
+        NumberOfGuests = r.NumberOfGuests,
+        TablePreference = r.TablePreference,
+        TableName = r.TableName,
+        SpecialRequests = r.SpecialRequests,
+        Status = r.Status,
+        StatusClass = GetReservationStatusClass(r.Status),
+        StatusText = GetReservationStatusText(r.Status),
+        CanCancel = r.Status == "Pending" || r.Status == "Confirmed",
+        CanModify = r.Status == "Pending",
+        CreatedDate = r.CreatedDate,
+        IsUpcoming = r.ReservationDate >= DateTime.Today && (r.Status == "Pending" || r.Status == "Confirmed")
+    }).ToList();
+
+    return View(viewModel);
+}
+
+/// <summary>
+/// Hủy đặt bàn
+/// </summary>
+[HttpPost]
+public JsonResult CancelReservation(string code, string reason)
+{
+    try
+    {
+        var customerId = GetCustomerId();
+        if (customerId == null)
+        {
+            return Json(new { success = false, message = "Vui lòng đăng nhập!" });
+        }
+
+        // Verify ownership
+        var isOwner = _db.Database.SqlQuery<int>(
+            "SELECT COUNT(*) FROM Reservation WHERE ReservationCode = @p0 AND CustomerId = @p1",
+            code, customerId).FirstOrDefault();
+
+        if (isOwner == 0)
+        {
+            return Json(new { success = false, message = "Không tìm thấy đặt bàn!" });
+        }
+
+        var sql = @"
+            UPDATE Reservation 
+            SET Status = 'Cancelled', CancelReason = @p1, CancelledDate = GETDATE()
+            WHERE ReservationCode = @p0 AND Status IN ('Pending', 'Confirmed')";
+
+        var affected = _db.Database.ExecuteSqlCommand(sql, code, reason ?? "Khách hàng hủy");
+
+        if (affected > 0)
+        {
+            return Json(new { success = true, message = "Đã hủy đặt bàn thành công!" });
+        }
+        else
+        {
+            return Json(new { success = false, message = "Không thể hủy đặt bàn này!" });
+        }
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = ex.Message });
+    }
+}
+
+private string GetReservationStatusClass(string status)
+{
+    switch (status)
+    {
+        case "Pending": return "warning";
+        case "Confirmed": return "success";
+        case "Completed": return "info";
+        case "Cancelled": return "danger";
+        case "NoShow": return "secondary";
+        default: return "secondary";
+    }
+}
+
+private string GetReservationStatusText(string status)
+{
+    switch (status)
+    {
+        case "Pending": return "Chờ xác nhận";
+        case "Confirmed": return "Đã xác nhận";
+        case "Completed": return "Hoàn thành";
+        case "Cancelled": return "Đã hủy";
+        case "NoShow": return "Không đến";
+        default: return status;
+    }
+}
+
+private class MyReservationInfo
+{
+    public int Id { get; set; }
+    public string ReservationCode { get; set; }
+    public string CustomerName { get; set; }
+    public string CustomerPhone { get; set; }
+    public string CustomerEmail { get; set; }
+    public DateTime ReservationDate { get; set; }
+    public TimeSpan ReservationTime { get; set; }
+    public int NumberOfGuests { get; set; }
+    public string TablePreference { get; set; }
+    public string SpecialRequests { get; set; }
+    public string Status { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public string TableName { get; set; }
+}
+
+#endregion
+
 #region Helper Methods
 
 private bool IsCustomerLoggedIn()

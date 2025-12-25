@@ -3,451 +3,741 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - Thu Ngân POS</title>
+    <title>@ViewBag.Title - LDP POS</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-    
-    <!-- SweetAlert2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary: #64748b;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0ea5e9;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+            --sidebar-width: 260px;
+            --header-height: 64px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f8f9fa;
-            color: #212529;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-top: 60px;
-            padding-bottom: 50px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e5e7eb 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        .cashier-navbar {
-            background-color: #ffffff;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s;
-            border-bottom: 1px solid #e9ecef;
+        /* Sidebar */
+        .pos-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
         }
 
-        .navbar-brand {
+        .sidebar-logo {
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .sidebar-logo-text {
+            color: white;
+        }
+
+        .sidebar-logo-text h1 {
+            font-size: 18px;
             font-weight: 700;
-            color: #dc7633 !important;
-            font-size: 1.5rem;
+            margin: 0;
         }
 
-        .navbar-nav .nav-link {
-            color: #495057 !important;
-            transition: color 0.3s, background-color 0.3s;
-            border-radius: 5px;
-            padding: 8px 15px;
+        .sidebar-logo-text span {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.4);
+            padding: 16px 12px 8px;
+            font-weight: 600;
+        }
+
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .sidebar-nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .sidebar-nav-item.active {
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .sidebar-nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .sidebar-nav-item span {
+            font-size: 14px;
             font-weight: 500;
         }
 
-            .navbar-nav .nav-link:hover {
-                color: #dc7633 !important;
-                background-color: rgba(220, 118, 51, 0.1);
-            }
-
-            .navbar-nav .nav-link.active {
-                color: #dc7633 !important;
-                background-color: rgba(220, 118, 51, 0.2);
-            }
-
-        .main-container {
-            padding-top: 20px;
-            padding-bottom: 20px;
-            min-height: calc(100vh - 110px);
-        }
-
-        .fixed-bottom-footer {
-            z-index: 1000;
-            background-color: #ffffff;
-            border-top: 3px solid #e9ecef;
-            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
-            height: 50px;
-        }
-
-        .footer-item {
-            color: #495057;
+        .nav-badge {
+            position: absolute;
+            right: 12px;
+            background: var(--danger);
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
             font-weight: 600;
-            padding: 0 15px;
-            transition: color 0.3s;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .sidebar-user-info h4 {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .sidebar-user-info span {
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+        }
+
+        .sidebar-user-status {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            margin-left: auto;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+        }
+
+        .btn-logout {
+            width: 100%;
+            padding: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-            .footer-item:hover {
-                color: #dc7633 !important;
-            }
-
-        /* Responsive design */
-        .navbar-toggler {
-            border-color: rgba(220, 118, 51, 0.3);
+        .btn-logout:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
         }
 
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28220, 118, 51, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        /* Main Content */
+        .pos-main {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Custom SweetAlert2 Styling for Cashier */
+        /* Header */
+        .pos-header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--light);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--secondary);
+        }
+
+        .header-stat i {
+            color: var(--primary);
+        }
+
+        .header-stat strong {
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .btn-header {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-header-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .btn-header-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-header-outline {
+            background: white;
+            color: var(--secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-header-outline:hover {
+            background: var(--light);
+            color: var(--dark);
+        }
+
+        /* Content */
+        .pos-content {
+            flex: 1;
+            padding: 24px;
+        }
+
+        /* Cards */
+        .pos-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .pos-card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .pos-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pos-card-title i {
+            color: var(--primary);
+        }
+
+        .pos-card-body {
+            padding: 24px;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card.primary::before { background: var(--primary); }
+        .stat-card.success::before { background: var(--success); }
+        .stat-card.warning::before { background: var(--warning); }
+        .stat-card.info::before { background: var(--info); }
+
+        .stat-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card.primary .stat-card-icon { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
+        .stat-card.success .stat-card-icon { background: rgba(34, 197, 94, 0.1); color: var(--success); }
+        .stat-card.warning .stat-card-icon { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .stat-card.info .stat-card-icon { background: rgba(14, 165, 233, 0.1); color: var(--info); }
+
+        .stat-card-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .stat-card-label {
+            font-size: 13px;
+            color: var(--secondary);
+            font-weight: 500;
+        }
+
+        /* Quick Actions */
+        .quick-action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .quick-action-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .quick-action-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
+        }
+
+        .quick-action-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin: 0 auto 16px;
+            color: white;
+        }
+
+        .quick-action-card.orders .quick-action-icon { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+        .quick-action-card.tables .quick-action-icon { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); }
+        .quick-action-card.sales .quick-action-icon { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .quick-action-card.online .quick-action-icon { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+
+        .quick-action-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 6px;
+        }
+
+        .quick-action-desc {
+            font-size: 13px;
+            color: var(--secondary);
+        }
+
+        /* Shift Info Bar */
+        .shift-info-bar {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .shift-info-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .shift-info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .shift-info-item i {
+            opacity: 0.8;
+        }
+
+        .shift-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-shift {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-shift:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .btn-shift.danger {
+            background: rgba(255,255,255,0.95);
+            color: var(--danger);
+            border-color: transparent;
+        }
+
+        .btn-shift.danger:hover {
+            background: white;
+        }
+
+        /* Footer Stats Bar */
+        .pos-footer {
+            background: white;
+            border-top: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--secondary);
+        }
+
+        .footer-stat i {
+            font-size: 16px;
+        }
+
+        .footer-stat.primary i { color: var(--primary); }
+        .footer-stat.success i { color: var(--success); }
+        .footer-stat.warning i { color: var(--warning); }
+        .footer-stat.info i { color: var(--info); }
+
+        /* SweetAlert2 Custom */
         .swal2-popup {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
-            border-radius: 15px !important;
+            font-family: 'Inter', sans-serif !important;
+            border-radius: 16px !important;
         }
 
         .swal2-title {
             font-weight: 700 !important;
-            color: #212529 !important;
-        }
-
-        .swal2-html-container {
-            color: #6c757d !important;
         }
 
         .swal2-confirm {
-            background: linear-gradient(135deg, #dc7633 0%, #c0392b 100%) !important;
+            background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%) !important;
             border-radius: 10px !important;
-            padding: 10px 25px !important;
             font-weight: 600 !important;
         }
 
-        .swal2-cancel {
-            background: #6c757d !important;
-            color: white !important;
-            border-radius: 10px !important;
-            padding: 10px 25px !important;
-            font-weight: 600 !important;
+        /* Responsive */
+        @@media (max-width: 1024px) {
+            .pos-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .pos-sidebar.open {
+                transform: translateX(0);
+            }
+
+            .pos-main {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: block !important;
+            }
         }
 
-        .swal2-icon {
-            border-width: 3px !important;
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--dark);
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg fixed-top cashier-navbar">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="@Url.Action("Dashboard", "Cashier")">
-                <i class="fa fa-receipt me-2"></i> LDP POS System
+    <!-- Sidebar -->
+    <aside class="pos-sidebar" id="posSidebar">
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <div class="sidebar-logo-text">
+                <h1>LDP POS</h1>
+                <span>Restaurant System</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-title">Main Menu</div>
+            
+            <a href="@Url.Action("Dashboard", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("POS") == true ? "active" : "")">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#cashierNavbar">
-                <span class="navbar-toggler-icon"></span>
+            <a href="@Url.Action("Menu", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Menu") == true ? "active" : "")">
+                <i class="fas fa-cash-register"></i>
+                <span>Bán hàng</span>
+            </a>
+
+            <a href="@Url.Action("Orders", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Order") == true ? "active" : "")">
+                <i class="fas fa-clipboard-list"></i>
+                <span>Đơn hàng</span>
+            </a>
+
+            <a href="@Url.Action("OnlineOrders", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Online") == true ? "active" : "")">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Đơn Online</span>
+                <span class="nav-badge" id="onlineOrderBadge" style="display:none;">0</span>
+            </a>
+
+            <a href="@Url.Action("TableArea", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Table") == true || ViewBag.Title?.ToString().Contains("Bàn") == true ? "active" : "")">
+                <i class="fas fa-border-all"></i>
+                <span>Khu vực bàn</span>
+            </a>
+
+            <div class="nav-section-title">Quản lý</div>
+
+            <a href="@Url.Action("ShiftDetails", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Chi Tiết Ca") == true ? "active" : "")">
+                <i class="fas fa-clock"></i>
+                <span>Chi tiết ca</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar">
+                    @{
+                        var userName = Session["Username"]?.ToString() ?? "U";
+                        var userInitial = !string.IsNullOrEmpty(userName) ? userName[0].ToString().ToUpper() : "U";
+                    }
+                    @userInitial
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>@(Session["FullName"] ?? Session["Username"] ?? "Thu Ngân")</h4>
+                    <span>Thu ngân</span>
+                </div>
+                <div class="sidebar-user-status"></div>
+            </div>
+            <button class="btn-logout" id="logoutBtn" onclick="confirmLogout()">
+                <i class="fas fa-sign-out-alt"></i>
+                Đăng xuất
             </button>
-
-            <div class="collapse navbar-collapse" id="cashierNavbar">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Action("Dashboard", "Cashier")">
-                            <i class="fa fa-home"></i> Trang Chính
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Action("Menu", "Cashier")">
-                            <i class="fa fa-cash-register"></i> Bán Hàng
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Action("Orders", "Cashier")">
-                            <i class="fa fa-clipboard-list"></i> Đơn Hàng
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Action("OnlineOrders", "Cashier")">
-                            <i class="fa fa-shopping-bag"></i> Đơn Online
-                            <span class="badge bg-danger ms-1" id="onlineOrderBadge" style="display:none;">0</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="@Url.Action("TableArea", "Cashier")">
-                            <i class="fa fa-table"></i> Khu Vực Bàn
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="ms-auto d-flex align-items-center">
-                <span class="text-dark me-3">
-                    <i class="fa fa-user-circle me-1"></i>
-                    @(Session["Username"] ?? "Thu Ngân")
-                </span>
-                <a href="#" class="btn btn-sm btn-outline-warning me-2" onclick="showHelp(); return false;">
-                    <i class="fa fa-headset"></i> Hỗ trợ
-                </a>
-                <a href="#" class="btn btn-sm btn-outline-info me-2" onclick="syncData(); return false;">
-                    <i class="fa fa-sync-alt"></i> Đồng bộ
-                </a>
-                <a href="@Url.Action("LogOut", "Account")" class="btn btn-sm btn-danger" id="logoutBtn">
-                    <i class="fa fa-sign-out-alt"></i> Đăng xuất
-                </a>
-            </div>
         </div>
-    </nav>
+    </aside>
 
-    <div class="container-fluid main-container">
+    <!-- Main Content -->
+    <main class="pos-main">
         @RenderBody()
-    </div>
 
-    <div class="fixed-bottom fixed-bottom-footer d-flex justify-content-between align-items-center">
-        <div class="footer-item" onclick="showNotifications()">
-            <i class="fa fa-bell text-warning me-1"></i>
-            Thông báo (<span id="notificationCount">0</span>)
-        </div>
-        <div class="footer-item" onclick="showOrderSummary()">
-            <i class="fa fa-shopping-cart text-info me-1"></i>
-            Đơn hàng (<span id="orderCount">0</span>)
-        </div>
-        <div class="footer-item" onclick="showTableStatus()">
-            <i class="fa fa-table text-success me-1"></i>
-            Bàn | <span id="tableStatus">0/12</span>
-        </div>
-        <div class="footer-item">
-            <i class="fa fa-map-marker-alt text-danger me-1"></i>
-            Khu vực chính
-        </div>
-        <div class="footer-item">
-            <i class="fa fa-home text-primary me-1"></i>
-            Nhà hàng | 120451
-        </div>
-        <div class="footer-item">
-            <i class="fa fa-clock text-info me-1"></i>
-            <span id="currentTime">--:--:--</span>
-        </div>
-    </div>
+        <!-- Footer -->
+        <footer class="pos-footer">
+            <div class="footer-stat primary">
+                <i class="fas fa-bell"></i>
+                <span>Thông báo: <strong id="notificationCount">0</strong></span>
+            </div>
+            <div class="footer-stat success">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Đơn hàng: <strong id="orderCount">0</strong></span>
+            </div>
+            <div class="footer-stat warning">
+                <i class="fas fa-chair"></i>
+                <span>Bàn: <strong id="tableStatus">0/0</strong></span>
+            </div>
+            <div class="footer-stat info">
+                <i class="fas fa-clock"></i>
+                <span id="currentTime">--:--:--</span>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- Global SweetAlert Helper Functions -->
     <script>
-        // Helper function for success messages
-        function showSuccess(title, text, callback) {
-            Swal.fire({
-                icon: 'success',
-                title: title || 'Thành công!',
-                text: text,
-                confirmButtonText: 'Đóng',
-                timer: 3000,
-                timerProgressBar: true
-            }).then((result) => {
-                if (callback) callback(result);
-            });
-        }
-
-        // Helper function for error messages
-        function showError(title, text) {
-            Swal.fire({
-                icon: 'error',
-                title: title || 'Có lỗi xảy ra!',
-                text: text,
-                confirmButtonText: 'Đóng'
-            });
-        }
-
-        // Helper function for warning messages
-        function showWarning(title, text) {
-            Swal.fire({
-                icon: 'warning',
-                title: title || 'Cảnh báo!',
-                text: text,
-                confirmButtonText: 'Đóng'
-            });
-        }
-
-        // Helper function for info messages
-        function showInfo(title, text) {
-            Swal.fire({
-                icon: 'info',
-                title: title || 'Thông tin',
-                text: text,
-                confirmButtonText: 'Đóng'
-            });
-        }
-
-        // Helper function for confirmation dialog - DÙNG HÀM NÀY THAY VÌ confirm()
-        function showConfirm(title, text, confirmCallback, cancelCallback) {
-            Swal.fire({
-                title: title || 'Xác nhận',
-                text: text,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Xác nhận',
-                cancelButtonText: 'Hủy',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed && confirmCallback) {
-                    confirmCallback();
-                } else if (result.isDismissed && cancelCallback) {
-                    cancelCallback();
-                }
-            });
-        }
-
-        // Helper function for loading state
-        function showLoading(title, text) {
-            Swal.fire({
-                title: title || 'Đang xử lý...',
-                text: text || 'Vui lòng chờ trong giây lát',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-        }
-
-        // Helper function to close loading
-        function closeLoading() {
-            Swal.close();
-        }
-
-        // Toast notification - Updated to use SweetAlert2
-        function showToastSwal(message, type) {
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                }
-            });
-
-            const iconMap = {
-                'success': 'success',
-                'error': 'error',
-                'warning': 'warning',
-                'info': 'info'
-            };
-
-            Toast.fire({
-                icon: iconMap[type] || 'info',
-                title: message
-            });
-        }
-
-        // KHÔNG override window.confirm vì gây bug - giữ native confirm
-        // Nếu cần confirm đẹp, dùng showConfirm() hoặc Swal.fire() trực tiếp
-    </script>
-
-    <script>
+        // Update time
         function updateTime() {
             const now = new Date();
-            const timeString = now.toLocaleTimeString('vi-VN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            document.getElementById('currentTime').textContent = timeString;
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('vi-VN');
         }
+        setInterval(updateTime, 1000);
+        updateTime();
 
-        function highlightActiveMenu() {
-            const currentPath = window.location.pathname.toLowerCase();
-            const menuItems = document.querySelectorAll('.navbar-nav .nav-link');
-
-            menuItems.forEach(item => {
-                item.classList.remove('active');
-                const href = item.getAttribute('href');
-                if (href && currentPath.includes(href.toLowerCase())) {
-                    item.classList.add('active');
+        // Logout confirmation
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Đăng xuất?',
+                text: 'Bạn có chắc muốn đăng xuất khỏi hệ thống?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng xuất',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#ef4444'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '@Url.Action("LogOut", "Account")';
                 }
             });
         }
 
-        function showNotifications() {
-            showInfo('Thông báo hệ thống', 'Hiện tại không có thông báo mới');
+        // Mobile sidebar
+        function openSidebar() {
+            document.getElementById('posSidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('show');
         }
 
-        function showOrderSummary() {
-            window.location.href = '@Url.Action("Orders", "Cashier")';
+        function closeSidebar() {
+            document.getElementById('posSidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('show');
         }
 
-        function showTableStatus() {
-            window.location.href = '@Url.Action("TableArea", "Cashier")';
-        }
-
-        function showHelp() {
-            Swal.fire({
-                title: 'Hệ thống hỗ trợ',
-                html: `
-                    <div class="text-start">
-                        <p><i class="fas fa-phone text-success"></i> <strong>Hotline:</strong> 1900-xxxx</p>
-                        <p><i class="fas fa-envelope text-primary"></i> <strong>Email:</strong> support@ldp.vn</p>
-                        <p><i class="fas fa-comments text-info"></i> <strong>Chat online:</strong> Đang phát triển</p>
-                    </div>
-                `,
-                icon: 'info',
-                confirmButtonText: 'Đóng'
-            });
-        }
-
-        function syncData() {
-            const syncBtn = event.target.closest('a');
-            const originalText = syncBtn.innerHTML;
-
-            syncBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang đồng bộ...';
-            syncBtn.classList.add('disabled');
-
-            setTimeout(() => {
-                syncBtn.innerHTML = originalText;
-                syncBtn.classList.remove('disabled');
-
-                document.getElementById('notificationCount').textContent = Math.floor(Math.random() * 5);
-                document.getElementById('orderCount').textContent = Math.floor(Math.random() * 10);
-                document.getElementById('tableStatus').textContent = Math.floor(Math.random() * 8) + '/12';
-
-                showToastSwal('Đồng bộ dữ liệu thành công!', 'success');
-            }, 2000);
-        }
-
-        function showToast(message, type) {
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position: fixed; top: 80px; right: 20px; padding: 15px 20px; border-radius: 5px; color: white; font-weight: bold; z-index: 9999; opacity: 0; transition: opacity 0.3s ease;';
-
-            const colors = {
-                'success': '#28a745',
-                'error': '#dc3545',
-                'warning': '#ffc107',
-                'info': '#17a2b8'
-            };
-            toast.style.backgroundColor = colors[type] || colors.info;
-            toast.textContent = message;
-
-            document.body.appendChild(toast);
-            setTimeout(() => toast.style.opacity = '1', 100);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => document.body.removeChild(toast), 300);
-            }, 3000);
-        }
-
-        function updateFooterStats() {
-            const orderCount = localStorage.getItem('currentOrderCount') || '0';
-            const tableStatus = localStorage.getItem('currentTableStatus') || '0/12';
-            const notificationCount = localStorage.getItem('notificationCount') || '0';
-
-            document.getElementById('orderCount').textContent = orderCount;
-            document.getElementById('tableStatus').textContent = tableStatus;
-            document.getElementById('notificationCount').textContent = notificationCount;
-        }
-
-        window.updateOrderCount = function(count) {
-            document.getElementById('orderCount').textContent = count;
-            localStorage.setItem('currentOrderCount', count);
-        };
-
-        window.updateTableStatus = function(status) {
-            document.getElementById('tableStatus').textContent = status;
-            localStorage.setItem('currentTableStatus', status);
-        };
-
-        window.updateNotificationCount = function(count) {
-            document.getElementById('notificationCount').textContent = count;
-            localStorage.setItem('notificationCount', count);
-        };
-
-        // Check for new online orders
+        // Check online orders
         function checkOnlineOrders() {
             fetch('@Url.Action("GetOnlineOrdersData", "Cashier")?status=pending')
                 .then(r => r.json())
@@ -466,49 +756,81 @@
                 .catch(() => {});
         }
 
-        // Logout với SweetAlert confirm
+        // Helper functions
+        function showSuccess(title, text, callback) {
+            Swal.fire({
+                icon: 'success',
+                title: title || 'Thành công!',
+                text: text,
+                confirmButtonText: 'Đóng',
+                timer: 3000,
+                timerProgressBar: true
+            }).then((result) => {
+                if (callback) callback(result);
+            });
+        }
+
+        function showError(title, text) {
+            Swal.fire({
+                icon: 'error',
+                title: title || 'Có lỗi xảy ra!',
+                text: text,
+                confirmButtonText: 'Đóng'
+            });
+        }
+
+        function showConfirm(title, text, confirmCallback, cancelCallback) {
+            Swal.fire({
+                title: title || 'Xác nhận',
+                text: text,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed && confirmCallback) {
+                    confirmCallback();
+                } else if (result.isDismissed && cancelCallback) {
+                    cancelCallback();
+                }
+            });
+        }
+
+        function showLoading(title, text) {
+            Swal.fire({
+                title: title || 'Đang xử lý...',
+                text: text || 'Vui lòng chờ',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+
+        function closeLoading() {
+            Swal.close();
+        }
+
+        function showToastSwal(message, type) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+            Toast.fire({
+                icon: type || 'info',
+                title: message
+            });
+        }
+
+        // Init
         document.addEventListener('DOMContentLoaded', function() {
-            updateTime();
-            highlightActiveMenu();
-            updateFooterStats();
             checkOnlineOrders();
-
-            setInterval(updateTime, 1000);
-            setInterval(updateFooterStats, 30000);
             setInterval(checkOnlineOrders, 30000);
-
-            // Handle logout button
-            var logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var logoutUrl = this.href;
-                    Swal.fire({
-                        title: 'Xác nhận đăng xuất?',
-                        text: 'Bạn có chắc muốn đăng xuất khỏi hệ thống?',
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Đăng xuất',
-                        cancelButtonText: 'Hủy',
-                        confirmButtonColor: '#dc3545'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = logoutUrl;
-                        }
-                    });
-                });
-            }
-        });
-
-        document.addEventListener('click', function(e) {
-            const navbar = document.getElementById('cashierNavbar');
-            const toggleButton = document.querySelector('.navbar-toggler');
-
-            if (navbar.classList.contains('show') &&
-                !navbar.contains(e.target) &&
-                !toggleButton.contains(e.target)) {
-                bootstrap.Collapse.getInstance(navbar).hide();
-            }
         });
     </script>
 
