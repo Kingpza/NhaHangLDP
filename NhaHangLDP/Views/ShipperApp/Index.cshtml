@@ -1,0 +1,625 @@
+﻿@{
+    ViewBag.Title = "Shipper App";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#667eea" />
+    <title>Shipper App - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0",
+                        "hover-light": "#e9ecef"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f0f2f5; }
+        ::-webkit-scrollbar-thumb { background: #ced4da; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #007bff; }
+        
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @@keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @@keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @@keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .animate-fadeInUp { animation: fadeInUp 0.8s ease-out forwards; }
+        .animate-slideInLeft { animation: slideInLeft 0.8s ease-out forwards; }
+        .animate-slideInRight { animation: slideInRight 0.8s ease-out forwards; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-8px);
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-background font-display text-text-primary">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 border-b border-border-light bg-background/95 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="h-12 w-12 rounded-full hero-gradient flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-2xl">two_wheeler</span>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-black text-text-primary">SHIPPER APP</h1>
+                        <p class="text-xs text-text-secondary">Nhà Hàng LDP</p>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="#features" class="text-text-primary hover:text-primary transition-colors">Tính năng</a>
+                    <a href="#how-it-works" class="text-text-primary hover:text-primary transition-colors">Cách thức</a>
+                    <a href="#benefits" class="text-text-primary hover:text-primary transition-colors">Quyền lợi</a>
+                    <a href="@Url.Action("Index", "Home")" class="text-text-primary hover:text-primary transition-colors">Về trang chủ</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="@Url.Action("Login", "ShipperApp")" class="flex items-center gap-2 px-6 py-2 hero-gradient rounded-full text-white hover:shadow-lg transition-all font-bold">
+                        <span class="material-symbols-outlined text-lg">login</span>
+                        Đăng nhập
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 hero-gradient"></div>
+        <div class="absolute inset-0 bg-black/20"></div>
+        
+        <!-- Floating elements -->
+        <div class="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-float" style="animation-delay: 0s;"></div>
+        <div class="absolute top-40 right-20 w-32 h-32 bg-white/10 rounded-full animate-float" style="animation-delay: 1s;"></div>
+        <div class="absolute bottom-20 left-1/4 w-16 h-16 bg-white/10 rounded-full animate-float" style="animation-delay: 2s;"></div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="animate-fadeInUp text-center lg:text-left">
+                    <span class="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold mb-6">
+                        🚀 Ứng dụng dành cho Shipper
+                    </span>
+                    <h1 class="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
+                        Giao Hàng<br/>
+                        <span class="text-yellow-300">Kiếm Tiền</span><br/>
+                        Linh Hoạt
+                    </h1>
+                    <p class="text-xl text-white/90 mb-8 max-w-xl">
+                        Tham gia đội ngũ shipper của Nhà Hàng LDP. Nhận đơn hàng, giao nhanh chóng và kiếm thu nhập hấp dẫn mỗi ngày.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                        <a href="@Url.Action("Login", "ShipperApp")" class="group flex items-center justify-center gap-3 px-8 py-4 bg-white text-primary rounded-full font-bold text-lg hover:shadow-2xl transition-all">
+                            <span class="material-symbols-outlined">login</span>
+                            Đăng nhập ngay
+                            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </a>
+                        <a href="#how-it-works" class="flex items-center justify-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
+                            <span class="material-symbols-outlined">play_circle</span>
+                            Tìm hiểu thêm
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="hidden lg:block animate-slideInRight">
+                    <div class="relative">
+                        <div class="absolute -inset-4 bg-white/20 rounded-[3rem] blur-2xl"></div>
+                        <div class="relative bg-white rounded-[2rem] p-6 shadow-2xl max-w-sm mx-auto">
+                            <!-- Mock App Screen -->
+                            <div class="bg-sidebar-surface rounded-xl p-4 mb-4">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-12 h-12 hero-gradient rounded-full flex items-center justify-center text-white font-bold">N</div>
+                                    <div>
+                                        <div class="font-bold">Nguyễn Văn A</div>
+                                        <div class="text-xs text-green-500 flex items-center gap-1">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                            Đang nhận đơn
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2 text-center">
+                                    <div class="bg-white rounded-lg p-2">
+                                        <div class="text-lg font-black text-primary">15</div>
+                                        <div class="text-xs text-text-secondary">Đơn hôm nay</div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-2">
+                                        <div class="text-lg font-black text-green-500">13</div>
+                                        <div class="text-xs text-text-secondary">Hoàn thành</div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-2">
+                                        <div class="text-sm font-black text-blue-500">450K</div>
+                                        <div class="text-xs text-text-secondary">Thu nhập</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-green-700 font-bold">#DH2024001</span>
+                                    <span class="px-2 py-1 bg-green-500 text-white text-xs rounded-full">Đang giao</span>
+                                </div>
+                                <div class="text-sm text-text-secondary">
+                                    <p class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg">person</span>
+                                        Trần Thị B
+                                    </p>
+                                    <p class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-lg text-red-500">location_on</span>
+                                        123 Lê Lợi, Q.1
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <span class="material-symbols-outlined text-white text-4xl">expand_more</span>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-20 bg-sidebar-surface">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="stat-card bg-white rounded-[2rem] p-8 text-center shadow-lg">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">group</span>
+                    </div>
+                    <h3 class="text-4xl font-black text-primary mb-2">500+</h3>
+                    <p class="text-text-secondary font-semibold">Shipper hoạt động</p>
+                </div>
+                <div class="stat-card bg-white rounded-[2rem] p-8 text-center shadow-lg">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">local_shipping</span>
+                    </div>
+                    <h3 class="text-4xl font-black text-primary mb-2">10K+</h3>
+                    <p class="text-text-secondary font-semibold">Đơn hàng/ngày</p>
+                </div>
+                <div class="stat-card bg-white rounded-[2rem] p-8 text-center shadow-lg">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">payments</span>
+                    </div>
+                    <h3 class="text-4xl font-black text-primary mb-2">30K</h3>
+                    <p class="text-text-secondary font-semibold">Thu nhập/đơn</p>
+                </div>
+                <div class="stat-card bg-white rounded-[2rem] p-8 text-center shadow-lg">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-primary text-3xl">star</span>
+                    </div>
+                    <h3 class="text-4xl font-black text-primary mb-2">4.9/5</h3>
+                    <p class="text-text-secondary font-semibold">Đánh giá</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-primary font-bold text-sm uppercase tracking-wider">Tính năng</span>
+                <h2 class="text-4xl md:text-5xl font-black text-text-primary mt-4 mb-6">
+                    Ứng Dụng <span class="text-primary">Thông Minh</span>
+                </h2>
+                <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+                    Shipper App được thiết kế tối ưu để bạn làm việc hiệu quả và kiếm được nhiều tiền hơn
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="feature-card bg-white rounded-[2rem] p-8 border border-border-light">
+                    <div class="w-20 h-20 bg-gradient-to-br from-primary to-purple-500 rounded-[1.5rem] flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-white text-4xl">notifications_active</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-4">Nhận đơn tức thì</h3>
+                    <p class="text-text-secondary leading-relaxed mb-6">
+                        Thông báo đẩy ngay khi có đơn hàng mới. Bạn có thể nhận hoặc từ chối đơn nhanh chóng chỉ với một chạm.
+                    </p>
+                    <div class="flex items-center gap-2 text-primary font-semibold">
+                        <span class="material-symbols-outlined">bolt</span>
+                        Thông báo real-time
+                    </div>
+                </div>
+
+                <div class="feature-card bg-white rounded-[2rem] p-8 border border-border-light">
+                    <div class="w-20 h-20 bg-gradient-to-br from-primary to-purple-500 rounded-[1.5rem] flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-white text-4xl">navigation</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-4">Chỉ đường thông minh</h3>
+                    <p class="text-text-secondary leading-relaxed mb-6">
+                        Tích hợp Google Maps giúp bạn tìm đường nhanh nhất đến địa chỉ giao hàng, tiết kiệm thời gian và xăng.
+                    </p>
+                    <div class="flex items-center gap-2 text-primary font-semibold">
+                        <span class="material-symbols-outlined">map</span>
+                        Tích hợp Google Maps
+                    </div>
+                </div>
+
+                <div class="feature-card bg-white rounded-[2rem] p-8 border border-border-light">
+                    <div class="w-20 h-20 bg-gradient-to-br from-primary to-purple-500 rounded-[1.5rem] flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-white text-4xl">bar_chart</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-4">Thống kê thu nhập</h3>
+                    <p class="text-text-secondary leading-relaxed mb-6">
+                        Theo dõi chi tiết thu nhập theo ngày, tuần, tháng. Biểu đồ trực quan giúp bạn quản lý tài chính dễ dàng.
+                    </p>
+                    <div class="flex items-center gap-2 text-primary font-semibold">
+                        <span class="material-symbols-outlined">insights</span>
+                        Báo cáo chi tiết
+                    </div>
+                </div>
+
+                <div class="feature-card bg-white rounded-[2rem] p-8 border border-border-light">
+                    <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-500 rounded-[1.5rem] flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-white text-4xl">call</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-4">Gọi điện trực tiếp</h3>
+                    <p class="text-text-secondary leading-relaxed mb-6">
+                        Liên hệ khách hàng nhanh chóng chỉ với một chạm. Không cần lưu số, app sẽ tự động kết nối cuộc gọi.
+                    </p>
+                    <div class="flex items-center gap-2 text-green-600 font-semibold">
+                        <span class="material-symbols-outlined">phone_in_talk</span>
+                        Gọi 1 chạm
+                    </div>
+                </div>
+
+                <div class="feature-card bg-white rounded-[2rem] p-8 border border-border-light">
+                    <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-[1.5rem] flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-white text-4xl">history</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-4">Lịch sử đơn hàng</h3>
+                    <p class="text-text-secondary leading-relaxed mb-6">
+                        Xem lại tất cả đơn hàng đã giao, đánh giá từ khách hàng. Dễ dàng tra cứu và đối soát thu nhập.
+                    </p>
+                    <div class="flex items-center gap-2 text-orange-600 font-semibold">
+                        <span class="material-symbols-outlined">list_alt</span>
+                        Đầy đủ thông tin
+                    </div>
+                </div>
+
+                <div class="feature-card bg-white rounded-[2rem] p-8 border border-border-light">
+                    <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-[1.5rem] flex items-center justify-center mb-6">
+                        <span class="material-symbols-outlined text-white text-4xl">toggle_on</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-text-primary mb-4">Bật/Tắt nhận đơn</h3>
+                    <p class="text-text-secondary leading-relaxed mb-6">
+                        Tự do chọn thời gian làm việc. Bật nhận đơn khi sẵn sàng, tắt khi cần nghỉ ngơi hoặc bận việc.
+                    </p>
+                    <div class="flex items-center gap-2 text-yellow-600 font-semibold">
+                        <span class="material-symbols-outlined">schedule</span>
+                        Làm việc linh hoạt
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="py-20 bg-sidebar-surface">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-primary font-bold text-sm uppercase tracking-wider">Quy trình</span>
+                <h2 class="text-4xl md:text-5xl font-black text-text-primary mt-4 mb-6">
+                    Cách Thức <span class="text-primary">Hoạt Động</span>
+                </h2>
+                <p class="text-text-secondary text-lg max-w-2xl mx-auto">
+                    Chỉ với 4 bước đơn giản, bạn có thể bắt đầu kiếm tiền ngay hôm nay
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="relative">
+                    <div class="bg-white rounded-[2rem] p-8 text-center shadow-lg relative z-10">
+                        <div class="w-16 h-16 hero-gradient rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-black">1</div>
+                        <h3 class="text-xl font-bold text-text-primary mb-3">Đăng nhập</h3>
+                        <p class="text-text-secondary text-sm">Đăng nhập bằng số điện thoại đã đăng ký với nhà hàng</p>
+                    </div>
+                    <div class="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 z-0">
+                        <span class="material-symbols-outlined text-border-light text-4xl">arrow_forward</span>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="bg-white rounded-[2rem] p-8 text-center shadow-lg relative z-10">
+                        <div class="w-16 h-16 hero-gradient rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-black">2</div>
+                        <h3 class="text-xl font-bold text-text-primary mb-3">Bật nhận đơn</h3>
+                        <p class="text-text-secondary text-sm">Bật trạng thái sẵn sàng để nhận đơn hàng mới từ hệ thống</p>
+                    </div>
+                    <div class="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 z-0">
+                        <span class="material-symbols-outlined text-border-light text-4xl">arrow_forward</span>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="bg-white rounded-[2rem] p-8 text-center shadow-lg relative z-10">
+                        <div class="w-16 h-16 hero-gradient rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-black">3</div>
+                        <h3 class="text-xl font-bold text-text-primary mb-3">Nhận & Giao</h3>
+                        <p class="text-text-secondary text-sm">Lấy hàng tại nhà hàng, dùng GPS chỉ đường đến khách hàng</p>
+                    </div>
+                    <div class="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2 z-0">
+                        <span class="material-symbols-outlined text-border-light text-4xl">arrow_forward</span>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <div class="bg-white rounded-[2rem] p-8 text-center shadow-lg relative z-10">
+                        <div class="w-16 h-16 hero-gradient rounded-full flex items-center justify-center mx-auto mb-4 text-white text-2xl font-black">4</div>
+                        <h3 class="text-xl font-bold text-text-primary mb-3">Nhận tiền</h3>
+                        <p class="text-text-secondary text-sm">Hoàn thành đơn và nhận tiền công ngay lập tức vào tài khoản</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Benefits Section -->
+    <section id="benefits" class="py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="animate-slideInLeft">
+                    <span class="text-primary font-bold text-sm uppercase tracking-wider">Quyền lợi</span>
+                    <h2 class="text-4xl md:text-5xl font-black text-text-primary mt-4 mb-6">
+                        Tại Sao Chọn<br/>
+                        <span class="text-primary">Nhà Hàng LDP?</span>
+                    </h2>
+                    <p class="text-text-secondary text-lg leading-relaxed mb-8">
+                        Chúng tôi cam kết mang đến môi trường làm việc tốt nhất cho đội ngũ shipper, với thu nhập hấp dẫn và nhiều phúc lợi.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 bg-sidebar-surface rounded-[1.5rem]">
+                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-white">payments</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-text-primary">Thu nhập cao</h4>
+                                <p class="text-sm text-text-secondary">Từ 25.000đ - 35.000đ/đơn tùy khoảng cách</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 p-4 bg-sidebar-surface rounded-[1.5rem]">
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-white">schedule</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-text-primary">Thời gian linh hoạt</h4>
+                                <p class="text-sm text-text-secondary">Tự chọn giờ làm, không ràng buộc</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 p-4 bg-sidebar-surface rounded-[1.5rem]">
+                            <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-white">redeem</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-text-primary">Thưởng hàng tháng</h4>
+                                <p class="text-sm text-text-secondary">Bonus khi đạt mục tiêu đơn hàng</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 p-4 bg-sidebar-surface rounded-[1.5rem]">
+                            <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span class="material-symbols-outlined text-white">support_agent</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-text-primary">Hỗ trợ 24/7</h4>
+                                <p class="text-sm text-text-secondary">Đội ngũ support luôn sẵn sàng giúp đỡ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="animate-slideInRight">
+                    <div class="relative">
+                        <div class="absolute -inset-4 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-[3rem] blur-2xl"></div>
+                        <div class="relative bg-white rounded-[2rem] p-8 shadow-2xl">
+                            <h3 class="text-2xl font-bold text-text-primary mb-6 text-center">Ước tính thu nhập</h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center p-4 bg-sidebar-surface rounded-xl">
+                                    <span class="text-text-secondary">10 đơn/ngày:</span>
+                                    <span class="font-bold text-green-600">300.000đ</span>
+                                </div>
+                                <div class="flex justify-between items-center p-4 bg-sidebar-surface rounded-xl">
+                                    <span class="text-text_secondary">15 đơn/ngày:</span>
+                                     <span class="font-bold text-green-600">450.000đ</span>
+                                </div>
+                                <div class="flex justify-between items-center p-4 bg-sidebar-surface rounded-xl">
+                                    <span class="text-text-secondary">20 đơn/ngày:</span>
+                                    <span class="font-bold text-green-600">600.000đ</span>
+                                </div>
+                                <div class="flex justify-between items-center p-4 bg-primary/10 rounded-xl border-2 border-primary">
+                                    <span class="text-primary font-semibold">Thu nhập/tháng:</span>
+                                    <span class="font-black text-primary text-xl">9 - 18 triệu</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-text-secondary text-center mt-4">*Ước tính dựa trên 30 ngày làm việc</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 hero-gradient">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <h2 class="text-4xl md:text-5xl font-black text-white mb-6">
+                Sẵn Sàng Bắt Đầu?
+            </h2>
+            <p class="text-xl text-white/90 mb-8">
+                Đăng nhập ngay để bắt đầu nhận đơn hàng và kiếm thu nhập
+            </p>
+            <a href="@Url.Action("Login", "ShipperApp")" class="inline-flex items-center gap-3 px-10 py-5 bg-white text-primary rounded-full font-bold text-xl hover:shadow-2xl transition-all">
+                <span class="material-symbols-outlined text-2xl">login</span>
+                Đăng nhập ngay
+                <span class="material-symbols-outlined">arrow_forward</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-text-primary text-white py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-12 w-12 rounded-full hero-gradient flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-2xl">two_wheeler</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-black">SHIPPER APP</h3>
+                            <p class="text-xs text-white/70">Nhà Hàng LDP</p>
+                        </div>
+                    </div>
+                    <p class="text-white/70 text-sm">
+                        Ứng dụng giao hàng chuyên nghiệp dành cho đội ngũ shipper.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Liên kết nhanh</h4>
+                    <ul class="space-y-2 text-white/70 text-sm">
+                        <li><a href="#features" class="hover:text-white transition-colors">Tính năng</a></li>
+                        <li><a href="#how-it-works" class="hover:text-white transition-colors">Cách thức</a></li>
+                        <li><a href="#benefits" class="hover:text-white transition-colors">Quyền lợi</a></li>
+                        <li><a href="@Url.Action("Login", "ShipperApp")" class="hover:text-white transition-colors">Đăng nhập</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Hỗ trợ</h4>
+                    <ul class="space-y-2 text-white/70 text-sm">
+                        <li><a href="#" class="hover:text-white transition-colors">Hướng dẫn sử dụng</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Câu hỏi thường gặp</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Liên hệ hỗ trợ</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Điều khoản dịch vụ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Liên hệ</h4>
+                    <ul class="space-y-2 text-white/70 text-sm">
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-lg">call</span>
+                            Hotline: 1900 1234
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-lg">mail</span>
+                            shipper@nhahangldp.vn
+                        </li>
+                    </ul>
+                    <div class="flex gap-4 mt-4">
+                        <a href="#" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-primary transition-colors">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-white/70 text-sm">
+                <p>© 2024 Nhà Hàng LDP. All rights reserved.</p>
+                <a href="@Url.Action("Index", "Home")" class="flex items-center gap-2 mt-4 md:mt-0 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">restaurant</span>
+                    Về trang chủ Nhà Hàng
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0) translateX(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.animate-fadeInUp, .animate-slideInLeft, .animate-slideInRight').forEach(el => {
+            el.style.opacity = '0';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>

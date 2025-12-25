@@ -1,0 +1,191 @@
+﻿@model List<NhaHangLDP.Models.ShipperOrderViewModel>
+@{
+    ViewBag.Title = "Lịch sử giao hàng";
+    Layout = null;
+    var fromDate = ViewBag.FromDate as DateTime?;
+    var toDate = ViewBag.ToDate as DateTime?;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#667eea" />
+    <title>@ViewBag.Title - Shipper App</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                }
+            }
+        }
+    </script>
+    <style>
+        .hero-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+</head>
+<body class="bg-sidebar-surface font-display text-text-primary min-h-screen pb-24">
+
+    <!-- Header -->
+    <header class="bg-white sticky top-0 z-50 border-b border-border-light shadow-sm">
+        <div class="px-4 py-4 flex items-center gap-4">
+            <a href="@Url.Action("Dashboard")" class="w-12 h-12 rounded-full bg-sidebar-surface flex items-center justify-center hover:bg-border-light transition-colors">
+                <span class="material-symbols-outlined text-text-secondary">arrow_back</span>
+            </a>
+            <div class="flex-1">
+                <h1 class="text-xl font-bold text-text-primary">Lịch sử giao hàng</h1>
+                <p class="text-sm text-text-secondary">Tất cả đơn hàng đã xử lý</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter -->
+    <section class="px-4 py-4 bg-white border-b border-border-light">
+        <form method="get" class="flex gap-3 items-center">
+            <div class="flex-1 relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">calendar_today</span>
+                <input type="date" name="fromDate" value="@(fromDate?.ToString("yyyy-MM-dd"))" 
+                       class="w-full pl-12 pr-4 py-3 rounded-full border-2 border-border-light focus:border-primary focus:outline-none text-sm" />
+            </div>
+            <span class="text-text-secondary font-bold">→</span>
+            <div class="flex-1 relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">calendar_today</span>
+                <input type="date" name="toDate" value="@(toDate?.ToString("yyyy-MM-dd"))" 
+                       class="w-full pl-12 pr-4 py-3 rounded-full border-2 border-border-light focus:border-primary focus:outline-none text-sm" />
+            </div>
+            <button type="submit" class="w-12 h-12 hero-gradient text-white rounded-full flex items-center justify-center shadow-lg">
+                <span class="material-symbols-outlined">filter_alt</span>
+            </button>
+        </form>
+    </section>
+
+    <!-- Summary -->
+    <section class="px-4 py-4">
+        <div class="hero-gradient rounded-[2rem] p-6 text-white shadow-lg">
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-2xl font-black">@Model.Count</span>
+                    </div>
+                    <p class="text-sm text-white/80">Tổng đơn</p>
+                </div>
+                <div>
+                    <div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-2xl font-black">@Model.Count(o => o.Status == "Delivered")</span>
+                    </div>
+                    <p class="text-sm text-white/80">Hoàn thành</p>
+                </div>
+                <div>
+                    <div class="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-lg font-black">@Model.Where(o => o.Status == "Delivered").Sum(o => o.ShipperEarning).ToString("N0")đ</span>
+                    </div>
+                    <p class="text-sm text-white/80">Thu nhập</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Orders List -->
+    <section class="px-4 space-y-3">
+        @if (Model.Any())
+        {
+            foreach (var order in Model)
+            {
+                var statusClass = order.Status == "Delivered" ? "bg-green-100 text-green-700" : 
+                                 (order.Status == "Failed" ? "bg-red-100 text-red-700" : 
+                                 (order.Status == "Cancelled" || order.Status == "Rejected" ? "bg-gray-100 text-gray-600" : "bg-blue-100 text-blue-700"));
+                var statusText = order.Status == "Delivered" ? "Hoàn thành" : 
+                                (order.Status == "Failed" ? "Thất bại" : 
+                                (order.Status == "Cancelled" ? "Đã hủy" : 
+                                (order.Status == "Rejected" ? "Đã từ chối" : order.Status)));
+                
+                <div class="bg-white rounded-[1.5rem] shadow-md p-5 border border-border-light">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="font-bold text-primary text-lg">#@order.OrderCode</span>
+                            <p class="text-sm text-text-secondary">@order.AssignedTime.ToString("HH:mm dd/MM/yyyy")</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold @statusClass">@statusText</span>
+                    </div>
+                    <div class="flex items-start gap-3 mb-4 p-3 bg-sidebar-surface rounded-[1rem]">
+                        <span class="material-symbols-outlined text-text-secondary">location_on</span>
+                        <span class="text-sm text-text-primary">@order.DeliveryAddress</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-3 border-t border-border-light">
+                        <span class="font-bold text-lg">@order.TotalAmount.ToString("N0")đ</span>
+                        @if (order.Status == "Delivered")
+                        {
+                            <div class="flex items-center gap-3">
+                                @if (order.CustomerRating.HasValue)
+                                {
+                                    <div class="flex items-center gap-1 text-yellow-500">
+                                        <span class="material-symbols-outlined text-lg">star</span>
+                                        <span class="font-bold">@order.CustomerRating</span>
+                                    </div>
+                                }
+                                <span class="font-bold text-green-600">+@order.ShipperEarning.ToString("N0")đ</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="bg-white rounded-[2rem] shadow-lg p-10 text-center border border-border-light">
+                <div class="w-24 h-24 bg-sidebar-surface rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="material-symbols-outlined text-text-secondary text-5xl">history</span>
+                </div>
+                <h3 class="text-2xl font-bold text-text-primary mb-3">Chưa có lịch sử</h3>
+                <p class="text-text-secondary">Lịch sử giao hàng của bạn sẽ hiển thị ở đây</p>
+            </div>
+        }
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light safe-bottom z-50 shadow-lg">
+        <div class="flex justify-around py-3">
+            <a href="@Url.Action("Dashboard")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">home</span>
+                <span class="text-xs">Trang chủ</span>
+            </a>
+            <a href="@Url.Action("NewOrders")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">list_alt</span>
+                <span class="text-xs">Đơn mới</span>
+            </a>
+            <a href="@Url.Action("History")" class="flex flex-col items-center py-2 px-4 text-primary">
+                <span class="material-symbols-outlined text-2xl">history</span>
+                <span class="text-xs font-bold">Lịch sử</span>
+            </a>
+            <a href="@Url.Action("Earnings")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">payments</span>
+                <span class="text-xs">Thu nhập</span>
+            </a>
+            <a href="@Url.Action("Profile")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">person</span>
+                <span class="text-xs">Cá nhân</span>
+            </a>
+        </div>
+    </nav>
+</body>
+</html>

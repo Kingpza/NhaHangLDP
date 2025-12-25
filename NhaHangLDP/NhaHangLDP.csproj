@@ -150,6 +150,7 @@
     <Compile Include="Controllers\ReservationController.cs" />
     <Compile Include="Controllers\ReturnManagementController.cs" />
     <Compile Include="Controllers\SettingsController.cs" />
+    <Compile Include="Controllers\ShipperAppController.cs" />
     <Compile Include="Filters\CustomAuthorizeAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -347,6 +348,7 @@
     <Compile Include="Models\Shipper.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\ShipperViewModels.cs" />
     <Compile Include="Models\StockInbound.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -652,6 +654,14 @@
     <Content Include="Views\Delivery\Tracking.cshtml" />
     <Content Include="Views\Delivery\Zones.cshtml" />
     <Content Include="Views\Delivery\Statistics.cshtml" />
+    <Content Include="Views\ShipperApp\Login.cshtml" />
+    <Content Include="Views\ShipperApp\Dashboard.cshtml" />
+    <Content Include="Views\ShipperApp\NewOrders.cshtml" />
+    <Content Include="Views\ShipperApp\History.cshtml" />
+    <Content Include="Views\ShipperApp\Earnings.cshtml" />
+    <Content Include="Views\ShipperApp\Profile.cshtml" />
+    <Content Include="Views\ShipperApp\OrderDetail.cshtml" />
+    <Content Include="Views\ShipperApp\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

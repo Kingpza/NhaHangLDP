@@ -1,0 +1,401 @@
+﻿@model NhaHangLDP.Models.ShipperDashboardViewModel
+@{
+    ViewBag.Title = "Dashboard";
+    Layout = null;
+    
+    var statusClass = Model.Shipper.Status == "Available" ? "bg-green-500" : (Model.Shipper.Status == "Busy" ? "bg-yellow-500" : "bg-gray-400");
+    var statusText = Model.Shipper.Status == "Available" ? "Đang nhận đơn" : (Model.Shipper.Status == "Busy" ? "Đang giao hàng" : "Offline");
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#667eea" />
+    <title>@ViewBag.Title - Shipper App</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                }
+            }
+        }
+    </script>
+    <style>
+        .hero-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-4px); }
+        .order-card { transition: all 0.2s ease; }
+        .order-card:active { transform: scale(0.99); }
+        .pulse-dot { animation: pulse-dot 2s infinite; }
+        @@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+</head>
+<body class="bg-sidebar-surface font-display text-text-primary min-h-screen pb-24">
+
+    <!-- Header -->
+    <header class="hero-gradient text-white sticky top-0 z-50 shadow-lg">
+        <div class="px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-14 h-14 bg-white/20 rounded-[1rem] flex items-center justify-center text-2xl font-bold backdrop-blur-sm">
+                        @Model.Shipper.FullName.Substring(0, 1).ToUpper()
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg">@Model.Shipper.FullName</h1>
+                        <div class="flex items-center gap-2 text-sm text-white/80">
+                            <span class="w-2 h-2 rounded-full @statusClass @(Model.Shipper.Status == "Available" ? "pulse-dot" : "")"></span>
+                            @statusText
+                        </div>
+                    </div>
+                </div>
+                <button onclick="toggleStatus()" class="px-5 py-2 rounded-full text-sm font-bold transition-all @(Model.Shipper.Status == "Available" ? "bg-white/20 text-white hover:bg-white/30" : "bg-white text-primary hover:shadow-lg")">
+                    @(Model.Shipper.Status == "Available" ? "Tắt nhận đơn" : "Bật nhận đơn")
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Cards -->
+    <section class="px-4 py-6 -mt-2">
+        <div class="grid grid-cols-3 gap-4">
+            <div class="stat-card bg-white rounded-[1.5rem] p-5 text-center shadow-lg border border-border-light">
+                <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span class="material-symbols-outlined text-primary text-2xl">receipt_long</span>
+                </div>
+                <h3 class="text-3xl font-black text-primary">@Model.TodayOrderCount</h3>
+                <p class="text-xs text-text-secondary font-semibold">Đơn hôm nay</p>
+            </div>
+            <div class="stat-card bg-white rounded-[1.5rem] p-5 text-center shadow-lg border border-border-light">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span class="material-symbols-outlined text-green-600 text-2xl">check_circle</span>
+                </div>
+                <h3 class="text-3xl font-black text-green-600">@Model.TodayCompletedCount</h3>
+                <p class="text-xs text-text-secondary font-semibold">Hoàn thành</p>
+            </div>
+            <div class="stat-card bg-white rounded-[1.5rem] p-5 text-center shadow-lg border border-border-light">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span class="material-symbols-outlined text-blue-600 text-2xl">payments</span>
+                </div>
+                <h3 class="text-2xl font-black text-blue-600">@Model.TodayEarnings.ToString("N0")đ</h3>
+                <p class="text-xs text-text-secondary font-semibold">Thu nhập</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Active Order -->
+    @if (Model.ActiveOrder != null)
+    {
+        <section class="px-4 py-2">
+            <h2 class="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">local_shipping</span>
+                Đơn hàng đang xử lý
+            </h2>
+            <div class="order-card bg-white rounded-[2rem] shadow-xl overflow-hidden border-2 border-primary">
+                <!-- Order Header -->
+                <div class="hero-gradient p-5 flex justify-between items-center text-white">
+                    <div>
+                        <span class="font-black text-xl">#@Model.ActiveOrder.OrderCode</span>
+                        <p class="text-sm text-white/80">@Model.ActiveOrder.AssignedTime.ToString("HH:mm dd/MM")</p>
+                    </div>
+                    <span class="px-4 py-1 rounded-full text-sm font-bold bg-white/20 backdrop-blur-sm">
+                        @GetStatusText(Model.ActiveOrder.Status)
+                    </span>
+                </div>
+                
+                <!-- Customer Info -->
+                <div class="p-5 space-y-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary">person</span>
+                        </div>
+                        <div class="flex-1">
+                            <span class="font-bold text-lg">@Model.ActiveOrder.CustomerName</span>
+                            <p class="text-text-secondary text-sm">@Model.ActiveOrder.CustomerPhone</p>
+                        </div>
+                        <a href="tel:@Model.ActiveOrder.CustomerPhone" class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all">
+                            <span class="material-symbols-outlined">call</span>
+                        </a>
+                    </div>
+                    
+                    <div class="flex items-start gap-4 p-4 bg-red-50 rounded-[1rem] border border-red-100">
+                        <span class="material-symbols-outlined text-red-500">location_on</span>
+                        <div>
+                            <p class="font-semibold text-text-primary">@Model.ActiveOrder.DeliveryAddress</p>
+                            <p class="text-sm text-text-secondary">@Model.ActiveOrder.Ward, @Model.ActiveOrder.District</p>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.ActiveOrder.Note))
+                    {
+                        <div class="flex items-start gap-4 p-4 bg-yellow-50 rounded-[1rem] border border-yellow-200">
+                            <span class="material-symbols-outlined text-yellow-600">sticky_note_2</span>
+                            <span class="text-yellow-800">@Model.ActiveOrder.Note</span>
+                        </div>
+                    }
+                </div>
+
+                <!-- Order Summary -->
+                <div class="bg-sidebar-surface p-5 border-t border-border-light">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <span class="text-text-secondary text-sm">Tổng tiền thu:</span>
+                            <span class="font-black text-2xl text-primary ml-2">@Model.ActiveOrder.TotalAmount.ToString("N0")đ</span>
+                        </div>
+                        <span class="px-4 py-2 rounded-full text-sm font-bold @(Model.ActiveOrder.PaymentStatus == "Paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700")">
+                            @(Model.ActiveOrder.PaymentMethod == "COD" ? "Thu tiền mặt" : "Đã thanh toán")
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="p-5 flex gap-3 border-t border-border-light">
+                    @if (Model.ActiveOrder.Status == "Assigned")
+                    {
+                        <button onclick="acceptOrder(@Model.ActiveOrder.AssignmentId)" class="flex-1 py-4 hero-gradient text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            Nhận đơn
+                        </button>
+                        <button onclick="rejectOrder(@Model.ActiveOrder.AssignmentId)" class="py-4 px-5 bg-red-100 text-red-600 rounded-full font-bold hover:bg-red-200 transition-all">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    }
+                    else if (Model.ActiveOrder.Status == "Accepted")
+                    {
+                        <a href="@Url.Action("Navigate", new { assignmentId = Model.ActiveOrder.AssignmentId })" class="py-4 px-5 bg-blue-500 text-white rounded-full font-bold flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
+                            <span class="material-symbols-outlined">navigation</span>
+                            Chỉ đường
+                        </a>
+                        <button onclick="pickupOrder(@Model.ActiveOrder.AssignmentId)" class="flex-1 py-4 hero-gradient text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all">
+                            <span class="material-symbols-outlined">inventory</span>
+                            Đã lấy hàng
+                        </button>
+                    }
+                    else if (Model.ActiveOrder.Status == "PickedUp" || Model.ActiveOrder.Status == "Delivering")
+                    {
+                        <a href="@Url.Action("Navigate", new { assignmentId = Model.ActiveOrder.AssignmentId })" class="py-4 px-5 bg-blue-500 text-white rounded-full font-bold flex items-center gap-2">
+                            <span class="material-symbols-outlined">navigation</span>
+                        </a>
+                        <a href="@Url.Action("CallCustomer", new { assignmentId = Model.ActiveOrder.AssignmentId })" class="py-4 px-5 bg-green-500 text-white rounded-full font-bold flex items-center gap-2">
+                            <span class="material-symbols-outlined">call</span>
+                        </a>
+                        <button onclick="completeDelivery(@Model.ActiveOrder.AssignmentId)" class="flex-1 py-4 hero-gradient text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            Hoàn thành
+                        </button>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+    else
+    {
+        <!-- No Active Order -->
+        <section class="px-4 py-8">
+            <div class="bg-white rounded-[2rem] shadow-lg p-10 text-center border border-border-light">
+                <div class="w-24 h-24 bg-sidebar-surface rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="material-symbols-outlined text-text-secondary text-5xl">inbox</span>
+                </div>
+                <h3 class="text-2xl font-bold text-text-primary mb-3">Không có đơn hàng</h3>
+                <p class="text-text-secondary mb-6">
+                    @if (Model.Shipper.Status == "Available")
+                    {
+                        <span>Đang chờ đơn hàng mới...</span>
+                    }
+                    else
+                    {
+                        <span>Bật nhận đơn để bắt đầu nhận đơn hàng</span>
+                    }
+                </p>
+                @if (Model.Shipper.Status != "Available")
+                {
+                    <button onclick="toggleStatus()" class="px-8 py-4 hero-gradient text-white rounded-full font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 mx-auto">
+                        <span class="material-symbols-outlined">power_settings_new</span>
+                        Bật nhận đơn
+                    </button>
+                }
+            </div>
+        </section>
+    }
+
+    <!-- Quick Stats -->
+    <section class="px-4 py-4">
+        <div class="bg-white rounded-[2rem] shadow-lg p-6 border border-border-light">
+            <h3 class="font-bold text-text-primary mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-yellow-500">star</span>
+                Thống kê của bạn
+            </h3>
+            <div class="grid grid-cols-3 gap-6 text-center">
+                <div>
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-2xl font-black text-yellow-500">@Model.Shipper.Rating.ToString("F1")</span>
+                    </div>
+                    <p class="text-sm text-text-secondary font-semibold">Đánh giá</p>
+                </div>
+                <div>
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-2xl font-black text-primary">@Model.Shipper.TotalDeliveries</span>
+                    </div>
+                    <p class="text-sm text-text.secondary font-semibold">Tổng đơn</p>
+                </div>
+                <div>
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <span class="text-lg font-black text-green-600">@(Model.Shipper.TotalEarnings > 1000000 ? (Model.Shipper.TotalEarnings / 1000000).ToString("F1") + "M" : Model.Shipper.TotalEarnings.ToString("N0"))</span>
+                    </div>
+                    <p class="text-sm text-text-secondary font-semibold">Thu nhập</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light safe-bottom z-50 shadow-lg">
+        <div class="flex justify-around py-3">
+            <a href="@Url.Action("Dashboard")" class="flex flex-col items-center py-2 px-4 text-primary">
+                <span class="material-symbols-outlined text-2xl">home</span>
+                <span class="text-xs font-bold">Trang chủ</span>
+            </a>
+            <a href="@Url.Action("NewOrders")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">list_alt</span>
+                <span class="text-xs">Đơn mới</span>
+            </a>
+            <a href="@Url.Action("History")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">history</span>
+                <span class="text-xs">Lịch sử</span>
+            </a>
+            <a href="@Url.Action("Earnings")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">payments</span>
+                <span class="text-xs">Thu nhập</span>
+            </a>
+            <a href="@Url.Action("Profile")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">person</span>
+                <span class="text-xs">Cá nhân</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        function toggleStatus() {
+            fetch('@Url.Action("ToggleStatus")', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                });
+        }
+
+        function acceptOrder(assignmentId) {
+            if (!confirm('Nhận đơn hàng này?')) return;
+            fetch('@Url.Action("AcceptOrder")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'assignmentId=' + assignmentId
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            });
+        }
+
+        function rejectOrder(assignmentId) {
+            var reason = prompt('Lý do từ chối đơn:');
+            if (!reason) return;
+            fetch('@Url.Action("RejectOrder")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'assignmentId=' + assignmentId + '&reason=' + encodeURIComponent(reason)
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            });
+        }
+
+        function pickupOrder(assignmentId) {
+            if (!confirm('Xác nhận đã lấy hàng?')) return;
+            fetch('@Url.Action("PickupOrder")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'assignmentId=' + assignmentId
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            });
+        }
+
+        function completeDelivery(assignmentId) {
+            if (!confirm('Xác nhận đã giao hàng thành công?')) return;
+            fetch('@Url.Action("CompleteDelivery")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'assignmentId=' + assignmentId
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            });
+        }
+
+        // Request location permission and update
+        if ('geolocation' in navigator) {
+            setInterval(function() {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    fetch('@Url.Action("UpdateLocation")', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: 'latitude=' + pos.coords.latitude + '&longitude=' + pos.coords.longitude
+                    });
+                });
+            }, 30000);
+        }
+
+        // Refresh page every 30 seconds to check for new orders
+        setTimeout(function() { location.reload(); }, 30000);
+    </script>
+</body>
+</html>
+
+@functions {
+    string GetStatusText(string status)
+    {
+        switch (status)
+        {
+            case "Assigned": return "Chờ nhận";
+            case "Accepted": return "Đã nhận";
+            case "PickedUp": return "Đã lấy hàng";
+            case "Delivering": return "Đang giao";
+            case "Delivered": return "Hoàn thành";
+            default: return status;
+        }
+    }
+}
