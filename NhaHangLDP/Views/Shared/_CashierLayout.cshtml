@@ -24,6 +24,7 @@
             --light: #f8fafc;
             --border: #e2e8f0;
             --sidebar-width: 260px;
+            --sidebar-collapsed-width: 80px;
             --header-height: 64px;
         }
 
@@ -51,7 +52,63 @@
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Collapsed Sidebar Styles */
+        .pos-sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .pos-sidebar.collapsed .sidebar-logo-text,
+        .pos-sidebar.collapsed .sidebar-nav-item span,
+        .pos-sidebar.collapsed .nav-section-title,
+        .pos-sidebar.collapsed .sidebar-user-info,
+        .pos-sidebar.collapsed .sidebar-user-status,
+        .pos-sidebar.collapsed .nav-badge,
+        .pos-sidebar.collapsed .btn-logout span {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .pos-sidebar.collapsed .sidebar-logo {
+            padding: 24px 16px;
+            justify-content: center;
+        }
+
+        .pos-sidebar.collapsed .sidebar-nav-item {
+            padding: 12px;
+            justify-content: center;
+        }
+
+        .pos-sidebar.collapsed .sidebar-nav-item i {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .pos-sidebar.collapsed .sidebar-user {
+            padding: 12px;
+            justify-content: center;
+        }
+
+        .pos-sidebar.collapsed .btn-logout {
+            padding: 12px;
+            justify-content: center;
+        }
+
+        .pos-sidebar.collapsed .btn-logout i {
+            margin: 0;
+        }
+
+        .pos-sidebar.collapsed .sidebar-toggle-btn {
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .pos-sidebar.collapsed .sidebar-toggle-btn i {
+            transform: rotate(180deg);
         }
 
         .sidebar-logo {
@@ -60,11 +117,13 @@
             align-items: center;
             gap: 12px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: relative;
         }
 
         .sidebar-logo-icon {
             width: 44px;
             height: 44px;
+            min-width: 44px;
             background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
             border-radius: 12px;
             display: flex;
@@ -76,6 +135,8 @@
 
         .sidebar-logo-text {
             color: white;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
         .sidebar-logo-text h1 {
@@ -91,6 +152,36 @@
             letter-spacing: 1px;
         }
 
+        /* Toggle Button */
+        .sidebar-toggle-btn {
+            position: absolute;
+            right: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            border: 2px solid #1e293b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            color: white;
+            font-size: 10px;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .sidebar-toggle-btn i {
+            transition: transform 0.3s ease;
+        }
+
         .sidebar-nav {
             flex: 1;
             padding: 16px 12px;
@@ -104,6 +195,8 @@
             color: rgba(255,255,255,0.4);
             padding: 16px 12px 8px;
             font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
         .sidebar-nav-item {
@@ -132,6 +225,7 @@
 
         .sidebar-nav-item i {
             width: 20px;
+            min-width: 20px;
             text-align: center;
             font-size: 16px;
         }
@@ -139,6 +233,8 @@
         .sidebar-nav-item span {
             font-size: 14px;
             font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
         .nav-badge {
@@ -150,6 +246,16 @@
             padding: 2px 8px;
             border-radius: 10px;
             font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .pos-sidebar.collapsed .nav-badge {
+            right: auto;
+            top: 4px;
+            left: 50%;
+            transform: translateX(50%);
+            padding: 2px 6px;
+            font-size: 10px;
         }
 
         .sidebar-footer {
@@ -165,11 +271,13 @@
             background: rgba(255,255,255,0.05);
             border-radius: 12px;
             margin-bottom: 12px;
+            transition: all 0.3s ease;
         }
 
         .sidebar-user-avatar {
             width: 40px;
             height: 40px;
+            min-width: 40px;
             background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
             border-radius: 10px;
             display: flex;
@@ -178,6 +286,11 @@
             color: white;
             font-weight: 700;
             font-size: 16px;
+        }
+
+        .sidebar-user-info {
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
         .sidebar-user-info h4 {
@@ -199,6 +312,7 @@
             border-radius: 50%;
             margin-left: auto;
             box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+            transition: all 0.3s ease;
         }
 
         .btn-logout {
@@ -224,12 +338,21 @@
             border-color: var(--danger);
         }
 
+        .btn-logout span {
+            transition: all 0.3s ease;
+        }
+
         /* Main Content */
         .pos-main {
             margin-left: var(--sidebar-width);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.sidebar-collapsed .pos-main {
+            margin-left: var(--sidebar-collapsed-width);
         }
 
         /* Header */
@@ -533,24 +656,39 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-top: auto;
+            flex-shrink: 0;
         }
 
-        .footer-stat {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            color: var(--secondary);
+        /* Sidebar Overlay for Mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        .footer-stat i {
-            font-size: 16px;
+        .sidebar-overlay.show {
+            display: block;
+            opacity: 1;
         }
 
-        .footer-stat.primary i { color: var(--primary); }
-        .footer-stat.success i { color: var(--success); }
-        .footer-stat.warning i { color: var(--warning); }
-        .footer-stat.info i { color: var(--info); }
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--dark);
+            cursor: pointer;
+            padding: 8px;
+        }
 
         /* SweetAlert2 Custom */
         .swal2-popup {
@@ -568,6 +706,37 @@
             font-weight: 600 !important;
         }
 
+        /* Tooltip for collapsed sidebar */
+        .sidebar-nav-item[data-tooltip] {
+            position: relative;
+        }
+
+        .pos-sidebar.collapsed .sidebar-nav-item:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: calc(100% + 15px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            white-space: nowrap;
+            z-index: 1002;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .pos-sidebar.collapsed .sidebar-nav-item:hover::before {
+            content: '';
+            position: absolute;
+            left: calc(100% + 8px);
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: #1e293b;
+        }
+
         /* Responsive */
         @@media (max-width: 1024px) {
             .pos-sidebar {
@@ -578,22 +747,61 @@
                 transform: translateX(0);
             }
 
+            .pos-sidebar.collapsed {
+                transform: translateX(-100%);
+            }
+
             .pos-main {
                 margin-left: 0;
             }
 
-            .sidebar-toggle {
-                display: block !important;
+            body.sidebar-collapsed .pos-main {
+                margin-left: 0;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .sidebar-toggle-btn {
+                display: none;
+            }
+
+            .sidebar-overlay.show {
+                display: block;
+            }
+
+            .shift-info-left {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .shift-actions {
+                flex-wrap: wrap;
             }
         }
 
-        .sidebar-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 24px;
-            color: var(--dark);
-            cursor: pointer;
+        @@media (max-width: 768px) {
+            .footer-stat {
+                display: none;
+            }
+
+            .footer-stat:last-child {
+                display: flex;
+            }
+
+            .pos-content {
+                padding: 16px;
+            }
+        }
+        /* Fix footer margin issue */
+        .pos-footer {
+            margin-top: 0 !important;
+        }
+
+        /* Ensure proper content spacing */
+        .pos-main > *:not(.pos-footer) {
+            flex: 1 1 auto;
         }
     </style>
 </head>
@@ -608,40 +816,55 @@
                 <h1>LDP POS</h1>
                 <span>Restaurant System</span>
             </div>
+            <button class="sidebar-toggle-btn" id="sidebarToggle" onclick="toggleSidebar()" title="Thu gọn/Mở rộng">
+                <i class="fas fa-chevron-left"></i>
+            </button>
         </div>
 
         <nav class="sidebar-nav">
             <div class="nav-section-title">Main Menu</div>
             
-            <a href="@Url.Action("Dashboard", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("POS") == true ? "active" : "")">
+            <a href="@Url.Action("Dashboard", "Cashier")" 
+               class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("POS") == true ? "active" : "")"
+               data-tooltip="Dashboard">
                 <i class="fas fa-home"></i>
                 <span>Dashboard</span>
             </a>
 
-            <a href="@Url.Action("Menu", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Menu") == true ? "active" : "")">
+            <a href="@Url.Action("Menu", "Cashier")" 
+               class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Menu") == true ? "active" : "")"
+               data-tooltip="Bán hàng">
                 <i class="fas fa-cash-register"></i>
                 <span>Bán hàng</span>
             </a>
 
-            <a href="@Url.Action("Orders", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Order") == true ? "active" : "")">
+            <a href="@Url.Action("Orders", "Cashier")" 
+               class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Order") == true ? "active" : "")"
+               data-tooltip="Đơn hàng">
                 <i class="fas fa-clipboard-list"></i>
                 <span>Đơn hàng</span>
             </a>
 
-            <a href="@Url.Action("OnlineOrders", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Online") == true ? "active" : "")">
+            <a href="@Url.Action("OnlineOrders", "Cashier")" 
+               class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Online") == true ? "active" : "")"
+               data-tooltip="Đơn Online">
                 <i class="fas fa-shopping-bag"></i>
                 <span>Đơn Online</span>
                 <span class="nav-badge" id="onlineOrderBadge" style="display:none;">0</span>
             </a>
 
-            <a href="@Url.Action("TableArea", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Table") == true || ViewBag.Title?.ToString().Contains("Bàn") == true ? "active" : "")">
+            <a href="@Url.Action("TableArea", "Cashier")" 
+               class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Table") == true || ViewBag.Title?.ToString().Contains("Bàn") == true ? "active" : "")"
+               data-tooltip="Khu vực bàn">
                 <i class="fas fa-border-all"></i>
                 <span>Khu vực bàn</span>
             </a>
 
             <div class="nav-section-title">Quản lý</div>
 
-            <a href="@Url.Action("ShiftDetails", "Cashier")" class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Chi Tiết Ca") == true ? "active" : "")">
+            <a href="@Url.Action("ShiftDetails", "Cashier")" 
+               class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Chi Tiết Ca") == true ? "active" : "")"
+               data-tooltip="Chi tiết ca">
                 <i class="fas fa-clock"></i>
                 <span>Chi tiết ca</span>
             </a>
@@ -664,7 +887,7 @@
             </div>
             <button class="btn-logout" id="logoutBtn" onclick="confirmLogout()">
                 <i class="fas fa-sign-out-alt"></i>
-                Đăng xuất
+                <span>Đăng xuất</span>
             </button>
         </div>
     </aside>
@@ -708,6 +931,28 @@
         }
         setInterval(updateTime, 1000);
         updateTime();
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('posSidebar');
+            const body = document.body;
+            
+            sidebar.classList.toggle('collapsed');
+            body.classList.toggle('sidebar-collapsed');
+            
+            // Save state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+
+        // Restore sidebar state on page load
+        function restoreSidebarState() {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                document.getElementById('posSidebar').classList.add('collapsed');
+                document.body.classList.add('sidebar-collapsed');
+            }
+        }
 
         // Logout confirmation
         function confirmLogout() {
@@ -829,6 +1074,7 @@
 
         // Init
         document.addEventListener('DOMContentLoaded', function() {
+            restoreSidebarState();
             checkOnlineOrders();
             setInterval(checkOnlineOrders, 30000);
         });

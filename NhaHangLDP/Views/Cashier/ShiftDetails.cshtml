@@ -5,485 +5,543 @@
 }
 
 <style>
-    .shift-details-container {
+    .shift-container {
         padding: 0;
     }
 
+    /* Header */
     .page-header {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
-        padding: 20px;
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
         margin-bottom: 20px;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .shift-info-section {
-        background: rgba(40, 167, 69, 0.1);
-        border: 1px solid #28a745;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-
-    .employees-summary-section {
-        background: rgba(23, 162, 184, 0.1);
-        border: 1px solid #17a2b8;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-
-    .filter-section {
-        background: rgba(248, 249, 250, 0.9);
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .period-tabs {
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
         display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .page-header-info h4 {
+        color: #1e293b;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .page-header-info h4 i { color: #6366f1; }
+    .page-header-info small { color: #64748b; font-size: 0.875rem; }
+
+    /* Info Cards Row */
+    .info-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+    }
+
+    .info-card.shift-info {
+        border-left: 4px solid #22c55e;
+    }
+
+    .info-card.revenue-info {
+        border-left: 4px solid #6366f1;
+    }
+
+    .info-card-header {
+        display: flex;
+        align-items: center;
         gap: 10px;
         margin-bottom: 20px;
-        flex-wrap: wrap;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f1f5f9;
     }
 
-    .period-tab {
-        background: rgba(255, 255, 255, 0.9);
-        border: 2px solid rgba(220, 118, 51, 0.3);
-        color: #6c757d;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
+    .info-card-header i {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .shift-info .info-card-header i {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+
+    .revenue-info .info-card-header i {
+        background: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+
+    .info-card-header h6 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .info-label {
+        font-size: 0.8rem;
+        color: #64748b;
         font-weight: 500;
-        text-decoration: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-        .period-tab.active,
-        .period-tab:hover {
-            background: rgba(220, 118, 51, 0.1);
-            color: #dc7633;
-            border-color: #dc7633;
-            text-decoration: none;
-        }
+    .info-value {
+        font-size: 0.95rem;
+        color: #1e293b;
+        font-weight: 600;
+    }
 
-    .filter-row {
+    .badge-staff {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f1f5f9;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+
+    .badge-staff.primary {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+    }
+
+    .badge-status {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .badge-status.active {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+    }
+
+    .badge-status.closed {
+        background: rgba(100, 116, 139, 0.1);
+        color: #64748b;
+    }
+
+    /* Summary Cards */
+    .summary-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-bottom: 15px;
-    }
-
-    .form-control {
-        background: rgba(255, 255, 255, 0.9);
-        border: 2px solid rgba(220, 118, 51, 0.3);
-        color: #495057;
-        border-radius: 8px;
-        padding: 10px 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-        .form-control:focus {
-            background: rgba(255, 255, 255, 1);
-            border-color: #dc7633;
-            color: #495057;
-            box-shadow: 0 0 0 0.2rem rgba(220, 118, 51, 0.25);
-        }
-
-        .form-control::placeholder {
-            color: rgba(108, 117, 125, 0.7);
-        }
-
-    .btn-filter {
-        background: linear-gradient(135deg, #dc7633, #e67e22);
-        border: none;
-        color: #fff;
-        font-weight: bold;
-        padding: 10px 20px;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-        .btn-filter:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(220, 118, 51, 0.4);
-            color: #fff;
-        }
-
-    .summary-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
         margin-bottom: 20px;
     }
 
     .summary-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 10px;
-        padding: 15px;
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
         text-align: center;
-        backdrop-filter: blur(10px);
-        transition: transform 0.3s ease;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        position: relative;
+        overflow: hidden;
     }
 
-        .summary-card:hover {
-            transform: translateY(-2px);
-        }
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+    }
+
+    .summary-card.orders::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+    .summary-card.revenue::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .summary-card.avg::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+    .summary-card.completed::before { background: linear-gradient(90deg, #0ea5e9, #0284c7); }
 
     .summary-value {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #dc7633;
-        margin-bottom: 5px;
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin-bottom: 4px;
     }
+
+    .summary-card.orders .summary-value { color: #6366f1; }
+    .summary-card.revenue .summary-value { color: #22c55e; }
+    .summary-card.avg .summary-value { color: #f59e0b; }
+    .summary-card.completed .summary-value { color: #0ea5e9; }
 
     .summary-label {
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-
-    .employees-quick-view {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    .employee-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(0,0,0,0.1);
-    }
-
-        .employee-item:last-child {
-            border-bottom: none;
-        }
-
-    .employee-name {
+        font-size: 0.875rem;
+        color: #64748b;
         font-weight: 500;
-        color: #495057;
     }
 
-    .employee-role {
-        font-size: 0.8rem;
-        padding: 2px 6px;
+    /* Filter Section */
+    .filter-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: 10px 20px;
+        border-radius: 25px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        font-size: 0.875rem;
+    }
+
+    .filter-tab:hover { border-color: #6366f1; color: #6366f1; }
+
+    .filter-tab.active {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border-color: #6366f1;
+        color: white;
+    }
+
+    .filter-inputs {
+        display: none;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .filter-inputs.show { display: grid; }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 8px;
+        font-size: 0.875rem;
+    }
+
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
         border-radius: 10px;
-        background: rgba(23, 162, 184, 0.2);
-        color: #17a2b8;
+        font-size: 0.875rem;
+        color: #1e293b;
+        background: white;
     }
 
-    .employee-status {
-        font-size: 0.8rem;
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: #6366f1;
     }
 
-    .status-active {
-        color: #28a745;
+    .btn-filter {
+        padding: 12px 24px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
     }
 
-    .status-inactive {
-        color: #6c757d;
+    .btn-filter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
     }
 
-    .orders-table-container {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
-        padding: 20px;
-        backdrop-filter: blur(10px);
-        overflow-x: auto;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.1);
+    /* Orders Table */
+    .orders-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
     }
 
     .orders-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 15px;
     }
 
-        .orders-table th,
-        .orders-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .orders-table th {
-            background: rgba(220, 118, 51, 0.2);
-            color: #dc7633;
-            font-weight: bold;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .orders-table td {
-            color: #495057;
-        }
-
-        .orders-table tr:hover {
-            background: rgba(220, 118, 51, 0.05);
-        }
-
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: 15px;
-        font-size: 0.8rem;
-        font-weight: bold;
+    .orders-table th {
+        background: #f8fafc;
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        color: #475569;
+        font-size: 0.875rem;
+        border-bottom: 2px solid #e2e8f0;
     }
 
-    .status-completed {
-        background: rgba(40, 167, 69, 0.3);
-        color: #28a745;
-    }
-
-    .status-pending {
-        background: rgba(255, 193, 7, 0.3);
-        color: #ffc107;
-    }
-
-    .status-cancelled {
-        background: rgba(220, 53, 69, 0.3);
-        color: #dc3545;
-    }
-
-    .order-actions {
-        display: flex;
-        gap: 5px;
-    }
-
-    .btn-action {
-        padding: 4px 8px;
-        border: none;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .btn-view {
-        background: #17a2b8;
-        color: white;
-    }
-
-        .btn-view:hover {
-            background: #138496;
-        }
-
-    .btn-reprint {
-        background: #28a745;
-        color: white;
-    }
-
-        .btn-reprint:hover {
-            background: #1e7e34;
-        }
-
-    .btn-manage-employees {
-        background: linear-gradient(135deg, #17a2b8, #20c997);
-        border: none;
-        color: #fff;
-        font-weight: bold;
-        padding: 8px 16px;
-        border-radius: 6px;
-        transition: all 0.3s ease;
-        text-decoration: none;
+    .orders-table td {
+        padding: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        color: #1e293b;
         font-size: 0.9rem;
     }
 
-        .btn-manage-employees:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(23, 162, 184, 0.4);
-            color: #fff;
-            text-decoration: none;
-        }
+    .orders-table tr:hover {
+        background: #f8fafc;
+    }
 
-    .pagination-container {
+    .order-id { font-weight: 700; color: #6366f1; }
+    .order-amount { font-weight: 700; color: #22c55e; }
+
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-completed { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .status-pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .status-cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+    .action-btns {
         display: flex;
-        justify-content: center;
-        margin-top: 20px;
+        gap: 8px;
     }
 
-    .pagination {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 8px;
-        padding: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .page-link {
-        background: transparent;
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
         border: none;
-        color: #dc7633;
-        padding: 8px 12px;
-        margin: 0 2px;
-        border-radius: 4px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
     }
 
-        .page-link:hover,
-        .page-link.active {
-            background: #dc7633;
-            color: #fff;
-        }
-
-    .loading {
-        text-align: center;
-        padding: 40px;
-        color: #6c757d;
-    }
+    .btn-icon.view { background: rgba(14, 165, 233, 0.1); color: #0ea5e9; }
+    .btn-icon.print { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .btn-icon:hover { transform: scale(1.1); }
 
     .empty-state {
         text-align: center;
         padding: 60px 20px;
-        color: #6c757d;
+        color: #94a3b8;
     }
 
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
+    .empty-state i { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
 
-    .page-header h4 {
-        color: #dc7633 !important;
+    /* Pagination */
+    .pagination-bar {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        gap: 8px;
     }
 
-    .page-header small {
-        color: #6c757d !important;
+    .page-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
-    .form-label {
-        color: #495057 !important;
-        font-weight: 500;
+    .page-btn:hover, .page-btn.active {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border-color: #6366f1;
+        color: white;
     }
 
-    .shift-info-section h6 {
-        color: #28a745 !important;
+    /* Responsive */
+    @@media (max-width: 1024px) {
+        .info-row { grid-template-columns: 1fr; }
+        .summary-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
-    .shift-info-section .text-dark {
-        color: #495057 !important;
-    }
-
-    .employees-summary-section h6 {
-        color: #17a2b8 !important;
-    }
-
-    .employees-summary-section .text-dark {
-        color: #495057 !important;
-    }
-
-    .badge {
-        font-size: 0.85rem;
-        padding: 0.4em 0.7em;
+    @@media (max-width: 768px) {
+        .summary-grid { grid-template-columns: 1fr; }
+        .orders-table { display: block; overflow-x: auto; }
     }
 </style>
-<div class="shift-details-container">
+
+<div class="shift-container">
     <div class="page-header">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h4 class="text-warning mb-1">
-                    <i class="fas fa-list-alt me-2"></i>Chi Tiết Ca Làm Việc
-                </h4>
-                <small class="text-muted">Xem lịch sử hóa đơn theo ca làm việc và quản lý nhân viên</small>
-            </div>
-            <div class="col-md-4 text-end">
-                <a href="@Url.Action("Dashboard", "Cashier")" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-arrow-left me-1"></i>Quay lại
-                </a>
-            </div>
+        <div class="page-header-info">
+            <h4><i class="fas fa-list-alt"></i>Chi Tiết Ca Làm Việc</h4>
+            <small>Xem lịch sử hóa đơn và thống kê ca làm việc</small>
         </div>
+        <a href="@Url.Action("Dashboard", "Cashier")" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại
+        </a>
     </div>
 
     @if (Model?.ShiftInfo != null)
     {
-        <div class="shift-info-section">
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="text-success mb-3">
-                        <i class="fas fa-user-clock me-2"></i>Thông tin ca làm việc
-                    </h6>
-
-                    <div class="d-flex flex-wrap align-items-center mb-2" style="gap: 5px;">
-                        <strong class="text-dark">Thu ngân:</strong>
-                        <span class="badge bg-primary" data-employee-id="@(Model.ShiftInfo.Employee?.Id ?? 0)">
-                            <i class="fas fa-star me-1"></i>
-                            @(Model.ShiftInfo.Employee?.FullName ?? "N/A")
+        <div class="info-row">
+            <div class="info-card shift-info">
+                <div class="info-card-header">
+                    <i class="fas fa-user-clock"></i>
+                    <h6>Thông tin ca làm việc</h6>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Thu ngân chính</span>
+                        <span class="badge-staff primary">
+                            <i class="fas fa-star"></i>@(Model.ShiftInfo.Employee?.FullName ?? "N/A")
                         </span>
                     </div>
-                    <div class="d-flex flex-wrap align-items-center mb-2" style="gap: 5px;">
-                        <strong class="text-dark">Nhân viên thêm vào ca:</strong>
-                        @if (Model.ShiftInfo.ShiftSupportStaff != null && Model.ShiftInfo.ShiftSupportStaff.Any())
-                        {
-                            foreach (var supportStaff in Model.ShiftInfo.ShiftSupportStaff)
-                            {
-                                <span class="badge bg-secondary" data-employee-id="@supportStaff.Employee.Id">
-                                    <i class="fas fa-user me-1"></i>
-                                    @supportStaff.Employee.FullName
-                                </span>
-                            }
-                        }
-                        else
-                        {
-                            <span class="text-muted small">Không có</span>
-                        }
-                    </div>
-
-                    <p class="text-dark mb-2">
-                        <strong>Bắt đầu:</strong> @Model.ShiftInfo.StartTime.ToString("HH:mm dd/MM/yyyy")
-                    </p>
-                    @if (Model.ShiftInfo.EndTime.HasValue)
-                    {
-                        <p class="text-dark mb-2">
-                            <strong>Kết thúc:</strong> @Model.ShiftInfo.EndTime.Value.ToString("HH:mm dd/MM/yyyy")
-                        </p>
-                    }
-                    <p class="text-dark mb-0">
-                        <strong>Thời gian làm việc:</strong> @Model.WorkingTimeDisplay
-                    </p>
-                </div>
-                <div class="col-md-6">
-                    <h6 class="text-success mb-3">
-                        <i class="fas fa-money-bill-wave me-2"></i>Thống kê ca
-                    </h6>
-                    <p class="text-dark mb-2">
-                        <strong>Tiền mặt đầu ca:</strong> @Model.ShiftInfo.InitialCash.ToString("#,##0") VNĐ
-                    </p>
-                    <p class="text-dark mb-2">
-                        <strong>Tổng doanh thu:</strong> @Model.TotalRevenue.ToString("#,##0") VNĐ
-                    </p>
-                    <p class="text-dark mb-2">
-                        <strong>Tổng đơn hàng:</strong> @Model.TotalOrders
-                    </p>
-                    <p class="text-dark mb-0">
-                        <strong>Trạng thái ca:</strong>
-                        <span class="badge @(Model.ShiftInfo.Status == "Active" ? "bg-success" : "bg-secondary")">
+                    <div class="info-item">
+                        <span class="info-label">Trạng thái</span>
+                        <span class="badge-status @(Model.ShiftInfo.Status == "Active" ? "active" : "closed")">
                             @(Model.ShiftInfo.Status == "Active" ? "Đang hoạt động" : "Đã đóng")
                         </span>
-                    </p>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bắt đầu</span>
+                        <span class="info-value">@Model.ShiftInfo.StartTime.ToString("HH:mm dd/MM/yyyy")</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Thời gian làm việc</span>
+                        <span class="info-value">@Model.WorkingTimeDisplay</span>
+                    </div>
+                    @if (Model.ShiftInfo.ShiftSupportStaff != null && Model.ShiftInfo.ShiftSupportStaff.Any())
+                    {
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <span class="info-label">Nhân viên hỗ trợ</span>
+                            <div>
+                                @foreach (var staff in Model.ShiftInfo.ShiftSupportStaff)
+                                {
+                                    <span class="badge-staff"><i class="fas fa-user"></i>@staff.Employee.FullName</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="info-card revenue-info">
+                <div class="info-card-header">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <h6>Thống kê doanh thu</h6>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Tiền mặt đầu ca</span>
+                        <span class="info-value">@Model.ShiftInfo.InitialCash.ToString("#,##0") VNĐ</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tổng doanh thu</span>
+                        <span class="info-value" style="color: #22c55e;">@Model.TotalRevenue.ToString("#,##0") VNĐ</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tổng đơn hàng</span>
+                        <span class="info-value">@Model.TotalOrders đơn</span>
+                    </div>
+                    @if (Model.ShiftInfo.EndTime.HasValue)
+                    {
+                        <div class="info-item">
+                            <span class="info-label">Kết thúc</span>
+                            <span class="info-value">@Model.ShiftInfo.EndTime.Value.ToString("HH:mm dd/MM/yyyy")</span>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     }
 
-    <div class="filter-section">
+    <div class="summary-grid">
+        <div class="summary-card orders">
+            <div class="summary-value" id="totalOrders">@(Model?.TotalOrders ?? 0)</div>
+            <div class="summary-label">Tổng đơn hàng</div>
+        </div>
+        <div class="summary-card revenue">
+            <div class="summary-value" id="totalRevenue">@(Model?.TotalRevenue.ToString("#,##0") ?? "0")</div>
+            <div class="summary-label">Doanh thu (VNĐ)</div>
+        </div>
+        <div class="summary-card avg">
+            <div class="summary-value" id="avgOrderValue">@(Model?.TotalOrders > 0 ? (Model.TotalRevenue / Model.TotalOrders).ToString("#,##0") : "0")</div>
+            <div class="summary-label">TB/Đơn (VNĐ)</div>
+        </div>
+        <div class="summary-card completed">
+            <div class="summary-value" id="completedOrders">@(Model?.Orders?.Count(o => o.Status == "completed") ?? 0)</div>
+            <div class="summary-label">Hoàn thành</div>
+        </div>
     </div>
 
-    <div class="summary-cards" id="summaryCards">
+    <div class="filter-card">
+        <div class="filter-tabs">
+            <button class="filter-tab active" data-period="today" onclick="selectPeriod('today')">Hôm nay</button>
+            <button class="filter-tab" data-period="month" onclick="selectPeriod('month')">Tháng này</button>
+            <button class="filter-tab" data-period="custom" onclick="selectPeriod('custom')">Tùy chọn</button>
+        </div>
+        <div class="filter-inputs" id="customDateFilter">
+            <div class="form-group">
+                <label>Từ ngày</label>
+                <input type="date" id="fromDate">
+            </div>
+            <div class="form-group">
+                <label>Đến ngày</label>
+                <input type="date" id="toDate">
+            </div>
+            <div class="form-group">
+                <label>Tìm kiếm</label>
+                <input type="text" id="searchInput" placeholder="Mã đơn, bàn...">
+            </div>
+            <button class="btn-filter" onclick="loadShiftData()">
+                <i class="fas fa-search"></i>Lọc
+            </button>
+        </div>
     </div>
 
-    <div class="orders-table-container">
+    <div class="orders-card">
         <div id="ordersTableContainer">
             @if (Model?.Orders != null && Model.Orders.Any())
             {
@@ -492,8 +550,7 @@
                         <tr>
                             <th>Mã đơn</th>
                             <th>Mã hóa đơn</th>
-                            <th>Ngày</th>
-                            <th>Giờ</th>
+                            <th>Ngày giờ</th>
                             <th>Bàn</th>
                             <th>Số món</th>
                             <th>Tổng tiền</th>
@@ -505,31 +562,19 @@
                         @foreach (var order in Model.Orders)
                         {
                             <tr>
-                                <td><strong>@order.OrderId</strong></td>
-                                <td>
-                                    <strong>
-                                        @if (order.BillId.HasValue)
-                                        {
-                                            @order.BillId.Value.ToString()
-                                        }
-                                    </strong>
-                                </td>
-                                <td>@order.Date</td>
-                                <td>@order.Time</td>
+                                <td class="order-id">@order.OrderId</td>
+                                <td><strong>@(order.BillId?.ToString() ?? "-")</strong></td>
+                                <td>@order.Date @order.Time</td>
                                 <td>@order.TableNumber</td>
                                 <td>@order.ItemCount món</td>
-                                <td><strong>@order.TotalAmount.ToString("#,##0") VNĐ</strong></td>
+                                <td class="order-amount">@order.TotalAmount.ToString("#,##0") VNđ</td>
+                                <td><span class="status-badge status-@order.Status">@order.StatusDisplay</span></td>
                                 <td>
-                                    <span class="status-badge status-@order.Status">
-                                        @order.StatusDisplay
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="order-actions">
-                                        <button class="btn-action btn-view" onclick="viewOrderDetailFromModel(@order.Id)" title="Xem chi tiết">
+                                    <div class="action-btns">
+                                        <button class="btn-icon view" onclick="viewOrderDetail(@order.Id)" title="Xem chi tiết">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <button class="btn-action btn-reprint" onclick="reprintOrder('@order.OrderId')" title="In lại hóa đơn">
+                                        <button class="btn-icon print" onclick="reprintOrder('@order.OrderId')" title="In hóa đơn">
                                             <i class="fas fa-print"></i>
                                         </button>
                                     </div>
@@ -548,14 +593,29 @@
                 </div>
             }
         </div>
-
-        <div class="pagination-container" id="paginationContainer" style="display: none;">
-            <div class="pagination" id="pagination"></div>
+        <div class="pagination-bar" id="paginationContainer" style="display: none;">
+            <div id="pagination"></div>
         </div>
     </div>
 </div>
 
+<!-- Order Detail Modal -->
 <div class="modal fade" id="orderDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-file-invoice me-2"></i>Chi tiết đơn hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-success" onclick="reprintInvoice()">
+                    <i class="fas fa-print me-1"></i>In hóa đơn
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section scripts {
@@ -566,83 +626,38 @@
         <text>
         ordersFromModel = [
         @foreach (var order in Model.Orders)
-            {
-            <text>
-            {
-                id: @order.Id,
-                orderId: '@order.OrderId',
-                billId: @(order.BillId.HasValue ? order.BillId.Value.ToString() : "null"),
-                tableNumber: '@order.TableNumber',
-                orderTime: new Date('@order.OrderTime.ToString("yyyy-MM-ddTHH:mm:ss")'),
-                date: '@order.Date',
-                time: '@order.Time',
-                status: '@order.Status',
-                statusDisplay: '@order.StatusDisplay',
-                totalAmount: @order.TotalAmount,
-                paymentMethod: '@order.PaymentMethod',
-                itemCount: @order.ItemCount,
-                isPaid: @(order.IsPaid.ToString().ToLower()),
-                cashierName: '@order.CashierName',
-                items: [
-            @foreach (var item in order.Items)
-            {
-                    <text>
-                    {
-                        name: '@Html.Raw(item.Name.Replace("'", "\\'"))',
-                        quantity: @item.Quantity,
-                        price: @item.Price,
-                        total: @item.Total,
-description: '@Html.Raw((item.Description ?? "").Replace("'", "\\'"))'
-                    },
-                    </text>
-            }
-                ]
-            },
-            </text>
-            }
+        {
+            <text>{ id: @order.Id, orderId: '@order.OrderId', billId: @(order.BillId.HasValue ? order.BillId.Value.ToString() : "null"), tableNumber: '@order.TableNumber', date: '@order.Date', time: '@order.Time', status: '@order.Status', statusDisplay: '@order.StatusDisplay', totalAmount: @order.TotalAmount, paymentMethod: '@order.PaymentMethod', itemCount: @order.ItemCount, cashierName: '@order.CashierName', items: [@foreach (var item in order.Items) {<text>{ name: '@Html.Raw(item.Name.Replace("'", "\\'"))', quantity: @item.Quantity, price: @item.Price, total: @item.Total },</text>}] },</text>
+        }
         ];
         </text>
     }
 
     var currentPeriod = 'today';
     var currentPage = 1;
-    var totalPages = 1;
     var currentOrderId = null;
 
     document.addEventListener('DOMContentLoaded', function() {
         setDefaultDates();
-        console.log('Loaded', ordersFromModel.length, 'orders from database model');
     });
 
     function setDefaultDates() {
-        var today = new Date();
-        var todayStr = today.toISOString().split('T')[0];
-
-        document.getElementById('fromDate').value = todayStr;
-        document.getElementById('toDate').value = todayStr;
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('fromDate').value = today;
+        document.getElementById('toDate').value = today;
     }
 
     function selectPeriod(period) {
         currentPeriod = period;
-
-        document.querySelectorAll('.period-tab').forEach(function(tab) {
-            tab.classList.remove('active');
-        });
+        document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
         document.querySelector(`[data-period="${period}"]`).classList.add('active');
-
-        var customFilter = document.getElementById('customDateFilter');
-        if (period === 'custom') {
-            customFilter.style.display = 'block';
-        } else {
-            customFilter.style.display = 'none';
-        }
-
-        loadShiftData();
+        document.getElementById('customDateFilter').classList.toggle('show', period === 'custom');
+        if (period !== 'custom') loadShiftData();
     }
 
     function loadShiftData() {
-        var fromDate, toDate;
         var today = new Date();
+        var fromDate, toDate;
 
         if (currentPeriod === 'today') {
             fromDate = toDate = today.toISOString().split('T')[0];
@@ -652,404 +667,81 @@ description: '@Html.Raw((item.Description ?? "").Replace("'", "\\'"))'
         } else {
             fromDate = document.getElementById('fromDate').value;
             toDate = document.getElementById('toDate').value;
-
-            if (!fromDate || !toDate) {
-                showToast('Vui lòng chọn khoảng thời gian!', 'error');
-                return;
-            }
         }
 
         var search = document.getElementById('searchInput').value;
 
-        document.getElementById('ordersTableContainer').innerHTML = `
-            <div class="loading">
-                <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
-                <p>Đang tải dữ liệu...</p>
-            </div>
-        `;
+        document.getElementById('ordersTableContainer').innerHTML = '<div class="text-center p-4"><i class="fas fa-spinner fa-spin fa-2x mb-3"></i><p>Đang tải...</p></div>';
 
         fetch('@Url.Action("GetShiftOrdersData", "Cashier")', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
             body: `fromDate=${fromDate}&toDate=${toDate}&search=${search}&page=${currentPage}`
         })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
+        .then(r => r.json())
+        .then(data => {
             if (data.success) {
                 renderOrdersTable(data.orders);
                 updateSummaryCards(data.summary);
-updatePagination(data.totalPages);
-            } else {
-                showError('Lỗi khi tải dữ liệu: ' + data.message);
             }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            showError('Có lỗi xảy ra khi tải dữ liệu!');
         });
-    }
-
-    function viewOrderDetailFromModel(orderId) {
-        var order = ordersFromModel.find(o => o.id === orderId);
-        if (!order) {
-            viewOrderDetail(orderId);
-            return;
-        }
-
-        renderOrderDetailFromModel(order);
-        var modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
-        modal.show();
-
-        currentOrderId = order.orderId;
-    }
-
-    function renderOrderDetailFromModel(order) {
-        var subtotal = order.items.reduce((sum, item) => sum + item.total, 0);
-        var vat = Math.round(subtotal * 0.1);
-        var total = subtotal + vat;
-
-        var billIdHtml = order.billId ? `<p><strong>Mã hóa đơn:</strong> ${order.billId}</p>` : '';
-
-        var detailHtml = `
-        <div class="row">
-            <div class="col-md-6">
-                <h6 class="text-warning">Thông tin đơn hàng</h6>
-                <p><strong>Mã đơn:</strong> ${order.orderId}</p>
-                ${billIdHtml} <p><strong>Ngày:</strong> ${order.date}</p>
-                <p><strong>Giờ:</strong> ${order.time}</p>
-                <p><strong>Bàn:</strong> ${order.tableNumber}</p>
-                <p><strong>Thu ngân:</strong> ${order.cashierName}</p>
-            </div>
-            <div class="col-md-6">
-                <h6 class="text-warning">Thanh toán</h6>
-                <p><strong>Tạm tính:</strong> ${subtotal.toLocaleString()} VNĐ</p>
-                <p><strong>Thuế VAT:</strong> ${vat.toLocaleString()} VNĐ</p>
-                <p><strong>Tổng cộng:</strong> ${total.toLocaleString()} VNĐ</p>
-                <p><strong>Phương thức:</strong> ${order.paymentMethod || 'Chưa thanh toán'}</p>
-                <p><strong>Trạng thái:</strong> <span class="status-badge status-${order.status}">${order.statusDisplay}</span></p>
-            </div>
-        </div>
-        <hr style="border-color: rgba(0,0,0,0.1);">
-        <h6 class="text-warning">Chi tiết món ăn</h6>
-        <div class="table-responsive">
-            <table class="table table-light table-striped">
-                <thead>
-                    <tr>
-                        <th>Món ăn</th>
-                        <th>SL</th>
-                        <th>Đơn giá</th>
-                        <th>Thành tiền</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        order.items.forEach(function(item) {
-            detailHtml += `
-            <tr>
-                <td>${item.name}</td>
-                <td>${item.quantity}</td>
-                <td>${item.price.toLocaleString()} VNĐ</td>
-                <td>${item.total.toLocaleString()} VNĐ</td>
-            </tr>
-            `;
-});
-
-        detailHtml += `
-                </tbody>
-            </table>
-        </div>
-        `;
-
-        document.getElementById('orderDetailContent').innerHTML = detailHtml;
     }
 
     function renderOrdersTable(orders) {
         if (!orders || orders.length === 0) {
-            document.getElementById('ordersTableContainer').innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-file-invoice"></i>
-                    <h5>Không có đơn hàng nào</h5>
-                    <p>Chưa có đơn hàng nào trong khoảng thời gian này.</p>
-                    <button class="btn btn-outline-warning btn-sm mt-2" onclick="loadShiftData()">
-                        <i class="fas fa-redo me-1"></i>Tải lại
-                    </button>
-                </div>
-            `;
+            document.getElementById('ordersTableContainer').innerHTML = '<div class="empty-state"><i class="fas fa-file-invoice"></i><h5>Không có đơn hàng</h5></div>';
             return;
         }
 
-        var html = `
-        <table class="orders-table">
-            <thead>
-                <tr>
-                    <th>Mã đơn</th>
-                    <th>Mã hóa đơn</th> <th>Ngày</th>
-                    <th>Giờ</th>
-                    <th>Bàn</th>
-                    <th>Số món</th>
-                    <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody>
-        `;
-
+        var html = '<table class="orders-table"><thead><tr><th>Mã đơn</th><th>Mã hóa đơn</th><th>Ngày giờ</th><th>Bàn</th><th>Số món</th><th>Tổng tiền</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>';
         orders.forEach(function(order) {
-            var statusClass = 'status-' + order.Status;
-            var statusText = getStatusText(order.Status);
-
-            html += `
-                <tr>
-                    <td><strong>${order.OrderId}</strong></td>
-
-                    <td><strong>${order.BillId || ''}</strong></td>
-
-                    <td>${order.Date}</td>
-                    <td>${order.Time}</td>
-                    <td>${order.Table}</td>
-                    <td>${order.ItemCount} món</td>
-                    <td><strong>${order.Total.toLocaleString()} VNĐ</strong></td>
-                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                    <td>
-                        <div class="order-actions">
-                            <button class="btn-action btn-view" onclick="viewOrderDetail('${order.OrderId}')" title="Xem chi tiết">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn-action btn-reprint" onclick="reprintOrder('${order.OrderId}')" title="In lại hóa đơn">
-                                <i class="fas fa-print"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
+            html += `<tr><td class="order-id">${order.OrderId}</td><td><strong>${order.BillId || '-'}</strong></td><td>${order.Date} ${order.Time}</td><td>${order.Table}</td><td>${order.ItemCount} món</td><td class="order-amount">${order.Total.toLocaleString()} VNĐ</td><td><span class="status-badge status-${order.Status}">${getStatusText(order.Status)}</span></td><td><div class="action-btns"><button class="btn-icon view" onclick="viewOrderDetail('${order.OrderId}')"><i class="fas fa-eye"></i></button><button class="btn-icon print" onclick="reprintOrder('${order.OrderId}')"><i class="fas fa-print"></i></button></div></td></tr>`;
         });
-
         html += '</tbody></table>';
         document.getElementById('ordersTableContainer').innerHTML = html;
     }
 
     function updateSummaryCards(summary) {
-        document.getElementById('totalOrders').textContent = summary.TotalOrders.toLocaleString();
-document.getElementById('totalRevenue').textContent = summary.TotalRevenue.toLocaleString() + ' VNĐ';
-        document.getElementById('avgOrderValue').textContent = Math.round(summary.AvgOrderValue).toLocaleString() + ' VNĐ';
-        document.getElementById('completedOrders').textContent = summary.CompletedOrders.toLocaleString();
-    }
-
-    function updatePagination(totalPgs) {
-        totalPages = totalPgs;
-
-        if (totalPages <= 1) {
-            document.getElementById('paginationContainer').style.display = 'none';
-            return;
+        if (summary) {
+            document.getElementById('totalOrders').textContent = summary.TotalOrders.toLocaleString();
+            document.getElementById('totalRevenue').textContent = summary.TotalRevenue.toLocaleString();
+            document.getElementById('avgOrderValue').textContent = Math.round(summary.AvgOrderValue).toLocaleString();
+            document.getElementById('completedOrders').textContent = summary.CompletedOrders.toLocaleString();
         }
-
-        document.getElementById('paginationContainer').style.display = 'block';
-
-        var html = '';
-
-        if (currentPage > 1) {
-            html += `<button class="page-link" onclick="changePage(${currentPage - 1})">‹</button>`;
-        }
-
-        for (var i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
-            var activeClass = i === currentPage ? 'active' : '';
-            html += `<button class="page-link ${activeClass}" onclick="changePage(${i})">${i}</button>`;
-        }
-
-        if (currentPage < totalPages) {
-            html += `<button class="page-link" onclick="changePage(${currentPage + 1})">›</button>`;
-        }
-
-        document.getElementById('pagination').innerHTML = html;
-    }
-
-    function changePage(page) {
-        currentPage = page;
-        loadShiftData();
     }
 
     function getStatusText(status) {
-        var statusMap = {
-            'completed': 'Hoàn thành',
-            'pending': 'Đang xử lý',
-            'cancelled': 'Đã hủy'
-        };
-        return statusMap[status] || status;
+        return { 'completed': 'Hoàn thành', 'pending': 'Đang xử lý', 'cancelled': 'Đã hủy' }[status] || status;
     }
 
     function viewOrderDetail(orderId) {
         currentOrderId = orderId;
+        var order = ordersFromModel.find(o => o.id == orderId || o.orderId == orderId);
 
-        fetch('@Url.Action("GetOrderDetail", "Cashier")?orderId=' + orderId, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success) {
-                renderOrderDetail(data.order);
-                var modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
-                modal.show();
-            } else {
-                showToast('Không thể tải chi tiết đơn hàng: ' + data.message, 'error');
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            showToast('Có lỗi xảy ra khi tải chi tiết đơn hàng!', 'error');
-        });
-    }
+        if (order) {
+            var subtotal = order.items.reduce((sum, item) => sum + item.total, 0);
+            var vat = Math.round(subtotal * 0.1);
 
-    function renderOrderDetail(order) {
-        var billId = order.BillId || '';
-        var billIdHtml = billId ? `<p><strong>Mã hóa đơn:</strong> ${billId}</p>` : '';
-
-        var detailHtml = `
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="text-warning">Thông tin đơn hàng</h6>
-                    <p><strong>Mã đơn:</strong> ${order.OrderId}</p>
-${billIdHtml} <p><strong>Ngày:</strong> ${order.Date}</p>
-                    <p><strong>Giờ:</strong> ${order.Time}</p>
-                    <p><strong>Bàn:</strong> ${order.Table}</p>
-                    <p><strong>Thu ngân:</strong> ${order.Cashier}</p>
-                </div>
-                <div class="col-md-6">
-                    <h6 class="text-warning">Thanh toán</h6>
-                    <p><strong>Tạm tính:</strong> ${order.Subtotal.toLocaleString()} VNĐ</p>
-                    <p><strong>Thuế VAT:</strong> ${order.Tax.toLocaleString()} VNĐ</p>
-                    <p><strong>Tổng cộng:</strong> ${order.Total.toLocaleString()} VNĐ</p>
-                    <p><strong>Phương thức:</strong> ${order.PaymentMethod}</p>
-                    <p><strong>Trạng thái:</strong> <span class="status-badge status-${order.Status}">${getStatusText(order.Status)}</span></p>
-                </div>
-            </div>
-            <hr style="border-color: rgba(0,0,0,0.1);">
-            <h6 class="text-warning">Chi tiết món ăn</h6>
-            <div class="table-responsive">
-                <table class="table table-light table-striped">
-                    <thead>
-                        <tr>
-                            <th>Món ăn</th>
-                            <th>SL</th>
-                            <th>Đơn giá</th>
-                            <th>Thành tiền</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-        order.Items.forEach(function(item) {
-            detailHtml += `
-                        <tr>
-                            <td>${item.Name}</td>
-                            <td>${item.Quantity}</td>
-                            <td>${item.Price.toLocaleString()} VNĐ</td>
-                            <td>${item.Total.toLocaleString()} VNĐ</td>
-                        </tr>
-            `;
-        });
-
-        detailHtml += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-
-        document.getElementById('orderDetailContent').innerHTML = detailHtml;
-    }
-
-    function reprintOrder(orderId) {
-        reprintInvoice(orderId);
-    }
-
-    function reprintInvoice(orderId = null) {
-        var orderIdToUse = orderId || currentOrderId;
-
-        if (!orderIdToUse) {
-            showToast('Không tìm thấy thông tin đơn hàng!', 'error');
-            return;
-        }
-
-        var printWindow = window.open('@Url.Action("PrintBill", "Cashier")?orderId=' + orderIdToUse, '_blank');
-
-        if (printWindow) {
-            printWindow.focus();
-            showToast('Đã mở trang in hóa đơn!', 'success');
+            var html = `<div class="row"><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-info-circle me-1"></i>Thông tin đơn</h6><p><strong>Mã đơn:</strong> ${order.orderId}</p><p><strong>Bàn:</strong> ${order.tableNumber}</p><p><strong>Thời gian:</strong> ${order.date} ${order.time}</p></div><div class="col-md-6"><h6 class="text-primary"><i class="fas fa-money-bill me-1"></i>Thanh toán</h6><p><strong>Tạm tính:</strong> ${subtotal.toLocaleString()} VNĐ</p><p><strong>VAT:</strong> ${vat.toLocaleString()} VNĐ</p><p><strong>Tổng:</strong> <span class="text-success fw-bold">${order.totalAmount.toLocaleString()} VNĐ</span></p></div></div><hr><h6 class="text-primary"><i class="fas fa-utensils me-1"></i>Chi tiết món</h6><table class="table table-striped"><thead><tr><th>Món</th><th>SL</th><th>Giá</th><th>Thành tiền</th></tr></thead><tbody>`;
+            order.items.forEach(item => { html += `<tr><td>${item.name}</td><td>${item.quantity}</td><td>${item.price.toLocaleString()}</td><td>${item.total.toLocaleString()}</td></tr>`; });
+            html += '</tbody></table>';
+            document.getElementById('orderDetailContent').innerHTML = html;
+            new bootstrap.Modal(document.getElementById('orderDetailModal')).show();
         } else {
-            showToast('Không thể mở cửa sổ in. Vui lòng kiểm tra popup blocker.', 'error');
+            fetch('@Url.Action("GetOrderDetail", "Cashier")?orderId=' + orderId, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    var o = data.order;
+                    var html = `<div class="row"><div class="col-md-6"><h6 class="text-primary">Thông tin đơn</h6><p><strong>Mã đơn:</strong> ${o.OrderId}</p><p><strong>Bàn:</strong> ${o.Table}</p><p><strong>Thời gian:</strong> ${o.Date} ${o.Time}</p></div><div class="col-md-6"><h6 class="text-primary">Thanh toán</h6><p><strong>Tổng:</strong> <span class="text-success fw-bold">${o.Total.toLocaleString()} VNĐ</span></p></div></div>`;
+                    document.getElementById('orderDetailContent').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('orderDetailModal')).show();
+                }
+            });
         }
     }
 
-    function showError(message) {
-        document.getElementById('ordersTableContainer').innerHTML = `
-            <div class="text-center text-danger p-4">
-<i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
-                <p>${message}</p>
-                <button class="btn btn-outline-warning btn-sm mt-2" onclick="loadShiftData()">
-                    <i class="fas fa-redo me-1"></i>Thử lại
-                </button>
-            </div>
-        `;
-    }
-
-    function showToast(message, type) {
-        var toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} toast-notification`;
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            min-width: 300px;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            animation: slideInRight 0.3s ease-out;
-        `;
-
-        toast.innerHTML = `
-            <div class="d-flex align-items-center">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-                <span>${message}</span>
-                <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 1.2rem;">&times;</button>
-            </div>
-        `;
-
-        document.body.appendChild(toast);
-
-        setTimeout(function() {
-            if (toast.parentElement) {
-                toast.remove();
-            }
-        }, 3000);
-    }
-
-    if (!document.getElementById('toast-styles')) {
-        var style = document.createElement('style');
-        style.id = 'toast-styles';
-        style.textContent = `
-            @@keyframes slideInRight {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            .toast-notification {
-                animation: slideInRight 0.3s ease-out;
-            }
-        `;
-        document.head.appendChild(style);
-    }
+    function reprintOrder(orderId) { window.open('@Url.Action("PrintBill", "Cashier")?orderId=' + orderId, '_blank'); }
+    function reprintInvoice() { if (currentOrderId) reprintOrder(currentOrderId); }
     </script>
 }
