@@ -301,6 +301,77 @@ namespace NhaHangLDP.Controllers
 
         #endregion
 
+        #region Suggested Items
+
+        /// <summary>
+        /// Lấy danh sách món gợi ý
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetSuggestedItems()
+        {
+            try
+            {
+                var cart = GetCart();
+                var cartMenuItemIds = cart.Items.Select(i => i.MenuItemId).ToList();
+                var cartCategories = cart.Items.Select(i => i.Category).Distinct().ToList();
+
+                List<MenuItem> suggestedItems;
+
+                if (cartCategories.Any())
+                {
+                    // Gợi ý các món cùng danh mục nhưng chưa có trong giỏ
+                    suggestedItems = _db.MenuItem
+                        .Where(m => m.IsAvailable && 
+                                    cartCategories.Contains(m.Category) && 
+                                    !cartMenuItemIds.Contains(m.Id))
+                        .OrderByDescending(m => m.SoldCount)
+                        .Take(4)
+                        .ToList();
+
+                    // Nếu không đủ 4 món, bổ sung từ các món bán chạy khác
+                    if (suggestedItems.Count < 4)
+                    {
+                        var existingIds = suggestedItems.Select(s => s.Id).ToList();
+                        existingIds.AddRange(cartMenuItemIds);
+
+                        var additionalItems = _db.MenuItem
+                            .Where(m => m.IsAvailable && !existingIds.Contains(m.Id))
+                            .OrderByDescending(m => m.SoldCount)
+                            .Take(4 - suggestedItems.Count)
+                            .ToList();
+
+                        suggestedItems.AddRange(additionalItems);
+                    }
+                }
+                else
+                {
+                    // Nếu giỏ hàng trống hoặc không có danh mục, lấy các món bán chạy
+                    suggestedItems = _db.MenuItem
+                        .Where(m => m.IsAvailable)
+                        .OrderByDescending(m => m.SoldCount)
+                        .Take(4)
+                        .ToList();
+                }
+
+                var result = suggestedItems.Select(m => new
+                {
+                    id = m.Id,
+                    name = m.Name,
+                    price = m.Price,
+                    imageUrl = m.ImageUrl,
+                    category = m.Category
+                }).ToList();
+
+                return Json(new { success = true, items = result }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        #endregion
+
         #region Helper Methods
 
         /// <summary>
