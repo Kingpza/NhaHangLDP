@@ -853,6 +853,14 @@
                 <span class="nav-badge" id="onlineOrderBadge" style="display:none;">0</span>
             </a>
 
+            <a href="@Url.Action("Reservations", "Cashier")" 
+               class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Đặt Bàn") == true ? "active" : "")"
+               data-tooltip="Đặt bàn">
+                <i class="fas fa-calendar-check"></i>
+                <span>Đặt bàn</span>
+                <span class="nav-badge" id="reservationBadge" style="display:none;">0</span>
+            </a>
+
             <a href="@Url.Action("TableArea", "Cashier")" 
                class="sidebar-nav-item @(ViewBag.Title?.ToString().Contains("Table") == true || ViewBag.Title?.ToString().Contains("Bàn") == true ? "active" : "")"
                data-tooltip="Khu vực bàn">
@@ -1001,6 +1009,25 @@
                 .catch(() => {});
         }
 
+        // Check pending reservations
+        function checkPendingReservations() {
+            fetch('@Url.Action("GetReservationsData", "Cashier")?status=Pending')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.counts) {
+                        var pending = data.counts.pending || 0;
+                        var badge = document.getElementById('reservationBadge');
+                        if (pending > 0) {
+                            badge.textContent = pending;
+                            badge.style.display = 'inline';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+
         // Helper functions
         function showSuccess(title, text, callback) {
             Swal.fire({
@@ -1076,7 +1103,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             restoreSidebarState();
             checkOnlineOrders();
+            checkPendingReservations();
             setInterval(checkOnlineOrders, 30000);
+            setInterval(checkPendingReservations, 30000);
         });
     </script>
 

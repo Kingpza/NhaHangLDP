@@ -132,6 +132,17 @@
                     <div class="quick-action-title">Đơn Online</div>
                     <div class="quick-action-desc">Xử lý đơn hàng online</div>
                 </a>
+
+                <a href="@Url.Action("Reservations", "Cashier")" class="quick-action-card reservations">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="quick-action-title">Đặt Bàn</div>
+                    <div class="quick-action-desc">
+                        Duyệt đơn đặt bàn
+                        <span class="badge bg-warning text-dark ms-1" id="pendingReservationsBadge" style="display:none;">0</span>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
@@ -284,6 +295,11 @@
 </div>
 
 @section scripts {
+    <style>
+        .quick-action-card.reservations .quick-action-icon { 
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); 
+        }
+    </style>
     <script>
         let selectedAddEmployee = { id: null, name: null };
         let addEmployeeModalInstance = null;
@@ -292,6 +308,7 @@
             addEmployeeModalInstance = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
             updateWorkingTime();
             setInterval(updateWorkingTime, 1000);
+            loadPendingReservations();
         });
 
         @{
@@ -309,6 +326,24 @@
             const seconds = Math.floor((diff % 60000) / 1000);
             document.getElementById('workingTime').textContent =
                 `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function loadPendingReservations() {
+            fetch('@Url.Action("GetReservationsData", "Cashier")?status=Pending')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.counts) {
+                        var pending = data.counts.pending || 0;
+                        var badge = document.getElementById('pendingReservationsBadge');
+                        if (pending > 0) {
+                            badge.textContent = pending;
+                            badge.style.display = 'inline';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(() => {});
         }
 
         function showPrintInvoiceOptions() {
@@ -464,6 +499,7 @@
                         document.getElementById('pendingOrders').textContent = stats.PendingOrderCount;
                     }
                 });
+            loadPendingReservations();
         }, 30000);
     </script>
 }

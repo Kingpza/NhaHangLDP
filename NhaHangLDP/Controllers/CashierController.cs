@@ -1106,5 +1106,401 @@ namespace NhaHangLDP.Controllers
         }
 
         #endregion
+
+        #region Reservation Management
+
+        /// <summary>
+        /// Trang quản lý đơn đặt bàn
+        /// </summary>
+        public ActionResult Reservations(string status = "all", string date = "")
+        {
+            if (shiftService.GetActiveShift() == null)
+                return RedirectToAction("OpenShift");
+
+            ViewBag.SelectedStatus = status;
+            ViewBag.SelectedDate = date;
+            ViewBag.StatusCounts = GetReservationCounts();
+
+            return View();
+        }
+
+        /// <summary>
+        /// API lấy danh sách đơn đặt bàn
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetReservationsData(string status = "all", string date = "")
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" }, JsonRequestBehavior.AllowGet);
+
+                var query = db.Reservation.AsQueryable();
+
+                // Filter by status
+                if (!string.IsNullOrEmpty(status) && status != "all")
+                {
+                    query = query.Where(r => r.Status == status);
+                }
+
+                // Filter by date
+                DateTime filterDate;
+                if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out filterDate))
+                {
+                    query = query.Where(r => DbFunctions.TruncateTime(r.ReservationDate) == filterDate.Date);
+                }
+                else
+                {
+                    // Default: show today and future reservations
+                    var today = DateTime.Today;
+                    query = query.Where(r => r.ReservationDate >= today);
+                }
+
+                var reservations = query
+                    .OrderBy(r => r.ReservationDate)
+                    .ThenBy(r => r.ReservationTime)
+                    .ToList()
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.ReservationCode,
+                        r.CustomerName,
+                        r.CustomerPhone,
+                        r.CustomerEmail,
+                        ReservationDate = r.ReservationDate.ToString("dd/MM/yyyy"),
+                        ReservationTime = r.ReservationTime.ToString(@"hh\:mm"),
+                        r.NumberOfGuests,
+                        r.TablePreference,
+                        r.SpecialRequests,
+                        r.Status,
+                        StatusText = GetReservationStatusText(r.Status),
+                        StatusClass = GetReservationStatusClass(r.Status),
+                        CreatedDate = r.CreatedDate.ToString("dd/MM/yyyy HH:mm"),
+                        CanConfirm = r.Status == "Pending",
+                        CanComplete = r.Status == "Confirmed",
+                        CanCancel = r.Status == "Pending" || r.Status == "Confirmed"
+                    })
+                    .ToList();
+
+                var counts = GetReservationCounts();
+
+                return Json(new { success = true, reservations, counts }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// API lấy chi tiết đơn đặt bàn
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetReservationDetail(int id)
+        {
+            try
+            {
+                var reservation = db.Reservation
+                    .Where(r => r.Id == id)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.ReservationCode,
+                        r.CustomerName,
+                        r.CustomerPhone,
+                        r.CustomerEmail,
+                        ReservationDate = r.ReservationDate,
+                        ReservationTime = r.ReservationTime,
+                        r.NumberOfGuests,
+                        r.TableId,
+                        r.TablePreference,
+                        r.SpecialRequests,
+                        r.Status,
+                        r.DepositAmount,
+                        r.DepositPaid,
+                        r.CancelReason,
+                        r.CreatedDate,
+                        r.ConfirmedDate,
+                        r.CancelledDate
+                    })
+                    .FirstOrDefault();
+
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" }, JsonRequestBehavior.AllowGet);
+
+                // Get table info if assigned
+                string tableName = null;
+                if (reservation.TableId.HasValue)
+                {
+                    var table = db.RestaurantTable.Find(reservation.TableId.Value);
+                    tableName = table?.TableNumber;
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    reservation = new
+                    {
+                        reservation.Id,
+                        reservation.ReservationCode,
+                        reservation.CustomerName,
+                        reservation.CustomerPhone,
+                        reservation.CustomerEmail,
+                        ReservationDate = reservation.ReservationDate.ToString("dd/MM/yyyy"),
+                        ReservationTime = reservation.ReservationTime.ToString(@"hh\:mm"),
+                        reservation.NumberOfGuests,
+                        reservation.TableId,
+                        TableName = tableName,
+                        reservation.TablePreference,
+                        reservation.SpecialRequests,
+                        reservation.Status,
+                        StatusText = GetReservationStatusText(reservation.Status),
+                        StatusClass = GetReservationStatusClass(reservation.Status),
+                        reservation.DepositAmount,
+                        reservation.DepositPaid,
+                        reservation.CancelReason,
+                        CreatedDate = reservation.CreatedDate.ToString("dd/MM/yyyy HH:mm"),
+                        ConfirmedDate = reservation.ConfirmedDate?.ToString("dd/MM/yyyy HH:mm"),
+                        CancelledDate = reservation.CancelledDate?.ToString("dd/MM/yyyy HH:mm"),
+                        CanConfirm = reservation.Status == "Pending",
+                        CanComplete = reservation.Status == "Confirmed",
+                        CanCancel = reservation.Status == "Pending" || reservation.Status == "Confirmed"
+                    }
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Xác nhận đơn đặt bàn
+        /// </summary>
+        [HttpPost]
+        public JsonResult ConfirmReservation(int id, int? tableId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var reservation = db.Reservation.Find(id);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
+
+                if (reservation.Status != "Pending")
+                    return Json(new { success = false, message = "Đơn đặt bàn không ở trạng thái chờ xác nhận!" });
+
+                reservation.Status = "Confirmed";
+                reservation.ConfirmedDate = DateTime.Now;
+
+                if (tableId.HasValue && tableId.Value > 0)
+                {
+                    reservation.TableId = tableId.Value;
+                }
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Đã xác nhận đơn đặt bàn!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Từ chối đơn đặt bàn
+        /// </summary>
+        [HttpPost]
+        public JsonResult RejectReservation(int id, string reason)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var reservation = db.Reservation.Find(id);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
+
+                if (reservation.Status != "Pending" && reservation.Status != "Confirmed")
+                    return Json(new { success = false, message = "Không thể từ chối đơn đặt bàn này!" });
+
+                reservation.Status = "Cancelled";
+                reservation.CancelReason = reason ?? "Từ chối bởi nhà hàng";
+                reservation.CancelledDate = DateTime.Now;
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Đã từ chối đơn đặt bàn!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Hoàn thành đơn đặt bàn (khách đã đến)
+        /// </summary>
+        [HttpPost]
+        public JsonResult CompleteReservation(int id)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var reservation = db.Reservation.Find(id);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
+
+                if (reservation.Status != "Confirmed")
+                    return Json(new { success = false, message = "Đơn đặt bàn chưa được xác nhận!" });
+
+                reservation.Status = "Completed";
+
+                // Update table status if assigned
+                if (reservation.TableId.HasValue)
+                {
+                    var table = db.RestaurantTable.Find(reservation.TableId.Value);
+                    if (table != null)
+                    {
+                        table.Status = "Occupied";
+                    }
+                }
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Khách đã đến! Đơn đặt bàn hoàn thành." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Đánh dấu khách không đến
+        /// </summary>
+        [HttpPost]
+        public JsonResult NoShowReservation(int id)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var reservation = db.Reservation.Find(id);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
+
+                if (reservation.Status != "Confirmed")
+                    return Json(new { success = false, message = "Đơn đặt bàn chưa được xác nhận!" });
+
+                reservation.Status = "NoShow";
+                reservation.CancelReason = "Khách không đến";
+                reservation.CancelledDate = DateTime.Now;
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Đã đánh dấu khách không đến." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách bàn trống cho đặt bàn
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetAvailableTablesForReservation(int reservationId)
+        {
+            try
+            {
+                var reservation = db.Reservation.Find(reservationId);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" }, JsonRequestBehavior.AllowGet);
+
+                var timeMinutes = (int)reservation.ReservationTime.TotalMinutes;
+
+                // Get tables that can accommodate guests and are not reserved at the same time
+                var tables = db.RestaurantTable
+                    .Where(t => t.Capacity >= reservation.NumberOfGuests)
+                    .ToList()
+                    .Select(t => new
+                    {
+                        t.Id,
+                        t.TableNumber,
+                        t.Capacity,
+                        t.Status,
+                        IsAvailable = !db.Reservation.Any(r =>
+                            r.Id != reservationId &&
+                            r.TableId == t.Id &&
+                            r.ReservationDate == reservation.ReservationDate &&
+                            r.Status != "Cancelled" && r.Status != "NoShow" && r.Status != "Completed" &&
+                            Math.Abs((int)r.ReservationTime.TotalMinutes - timeMinutes) < 120)
+                    })
+                    .OrderBy(t => t.Capacity)
+                    .ThenBy(t => t.TableNumber)
+                    .ToList();
+
+                return Json(new { success = true, tables }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Lấy số lượng đơn đặt bàn theo trạng thái
+        /// </summary>
+        private object GetReservationCounts()
+        {
+            var today = DateTime.Today;
+            var reservations = db.Reservation.Where(r => r.ReservationDate >= today).ToList();
+
+            return new
+            {
+                all = reservations.Count,
+                pending = reservations.Count(r => r.Status == "Pending"),
+                confirmed = reservations.Count(r => r.Status == "Confirmed"),
+                completed = reservations.Count(r => r.Status == "Completed"),
+                cancelled = reservations.Count(r => r.Status == "Cancelled" || r.Status == "NoShow")
+            };
+        }
+
+        private string GetReservationStatusText(string status)
+        {
+            switch (status)
+            {
+                case "Pending": return "Chờ xác nhận";
+                case "Confirmed": return "Đã xác nhận";
+                case "Completed": return "Hoàn thành";
+                case "Cancelled": return "Đã hủy";
+                case "NoShow": return "Không đến";
+                default: return status;
+            }
+        }
+
+        private string GetReservationStatusClass(string status)
+        {
+            switch (status)
+            {
+                case "Pending": return "warning";
+                case "Confirmed": return "success";
+                case "Completed": return "info";
+                case "Cancelled": return "danger";
+                case "NoShow": return "secondary";
+                default: return "secondary";
+            }
+        }
+
+        #endregion
     }
 }

@@ -1,0 +1,774 @@
+﻿@{
+    ViewBag.Title = "Đặt Bàn";
+    Layout = "~/Views/Shared/_CashierLayout.cshtml";
+    var statusCounts = ViewBag.StatusCounts;
+}
+
+<!-- Shift Info Bar -->
+<div class="shift-info-bar" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+    <div class="shift-info-left">
+        <div class="shift-info-item">
+            <i class="fas fa-calendar-check"></i>
+            <span>Quản lý đặt bàn</span>
+        </div>
+        <div class="shift-info-item">
+            <i class="fas fa-clock"></i>
+            <span>Cập nhật: <strong id="lastUpdated">--:--</strong></span>
+        </div>
+    </div>
+    <div class="shift-actions">
+        <button class="btn-shift" onclick="refreshData()">
+            <i class="fas fa-sync-alt"></i> Làm mới
+        </button>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="pos-content">
+    <!-- Filter Tabs -->
+    <div class="pos-card mb-4">
+        <div class="pos-card-body py-3">
+            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn-filter active" data-status="all" onclick="filterByStatus('all')">
+                        <i class="fas fa-list"></i> Tất cả
+                        <span class="badge bg-secondary ms-1" id="countAll">0</span>
+                    </button>
+                    <button class="btn-filter" data-status="Pending" onclick="filterByStatus('Pending')">
+                        <i class="fas fa-hourglass-half"></i> Chờ xác nhận
+                        <span class="badge bg-warning text-dark ms-1" id="countPending">0</span>
+                    </button>
+                    <button class="btn-filter" data-status="Confirmed" onclick="filterByStatus('Confirmed')">
+                        <i class="fas fa-check-circle"></i> Đã xác nhận
+                        <span class="badge bg-success ms-1" id="countConfirmed">0</span>
+                    </button>
+                    <button class="btn-filter" data-status="Completed" onclick="filterByStatus('Completed')">
+                        <i class="fas fa-flag-checkered"></i> Hoàn thành
+                        <span class="badge bg-info ms-1" id="countCompleted">0</span>
+                    </button>
+                    <button class="btn-filter" data-status="Cancelled" onclick="filterByStatus('Cancelled')">
+                        <i class="fas fa-times-circle"></i> Đã hủy
+                        <span class="badge bg-danger ms-1" id="countCancelled">0</span>
+                    </button>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <label class="text-muted me-2 mb-0">Ngày:</label>
+                    <input type="date" id="filterDate" class="form-control form-control-sm" style="width: 160px;" onchange="filterByDate()">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearDateFilter()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservations List -->
+    <div class="pos-card">
+        <div class="pos-card-header">
+            <div class="pos-card-title">
+                <i class="fas fa-calendar-alt"></i>
+                Danh sách đặt bàn
+            </div>
+            <div class="text-muted" id="totalCount">0 đơn</div>
+        </div>
+        <div class="pos-card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 130px;">Mã đặt bàn</th>
+                            <th>Khách hàng</th>
+                            <th style="width: 120px;">Ngày</th>
+                            <th style="width: 80px;">Giờ</th>
+                            <th style="width: 80px;">Số khách</th>
+                            <th style="width: 120px;">Trạng thái</th>
+                            <th style="width: 180px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reservationsList">
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                                <p class="mt-2 text-muted">Đang tải...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reservation Detail Modal -->
+<div class="modal fade" id="reservationDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-calendar-check me-2 text-primary"></i>
+                    Chi tiết đặt bàn
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="reservationDetailContent">
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                </div>
+            </div>
+            <div class="modal-footer border-0" id="reservationDetailFooter">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm Reservation Modal -->
+<div class="modal fade" id="confirmReservationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-check-circle me-2 text-success"></i>
+                    Xác nhận đặt bàn
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="confirmReservationId">
+                <p class="mb-3">Chọn bàn cho khách (không bắt buộc):</p>
+                <div id="availableTablesList" class="mb-3">
+                    <div class="text-center py-3">
+                        <i class="fas fa-spinner fa-spin text-muted"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-success" onclick="executeConfirmReservation()">
+                    <i class="fas fa-check me-1"></i> Xác nhận
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Reservation Modal -->
+<div class="modal fade" id="rejectReservationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-times-circle me-2 text-danger"></i>
+                    Từ chối đặt bàn
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rejectReservationId">
+                <div class="mb-3">
+                    <label class="form-label">Lý do từ chối:</label>
+                    <textarea class="form-control" id="rejectReason" rows="3" placeholder="Nhập lý do từ chối..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="executeRejectReservation()">
+                    <i class="fas fa-times me-1"></i> Từ chối
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-filter {
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        font-weight: 500;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-filter:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .btn-filter.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .btn-filter.active .badge {
+        background: white !important;
+        color: var(--primary) !important;
+    }
+
+    .reservation-row {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .reservation-row:hover {
+        background: #f8fafc !important;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-badge.warning { background: #fef3c7; color: #d97706; }
+    .status-badge.success { background: #d1fae5; color: #059669; }
+    .status-badge.info { background: #dbeafe; color: #2563eb; }
+    .status-badge.danger { background: #fee2e2; color: #dc2626; }
+    .status-badge.secondary { background: #f1f5f9; color: #64748b; }
+
+    .btn-action {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: none;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-1px);
+    }
+
+    .btn-action.success { background: #d1fae5; color: #059669; }
+    .btn-action.success:hover { background: #059669; color: white; }
+    .btn-action.danger { background: #fee2e2; color: #dc2626; }
+    .btn-action.danger:hover { background: #dc2626; color: white; }
+    .btn-action.info { background: #dbeafe; color: #2563eb; }
+    .btn-action.info:hover { background: #2563eb; color: white; }
+    .btn-action.warning { background: #fef3c7; color: #d97706; }
+    .btn-action.warning:hover { background: #d97706; color: white; }
+
+    .table-option {
+        padding: 10px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 8px;
+    }
+
+    .table-option:hover {
+        border-color: var(--primary);
+    }
+
+    .table-option.selected {
+        border-color: var(--success);
+        background: #d1fae5;
+    }
+
+    .table-option.unavailable {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .detail-card {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .detail-label {
+        font-size: 12px;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .detail-value {
+        font-weight: 600;
+        color: #1e293b;
+    }
+</style>
+
+@section scripts {
+    <script>
+        let currentStatus = '@ViewBag.SelectedStatus' || 'all';
+        let currentDate = '@ViewBag.SelectedDate' || '';
+        let selectedTableId = null;
+        let detailModal, confirmModal, rejectModal;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            detailModal = new bootstrap.Modal(document.getElementById('reservationDetailModal'));
+            confirmModal = new bootstrap.Modal(document.getElementById('confirmReservationModal'));
+            rejectModal = new bootstrap.Modal(document.getElementById('rejectReservationModal'));
+
+            if (currentDate) {
+                document.getElementById('filterDate').value = currentDate;
+            }
+
+            loadReservations();
+            updateLastUpdated();
+        });
+
+        function updateLastUpdated() {
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function loadReservations() {
+            const url = '@Url.Action("GetReservationsData", "Cashier")' + 
+                '?status=' + currentStatus + 
+                '&date=' + currentDate;
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        renderReservations(data.reservations);
+                        updateCounts(data.counts);
+                    } else {
+                        showError('Lỗi', data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showError('Lỗi', 'Không thể tải dữ liệu');
+                });
+        }
+
+        function renderReservations(reservations) {
+            const tbody = document.getElementById('reservationsList');
+            
+            if (reservations.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Không có đơn đặt bàn nào</p>
+                        </td>
+                    </tr>`;
+                document.getElementById('totalCount').textContent = '0 đơn';
+                return;
+            }
+
+            let html = '';
+            reservations.forEach(r => {
+                html += `
+                    <tr class="reservation-row" onclick="viewReservationDetail(${r.Id})">
+                        <td>
+                            <span class="fw-bold text-primary">${r.ReservationCode}</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">${r.CustomerName}</div>
+                            <small class="text-muted"><i class="fas fa-phone me-1"></i>${r.CustomerPhone}</small>
+                        </td>
+                        <td>${r.ReservationDate}</td>
+                        <td><strong>${r.ReservationTime}</strong></td>
+                        <td>
+                            <span class="badge bg-secondary">${r.NumberOfGuests} khách</span>
+                        </td>
+                        <td>
+                            <span class="status-badge ${r.StatusClass}">${r.StatusText}</span>
+                        </td>
+                        <td onclick="event.stopPropagation();">
+                            ${getActionButtons(r)}
+                        </td>
+                    </tr>`;
+            });
+
+            tbody.innerHTML = html;
+            document.getElementById('totalCount').textContent = reservations.length + ' đơn';
+        }
+
+        function getActionButtons(reservation) {
+            let buttons = '';
+            
+            if (reservation.CanConfirm) {
+                buttons += `<button class="btn-action success me-1" onclick="openConfirmModal(${reservation.Id})" title="Xác nhận">
+                    <i class="fas fa-check"></i>
+                </button>`;
+                buttons += `<button class="btn-action danger me-1" onclick="openRejectModal(${reservation.Id})" title="Từ chối">
+                    <i class="fas fa-times"></i>
+                </button>`;
+            }
+            
+            if (reservation.CanComplete) {
+                buttons += `<button class="btn-action info me-1" onclick="completeReservation(${reservation.Id})" title="Khách đã đến">
+                    <i class="fas fa-user-check"></i>
+                </button>`;
+                buttons += `<button class="btn-action warning me-1" onclick="noShowReservation(${reservation.Id})" title="Khách không đến">
+                    <i class="fas fa-user-times"></i>
+                </button>`;
+            }
+
+            buttons += `<button class="btn-action info" onclick="viewReservationDetail(${reservation.Id})" title="Xem chi tiết">
+                <i class="fas fa-eye"></i>
+            </button>`;
+
+            return buttons;
+        }
+
+        function updateCounts(counts) {
+            document.getElementById('countAll').textContent = counts.all;
+            document.getElementById('countPending').textContent = counts.pending;
+            document.getElementById('countConfirmed').textContent = counts.confirmed;
+            document.getElementById('countCompleted').textContent = counts.completed;
+            document.getElementById('countCancelled').textContent = counts.cancelled;
+        }
+
+        function filterByStatus(status) {
+            currentStatus = status;
+            
+            document.querySelectorAll('.btn-filter').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.status === status) {
+                    btn.classList.add('active');
+                }
+            });
+
+            loadReservations();
+        }
+
+        function filterByDate() {
+            currentDate = document.getElementById('filterDate').value;
+            loadReservations();
+        }
+
+        function clearDateFilter() {
+            document.getElementById('filterDate').value = '';
+            currentDate = '';
+            loadReservations();
+        }
+
+        function refreshData() {
+            loadReservations();
+            updateLastUpdated();
+            showToastSwal('Đã làm mới dữ liệu', 'success');
+        }
+
+        function viewReservationDetail(id) {
+            document.getElementById('reservationDetailContent').innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                </div>`;
+            detailModal.show();
+
+            fetch('@Url.Action("GetReservationDetail", "Cashier")?id=' + id)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        renderReservationDetail(data.reservation);
+                    } else {
+                        document.getElementById('reservationDetailContent').innerHTML = `
+                            <div class="text-center py-5 text-danger">
+                                <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                                <p>${data.message}</p>
+                            </div>`;
+                    }
+                });
+        }
+
+        function renderReservationDetail(r) {
+            const content = document.getElementById('reservationDetailContent');
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-user me-2 text-primary"></i>Thông tin khách hàng</h6>
+                            <div class="mb-2">
+                                <div class="detail-label">Họ tên</div>
+                                <div class="detail-value">${r.CustomerName}</div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="detail-label">Số điện thoại</div>
+                                <div class="detail-value">${r.CustomerPhone}</div>
+                            </div>
+                            ${r.CustomerEmail ? `<div>
+                                <div class="detail-label">Email</div>
+                                <div class="detail-value">${r.CustomerEmail}</div>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6 class="fw-bold mb-3"><i class="fas fa-calendar me-2 text-success"></i>Thông tin đặt bàn</h6>
+                            <div class="mb-2">
+                                <div class="detail-label">Mã đặt bàn</div>
+                                <div class="detail-value text-primary">${r.ReservationCode}</div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="detail-label">Ngày - Giờ</div>
+                                <div class="detail-value">${r.ReservationDate} - ${r.ReservationTime}</div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="detail-label">Số khách</div>
+                                <div class="detail-value">${r.NumberOfGuests} người</div>
+                            </div>
+                            <div>
+                                <div class="detail-label">Trạng thái</div>
+                                <span class="status-badge ${r.StatusClass}">${r.StatusText}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ${r.TableName || r.TablePreference ? `
+                <div class="detail-card">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-chair me-2 text-warning"></i>Thông tin bàn</h6>
+                    ${r.TableName ? `<div class="mb-2">
+                        <div class="detail-label">Bàn đã xếp</div>
+                        <div class="detail-value">${r.TableName}</div>
+                    </div>` : ''}
+                    ${r.TablePreference ? `<div>
+                        <div class="detail-label">Yêu cầu vị trí</div>
+                        <div class="detail-value">${r.TablePreference}</div>
+                    </div>` : ''}
+                </div>` : ''}
+                ${r.SpecialRequests ? `
+                <div class="detail-card">
+                    <h6 class="fw-bold mb-3"><i class="fas fa-comment me-2 text-info"></i>Ghi chú</h6>
+                    <p class="mb-0">${r.SpecialRequests}</p>
+                </div>` : ''}
+                <div class="detail-card mb-0">
+                    <div class="row text-muted small">
+                        <div class="col-md-4">
+                            <i class="fas fa-clock me-1"></i>Tạo lúc: ${r.CreatedDate}
+                        </div>
+                        ${r.ConfirmedDate ? `<div class="col-md-4">
+                            <i class="fas fa-check me-1"></i>Xác nhận: ${r.ConfirmedDate}
+                        </div>` : ''}
+                        ${r.CancelledDate ? `<div class="col-md-4">
+                            <i class="fas fa-times me-1"></i>Hủy: ${r.CancelledDate}
+                        </div>` : ''}
+                    </div>
+                    ${r.CancelReason ? `<div class="mt-2 text-danger small">
+                        <i class="fas fa-exclamation-circle me-1"></i>Lý do hủy: ${r.CancelReason}
+                    </div>` : ''}
+                </div>`;
+
+            // Footer buttons
+            const footer = document.getElementById('reservationDetailFooter');
+            let footerHtml = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>';
+            
+            if (r.CanConfirm) {
+                footerHtml += `<button type="button" class="btn btn-success" onclick="detailModal.hide(); openConfirmModal(${r.Id})">
+                    <i class="fas fa-check me-1"></i>Xác nhận
+                </button>`;
+            }
+            if (r.CanComplete) {
+                footerHtml += `<button type="button" class="btn btn-info" onclick="detailModal.hide(); completeReservation(${r.Id})">
+                    <i class="fas fa-user-check me-1"></i>Khách đã đến
+                </button>`;
+            }
+
+            footer.innerHTML = footerHtml;
+        }
+
+        function openConfirmModal(id) {
+            document.getElementById('confirmReservationId').value = id;
+            selectedTableId = null;
+            
+            document.getElementById('availableTablesList').innerHTML = `
+                <div class="text-center py-3">
+                    <i class="fas fa-spinner fa-spin text-muted"></i>
+                </div>`;
+            
+            confirmModal.show();
+
+            fetch('@Url.Action("GetAvailableTablesForReservation", "Cashier")?reservationId=' + id)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        renderAvailableTables(data.tables);
+                    }
+                });
+        }
+
+        function renderAvailableTables(tables) {
+            const container = document.getElementById('availableTablesList');
+            
+            if (tables.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center">Không có bàn phù hợp</p>';
+                return;
+            }
+
+            let html = '<div class="row g-2">';
+            tables.forEach(t => {
+                const isAvailable = t.IsAvailable;
+                html += `
+                    <div class="col-6 col-md-4">
+                        <div class="table-option ${!isAvailable ? 'unavailable' : ''}" 
+                             onclick="${isAvailable ? 'selectTable(' + t.Id + ', this)' : ''}"
+                             data-table-id="${t.Id}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">${t.TableNumber}</div>
+                                    <small class="text-muted">${t.Capacity} chỗ</small>
+                                </div>
+                                ${isAvailable ? 
+                                    '<span class="badge bg-success">Trống</span>' : 
+                                    '<span class="badge bg-danger">Đã đặt</span>'}
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function selectTable(tableId, element) {
+            document.querySelectorAll('.table-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedTableId = tableId;
+        }
+
+        function executeConfirmReservation() {
+            const id = document.getElementById('confirmReservationId').value;
+            
+            showLoading('Đang xử lý...');
+            
+            const formData = new FormData();
+            formData.append('id', id);
+            if (selectedTableId) {
+                formData.append('tableId', selectedTableId);
+            }
+
+            fetch('@Url.Action("ConfirmReservation", "Cashier")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                closeLoading();
+                if (data.success) {
+                    confirmModal.hide();
+                    showSuccess('Thành công', data.message);
+                    loadReservations();
+                } else {
+                    showError('Lỗi', data.message);
+                }
+            })
+            .catch(err => {
+                closeLoading();
+                showError('Lỗi', 'Không thể kết nối đến máy chủ');
+            });
+        }
+
+        function openRejectModal(id) {
+            document.getElementById('rejectReservationId').value = id;
+            document.getElementById('rejectReason').value = '';
+            rejectModal.show();
+        }
+
+        function executeRejectReservation() {
+            const id = document.getElementById('rejectReservationId').value;
+            const reason = document.getElementById('rejectReason').value;
+
+            showLoading('Đang xử lý...');
+            
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('reason', reason);
+
+            fetch('@Url.Action("RejectReservation", "Cashier")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                closeLoading();
+                if (data.success) {
+                    rejectModal.hide();
+                    showSuccess('Thành công', data.message);
+                    loadReservations();
+                } else {
+                    showError('Lỗi', data.message);
+                }
+            })
+            .catch(err => {
+                closeLoading();
+                showError('Lỗi', 'Không thể kết nối đến máy chủ');
+            });
+        }
+
+        function completeReservation(id) {
+            Swal.fire({
+                title: 'Xác nhận khách đã đến?',
+                text: 'Đơn đặt bàn sẽ được đánh dấu hoàn thành',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#22c55e'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showLoading('Đang xử lý...');
+                    
+                    const formData = new FormData();
+                    formData.append('id', id);
+
+                    fetch('@Url.Action("CompleteReservation", "Cashier")', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        closeLoading();
+                        if (data.success) {
+                            showSuccess('Thành công', data.message);
+                            loadReservations();
+                        } else {
+                            showError('Lỗi', data.message);
+                        }
+                    });
+                }
+            });
+        }
+
+        function noShowReservation(id) {
+            Swal.fire({
+                title: 'Khách không đến?',
+                text: 'Đơn đặt bàn sẽ được đánh dấu là khách không đến',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#f59e0b'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showLoading('Đang xử lý...');
+                    
+                    const formData = new FormData();
+                    formData.append('id', id);
+
+                    fetch('@Url.Action("NoShowReservation", "Cashier")', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        closeLoading();
+                        if (data.success) {
+                            showSuccess('Thành công', data.message);
+                            loadReservations();
+                        } else {
+                            showError('Lỗi', data.message);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Auto refresh every 30 seconds
+        setInterval(function() {
+            loadReservations();
+            updateLastUpdated();
+        }, 30000);
+    </script>
+}
