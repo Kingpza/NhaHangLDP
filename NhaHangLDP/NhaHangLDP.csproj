@@ -666,6 +666,10 @@
     <Content Include="Views\Management\OnlineOrders.cshtml" />
     <Content Include="Views\CustomerAccount\MyReservations.cshtml" />
     <Content Include="Views\Cashier\Reservations.cshtml" />
+    <Content Include="Views\Management\SupplierList.cshtml" />
+    <Content Include="Views\Management\CreateSupplier.cshtml" />
+    <Content Include="Views\Management\EditSupplier.cshtml" />
+    <Content Include="Views\Management\ExpiringItems.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

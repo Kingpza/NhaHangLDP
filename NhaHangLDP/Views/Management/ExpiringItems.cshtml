@@ -1,0 +1,329 @@
+﻿@model List<NhaHangLDP.Models.ExpiringItem>
+@{
+    ViewBag.Title = "Nguyên Liệu Sắp Hết Hạn";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-card .icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 15px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+
+        .table-card .card-header {
+            background: #fef3c7;
+            padding: 20px;
+            border-bottom: 1px solid #fcd34d;
+        }
+
+        .table-custom thead th {
+            background: #f8fafc;
+            font-weight: 600;
+            padding: 15px;
+        }
+
+        .table-custom tbody td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+
+        .badge-expired {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-warning-custom {
+            background: #fef3c7;
+            color: #d97706;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-safe {
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .days-left {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .days-left.expired {
+            color: #dc2626;
+        }
+
+        .days-left.warning {
+            color: #d97706;
+        }
+
+        .days-left.safe {
+            color: #16a34a;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            color: #22c55e;
+            margin-bottom: 20px;
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-calendar-times me-2"></i>Nguyên Liệu Sắp Hết Hạn</h1>
+            <p class="mb-0">Danh sách nguyên liệu cần kiểm tra và xử lý</p>
+        </div>
+        <a href="@Url.Action("Inventory", "Management")" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay Lại Kho
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="icon bg-danger bg-opacity-10 text-danger me-3">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div>
+                    <div class="value text-danger">@Model.Count(e => e.DaysUntilExpiry <= 0)</div>
+                    <div class="text-muted">Đã hết hạn</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="icon bg-warning bg-opacity-10 text-warning me-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div>
+                    <div class="value text-warning">@Model.Count(e => e.DaysUntilExpiry > 0 && e.DaysUntilExpiry <= 3)</div>
+                    <div class="text-muted">Hết hạn trong 3 ngày</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="icon bg-info bg-opacity-10 text-info me-3">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <div class="value text-info">@Model.Count(e => e.DaysUntilExpiry > 3 && e.DaysUntilExpiry <= 7)</div>
+                    <div class="text-muted">Hết hạn trong 7 ngày</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="icon bg-secondary bg-opacity-10 text-secondary me-3">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div>
+                    <div class="value">@Model.Count(e => e.DaysUntilExpiry > 7)</div>
+                    <div class="text-muted">Trên 7 ngày</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expiring Items Table -->
+@if (Model == null || !Model.Any())
+{
+    <div class="table-card">
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <h4 class="text-success">Không có nguyên liệu nào sắp hết hạn!</h4>
+            <p class="text-muted">Tất cả nguyên liệu trong kho vẫn còn hạn sử dụng tốt.</p>
+            <a href="@Url.Action("Inventory", "Management")" class="btn btn-outline-primary mt-3">
+                <i class="fas fa-warehouse me-2"></i>Xem Tổng Quan Kho
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Danh Sách Nguyên Liệu Cần Chú Ý (@Model.Count mặt hàng)
+                </h5>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" id="filterDays" style="width: auto;">
+                        <option value="all">Tất cả</option>
+                        <option value="expired">Đã hết hạn</option>
+                        <option value="3days">Trong 3 ngày</option>
+                        <option value="7days">Trong 7 ngày</option>
+                        <option value="30days">Trong 30 ngày</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-custom table-hover mb-0" id="expiringTable">
+                <thead>
+                    <tr>
+                        <th>Nguyên Liệu</th>
+                        <th>Số Lô</th>
+                        <th>Số Lượng</th>
+                        <th>Ngày Hết Hạn</th>
+                        <th>Còn Lại</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderBy(e => e.DaysUntilExpiry))
+                    {
+                        var statusClass = item.DaysUntilExpiry <= 0 ? "expired" : item.DaysUntilExpiry <= 3 ? "warning" : "safe";
+                        var badgeClass = item.DaysUntilExpiry <= 0 ? "badge-expired" : item.DaysUntilExpiry <= 3 ? "badge-warning-custom" : "badge-safe";
+                        var statusText = item.DaysUntilExpiry <= 0 ? "Đã hết hạn" : item.DaysUntilExpiry <= 3 ? "Sắp hết hạn" : "Còn hạn";
+
+                        <tr data-days="@item.DaysUntilExpiry">
+                            <td>
+                                <strong>@item.IngredientName</strong>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.BatchNumber))
+                                {
+                                    <span class="badge bg-secondary">@item.BatchNumber</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">N/A</span>
+                                }
+                            </td>
+                            <td>
+                                <strong>@item.Quantity.ToString("N1")</strong> @item.Unit
+                            </td>
+                            <td>
+                                @item.ExpiryDate.ToString("dd/MM/yyyy")
+                            </td>
+                            <td>
+                                <span class="days-left @statusClass">
+                                    @if (item.DaysUntilExpiry <= 0)
+                                    {
+                                        <text>Quá hạn @Math.Abs(item.DaysUntilExpiry) ngày</text>
+                                    }
+                                    else
+                                    {
+                                        <text>@item.DaysUntilExpiry ngày</text>
+                                    }
+                                </span>
+                            </td>
+                            <td>
+                                <span class="@badgeClass">@statusText</span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="@Url.Action("StockOutbound", "Management")" class="btn btn-outline-warning" title="Xuất kho">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </a>
+                                    <a href="@Url.Action("DamagedStock", "Management")" class="btn btn-outline-danger" title="Báo hỏng">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section scripts {
+    <script>
+        document.getElementById('filterDays')?.addEventListener('change', function() {
+            const filter = this.value;
+            const rows = document.querySelectorAll('#expiringTable tbody tr');
+
+            rows.forEach(row => {
+                const days = parseInt(row.getAttribute('data-days'));
+                let show = true;
+
+                switch (filter) {
+                    case 'expired':
+                        show = days <= 0;
+                        break;
+                    case '3days':
+                        show = days <= 3;
+                        break;
+                    case '7days':
+                        show = days <= 7;
+                        break;
+                    case '30days':
+                        show = days <= 30;
+                        break;
+                    default:
+                        show = true;
+                }
+
+                row.style.display = show ? '' : 'none';
+            });
+        });
+    </script>
+}
