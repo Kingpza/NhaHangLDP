@@ -1,9 +1,10 @@
-﻿using NhaHangLDP.Models;
+using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
-using System.Web.Mvc;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -169,7 +170,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                Session[CART_SESSION_KEY] = null;
+                HttpContext.Session.Remove(CART_SESSION_KEY);
                 return Json(new { success = true, message = "Đã xóa giỏ hàng!" });
             }
             catch (Exception ex)
@@ -185,7 +186,7 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetCartData()
         {
             var cart = GetCart();
-            return Json(new { success = true, cart = cart }, JsonRequestBehavior.AllowGet);
+            return Json(new { success = true, cart = cart });
         }
 
         /// <summary>
@@ -195,7 +196,7 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetCartCount()
         {
             var cart = GetCart();
-            return Json(new { count = cart.TotalItems }, JsonRequestBehavior.AllowGet);
+            return Json(new { count = cart.TotalItems });
         }
 
         /// <summary>
@@ -362,11 +363,11 @@ namespace NhaHangLDP.Controllers
                     category = m.Category
                 }).ToList();
 
-                return Json(new { success = true, items = result }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, items = result });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 
@@ -379,7 +380,12 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         private CartViewModel GetCart()
         {
-            var cart = Session[CART_SESSION_KEY] as CartViewModel;
+            var cartJson = HttpContext.Session.GetString(CART_SESSION_KEY);
+            CartViewModel cart = null;
+            if (!string.IsNullOrEmpty(cartJson))
+            {
+                cart = JsonSerializer.Deserialize<CartViewModel>(cartJson);
+            }
             if (cart == null)
             {
                 cart = new CartViewModel
@@ -400,7 +406,8 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         private void SaveCart(CartViewModel cart)
         {
-            Session[CART_SESSION_KEY] = cart;
+            var cartJson = JsonSerializer.Serialize(cart);
+            HttpContext.Session.SetString(CART_SESSION_KEY, cartJson);
         }
 
         /// <summary>

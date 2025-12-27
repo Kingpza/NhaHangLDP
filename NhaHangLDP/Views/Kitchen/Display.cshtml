@@ -307,7 +307,7 @@
         {
             foreach (var ticket in Model.Tickets)
             {
-                @Html.Partial("_TicketCard", ticket)
+                @await Html.PartialAsync("_TicketCard", ticket)
             }
         }
         else

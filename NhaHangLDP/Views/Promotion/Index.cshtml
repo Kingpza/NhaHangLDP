@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.PromotionListViewModel
+@model NhaHangLDP.Models.PromotionListViewModel
 @{
     ViewBag.Title = "Quản Lý Khuyến Mãi";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -187,17 +187,17 @@
             <div class="col-md-3">
                 <select name="status" class="form-select">
                     <option value="">-- Trạng thái --</option>
-                    <option value="active" @(Model.StatusFilter == "active" ? "selected" : "")>Đang hoạt động</option>
-                    <option value="inactive" @(Model.StatusFilter == "inactive" ? "selected" : "")>Tạm dừng</option>
-                    <option value="expired" @(Model.StatusFilter == "expired" ? "selected" : "")>Hết hạn</option>
-                    <option value="upcoming" @(Model.StatusFilter == "upcoming" ? "selected" : "")>Chưa bắt đầu</option>
+                    <option value="active" selected="@(Model.StatusFilter == "active")">Đang hoạt động</option>
+                    <option value="inactive" selected="@(Model.StatusFilter == "inactive")">Tạm dừng</option>
+                    <option value="expired" selected="@(Model.StatusFilter == "expired")">Hết hạn</option>
+                    <option value="upcoming" selected="@(Model.StatusFilter == "upcoming")">Chưa bắt đầu</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <select name="type" class="form-select">
                     <option value="">-- Loại giảm --</option>
-                    <option value="Percentage" @(Model.TypeFilter == "Percentage" ? "selected" : "")>Phần trăm</option>
-                    <option value="Fixed" @(Model.TypeFilter == "Fixed" ? "selected" : "")>Số tiền cố định</option>
+                    <option value="Percentage" selected="@(Model.TypeFilter == "Percentage")">Phần trăm</option>
+                    <option value="Fixed" selected="@(Model.TypeFilter == "Fixed")">Số tiền cố định</option>
                 </select>
             </div>
             <div class="col-md-2">

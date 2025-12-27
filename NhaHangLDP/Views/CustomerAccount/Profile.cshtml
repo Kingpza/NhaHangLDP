@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.CustomerProfileViewModel
+@model NhaHangLDP.Models.CustomerProfileViewModel
 @{
     ViewBag.Title = "Tài khoản";
     Layout = null;
@@ -164,9 +164,9 @@
                                 <label class="block text-sm font-medium mb-2">Giới tính</label>
                                 <select name="gender" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary">
                                     <option value="">Chọn giới tính</option>
-                                    <option value="Male" @(Model.Gender == "Male" ? "selected" : "")>Nam</option>
-                                    <option value="Female" @(Model.Gender == "Female" ? "selected" : "")>Nữ</option>
-                                    <option value="Other" @(Model.Gender == "Other" ? "selected" : "")>Khác</option>
+                                    <option value="Male" selected="@(Model.Gender == "Male")">Nam</option>
+                                    <option value="Female" selected="@(Model.Gender == "Female")">Nữ</option>
+                                    <option value="Other" selected="@(Model.Gender == "Other")">Khác</option>
                                 </select>
                             </div>
                         </div>

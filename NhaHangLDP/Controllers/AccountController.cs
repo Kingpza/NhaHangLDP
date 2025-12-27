@@ -1,4 +1,3 @@
-﻿using System.Web.Mvc;
 using System.Web.Security;
 using NhaHangLDP.Models;
 using System.Linq;
@@ -6,6 +5,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System;
 using System.Data.Entity;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 namespace NhaHangLDP.Controllers
 {
     public class AccountController : Controller
@@ -38,19 +40,20 @@ namespace NhaHangLDP.Controllers
                     if (employee.IsActive)
                     {
                         // Set Forms Authentication Cookie
-                        FormsAuthentication.SetAuthCookie(username, false);
+                        // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
+                                                // FormsAuthentication not available in ASP.NET Core - use proper authentication
                         
                         // Lưu thông tin vào Session với Role key chuẩn
-                        Session["Role"] = employee.Role.RoleName; // KEY QUAN TRỌNG!
-                        Session["UserRole"] = employee.Role.RoleName; // Backup key
-                        Session["Username"] = employee.UserName;
-                        Session["FullName"] = employee.FullName;
-                        Session["UserId"] = employee.Id;
-                        Session["RoleId"] = employee.RoleId;
-                        Session["CashierId"] = employee.Id;
-                        Session["EmployeeId"] = employee.Id;
-                        Session["LoginTime"] = DateTime.Now;
-                        Session["IsEmployee"] = true;
+                        HttpContext.Session.SetString("Role", (employee.Role.RoleName).ToString()); // KEY QUAN TRỌNG!
+                        HttpContext.Session.SetString("UserRole", (employee.Role.RoleName).ToString()); // Backup key
+                        HttpContext.Session.SetString("Username", (employee.UserName).ToString());
+                        HttpContext.Session.SetString("FullName", (employee.FullName).ToString());
+                        HttpContext.Session.SetString("UserId", (employee.Id).ToString());
+                        HttpContext.Session.SetString("RoleId", (employee.RoleId).ToString());
+                        HttpContext.Session.SetString("CashierId", (employee.Id).ToString());
+                        HttpContext.Session.SetString("EmployeeId", (employee.Id).ToString());
+                        HttpContext.Session.SetString("LoginTime", (DateTime.Now).ToString());
+                        HttpContext.Session.SetString("IsEmployee", (true).ToString());
 
                         // Log session info (for debugging)
                         System.Diagnostics.Debug.WriteLine($"Login Success - Employee: {employee.UserName}, Role: {employee.Role.RoleName}");
@@ -86,19 +89,20 @@ namespace NhaHangLDP.Controllers
                     if (account.IsActive)
                     {
                         // Set Forms Authentication Cookie
-                        FormsAuthentication.SetAuthCookie(username, false);
+                        // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
+                                                // FormsAuthentication not available in ASP.NET Core - use proper authentication
                         
                         // Lưu thông tin vào Session với Role key chuẩn
-                        Session["Role"] = account.Role.RoleName; // KEY QUAN TRỌNG!
-                        Session["UserRole"] = account.Role.RoleName; // Backup key
-                        Session["Username"] = account.Username;
-                        Session["FullName"] = account.FullName;
-                        Session["UserId"] = account.Id;
-                        Session["RoleId"] = account.RoleId;
-                        Session["CashierId"] = account.Id;
-                        Session["EmployeeId"] = account.Id;
-                        Session["LoginTime"] = DateTime.Now;
-                        Session["IsEmployee"] = false;
+                        HttpContext.Session.SetString("Role", (account.Role.RoleName).ToString()); // KEY QUAN TRỌNG!
+                        HttpContext.Session.SetString("UserRole", (account.Role.RoleName).ToString()); // Backup key
+                        HttpContext.Session.SetString("Username", (account.Username).ToString());
+                        HttpContext.Session.SetString("FullName", (account.FullName).ToString());
+                        HttpContext.Session.SetString("UserId", (account.Id).ToString());
+                        HttpContext.Session.SetString("RoleId", (account.RoleId).ToString());
+                        HttpContext.Session.SetString("CashierId", (account.Id).ToString());
+                        HttpContext.Session.SetString("EmployeeId", (account.Id).ToString());
+                        HttpContext.Session.SetString("LoginTime", (DateTime.Now).ToString());
+                        HttpContext.Session.SetString("IsEmployee", (false).ToString());
 
                         // Update last login
                         account.LastLoginDate = DateTime.Now;
@@ -220,8 +224,9 @@ namespace NhaHangLDP.Controllers
         // POST: /Account/LogOut
         public ActionResult LogOut()
         {
-            FormsAuthentication.SignOut();
-            Session.Clear();
+            // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
+            // FormsAuthentication not available in ASP.NET Core
+            HttpContext.Session.Clear();
             return RedirectToAction("Login", "Account");
         }
 

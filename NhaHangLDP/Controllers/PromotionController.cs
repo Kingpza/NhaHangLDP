@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace NhaHangLDP.Controllers
 {
@@ -166,7 +168,7 @@ namespace NhaHangLDP.Controllers
                         ApplicableDays = model.ApplicableDays,
                         IsActive = model.IsActive,
                         CreatedDate = DateTime.Now,
-                        CreatedBy = Session["Username"]?.ToString() ?? "Admin"
+                        CreatedBy = HttpContext.Session.GetString("Username")?.ToString() ?? "Admin"
                     };
 
                     db.Promotion.Add(promotion);
@@ -672,11 +674,11 @@ namespace NhaHangLDP.Controllers
                     })
                     .ToList();
 
-                return Json(new { success = true, promotions = promotions }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, promotions = promotions });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 

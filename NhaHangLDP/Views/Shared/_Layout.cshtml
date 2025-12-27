@@ -1,4 +1,4 @@
-﻿@{
+@{
     Layout = null;
 }
 
@@ -130,11 +130,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    @if (Session["Username"] != null)
+                    @if (Context.Session.GetString("Username") != null)
                     {
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user"></i> @Session["Username"]
+                                <i class="fas fa-user"></i> @Context.Session.GetString("Username")
                             </a>
                             <ul class="dropdown-menu">
                                 <li>

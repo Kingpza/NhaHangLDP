@@ -1,24 +1,26 @@
-using System.Web;
-using System.Web.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 
 namespace NhaHangLDP.Helpers
 {
     public static class AuthorizationHelper
     {
-        public static bool IsAdminOrManager(HttpSessionStateBase session)
+        public static bool IsAdminOrManager(ISession session)
         {
-            if (session["UserRole"] == null)
+            var role = session.GetString("UserRole");
+            if (string.IsNullOrEmpty(role))
                 return false;
 
-            var role = session["UserRole"].ToString().ToLower();
+            role = role.ToLower();
             return role == "admin" || role == "manager";
         }
 
-        public static ActionResult RedirectToLoginIfUnauthorized(HttpSessionStateBase session, UrlHelper url)
+        public static ActionResult RedirectToLoginIfUnauthorized(ISession session, IUrlHelper url)
         {
             if (!IsAdminOrManager(session))
             {
-                return new RedirectToRouteResult(new System.Web.Routing.RouteValueDictionary
+                return new RedirectToRouteResult(new RouteValueDictionary
                 {
                     { "controller", "Account" },
                     { "action", "Login" }

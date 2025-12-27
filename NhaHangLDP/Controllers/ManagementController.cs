@@ -8,8 +8,12 @@ using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Web;
-using System.Web.Mvc;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
 
 namespace NhaHangLDP.Controllers
 {
@@ -22,8 +26,9 @@ namespace NhaHangLDP.Controllers
         private readonly InventoryService inventoryService;
         private readonly ManagementDashboardDataService dashboardService;
         private readonly OrderQueryService orderQueryService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ManagementController()
+        public ManagementController(IWebHostEnvironment webHostEnvironment = null)
         {
             tableService = new TableAdminService(db);
             employeeService = new EmployeeAdminService(db);
@@ -31,13 +36,14 @@ namespace NhaHangLDP.Controllers
             inventoryService = new InventoryService(db);
             dashboardService = new ManagementDashboardDataService(db);
             orderQueryService = new OrderQueryService(db);
+            _webHostEnvironment = webHostEnvironment;
         }
 
         #region Authorization Helper
 
         private bool IsAuthorized()
         {
-            return AuthorizationHelper.IsAdminOrManager(Session);
+            return AuthorizationHelper.IsAdminOrManager(HttpContext.Session);
         }
 
         private ActionResult RedirectUnauthorized()
@@ -276,11 +282,11 @@ namespace NhaHangLDP.Controllers
                 return RedirectUnauthorized();
 
             if (id == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Yêu cầu không hợp lệ");
+                return new StatusCodeResult((int)HttpStatusCode.BadRequest);
 
             Employee employee = employeeService.GetEmployeeById(id.Value);
             if (employee == null)
-                return HttpNotFound("Không tìm thấy nhân viên này.");
+                return NotFound("Không tìm thấy nhân viên này.");
 
             ViewBag.RoleId = new SelectList(employeeService.GetAllRoles(), "Id", "RoleName", employee.RoleId);
             return View(employee);
@@ -333,7 +339,7 @@ namespace NhaHangLDP.Controllers
 
             string errorMessage;
             bool newStatus;
-            string currentUserName = Session["UserName"]?.ToString();
+            string currentUserName = HttpContext.Session.GetString("UserName");
 
             if (employeeService.ToggleEmployeeStatus(id, currentUserName, out errorMessage, out newStatus))
             {
@@ -403,24 +409,28 @@ namespace NhaHangLDP.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateMenuItem(MenuItemFormViewModel model)
+        public async Task<ActionResult> CreateMenuItem(MenuItemFormViewModel model)
         {
             if (!IsAuthorized())
                 return RedirectUnauthorized();
 
             if (ModelState.IsValid)
             {
-                if (model.ImageFile != null && model.ImageFile.ContentLength > 0)
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
                 {
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ImageFile.FileName);
-                    string serverPath = Path.Combine(Server.MapPath("~/images/menu/"), fileName);
-                    Directory.CreateDirectory(Path.GetDirectoryName(serverPath));
-                    model.ImageFile.SaveAs(serverPath);
+                    string uploadsFolder = Path.Combine(_webHostEnvironment?.WebRootPath ?? "wwwroot", "images", "menu");
+                    Directory.CreateDirectory(uploadsFolder);
+                    string filePath = Path.Combine(uploadsFolder, fileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ImageFile.CopyToAsync(stream);
+                    }
                     model.MenuItem.ImageUrl = fileName;
                 }
 
                 string errorMessage;
-                if (menuService.CreateMenuItem(model.MenuItem, model.SelectedIngredients, Session["Username"]?.ToString() ?? "Admin", out errorMessage))
+                if (menuService.CreateMenuItem(model.MenuItem, model.SelectedIngredients, HttpContext.Session.GetString("Username") ?? "Admin", out errorMessage))
                 {
                     TempData["Success"] = "Thêm món ăn thành công!";
                     return RedirectToAction("MenuManagement");
@@ -438,11 +448,11 @@ namespace NhaHangLDP.Controllers
                 return RedirectUnauthorized();
 
             if (id == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return new StatusCodeResult((int)HttpStatusCode.BadRequest);
 
             MenuItem menuItem = menuService.GetMenuItemById(id.Value);
             if (menuItem == null)
-                return HttpNotFound();
+                return NotFound();
 
             var viewModel = new MenuItemFormViewModel
             {
@@ -457,7 +467,7 @@ namespace NhaHangLDP.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult EditMenuItem(MenuItemFormViewModel model)
+        public async Task<ActionResult> EditMenuItem(MenuItemFormViewModel model)
         {
             if (!IsAuthorized())
                 return RedirectUnauthorized();
@@ -467,12 +477,16 @@ namespace NhaHangLDP.Controllers
 
             if (ModelState.IsValid)
             {
-                if (model.ImageFile != null && model.ImageFile.ContentLength > 0)
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
                 {
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ImageFile.FileName);
-                    string serverPath = Path.Combine(Server.MapPath("~/images/menu/"), fileName);
-                    Directory.CreateDirectory(Path.GetDirectoryName(serverPath));
-                    model.ImageFile.SaveAs(serverPath);
+                    string uploadsFolder = Path.Combine(_webHostEnvironment?.WebRootPath ?? "wwwroot", "images", "menu");
+                    Directory.CreateDirectory(uploadsFolder);
+                    string filePath = Path.Combine(uploadsFolder, fileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ImageFile.CopyToAsync(stream);
+                    }
                     model.MenuItem.ImageUrl = fileName;
                 }
 
@@ -531,7 +545,7 @@ namespace NhaHangLDP.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateCombo([Bind(Include = "Name,Description,ComboPrice")] MenuCombo combo, List<int> selectedMenuItems)
+        public ActionResult CreateCombo([Bind("Name", "Description", "ComboPrice")] MenuCombo combo, List<int> selectedMenuItems)
         {
             if (!IsAuthorized())
                 return RedirectUnauthorized();
@@ -561,7 +575,7 @@ namespace NhaHangLDP.Controllers
 
             var combo = menuService.GetComboById(id);
             if (combo == null)
-                return HttpNotFound();
+                return NotFound();
 
             ViewBag.AvailableMenuItems = menuService.GetAvailableMenuItems();
             return View("EditCombo", combo);
@@ -569,7 +583,7 @@ namespace NhaHangLDP.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult EditCombo([Bind(Include = "Id,Name,Description,ComboPrice")] MenuCombo combo, List<int> selectedMenuItems)
+        public ActionResult EditCombo([Bind("Id", "Name", "Description", "ComboPrice")] MenuCombo combo, List<int> selectedMenuItems)
         {
             if (!IsAuthorized())
                 return RedirectUnauthorized();
@@ -676,14 +690,14 @@ namespace NhaHangLDP.Controllers
         {
             var ingredient = inventoryService.GetIngredientById(id);
             if (ingredient == null)
-                return HttpNotFound();
+                return NotFound();
 
             return View(ingredient);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult EditIngredient([Bind(Include = "Id, Name, Unit, EstimatedCost, LowStockThreshold, AvailableStock")] Ingredient formData)
+        public ActionResult EditIngredient([Bind("Id", " Name", " Unit", " EstimatedCost", " LowStockThreshold", " AvailableStock")] Ingredient formData)
         {
             if (ModelState.IsValid)
             {
@@ -703,13 +717,13 @@ namespace NhaHangLDP.Controllers
             {
                 var result = inventoryService.GetIngredientDetail(id);
                 if (result == null)
-                    return Json(new { success = false, message = "Không tìm thấy nguyên liệu!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy nguyên liệu!" });
 
-                return Json(new { success = true, ingredient = ((dynamic)result).ingredient, recentTransactions = ((dynamic)result).recentTransactions }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, ingredient = ((dynamic)result).ingredient, recentTransactions = ((dynamic)result).recentTransactions });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
             }
         }
 
@@ -776,7 +790,7 @@ namespace NhaHangLDP.Controllers
                     {
                         InboundCode = "IN" + DateTime.Now.ToString("yyyyMMddHHmmss"),
                         InboundDate = DateTime.Now,
-                        CreatedBy = Session["Username"]?.ToString() ?? "Admin",
+                        CreatedBy = HttpContext.Session.GetString("Username") ?? "Admin",
                         Status = "Draft"
                     },
                     AvailableIngredients = inventoryService.GetAllIngredients()
@@ -817,7 +831,7 @@ namespace NhaHangLDP.Controllers
             }
 
             string errorMessage;
-            if (inventoryService.ProcessStockInbound(model, submitType, Session["Username"]?.ToString(), out errorMessage))
+            if (inventoryService.ProcessStockInbound(model, submitType, HttpContext.Session.GetString("Username"), out errorMessage))
             {
                 TempData["Success"] = submitType == "draft" ? "Đã lưu nháp phiếu nhập kho!" : "Nhập kho thành công!";
                 return RedirectToAction("IngredientList");
@@ -893,7 +907,7 @@ namespace NhaHangLDP.Controllers
                     {
                         OutboundCode = "OUT" + DateTime.Now.ToString("yyyyMMddHHmmss"),
                         OutboundDate = DateTime.Now,
-                        CreatedBy = Session["Username"]?.ToString() ?? "Admin",
+                        CreatedBy = HttpContext.Session.GetString("Username") ?? "Admin",
                         Status = "Draft"
                     },
                     AvailableIngredients = inventoryService.GetIngredientsWithStock()
@@ -1122,10 +1136,10 @@ namespace NhaHangLDP.Controllers
                 }
 
                 var reportData = inventoryService.GetInventoryReportData(from, to);
-                
+
                 ViewBag.FromDate = fromDate;
                 ViewBag.ToDate = toDate;
-                
+
                 return View(reportData);
             }
             catch (Exception ex)
@@ -1148,13 +1162,13 @@ namespace NhaHangLDP.Controllers
                 var csvContent = inventoryService.ExportInventoryToCsv();
                 var bytes = System.Text.Encoding.UTF8.GetBytes(csvContent);
                 var fileName = $"BaoCaoKho_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-                
+
                 // Thêm BOM để Excel hiển thị đúng tiếng Việt
                 var bom = new byte[] { 0xEF, 0xBB, 0xBF };
                 var result = new byte[bom.Length + bytes.Length];
                 bom.CopyTo(result, 0);
                 bytes.CopyTo(result, bom.Length);
-                
+
                 return File(result, "text/csv", fileName);
             }
             catch (Exception ex)
@@ -1171,7 +1185,7 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetInventoryChartData(string period = "month")
         {
             if (!IsAuthorized())
-                return Json(new { success = false }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false });
 
             try
             {
@@ -1213,11 +1227,11 @@ namespace NhaHangLDP.Controllers
                         lowStockCount = reportData.LowStockCount,
                         outOfStockCount = reportData.OutOfStockCount
                     }
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -1278,19 +1292,19 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetOnlineOrderDetail(int orderId)
         {
             if (!IsAuthorized())
-                return Json(new { success = false, message = "Không có quyền truy cập!" }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Không có quyền truy cập!" });
 
             try
             {
                 var order = orderQueryService.GetOnlineOrderDetail(orderId);
                 if (order == null)
-                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
 
-                return Json(new { success = true, order }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, order });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 
@@ -1342,7 +1356,7 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetOnlineOrderStats(string period = "week")
         {
             if (!IsAuthorized())
-                return Json(new { success = false, message = "Không có quyền truy cập!" }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Không có quyền truy cập!" });
 
             try
             {
@@ -1373,8 +1387,8 @@ namespace NhaHangLDP.Controllers
                     completedOrders = orders.Count(o => o.Status == "Completed"),
                     cancelledOrders = orders.Count(o => o.Status == "Cancelled"),
                     totalRevenue = orders.Where(o => o.Status == "Completed").Sum(o => o.TotalAmount),
-                    averageOrderValue = orders.Where(o => o.Status == "Completed").Any() 
-                        ? orders.Where(o => o.Status == "Completed").Average(o => o.TotalAmount) 
+                    averageOrderValue = orders.Where(o => o.Status == "Completed").Any()
+                        ? orders.Where(o => o.Status == "Completed").Average(o => o.TotalAmount)
                         : 0,
                     byType = new
                     {
@@ -1394,11 +1408,11 @@ namespace NhaHangLDP.Controllers
                     }
                 };
 
-                return Json(new { success = true, stats }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, stats });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -1505,17 +1519,19 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetSupplierDetail(int id)
         {
             if (!IsAuthorized())
-                return Json(new { success = false, message = "Không có quyền truy cập!" }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Không có quyền truy cập!" });
 
             try
             {
                 var detail = inventoryService.GetSupplierDetail(id);
                 if (detail == null)
-                    return Json(new { success = false, message = "Không tìm thấy nhà cung cấp!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy nhà cung cấp!" });
 
-                return Json(new { 
-                    success = true, 
-                    supplier = new {
+                return Json(new
+                {
+                    success = true,
+                    supplier = new
+                    {
                         id = detail.Supplier.Id,
                         name = detail.Supplier.Name,
                         contactPerson = detail.Supplier.ContactPerson,
@@ -1525,11 +1541,11 @@ namespace NhaHangLDP.Controllers
                         totalValue = detail.TotalValue
                     },
                     recentInbounds = detail.RecentInbounds
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 
@@ -1572,26 +1588,28 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetExpiringItemsAlert()
         {
             if (!IsAuthorized())
-                return Json(new { success = false }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false });
 
             try
             {
-                var expiringItems = inventoryService.GetExpiringItems(7); // 7 ngày
-                return Json(new { 
-                    success = true, 
+                var expiringItems = inventoryService.GetExpiringItems(7);
+                return Json(new
+                {
+                    success = true,
                     count = expiringItems.Count,
-                    items = expiringItems.Take(5).Select(e => new {
+                    items = expiringItems.Take(5).Select(e => new
+                    {
                         name = e.IngredientName,
                         quantity = e.Quantity,
                         unit = e.Unit,
                         daysLeft = e.DaysUntilExpiry,
                         expiryDate = e.ExpiryDate.ToString("dd/MM/yyyy")
                     })
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
             catch
             {
-                return Json(new { success = false, count = 0 }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, count = 0 });
             }
         }
 
@@ -1601,8 +1619,9 @@ namespace NhaHangLDP.Controllers
 
         private int GetCurrentEmployeeId()
         {
-            if (Session["EmployeeId"] != null)
-                return (int)Session["EmployeeId"];
+            var employeeIdStr = HttpContext.Session.GetString("EmployeeId");
+            if (!string.IsNullOrEmpty(employeeIdStr) && int.TryParse(employeeIdStr, out int employeeId))
+                return employeeId;
 
             var adminEmployee = db.Employee.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive);
             return adminEmployee?.Id ?? 1;

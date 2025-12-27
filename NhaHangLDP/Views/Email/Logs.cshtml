@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.EmailLogListViewModel
+@model NhaHangLDP.Models.EmailLogListViewModel
 @{
     ViewBag.Title = "Lịch Sử Gửi Email";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -113,9 +113,9 @@
         <div class="col-md-3">
             <select name="status" class="form-select">
                 <option value="">-- Trạng thái --</option>
-                <option value="Sent" @(Model.StatusFilter == "Sent" ? "selected" : "")>Đã gửi</option>
-                <option value="Failed" @(Model.StatusFilter == "Failed" ? "selected" : "")>Thất bại</option>
-                <option value="Pending" @(Model.StatusFilter == "Pending" ? "selected" : "")>Đang chờ</option>
+                <option value="Sent" selected="@(Model.StatusFilter == "Sent")">Đã gửi</option>
+                <option value="Failed" selected="@(Model.StatusFilter == "Failed")">Thất bại</option>
+                <option value="Pending" selected="@(Model.StatusFilter == "Pending")">Đang chờ</option>
             </select>
         </div>
         <div class="col-md-3">
@@ -123,7 +123,7 @@
                 <option value="">-- Loại email --</option>
                 @foreach (var item in ViewBag.EmailTypes as List<SelectListItem>)
                 {
-                    <option value="@item.Value" @(Model.TypeFilter == item.Value ? "selected" : "")>@item.Value</option>
+                    <option value="@item.Value" selected="@(Model.TypeFilter == item.Value)">@item.Value</option>
                 }
             </select>
         </div>

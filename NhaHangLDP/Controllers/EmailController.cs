@@ -1,12 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
 using NhaHangLDP.Filters;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace NhaHangLDP.Controllers
 {
@@ -208,7 +210,6 @@ namespace NhaHangLDP.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [ValidateInput(false)] // Cho phép HTML
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult CreateTemplate(EmailTemplateViewModel model)
         {
@@ -281,7 +282,6 @@ namespace NhaHangLDP.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [ValidateInput(false)]
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult EditTemplate(EmailTemplateViewModel model)
         {

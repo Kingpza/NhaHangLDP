@@ -1,11 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
 using NhaHangLDP.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -131,7 +132,7 @@ namespace NhaHangLDP.Controllers
             // Lấy order hiện tại nếu có
             var currentOrder = db.QROrder
                 .Include(o => o.QROrderDetail.Select(d => d.MenuItem))
-                .Where(o => o.SessionToken == token && o.TableId == tableId && 
+                .Where(o => o.SessionToken == token && o.TableId == tableId &&
                            (o.Status == "Draft" || o.Status == "Submitted"))
                 .OrderByDescending(o => o.CreatedTime)
                 .FirstOrDefault();
@@ -261,8 +262,8 @@ namespace NhaHangLDP.Controllers
                 // Tìm hoặc tạo order draft
                 var order = db.QROrder
                     .Include(o => o.QROrderDetail)
-                    .FirstOrDefault(o => o.SessionToken == dto.SessionToken && 
-                                        o.TableId == dto.TableId && 
+                    .FirstOrDefault(o => o.SessionToken == dto.SessionToken &&
+                                        o.TableId == dto.TableId &&
                                         o.Status == "Draft");
 
                 if (order == null)
@@ -405,8 +406,8 @@ namespace NhaHangLDP.Controllers
                 {
                     var order = db.QROrder
                         .Include(o => o.QROrderDetail)
-                        .FirstOrDefault(o => o.SessionToken == dto.SessionToken && 
-                                            o.TableId == dto.TableId && 
+                        .FirstOrDefault(o => o.SessionToken == dto.SessionToken &&
+                                            o.TableId == dto.TableId &&
                                             o.Status == "Draft");
 
                     if (order == null)
@@ -423,7 +424,7 @@ namespace NhaHangLDP.Controllers
                     decimal discount = 0;
                     if (!string.IsNullOrEmpty(dto.PromotionCode))
                     {
-                        var promoResult = ValidatePromotionForOrder(dto.PromotionCode, 
+                        var promoResult = ValidatePromotionForOrder(dto.PromotionCode,
                             order.QROrderDetail.Sum(d => d.Quantity * d.UnitPrice),
                             dto.CustomerPhone);
 
@@ -493,15 +494,15 @@ namespace NhaHangLDP.Controllers
 
                 if (order == null)
                 {
-                    return Json(new { success = true, hasOrder = false }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = true, hasOrder = false });
                 }
 
                 var viewModel = MapToOrderViewModel(order);
-                return Json(new { success = true, hasOrder = true, order = viewModel }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, hasOrder = true, order = viewModel });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -519,15 +520,15 @@ namespace NhaHangLDP.Controllers
 
                 if (order == null)
                 {
-                    return Json(new { success = false, message = "Không tìm thấy đơn hàng" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
                 }
 
                 var viewModel = MapToOrderViewModel(order);
-                return Json(new { success = true, order = viewModel }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, order = viewModel });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -628,7 +629,7 @@ namespace NhaHangLDP.Controllers
 
                     // Tạo Order chính thức
                     var activeShift = db.CashierShift.FirstOrDefault(s => s.Status == "Active");
-                    
+
                     var order = new Order
                     {
                         TableId = qrOrder.TableId,
@@ -652,7 +653,7 @@ namespace NhaHangLDP.Controllers
                             Notes = qrItem.ItemNotes
                         };
                         db.OrderDetail.Add(detail);
-                        
+
                         qrItem.ItemStatus = "Confirmed";
                     }
 
@@ -730,10 +731,10 @@ namespace NhaHangLDP.Controllers
             var table = db.RestaurantTable.Include(t => t.TableArea).FirstOrDefault(t => t.Id == tableId);
             if (table == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
 
-            var baseUrl = Request.Url.GetLeftPart(UriPartial.Authority);
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var qrUrl = $"{baseUrl}{Url.Action("Scan", "QROrder", new { tableId = tableId })}";
 
             ViewBag.QRUrl = qrUrl;
@@ -750,8 +751,8 @@ namespace NhaHangLDP.Controllers
         {
             if (string.IsNullOrEmpty(token)) return false;
 
-            return db.TableSession.Any(s => s.TableId == tableId && 
-                                           s.SessionToken == token && 
+            return db.TableSession.Any(s => s.TableId == tableId &&
+                                           s.SessionToken == token &&
                                            s.Status == "Active");
         }
 
@@ -864,7 +865,7 @@ namespace NhaHangLDP.Controllers
 
         private int? GetCurrentEmployeeId()
         {
-            return Session["EmployeeId"] as int?;
+            return HttpContext.Session.GetInt32("EmployeeId");
         }
 
         protected override void Dispose(bool disposing)

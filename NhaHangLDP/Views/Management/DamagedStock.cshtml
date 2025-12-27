@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.DamagedStock
+@model NhaHangLDP.Models.DamagedStock
 @{
     ViewBag.Title = "Báo Cáo Hàng Hỏng";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -199,7 +199,7 @@
                         <div class="mb-3">
                             @Html.LabelFor(m => m.ReportedByEmployeeId, "Người báo cáo", new { @class = "form-label" })
                             @Html.DropDownListFor(m => m.ReportedByEmployeeId,
-                                new SelectList(ViewBag.Employees as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "FullName", Session["UserId"]),
+                                new SelectList(ViewBag.Employees as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "FullName", Context.Session.GetString("UserId")),
                                 "-- Chọn nhân viên --",
                                 new { @class = "form-select", required = "required" })
                             @Html.ValidationMessageFor(m => m.ReportedByEmployeeId, "", new { @class = "text-danger small" })
@@ -456,7 +456,7 @@
             const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
             document.querySelector('input[name="DamageDate"]').value = localDateTime;
 
-            const userIdFromSession = '@Session["UserId"]';
+            const userIdFromSession = '@Context.Session.GetString("UserId")';
             if (userIdFromSession) {
                 const employeeSelect = document.querySelector('select[name="ReportedByEmployeeId"]');
                 if (employeeSelect) {

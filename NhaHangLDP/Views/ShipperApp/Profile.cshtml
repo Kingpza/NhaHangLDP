@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.Shipper
+@model NhaHangLDP.Models.Shipper
 @{
     ViewBag.Title = "Thông tin cá nhân";
     Layout = null;
@@ -148,9 +148,9 @@
                         Loại xe
                     </label>
                     <select name="vehicleType" class="form-input w-full px-5 py-4 rounded-full border-2 border-border-light focus:outline-none bg-white">
-                        <option value="Xe máy" @(Model.VehicleType == "Xe máy" ? "selected" : "")>Xe máy</option>
-                        <option value="Xe đạp điện" @(Model.VehicleType == "Xe đạp điện" ? "selected" : "")>Xe đạp điện</option>
-                        <option value="Ô tô" @(Model.VehicleType == "Ô tô" ? "selected" : "")>Ô tô</option>
+                        <option value="Xe máy" selected="@(Model.VehicleType == "Xe máy")">Xe máy</option>
+                        <option value="Xe đạp điện" selected="@(Model.VehicleType == "Xe đạp điện")">Xe đạp điện</option>
+                        <option value="Ô tô" selected="@(Model.VehicleType == "Ô tô")">Ô tô</option>
                     </select>
                 </div>
                 <div>

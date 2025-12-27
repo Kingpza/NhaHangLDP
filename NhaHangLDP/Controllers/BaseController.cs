@@ -1,5 +1,7 @@
-﻿using System.Web.Mvc;
-using System.Web.Routing;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.Http;
 
 namespace NhaHangLDP.Controllers
 {
@@ -8,10 +10,13 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class BaseController : Controller
     {
-        protected override void OnActionExecuting(ActionExecutingContext filterContext)
+        public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
             // Kiểm tra session có tồn tại không
-            if (Session["Username"] == null || Session["UserRole"] == null)
+            var username = HttpContext.Session.GetString("Username");
+            var userRole = HttpContext.Session.GetString("UserRole");
+            
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(userRole))
             {
                 // Nếu không có session, redirect về trang đăng nhập
                 filterContext.Result = new RedirectToRouteResult(
@@ -30,7 +35,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         protected bool IsInRole(params string[] roles)
         {
-            var userRole = Session["UserRole"]?.ToString();
+            var userRole = HttpContext.Session.GetString("UserRole");
             if (string.IsNullOrEmpty(userRole))
                 return false;
 
@@ -64,7 +69,8 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         protected int? GetCurrentUserId()
         {
-            if (Session["UserId"] != null && int.TryParse(Session["UserId"].ToString(), out int userId))
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            if (!string.IsNullOrEmpty(userIdStr) && int.TryParse(userIdStr, out int userId))
             {
                 return userId;
             }
@@ -76,7 +82,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         protected string GetCurrentUsername()
         {
-            return Session["Username"]?.ToString();
+            return HttpContext.Session.GetString("Username");
         }
 
         /// <summary>
@@ -84,7 +90,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         protected string GetCurrentFullName()
         {
-            return Session["FullName"]?.ToString() ?? Session["Username"]?.ToString();
+            return HttpContext.Session.GetString("FullName") ?? HttpContext.Session.GetString("Username");
         }
     }
 }

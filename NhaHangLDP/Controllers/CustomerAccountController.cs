@@ -1,12 +1,11 @@
-﻿using NhaHangLDP.Models;
+using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
-using System.Web.Mvc;
-using System.Web.Security;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -68,10 +67,10 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Set session - lưu đầy đủ thông tin khách hàng
-                Session["CustomerId"] = customer.Id;
-                Session["CustomerName"] = customer.FullName;
-                Session["CustomerEmail"] = customer.Email;
-                Session["CustomerPhone"] = customer.Phone;
+                HttpContext.Session.SetString("CustomerId", (customer.Id).ToString());
+                HttpContext.Session.SetString("CustomerName", (customer.FullName).ToString());
+                HttpContext.Session.SetString("CustomerEmail", (customer.Email).ToString());
+                HttpContext.Session.SetString("CustomerPhone", (customer.Phone).ToString());
 
                 // Update last login
                 _db.Database.ExecuteSqlCommand(
@@ -81,7 +80,8 @@ namespace NhaHangLDP.Controllers
                 // Set auth cookie if remember me
                 if (model.RememberMe)
                 {
-                    FormsAuthentication.SetAuthCookie(customer.Email, true);
+                    // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
+                    // FormsAuthentication not available in ASP.NET Core - use proper authentication
                 }
 
                 // Redirect
@@ -174,10 +174,10 @@ namespace NhaHangLDP.Controllers
                     passwordHash).FirstOrDefault();
 
                 // Auto login - lưu đầy đủ thông tin khách hàng
-                Session["CustomerId"] = (int)customerId;
-                Session["CustomerName"] = model.FullName;
-                Session["CustomerEmail"] = model.Email;
-                Session["CustomerPhone"] = model.Phone;
+                HttpContext.Session.SetInt32("CustomerId", (int)customerId);
+                HttpContext.Session.SetString("CustomerName", model.FullName);
+                HttpContext.Session.SetString("CustomerEmail", model.Email);
+                HttpContext.Session.SetString("CustomerPhone", model.Phone);
 
                 TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà Hàng LDP.";
                 return RedirectToAction("Menu", "Public");
@@ -198,8 +198,9 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Logout()
         {
-            Session.Clear();
-            FormsAuthentication.SignOut();
+            HttpContext.Session.Clear();
+            // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
+            // FormsAuthentication not available in ASP.NET Core
             return RedirectToAction("Menu", "Public");
         }
 
@@ -313,7 +314,7 @@ namespace NhaHangLDP.Controllers
                     @"UPDATE Customer SET FullName = @p1, Phone = @p2, DateOfBirth = @p3, Gender = @p4 WHERE Id = @p0",
                     customerId, fullName, phone, dateOfBirth, gender);
 
-                Session["CustomerName"] = fullName;
+                HttpContext.Session.SetString("CustomerName", (fullName).ToString());
 
                 return Json(new { success = true, message = "Cập nhật thành công!" });
             }
@@ -568,7 +569,7 @@ namespace NhaHangLDP.Controllers
                 var customerId = GetCustomerId();
                 if (customerId == null)
                 {
-                    return Json(new { success = false, message = "Vui lòng đăng nhập!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Vui lòng đăng nhập!" });
                 }
 
                 var address = _db.Database.SqlQuery<CustomerAddressInfo>(
@@ -579,14 +580,14 @@ namespace NhaHangLDP.Controllers
 
                 if (address == null)
                 {
-                    return Json(new { success = false, message = "Không tìm thấy địa chỉ!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy địa chỉ!" });
                 }
 
-                return Json(new { success = true, data = address }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = address });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -731,8 +732,9 @@ public JsonResult DeleteAccount()
             customerId);
 
         // Clear session
-        Session.Clear();
-        FormsAuthentication.SignOut();
+        HttpContext.Session.Clear();
+        // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
+        // FormsAuthentication not available in ASP.NET Core
 
         return Json(new { success = true, message = "Tài khoản đã bị xóa!" });
     }
@@ -886,12 +888,12 @@ private class MyReservationInfo
 
 private bool IsCustomerLoggedIn()
 {
-    return Session["CustomerId"] != null;
+    return HttpContext.Session.GetString("CustomerId") != null;
 }
 
 private int? GetCustomerId()
 {
-    return Session["CustomerId"] as int?;
+    return HttpContext.Session.GetInt32("CustomerId");
 }
 
 private CustomerProfileViewModel GetCustomerProfile(int customerId)

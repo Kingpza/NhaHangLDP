@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.CartViewModel
+@model NhaHangLDP.Models.CartViewModel
 @{
     ViewBag.Title = "Giỏ hàng";
     Layout = null;
@@ -223,7 +223,7 @@
                         }
 
                         <!-- Checkout Button -->
-                        @if (Session["CustomerId"] != null)
+                        @if (Context.Session.GetString("CustomerId") != null)
                         {
                             <a href="@Url.Action("Index", "Checkout")" 
                                class="mt-6 w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/30">

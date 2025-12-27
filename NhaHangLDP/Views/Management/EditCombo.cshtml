@@ -1,4 +1,5 @@
-﻿@model NhaHangLDP.Models.MenuCombo
+
+@model NhaHangLDP.Models.MenuCombo
 @{
     ViewBag.Title = "Chỉnh Sửa Combo Món Ăn";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -170,7 +171,7 @@
 
                     <div class="row" id="menuItemsList">
                         @* Tự động lấy danh sách ID đã chọn từ Model *@
-                        @{ var selectedIds = new HashSet<int>(Model.MenuComboItems.Select(ci => ci.MenuItemId)); }
+                        @{ var selectedIds = new HashSet<int>(Model.MenuComboItem.Select(ci => ci.MenuItemId)); }
 
                         @foreach (var item in (List<NhaHangLDP.Models.MenuItem>)ViewBag.AvailableMenuItems)
                         {
@@ -178,7 +179,7 @@
 
                             <div class="col-md-6 col-lg-4">
                                 @* Thêm class "selected" nếu đã chọn *@
-                                <div class="menu-item-card @(isSelected ? "selected" : "")" onclick="toggleMenuItem(@item.Id, '@Html.Raw(HttpUtility.JavaScriptStringEncode(item.Name))', @item.Price)">
+                                <div class="menu-item-card @(isSelected ? "selected" : "")" onclick="toggleMenuItem(@item.Id, '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(item.Name))', @item.Price)">
                                     @* Thêm "checked" nếu đã chọn *@
                                     <input type="checkbox" class="item-checkbox" name="selectedMenuItems" value="@item.Id" id="item_@item.Id" @(isSelected ? "checked" : "")>
 
@@ -276,7 +277,7 @@
     <script>
         // === KHỞI TẠO DỮ LIỆU CÓ SẴN KHI SỬA ===
         let selectedItems = [
-            @foreach(var comboItem in Model.MenuComboItems)
+            @foreach(var comboItem in Model.MenuComboItem)
             {
                 // Lấy MenuItem từ navigation property
                 var menuItem = comboItem.MenuItem;
@@ -284,7 +285,7 @@
                 {
                     // Dùng <text> để Razor render đúng JS
                     <text>
-                    { id: @menuItem.Id, name: '@Html.Raw(HttpUtility.JavaScriptStringEncode(menuItem.Name))', price: @menuItem.Price },
+                    { id: @menuItem.Id, name: '@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(menuItem.Name))', price: @menuItem.Price },
                     </text>
                 }
             }

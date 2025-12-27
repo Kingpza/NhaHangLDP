@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.AttendanceReportViewModel
+@model NhaHangLDP.Models.AttendanceReportViewModel
 @{
     ViewBag.Title = "Báo cáo chấm công";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -144,7 +144,7 @@
                     {
                         foreach (var emp in Model.Employees)
                         {
-                            <option value="@emp.Id" @(Model.EmployeeId == emp.Id ? "selected" : "")>
+                            <option value="@emp.Id" selected="@(Model.EmployeeId == emp.Id)">
                                 @emp.FullName
                             </option>
                         }

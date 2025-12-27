@@ -1,12 +1,14 @@
-﻿using System;
+using System;
+using System.Text.Json;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
 using NhaHangLDP.Helpers;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -56,8 +58,8 @@ namespace NhaHangLDP.Controllers
             if (shiftService.StartShift(GetCurrentCashierIdFromSession(), openingAmount, notes, out errorMessage))
             {
                 var activeShift = shiftService.GetActiveShift();
-                Session["ActiveShiftId"] = activeShift.Id;
-                Session["ShiftStartTime"] = activeShift.StartTime;
+                HttpContext.Session.SetString("ActiveShiftId", (activeShift.Id).ToString());
+                HttpContext.Session.SetString("ShiftStartTime", (activeShift.StartTime).ToString());
                 return Json(new { success = true, message = "Mở ca thành công!", shiftId = activeShift.Id, openingAmount });
             }
             return Json(new { success = false, message = errorMessage });
@@ -71,8 +73,8 @@ namespace NhaHangLDP.Controllers
 
             if (shiftService.CloseShift(out shiftSummary, out errorMessage))
             {
-                Session.Remove("ActiveShiftId");
-                Session.Remove("ShiftStartTime");
+                HttpContext.Session.Remove("ActiveShiftId");
+                HttpContext.Session.Remove("ShiftStartTime");
                 var summary = (dynamic)shiftSummary;
                 return Json(new
                 {
@@ -111,9 +113,9 @@ namespace NhaHangLDP.Controllers
             if (activeShift == null)
                 return RedirectToAction("OpenShift");
 
-            Session["ActiveShiftId"] = activeShift.Id;
-            Session["ShiftStartTime"] = activeShift.StartTime;
-            Session["CashierName"] = activeShift.Employee?.FullName ?? "Thu Ngân";
+            HttpContext.Session.SetString("ActiveShiftId", (activeShift.Id).ToString());
+            HttpContext.Session.SetString("ShiftStartTime", (activeShift.StartTime).ToString());
+            HttpContext.Session.SetString("CashierName", (activeShift.Employee?.FullName ?? "Thu Ngân").ToString());
 
             return View(dashboardService.GetDashboardData(activeShift.Id));
         }
@@ -157,11 +159,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var menuItems = menuService.GetMenuItems(category);
-                return Json(new { success = true, items = menuItems }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, items = menuItems });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi khi tải menu: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi khi tải menu: " + ex.Message });
             }
         }
 
@@ -199,20 +201,20 @@ namespace NhaHangLDP.Controllers
         public ActionResult PrintBill(string orderId)
         {
             if (string.IsNullOrEmpty(orderId))
-                return HttpNotFound("Không có mã đơn hàng.");
+                return NotFound("Không có mã đơn hàng.");
 
             int numericOrderId;
             if (!int.TryParse(orderId.Replace("DH", ""), out numericOrderId))
             {
                 if (!int.TryParse(orderId, out numericOrderId))
-                    return HttpNotFound("Mã đơn hàng không hợp lệ: " + orderId);
+                    return NotFound("Mã đơn hàng không hợp lệ: " + orderId);
             }
 
             try
             {
                 var invoiceViewModel = reportService.GenerateInvoice(numericOrderId);
                 if (invoiceViewModel == null)
-                    return HttpNotFound("Không tìm thấy đơn hàng.");
+                    return NotFound("Không tìm thấy đơn hàng.");
                 
                 return View("PrintBill", invoiceViewModel);
             }
@@ -232,17 +234,17 @@ namespace NhaHangLDP.Controllers
             try
             {
                 if (shiftService.GetActiveShift() == null)
-                    return Json(new { success = false, message = "Vui lòng mở ca trước!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
                 var tableStatus = orderQueryService.GetTableStatus(tableId);
                 if (tableStatus == null)
-                    return Json(new { success = false, message = "Không tìm thấy bàn!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy bàn!" });
                 
-                return Json(new { success = true, data = tableStatus }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = tableStatus });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Có lỗi xảy ra: " + ex.Message });
             }
         }
 
@@ -365,14 +367,14 @@ namespace NhaHangLDP.Controllers
             {
                 var activeShift = shiftService.GetActiveShift();
                 if (activeShift == null)
-                    return Json(new { success = false, message = "Vui lòng mở ca trước khi xem đơn hàng!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Vui lòng mở ca trước khi xem đơn hàng!" });
 
                 var orders = orderQueryService.GetOrdersData(activeShift.Id, status);
-                return Json(new { success = true, orders }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, orders });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi khi lấy dữ liệu đơn hàng: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi khi lấy dữ liệu đơn hàng: " + ex.Message });
             }
         }
 
@@ -383,13 +385,13 @@ namespace NhaHangLDP.Controllers
             {
                 var orderDetail = orderQueryService.GetOrderDetail(orderId);
                 if (orderDetail == null)
-                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
                 
-                return Json(new { success = true, order = orderDetail }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, order = orderDetail });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi khi lấy chi tiết đơn hàng: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi khi lấy chi tiết đơn hàng: " + ex.Message });
             }
         }
 
@@ -493,17 +495,17 @@ namespace NhaHangLDP.Controllers
             {
                 var activeShift = shiftService.GetActiveShift();
                 if (activeShift == null)
-                    return Json(new { success = false, message = "Ca làm việc không hoạt động." }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Ca làm việc không hoạt động." });
 
                 var orderId = orderQueryService.GetLastPaidOrderId(activeShift.Id);
                 if (orderId.HasValue)
-                    return Json(new { success = true, orderId = orderId.Value.ToString() }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = true, orderId = orderId.Value.ToString() });
                 
-                return Json(new { success = false, message = "Không tìm thấy hóa đơn nào đã thanh toán trong ca này." }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Không tìm thấy hóa đơn nào đã thanh toán trong ca này." });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi máy chủ: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi máy chủ: " + ex.Message });
             }
         }
 
@@ -514,14 +516,14 @@ namespace NhaHangLDP.Controllers
             {
                 var activeShift = shiftService.GetActiveShift();
                 if (activeShift == null)
-                    return Json(new { success = false, message = "Ca làm việc không hoạt động." }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Ca làm việc không hoạt động." });
 
                 var stats = dashboardService.GetDashboardStats(activeShift.Id);
-                return Json(new { success = true, data = stats }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = stats });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi máy chủ: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi máy chủ: " + ex.Message });
             }
         }
 
@@ -535,14 +537,14 @@ namespace NhaHangLDP.Controllers
             try
             {
                 if (shiftService.GetActiveShift() == null)
-                    return Json(new { success = false, message = "Vui lòng mở ca trước!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
                 var tablesData = orderQueryService.GetTablesData();
-                return Json(new { success = true, tables = tablesData }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, tables = tablesData });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi khi tải dữ liệu bàn: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi khi tải dữ liệu bàn: " + ex.Message });
             }
         }
 
@@ -650,15 +652,15 @@ namespace NhaHangLDP.Controllers
             {
                 var activeShift = db.CashierShift.FirstOrDefault(s => s.Status == "Active");
                 if (activeShift == null)
-                    return Json(new List<object>(), JsonRequestBehavior.AllowGet);
+                    return Json(new List<object>());
 
                 var employees = employeeService.GetAvailableEmployees(activeShift.CashierId);
-                return Json(employees, JsonRequestBehavior.AllowGet);
+                return Json(employees);
             }
             catch (Exception ex)
             {
                 Response.StatusCode = 500;
-                return Json(new { message = "Lỗi máy chủ: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { message = "Lỗi máy chủ: " + ex.Message });
             }
         }
 
@@ -729,13 +731,13 @@ namespace NhaHangLDP.Controllers
             {
                 var items = orderQueryService.GetTableOrderItems(tableId);
                 if (items == null)
-                    return Json(new { success = false, message = "Bàn chưa có đơn hàng" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Bàn chưa có đơn hàng" });
                 
-                return Json(new { success = true, items }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, items });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -744,8 +746,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-                var items = serializer.Deserialize<List<TableOperationService.SplitItemModel>>(itemsToSplit);
+                var items = JsonSerializer.Deserialize<List<TableOperationService.SplitItemModel>>(itemsToSplit);
 
                 string errorMessage;
                 if (tableOperationService.SplitTable(sourceTableId, targetTableId, items, out errorMessage))
@@ -765,7 +766,7 @@ namespace NhaHangLDP.Controllers
 
         private int GetCurrentCashierIdFromSession()
         {
-            return Session["CashierId"] as int? ?? 1;
+            return HttpContext.Session.GetInt32("CashierId") ?? 1;
         }
 
         protected override void Dispose(bool disposing)
@@ -806,16 +807,16 @@ namespace NhaHangLDP.Controllers
             try
             {
                 if (shiftService.GetActiveShift() == null)
-                    return Json(new { success = false, message = "Vui lòng mở ca trước!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
                 var orders = orderQueryService.GetOnlineOrders(status, orderType);
                 var counts = orderQueryService.GetOnlineOrderCounts();
 
-                return Json(new { success = true, orders, counts }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, orders, counts });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 
@@ -829,13 +830,13 @@ namespace NhaHangLDP.Controllers
             {
                 var order = orderQueryService.GetOnlineOrderDetail(orderId);
                 if (order == null)
-                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
 
-                return Json(new { success = true, order }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, order });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 
@@ -1097,11 +1098,11 @@ namespace NhaHangLDP.Controllers
                     .OrderByDescending(s => s.Rating)
                     .ToList();
 
-                return Json(new { success = true, shippers }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, shippers });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -1133,7 +1134,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 if (shiftService.GetActiveShift() == null)
-                    return Json(new { success = false, message = "Vui lòng mở ca trước!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
                 var query = db.Reservation.AsQueryable();
 
@@ -1184,11 +1185,11 @@ namespace NhaHangLDP.Controllers
 
                 var counts = GetReservationCounts();
 
-                return Json(new { success = true, reservations, counts }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, reservations, counts });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 
@@ -1226,7 +1227,7 @@ namespace NhaHangLDP.Controllers
                     .FirstOrDefault();
 
                 if (reservation == null)
-                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
 
                 // Get table info if assigned
                 string tableName = null;
@@ -1266,11 +1267,11 @@ namespace NhaHangLDP.Controllers
                         CanComplete = reservation.Status == "Confirmed",
                         CanCancel = reservation.Status == "Pending" || reservation.Status == "Confirmed"
                     }
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 
@@ -1424,7 +1425,7 @@ namespace NhaHangLDP.Controllers
             {
                 var reservation = db.Reservation.Find(reservationId);
                 if (reservation == null)
-                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
 
                 var timeMinutes = (int)reservation.ReservationTime.TotalMinutes;
 
@@ -1449,11 +1450,11 @@ namespace NhaHangLDP.Controllers
                     .ThenBy(t => t.TableNumber)
                     .ToList();
 
-                return Json(new { success = true, tables }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, tables });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 

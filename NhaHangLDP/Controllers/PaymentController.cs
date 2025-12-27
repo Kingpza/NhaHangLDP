@@ -1,11 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web.Mvc;
+using System.Threading.Tasks;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
 using NhaHangLDP.Filters;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -167,11 +169,11 @@ namespace NhaHangLDP.Controllers
                     })
                     .ToList();
 
-                return Json(new { success = true, promotions }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, promotions });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -219,11 +221,11 @@ namespace NhaHangLDP.Controllers
                 };
 
                 var result = paymentService.GetBillList(filter);
-                return Json(new { success = true, data = result }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -255,14 +257,14 @@ namespace NhaHangLDP.Controllers
                 var bill = paymentService.GetBillDetail(billId);
                 if (bill == null)
                 {
-                    return Json(new { success = false, message = "Không tìm thấy hóa đơn!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy hóa đơn!" });
                 }
 
-                return Json(new { success = true, bill }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, bill });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -275,7 +277,7 @@ namespace NhaHangLDP.Controllers
             var viewModel = invoiceService.GenerateDetailedInvoice(billId);
             if (viewModel == null)
             {
-                return HttpNotFound("Không tìm thấy hóa đơn");
+                return NotFound("Không tìm thấy hóa đơn");
             }
 
             return View(viewModel);
@@ -291,11 +293,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var results = invoiceService.SearchInvoices(keyword);
-                return Json(new { success = true, bills = results }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, bills = results });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -363,11 +365,11 @@ namespace NhaHangLDP.Controllers
                     })
                     .ToList();
 
-                return Json(new { success = true, refunds }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, refunds });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -417,20 +419,20 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         [HttpPost]
         [CustomAuthorize("Admin", "Manager", "Cashier")]
-        public JsonResult ProcessSplitBill(SplitBillRequest request)
+        public async Task<JsonResult> ProcessSplitBill(SplitBillRequest request)
         {
-            // Nếu request null, thử đọc từ Request.InputStream (JSON)
+            // Nếu request null, thử đọc từ Request.Body (JSON)
             if (request == null || request.OrderId == 0)
             {
                 try
                 {
-                    Request.InputStream.Position = 0;
-                    using (var reader = new System.IO.StreamReader(Request.InputStream))
+                    Request.Body.Position = 0;
+                    using (var reader = new System.IO.StreamReader(Request.Body))
                     {
-                        var json = reader.ReadToEnd();
+                        var json = await reader.ReadToEndAsync();
                         if (!string.IsNullOrEmpty(json))
                         {
-                            request = Newtonsoft.Json.JsonConvert.DeserializeObject<SplitBillRequest>(json);
+                            request = System.Text.Json.JsonSerializer.Deserialize<SplitBillRequest>(json);
                         }
                     }
                 }
@@ -693,11 +695,11 @@ namespace NhaHangLDP.Controllers
             {
                 var targetDate = date ?? DateTime.Today;
                 var summary = paymentService.GetDailyPaymentSummary(targetDate);
-                return Json(new { success = true, data = summary }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = summary });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -711,11 +713,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var stats = invoiceService.GetInvoiceStatistics(fromDate, toDate);
-                return Json(new { success = true, data = stats }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = stats });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -729,11 +731,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var items = invoiceService.GetTopSellingItems(fromDate, toDate, top);
-                return Json(new { success = true, data = items }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = items });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -753,15 +755,15 @@ namespace NhaHangLDP.Controllers
                 var targetShiftId = shiftId ?? GetCurrentShiftId();
                 if (!targetShiftId.HasValue)
                 {
-                    return Json(new { success = false, message = "Không có ca làm việc!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không có ca làm việc!" });
                 }
 
                 var invoices = invoiceService.GetShiftInvoices(targetShiftId.Value);
-                return Json(new { success = true, invoices }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, invoices });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -776,11 +778,11 @@ namespace NhaHangLDP.Controllers
             {
                 var targetDate = date ?? DateTime.Today;
                 var invoices = invoiceService.GetDailyInvoices(targetDate);
-                return Json(new { success = true, invoices }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, invoices });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -802,7 +804,7 @@ namespace NhaHangLDP.Controllers
 
                 if (order == null)
                 {
-                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
                 }
 
                 var subTotal = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
@@ -842,11 +844,11 @@ namespace NhaHangLDP.Controllers
                     discountAmount,
                     discountMessage,
                     totalAmount
-                }, JsonRequestBehavior.AllowGet);
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -864,7 +866,7 @@ namespace NhaHangLDP.Controllers
                 receivedAmount,
                 changeAmount,
                 isEnough = receivedAmount >= totalAmount
-            }, JsonRequestBehavior.AllowGet);
+            });
         }
 
         #endregion
@@ -873,12 +875,12 @@ namespace NhaHangLDP.Controllers
 
         private int GetCurrentCashierId()
         {
-            return Session["CashierId"] as int? ?? Session["EmployeeId"] as int? ?? 1;
+            return HttpContext.Session.GetInt32("CashierId") ?? HttpContext.Session.GetInt32("EmployeeId") ?? 1;
         }
 
         private int? GetCurrentShiftId()
         {
-            var shiftId = Session["ActiveShiftId"] as int?;
+            var shiftId = HttpContext.Session.GetInt32("ActiveShiftId");
             if (!shiftId.HasValue)
             {
                 var activeShift = db.CashierShift.FirstOrDefault(s => s.Status == "Active");

@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NhaHangLDP.Controllers
 {
@@ -28,7 +30,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Index()
         {
-            if (Session["ShipperId"] != null)
+            if (HttpContext.Session.GetString("ShipperId") != null)
             {
                 return RedirectToAction("Dashboard");
             }
@@ -40,7 +42,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Login()
         {
-            if (Session["ShipperId"] != null)
+            if (HttpContext.Session.GetString("ShipperId") != null)
             {
                 return RedirectToAction("Dashboard");
             }
@@ -85,9 +87,9 @@ namespace NhaHangLDP.Controllers
             }
 
             // Đăng nhập thành công
-            Session["ShipperId"] = shipper.Id;
-            Session["ShipperName"] = shipper.FullName;
-            Session["ShipperPhone"] = shipper.Phone;
+            HttpContext.Session.SetString("ShipperId", (shipper.Id).ToString());
+            HttpContext.Session.SetString("ShipperName", (shipper.FullName).ToString());
+            HttpContext.Session.SetString("ShipperPhone", (shipper.Phone).ToString());
 
             // Cập nhật trạng thái online
             shipper.Status = "Available";
@@ -102,7 +104,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Logout()
         {
-            var shipperId = Session["ShipperId"] as int?;
+            var shipperId = HttpContext.Session.GetInt32("ShipperId");
             if (shipperId.HasValue)
             {
                 var shipper = _db.Shipper.Find(shipperId.Value);
@@ -113,7 +115,7 @@ namespace NhaHangLDP.Controllers
                 }
             }
 
-            Session.Clear();
+            HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
 
@@ -376,7 +378,7 @@ namespace NhaHangLDP.Controllers
                     shipper.LicensePlate = licensePlate;
                     _db.SaveChanges();
 
-                    Session["ShipperName"] = fullName;
+                    HttpContext.Session.SetString("ShipperName", (fullName).ToString());
                     TempData["Success"] = "Đã cập nhật thông tin";
                 }
             }
@@ -717,7 +719,7 @@ namespace NhaHangLDP.Controllers
         {
             var shipperId = GetCurrentShipperId();
             if (shipperId == 0)
-                return Json(new { success = false, message = "Chưa đăng nhập" }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Chưa đăng nhập" });
 
             var shipper = _db.Shipper.Find(shipperId);
             var today = DateTime.Today;
@@ -769,7 +771,7 @@ namespace NhaHangLDP.Controllers
                     todayOrders = todayStats?.Count ?? 0,
                     todayEarnings = todayStats?.Earnings ?? 0
                 }
-            }, JsonRequestBehavior.AllowGet);
+            });
         }
 
         /// <summary>
@@ -780,7 +782,7 @@ namespace NhaHangLDP.Controllers
         {
             var shipperId = GetCurrentShipperId();
             if (shipperId == 0)
-                return Json(new { success = false, message = "Chưa đăng nhập" }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Chưa đăng nhập" });
 
             var orders = _db.DeliveryAssignment
                 .Include(a => a.CustomerOrder)
@@ -802,7 +804,7 @@ namespace NhaHangLDP.Controllers
                 })
                 .ToList();
 
-            return Json(new { success = true, orders = orders }, JsonRequestBehavior.AllowGet);
+            return Json(new { success = true, orders = orders });
         }
 
         #endregion
@@ -811,8 +813,8 @@ namespace NhaHangLDP.Controllers
 
         private int GetCurrentShipperId()
         {
-            var shipperId = Session["ShipperId"];
-            return shipperId != null ? (int)shipperId : 0;
+            var shipperId = HttpContext.Session.GetInt32("ShipperId");
+            return shipperId ?? 0;
         }
 
         #endregion

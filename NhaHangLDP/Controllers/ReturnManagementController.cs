@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace NhaHangLDP.Controllers
 {
@@ -11,19 +13,25 @@ namespace NhaHangLDP.Controllers
     {
         private NhaHangLDPEntities db = new NhaHangLDPEntities();
 
+        private bool IsAuthorized()
+        {
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole))
+                return false;
+            var role = userRole.ToLower();
+            return role == "admin" || role == "manager";
+        }
+
         // GET: ReturnManagement
         public ActionResult Index()
         {
-            if (Session["UserRole"] == null ||
-                (Session["UserRole"].ToString().ToLower() != "admin" &&
-                Session["UserRole"].ToString().ToLower() != "manager"))
+            if (!IsAuthorized())
             {
                 return RedirectToAction("Login", "Account");
             }
 
             try
             {
-                // Lấy danh sách tất cả các phiếu trả hàng
                 var returnBills = db.ReturnBill
                     .Include(r => r.Bill)
                     .Include(r => r.Employee)
@@ -43,16 +51,13 @@ namespace NhaHangLDP.Controllers
         // GET: ReturnManagement/Create
         public ActionResult Create()
         {
-            if (Session["UserRole"] == null ||
-               (Session["UserRole"].ToString().ToLower() != "admin" &&
-                  Session["UserRole"].ToString().ToLower() != "manager"))
+            if (!IsAuthorized())
             {
                 return RedirectToAction("Login", "Account");
             }
 
             try
             {
-                // Tạo danh sách nhân viên cho dropdown
                 ViewBag.Employees = db.Employee
                              .Where(e => e.IsActive == true)
                              .Select(e => new SelectListItem
@@ -80,7 +85,6 @@ namespace NhaHangLDP.Controllers
             {
                 try
                 {
-                    // Tối ưu hóa Include: Chỉ tải những gì cần thiết
                     var bill = localDb.Bill
                          .Include(b => b.Order)
                          .Include(b => b.Order.OrderDetail.Select(od => od.MenuItem))
@@ -95,7 +99,6 @@ namespace NhaHangLDP.Controllers
                         });
                     }
 
-                    // Kiểm tra xem hóa đơn đã được trả hàng chưa
                     var existingReturn = localDb.ReturnBill
                                                 .FirstOrDefault(r => r.OriginalBillID == billId);
 
@@ -108,12 +111,10 @@ namespace NhaHangLDP.Controllers
                         });
                     }
 
-                    // Tạo danh sách chi tiết đơn hàng cho ViewModel
                     var orderDetails = bill.Order.OrderDetail.Select(od => new OrderDetailViewModel
                     {
                         OrderDetailID = od.Id,
                         MenuItemID = od.MenuItemId,
-                        // Đảm bảo MenuItem được tải để có tên
                         MenuItemName = od.MenuItem?.Name,
                         Quantity = od.Quantity,
                         PriceAtTime = od.PriceAtTime,
@@ -125,15 +126,15 @@ namespace NhaHangLDP.Controllers
                     {
                         Success = true,
                         Message = "Tìm thấy hóa đơn thành công!",
-                        Bill = new // Tạo đối tượng ẩn danh để tránh lỗi serialization vòng lặp
+                        Bill = new
                         {
                             bill.Id,
                             bill.BillDate,
                             bill.FinalAmount,
-                            bill.PaymentMethod // Giả định PaymentMethod là thuộc tính đơn giản có thể serialize
+                            bill.PaymentMethod
                         },
                         OrderDetails = orderDetails
-                    }, JsonRequestBehavior.AllowGet);
+                    });
                 }
                 catch (Exception ex)
                 {
@@ -151,14 +152,11 @@ namespace NhaHangLDP.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(ReturnManagementViewModel model)
         {
-            if (Session["UserRole"] == null ||
-                   (Session["UserRole"].ToString().ToLower() != "admin" &&
-               Session["UserRole"].ToString().ToLower() != "manager"))
+            if (!IsAuthorized())
             {
                 return RedirectToAction("Login", "Account");
             }
 
-            // Tải lại ViewBag cho Dropdown nếu có lỗi xảy ra
             Func<ReturnManagementViewModel, ActionResult> ReloadViewWithError = (currentModel) =>
             {
                 ViewBag.Employees = db.Employee
@@ -171,6 +169,7 @@ namespace NhaHangLDP.Controllers
                    .ToList();
                 return View(currentModel);
             };
+            
             if (!ModelState.IsValid)
             {
                 return ReloadViewWithError(model);
@@ -178,7 +177,6 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                // Kiểm tra hóa đơn có tồn tại và đã được thanh toán
                 var originalBill = db.Bill
                     .FirstOrDefault(b => b.Id == model.BillID && b.Status == "Paid");
 
@@ -188,7 +186,6 @@ namespace NhaHangLDP.Controllers
                     return ReloadViewWithError(model);
                 }
 
-                // Kiểm tra xem hóa đơn đã được trả hàng chưa
                 var existingReturn = db.ReturnBill
                     .FirstOrDefault(r => r.OriginalBillID == model.BillID);
 
@@ -198,7 +195,6 @@ namespace NhaHangLDP.Controllers
                     return ReloadViewWithError(model);
                 }
 
-                // Lọc ra các món có số lượng trả > 0 để xử lý
                 var itemsToReturn = model.ReturnItems?.Where(r => r.ReturnQuantity > 0).ToList();
 
                 if (itemsToReturn == null || !itemsToReturn.Any())
@@ -207,10 +203,8 @@ namespace NhaHangLDP.Controllers
                     return ReloadViewWithError(model);
                 }
 
-                // --- BẮT ĐẦU TRANSACTION ---
                 using (var transaction = db.Database.BeginTransaction())
                 {
-                    // Tạo phiếu trả hàng mới
                     var returnBill = new ReturnBill
                     {
                         OriginalBillID = model.BillID,
@@ -221,9 +215,8 @@ namespace NhaHangLDP.Controllers
                     };
 
                     db.ReturnBill.Add(returnBill);
-                    db.SaveChanges(); // Lưu để lấy ReturnBillID
+                    db.SaveChanges();
 
-                    // Tạo chi tiết phiếu trả hàng
                     foreach (var returnItem in itemsToReturn)
                     {
                         var returnDetail = new ReturnBillDetail
@@ -239,18 +232,15 @@ namespace NhaHangLDP.Controllers
                     }
 
                     db.SaveChanges();
-
-                    // Cập nhật kho hàng (Logic quan trọng)
                     UpdateInventoryAfterReturn(itemsToReturn);
 
-                    transaction.Commit(); // Hoàn tất giao dịch
+                    transaction.Commit();
                     TempData["Success"] = $"Tạo phiếu trả hàng #{returnBill.ReturnBillID} thành công! Số tiền hoàn trả: {model.TotalRefundAmount:N0} ₫";
                     return RedirectToAction("Index");
                 }
             }
             catch (Exception ex)
             {
-                // Nếu có lỗi, rollback (nếu có transaction) và ghi lỗi
                 TempData["Error"] = "Có lỗi xảy ra khi tạo phiếu trả hàng: " + ex.Message;
                 return ReloadViewWithError(model);
             }
@@ -259,9 +249,7 @@ namespace NhaHangLDP.Controllers
         // GET: ReturnManagement/Details/5
         public ActionResult Details(int id)
         {
-            if (Session["UserRole"] == null ||
-            (Session["UserRole"].ToString().ToLower() != "admin" &&
-                 Session["UserRole"].ToString().ToLower() != "manager"))
+            if (!IsAuthorized())
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -289,12 +277,10 @@ namespace NhaHangLDP.Controllers
             }
         }
 
-        // Logic cập nhật kho hàng sau khi trả hàng
         private void UpdateInventoryAfterReturn(List<ReturnItemViewModel> returnItems)
         {
             foreach (var returnItem in returnItems)
             {
-                // Tải nguyên liệu cần thiết cho món ăn
                 var menuItemIngredients = db.MenuItemIngredient
                     .Include(mi => mi.Ingredient)
                     .Where(mi => mi.MenuItemId == returnItem.MenuItemID)
@@ -306,7 +292,6 @@ namespace NhaHangLDP.Controllers
 
                     if (returnItem.IsDamaged)
                     {
-                        // Hàng bị hỏng, thêm vào bảng DamagedStock
                         var damagedStock = new DamagedStock
                         {
                             IngredientId = ingredient.IngredientId,
@@ -320,20 +305,18 @@ namespace NhaHangLDP.Controllers
                     }
                     else
                     {
-                        // Hàng còn tốt, cập nhật lại kho (tăng AvailableStock)
                         ingredient.Ingredient.AvailableStock += calculatedQuantity;
                     }
                 }
             }
 
-            // Lưu thay đổi vào database
             db.SaveChanges();
         }
 
-        // Helper method để lấy ID nhân viên hiện tại
         private int GetCurrentEmployeeId()
         {
-            if (Session["EmployeeId"] != null && int.TryParse(Session["EmployeeId"].ToString(), out int employeeId))
+            var employeeIdStr = HttpContext.Session.GetString("EmployeeId");
+            if (!string.IsNullOrEmpty(employeeIdStr) && int.TryParse(employeeIdStr, out int employeeId))
             {
                 return employeeId;
             }

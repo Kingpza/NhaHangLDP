@@ -1,19 +1,16 @@
-﻿using System.Web.Mvc;
-using System.Web.Routing;
-
-namespace NhaHangLDP
+﻿namespace NhaHangLDP
 {
+    /// <summary>
+    /// Route configuration - deprecated in ASP.NET Core
+    /// Routes are configured in Program.cs using endpoint routing
+    /// </summary>
     public class RouteConfig
     {
-        public static void RegisterRoutes(RouteCollection routes)
+        // ASP.NET Core sử dụng endpoint routing
+        // Routes được cấu hình trong Program.cs
+        public static void RegisterRoutes()
         {
-            routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
-
-            routes.MapRoute(
-                name: "Default",
-                url: "{controller}/{action}/{id}",
-                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
-            );
+            // No-op in ASP.NET Core - routes registered in Program.cs
         }
     }
 }

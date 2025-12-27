@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.PayrollViewModel
+@model NhaHangLDP.Models.PayrollViewModel
 @{
     ViewBag.Title = "Bảng lương";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -236,13 +236,13 @@
             <select id="monthSelect">
                 @for (int m = 1; m <= 12; m++)
                 {
-                    <option value="@m" @(m == Model.Month ? "selected" : "")>Tháng @m</option>
+                    <option value="@m" selected="@(m == Model.Month)">Tháng @m</option>
                 }
             </select>
             <select id="yearSelect">
                 @for (int y = DateTime.Now.Year - 2; y <= DateTime.Now.Year + 1; y++)
                 {
-                    <option value="@y" @(y == Model.Year ? "selected" : "")>@y</option>
+                    <option value="@y" selected="@(y == Model.Year)">@y</option>
                 }
             </select>
             <button class="btn btn-primary" onclick="loadPayroll()">
