@@ -1,119 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyTitle>NhaHangLDP</AssemblyTitle>
     <Product>NhaHangLDP</Product>
-    <Copyright>Copyright ©  2025</Copyright>
+    <Copyright>Copyright © 2025</Copyright>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
+  
   <ItemGroup>
+    <!-- Entity Framework 6 for EDMX support -->
     <PackageReference Include="EntityFramework" Version="6.5.1" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    
+    <!-- ASP.NET Core compatibility -->
     <PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters" Version="2.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters.CoreServices" Version="2.2.1" />
+    
+    <!-- JSON handling -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    
+    <!-- Configuration support -->
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.1" />
   </ItemGroup>
+  
+  <!-- EF6 EDMX file configuration -->
   <ItemGroup>
-    <Compile Update="Models\Account.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\AppSetting.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Attendance.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Bill.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Booking.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Cart.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\CartItem.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\CashierShift.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Customer.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\CustomerAddress.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\CustomerNotification.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\CustomerOrder.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\CustomerOrderDetail.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\DamagedStock.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\DeliveryAssignment.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\DeliverySettings.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\DeliveryZone.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\EmailConfig.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\EmailLog.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\EmailTemplate.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Employee.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\EmployeeContract.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\EmployeeSchedule.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Ingredient.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\KitchenOrderItem.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\KitchenOrderTicket.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\KitchenStation.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\LeaveRequest.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\MenuCombo.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\MenuComboItem.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\MenuItem.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\MenuItemIngredient.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
     <Compile Update="Models\NhaHangLDP.Context.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -129,88 +43,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>NhaHangLDP.edmx</DependentUpon>
     </Compile>
-    <Compile Update="Models\Notification.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Order.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\OrderDetail.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Payroll.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\PerformanceReview.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\PriceHistory.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Promotion.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\PromotionUsage.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\QROrder.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\QROrderDetail.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Reservation.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\RestaurantTable.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\ReturnBill.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\ReturnBillDetail.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Review.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Role.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\ShiftSupportStaff.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Shipper.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\StockInbound.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\StockInboundDetail.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Supplier.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\TableArea.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\TableSession.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Voucher.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\VoucherUsage.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\Wishlist.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\WorkShift.cs">
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
   </ItemGroup>
+  
   <ItemGroup>
     <Content Include="Models\NhaHangLDP.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
@@ -227,6 +61,7 @@
       <LastGenOutput>NhaHangLDP.Designer.cs</LastGenOutput>
     </EntityDeploy>
   </ItemGroup>
+  
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>

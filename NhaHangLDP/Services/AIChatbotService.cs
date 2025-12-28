@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data.Entity;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using NhaHangLDP.Models;
 
@@ -79,15 +78,23 @@ namespace NhaHangLDP.Services
         public AIChatbotService()
         {
             _db = new NhaHangLDPEntities();
-            _geminiApiKey = ConfigurationManager.AppSettings["GeminiApiKey"];
+            _geminiApiKey = GetAppSetting("GeminiApiKey");
             _useGeminiAI = !string.IsNullOrEmpty(_geminiApiKey);
         }
 
         public AIChatbotService(NhaHangLDPEntities db)
         {
             _db = db;
-            _geminiApiKey = ConfigurationManager.AppSettings["GeminiApiKey"];
+            _geminiApiKey = GetAppSetting("GeminiApiKey");
             _useGeminiAI = !string.IsNullOrEmpty(_geminiApiKey);
+        }
+
+        /// <summary>
+        /// Đọc AppSetting từ System.Configuration.ConfigurationManager
+        /// </summary>
+        private static string GetAppSetting(string key)
+        {
+            return System.Configuration.ConfigurationManager.AppSettings[key];
         }
 
         /// <summary>
