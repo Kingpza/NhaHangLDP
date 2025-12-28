@@ -23,8 +23,8 @@ namespace NhaHangLDP.Services.Management
             var sevenDaysAgo = today.AddDays(-7);
 
             viewModel.RecentOrders = db.Order
-                .Include(o => o.RestaurantTable)
-                .Include(o => o.Bill)
+                .Include(o => o.Table)
+                .Include(o => o.Bills)
                 .OrderByDescending(o => o.OrderTime)
                 .Take(5)
                 .ToList();

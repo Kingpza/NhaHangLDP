@@ -63,7 +63,7 @@ namespace NhaHangLDP.Services
             try
             {
                 var activeShift = await db.CashierShift
-                    .Include(s => s.ShiftSupportStaff)
+                    .Include(s => s.ShiftSupportStaffs)
                     .FirstOrDefaultAsync(s => s.Id == shiftId && s.EndTime == null);
 
                 if (activeShift == null)
@@ -72,7 +72,7 @@ namespace NhaHangLDP.Services
                 }
 
                 bool isAlreadyInShift = activeShift.CashierId == employeeId ||
-                                        activeShift.ShiftSupportStaff.Any(s => s.EmployeeId == employeeId);
+                                        activeShift.ShiftSupportStaffs.Any(s => s.EmployeeId == employeeId);
 
                 if (isAlreadyInShift)
                 {
@@ -101,7 +101,7 @@ namespace NhaHangLDP.Services
             try
             {
                 var shift = await db.CashierShift
-                    .Include(s => s.ShiftSupportStaff)
+                    .Include(s => s.ShiftSupportStaffs)
                     .FirstOrDefaultAsync(s => s.Id == shiftId && s.EndTime == null);
 
                 if (shift == null)
@@ -109,9 +109,9 @@ namespace NhaHangLDP.Services
                     return new OperationResult { Success = false, ErrorMessage = "Không tìm thấy ca làm việc." };
                 }
 
-                if (shift.ShiftSupportStaff != null && shift.ShiftSupportStaff.Any())
+                if (shift.ShiftSupportStaffs != null && shift.ShiftSupportStaffs.Any())
                 {
-                    db.ShiftSupportStaff.RemoveRange(shift.ShiftSupportStaff);
+                    db.ShiftSupportStaff.RemoveRange(shift.ShiftSupportStaffs);
                 }
 
                 shift.CashierId = newEmployeeId;

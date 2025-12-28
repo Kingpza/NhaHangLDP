@@ -283,7 +283,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var ticket = db.KitchenOrderTicket
-                    .Include(t => t.KitchenOrderItem)
+                    .Include(t => t.KitchenOrderItems)
                     .FirstOrDefault(t => t.Id == ticketId);
 
                 if (ticket == null)
@@ -294,7 +294,7 @@ namespace NhaHangLDP.Controllers
                 ticket.Status = "Ready";
                 ticket.CompletedTime = DateTime.Now;
 
-                foreach (var item in ticket.KitchenOrderItem)
+                foreach (var item in ticket.KitchenOrderItems)
                 {
                     item.Status = "Completed";
                     item.CompletedQuantity = item.Quantity;
@@ -394,7 +394,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var ticket = db.KitchenOrderTicket
-                    .Include(t => t.KitchenOrderItem)
+                    .Include(t => t.KitchenOrderItems)
                     .FirstOrDefault(t => t.Id == ticketId);
 
                 if (ticket == null)
@@ -405,7 +405,7 @@ namespace NhaHangLDP.Controllers
                 ticket.Status = "Cancelled";
                 ticket.SpecialNotes = (ticket.SpecialNotes ?? "") + "\n[Hủy]: " + reason;
 
-                foreach (var item in ticket.KitchenOrderItem)
+                foreach (var item in ticket.KitchenOrderItems)
                 {
                     item.Status = "Cancelled";
                 }

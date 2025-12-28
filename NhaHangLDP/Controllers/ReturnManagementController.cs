@@ -34,9 +34,9 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var returnBills = db.ReturnBill
-                    .Include(r => r.Bill)
+                    .Include(r => r.OriginalBill)
                     .Include(r => r.Employee)
-                    .Include(r => r.ReturnBillDetail)
+                    .Include(r => r.ReturnBillDetails)
                     .OrderByDescending(r => r.ReturnDate)
                     .ToList();
 

@@ -335,7 +335,7 @@ namespace NhaHangLDP.Services.Management
                 try
                 {
                     var comboInDb = db.MenuCombo
-                        .Include(c => c.MenuComboItem)
+                        .Include(c => c.MenuComboItems)
                         .FirstOrDefault(c => c.Id == combo.Id);
 
                     if (comboInDb == null)
