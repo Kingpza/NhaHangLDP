@@ -18,7 +18,7 @@ namespace NhaHangLDP.Services.Management
 
         public List<RestaurantTable> GetAllTables()
         {
-            return db.RestaurantTable.Include("TableArea").ToList();
+            return db.RestaurantTable.Include(t => t.TableArea).ToList();
         }
 
         public RestaurantTable GetTableById(int id)

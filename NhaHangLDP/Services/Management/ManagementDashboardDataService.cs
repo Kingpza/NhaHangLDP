@@ -174,8 +174,8 @@ namespace NhaHangLDP.Services.Management
                     .ToList();
 
                 var recentInbounds = db.StockInbound
-                    .Include("Employee")
-                    .Include("Supplier")
+                    .Include(s => s.Employee)
+                    .Include(s => s.Supplier)
                     .OrderByDescending(s => s.InboundDate)
                     .Take(10)
                     .ToList()
@@ -185,13 +185,13 @@ namespace NhaHangLDP.Services.Management
                         EmployeeName = s.Employee?.FullName ?? "N/A",
                         SupplierName = s.Supplier?.Name ?? "Kh�ng c�",
                         TotalCost = s.TotalCost,
-                        ItemCount = s.StockInboundDetail?.Count ?? 0
+                        ItemCount = s.StockInboundDetails?.Count ?? 0
                     })
                     .ToList();
 
                 var recentDamages = db.DamagedStock
-                    .Include("Ingredient")
-                    .Include("Employee")
+                    .Include(d => d.Ingredient)
+                    .Include(d => d.ReportedByEmployee)
                     .OrderByDescending(d => d.DamageDate)
                     .Take(10)
                     .ToList()
@@ -202,7 +202,7 @@ namespace NhaHangLDP.Services.Management
                         Quantity = d.Quantity,
                         Unit = d.Ingredient?.Unit ?? "",
                         Reason = d.Reason ?? "Kh�ng c� l� do",
-                        ReportedBy = d.Employee?.FullName ?? "N/A",
+                        ReportedBy = d.ReportedByEmployee?.FullName ?? "N/A",
                         EstimatedLoss = d.Quantity * (d.Ingredient?.EstimatedCost ?? 0)
                     })
                     .ToList();

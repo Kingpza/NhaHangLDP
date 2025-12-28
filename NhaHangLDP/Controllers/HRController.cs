@@ -582,7 +582,7 @@ namespace NhaHangLDP.Controllers
             if (!IsAuthorized())
                 return RedirectUnauthorized();
 
-            var employee = _db.Employee.Include("Role").FirstOrDefault(e => e.Id == id);
+            var employee = _db.Employee.Include(e => e.Role).FirstOrDefault(e => e.Id == id);
             if (employee == null)
             {
                 TempData["Error"] = "Không tìm thấy nhân viên!";

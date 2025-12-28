@@ -60,7 +60,8 @@ namespace NhaHangLDP.Services.Management
             try
             {
                 return db.MenuCombo
-                    .Include(mc => mc.MenuComboItem.Select(mci => mci.MenuItem))
+                    .Include(mc => mc.MenuComboItems)
+                        .ThenInclude(mci => mci.MenuItem)
                     .ToList();
             }
             catch (Exception)
@@ -277,7 +278,8 @@ namespace NhaHangLDP.Services.Management
         public MenuCombo GetComboById(int id)
         {
             return db.MenuCombo
-                .Include(c => c.MenuComboItem.Select(ci => ci.MenuItem))
+                .Include(c => c.MenuComboItems)
+                    .ThenInclude(ci => ci.MenuItem)
                 .FirstOrDefault(c => c.Id == id);
         }
 

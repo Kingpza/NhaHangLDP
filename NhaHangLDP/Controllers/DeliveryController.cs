@@ -149,7 +149,8 @@ namespace NhaHangLDP.Controllers
         public ActionResult OrderDetail(int id)
         {
             var order = _db.CustomerOrder
-                .Include(o => o.CustomerOrderDetail.Select(d => d.MenuItem))
+                .Include(o => o.CustomerOrderDetails)
+                    .ThenInclude(d => d.MenuItem)
                 .FirstOrDefault(o => o.Id == id);
 
             if (order == null)

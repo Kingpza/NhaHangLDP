@@ -72,8 +72,9 @@ namespace NhaHangLDP.Controllers
                 try
                 {
                     var order = db.Order
-                        .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                        .Include(o => o.RestaurantTable)
+                        .Include(o => o.OrderDetails)
+                            .ThenInclude(od => od.MenuItem)
+                        .Include(o => o.Table)
                         .FirstOrDefault(o => o.Id == dto.OrderId);
 
                     if (order == null)
@@ -466,9 +467,10 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var ticket = db.KitchenOrderTicket
-                    .Include(t => t.KitchenOrderItem.Select(i => i.MenuItem))
-                    .Include(t => t.RestaurantTable)
-                    .Include(t => t.Employee)
+                    .Include(t => t.KitchenOrderItems)
+                        .ThenInclude(i => i.MenuItem)
+                    .Include(t => t.Table)
+                    .Include(t => t.AssignedChef)
                     .FirstOrDefault(t => t.Id == ticketId);
 
                 if (ticket == null)
@@ -657,15 +659,16 @@ namespace NhaHangLDP.Controllers
         private KitchenDisplayViewModel GetKitchenDisplayData(string station)
         {
             var query = db.KitchenOrderTicket
-                .Include(t => t.KitchenOrderItem.Select(i => i.MenuItem))
-                .Include(t => t.RestaurantTable)
-                .Include(t => t.Employee)
+                .Include(t => t.KitchenOrderItems)
+                    .ThenInclude(i => i.MenuItem)
+                .Include(t => t.Table)
+                .Include(t => t.AssignedChef)
                 .Where(t => t.Status != "Completed" && t.Status != "Cancelled");
 
             if (!string.IsNullOrEmpty(station))
             {
                 query = query.Where(t => t.KitchenStation == station || 
-                                        t.KitchenOrderItem.Any(i => i.Station == station));
+                                        t.KitchenOrderItems.Any(i => i.Station == station));
             }
 
             var tickets = query

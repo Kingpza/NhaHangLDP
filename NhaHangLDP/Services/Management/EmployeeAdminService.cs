@@ -20,7 +20,7 @@ namespace NhaHangLDP.Services.Management
 
         public List<Employee> GetAllEmployees()
         {
-            return db.Employee.Include("Role").ToList();
+            return db.Employee.Include(e => e.Role).ToList();
         }
 
         public Employee GetEmployeeById(int id)

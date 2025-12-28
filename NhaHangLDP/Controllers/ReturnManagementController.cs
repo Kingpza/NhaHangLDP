@@ -88,7 +88,8 @@ namespace NhaHangLDP.Controllers
                 {
                     var bill = localDb.Bill
                          .Include(b => b.Order)
-                         .Include(b => b.Order.OrderDetail.Select(od => od.MenuItem))
+                             .ThenInclude(o => o.OrderDetails)
+                                 .ThenInclude(od => od.MenuItem)
                          .FirstOrDefault(b => b.Id == billId && b.Status == "Paid");
 
                     if (bill == null)
@@ -258,10 +259,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var returnBill = db.ReturnBill
-                    .Include(r => r.Bill)
+                    .Include(r => r.OriginalBill)
                     .Include(r => r.Employee)
-                    .Include(r => r.ReturnBillDetail.Select(rd => rd.MenuItem))
-                    .FirstOrDefault(r => r.ReturnBillID == id);
+                    .Include(r => r.ReturnBillDetails)
+                        .ThenInclude(rd => rd.MenuItem)
+                    .FirstOrDefault(r => r.ReturnBillId == id);
 
                 if (returnBill == null)
                 {

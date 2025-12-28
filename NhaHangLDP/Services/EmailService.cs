@@ -341,8 +341,9 @@ namespace NhaHangLDP.Services
         public async Task<EmailSendResult> SendInvoiceEmailAsync(Bill bill, string customerEmail, string customerName)
         {
             var order = _db.Order
-                .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                .Include(o => o.RestaurantTable)
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.MenuItem)
+                .Include(o => o.Table)
                 .FirstOrDefault(o => o.Id == bill.OrderId);
 
             if (order == null)
@@ -354,7 +355,7 @@ namespace NhaHangLDP.Services
                 };
             }
 
-            var itemsHtml = string.Join("", order.OrderDetail.Select(i =>
+            var itemsHtml = string.Join("", order.OrderDetails.Select(i =>
                 $"<tr><td>{i.MenuItem.Name}</td><td>{i.Quantity}</td><td>{i.PriceAtTime:N0}đ</td><td>{(i.Quantity * i.PriceAtTime):N0}đ</td></tr>"));
 
             var placeholders = new Dictionary<string, string>

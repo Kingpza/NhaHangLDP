@@ -88,8 +88,8 @@ namespace NhaHangLDP.Services.Management
             var thresholdDate = today.AddDays(daysThreshold);
 
             var expiringItems = db.StockInboundDetail
-                .Include("Ingredient")
-                .Include("StockInbound")
+                .Include(d => d.Ingredient)
+                .Include(d => d.StockInbound)
                 .Where(d => d.ExpiryDate.HasValue && d.ExpiryDate.Value <= thresholdDate)
                 .ToList()
                 .GroupBy(d => d.IngredientId)
@@ -230,8 +230,8 @@ namespace NhaHangLDP.Services.Management
                 return null;
 
             var inboundHistory = db.StockInbound
-                .Include("StockInboundDetail")
-                .Include("StockInboundDetail.Ingredient")
+                .Include(s => s.StockInboundDetails)
+                    .ThenInclude(sd => sd.Ingredient)
                 .Where(s => s.SupplierId == id)
                 .OrderByDescending(s => s.InboundDate)
                 .Take(10)
@@ -521,8 +521,8 @@ namespace NhaHangLDP.Services.Management
             {
                 Ingredient = ingredient,
                 InboundHistory = db.StockInboundDetail
-                    .Include("StockInbound")
-                    .Include("StockInbound.Supplier")
+                    .Include(d => d.StockInbound)
+                        .ThenInclude(s => s.Supplier)
                     .Where(d => d.IngredientId == id)
                     .OrderByDescending(d => d.StockInbound.InboundDate)
                     .ToList(),
@@ -680,10 +680,10 @@ namespace NhaHangLDP.Services.Management
         public StockInboundListViewModel GetStockInboundList()
         {
             var inboundListRaw = db.StockInbound
-                .Include("Employee")
-                .Include("Supplier")
-                .Include("StockInboundDetail")
-                .Include("StockInboundDetail.Ingredient")
+                .Include(s => s.Employee)
+                .Include(s => s.Supplier)
+                .Include(s => s.StockInboundDetails)
+                    .ThenInclude(d => d.Ingredient)
                 .OrderByDescending(s => s.InboundDate)
                 .ToList();
 
@@ -696,8 +696,8 @@ namespace NhaHangLDP.Services.Management
                 SupplierName = s.Supplier != null ? GetSupplierName(s.Supplier) : "Không có",
                 TotalCost = s.TotalCost,
                 Status = "Hoàn thành",
-                ItemCount = s.StockInboundDetail != null ? s.StockInboundDetail.Count : 0,
-                Details = s.StockInboundDetail != null ? s.StockInboundDetail.Select(d => new StockInboundDetailItem
+                ItemCount = s.StockInboundDetails != null ? s.StockInboundDetails.Count : 0,
+                Details = s.StockInboundDetails != null ? s.StockInboundDetails.Select(d => new StockInboundDetailItem
                 {
                     IngredientName = d.Ingredient != null ? d.Ingredient.Name : "N/A",
                     Quantity = d.Quantity,
@@ -712,10 +712,10 @@ namespace NhaHangLDP.Services.Management
         public StockInboundViewPageModel GetStockInboundDetail(int id)
         {
             var inbound = db.StockInbound
-                .Include("Employee")
-                .Include("Supplier")
-                .Include("StockInboundDetail")
-                .Include("StockInboundDetail.Ingredient")
+                .Include(s => s.Employee)
+                .Include(s => s.Supplier)
+                .Include(s => s.StockInboundDetails)
+                    .ThenInclude(d => d.Ingredient)
                 .FirstOrDefault(s => s.Id == id);
 
             if (inbound == null)
@@ -800,8 +800,8 @@ namespace NhaHangLDP.Services.Management
         public StockOutboundListViewModel GetStockOutboundList()
         {
             var outboundListRaw = db.DamagedStock
-                .Include("Ingredient")
-                .Include("Employee")
+                .Include(d => d.Ingredient)
+                .Include(d => d.ReportedByEmployee)
                 .OrderByDescending(d => d.DamageDate)
                 .ToList();
 
@@ -810,7 +810,7 @@ namespace NhaHangLDP.Services.Management
                 Id = d.Id,
                 OutboundCode = "OUT" + d.Id.ToString().PadLeft(6, '0'),
                 OutboundDate = d.DamageDate,
-                EmployeeName = d.Employee != null ? d.Employee.FullName : "N/A",
+                EmployeeName = d.ReportedByEmployee != null ? d.ReportedByEmployee.FullName : "N/A",
                 Purpose = d.Reason ?? "Xuất kho",
                 TotalCost = d.Quantity * (d.Ingredient != null ? d.Ingredient.EstimatedCost : 0),
                 Status = "Hoàn thành",
@@ -826,8 +826,8 @@ namespace NhaHangLDP.Services.Management
         public StockOutboundViewPageModel GetStockOutboundDetail(int id)
         {
             var outbound = db.DamagedStock
-                .Include("Ingredient")
-                .Include("Employee")
+                .Include(d => d.Ingredient)
+                .Include(d => d.ReportedByEmployee)
                 .FirstOrDefault(d => d.Id == id);
 
             if (outbound == null)
@@ -838,7 +838,7 @@ namespace NhaHangLDP.Services.Management
                 Id = outbound.Id,
                 OutboundCode = "OUT" + outbound.Id.ToString().PadLeft(6, '0'),
                 OutboundDate = outbound.DamageDate,
-                EmployeeName = outbound.Employee?.FullName ?? "N/A",
+                EmployeeName = outbound.ReportedByEmployee?.FullName ?? "N/A",
                 Reason = outbound.Reason ?? "Xuất kho",
                 Status = "Hoàn thành",
                 IngredientName = outbound.Ingredient?.Name ?? "N/A",
@@ -856,8 +856,8 @@ namespace NhaHangLDP.Services.Management
         public List<DamagedStock> GetDamagedStockList()
         {
             return db.DamagedStock
-                .Include("Ingredient")
-                .Include("Employee")
+                .Include(d => d.Ingredient)
+                .Include(d => d.ReportedByEmployee)
                 .OrderByDescending(d => d.DamageDate)
                 .ToList();
         }
@@ -1035,8 +1035,8 @@ namespace NhaHangLDP.Services.Management
 
             // Thống kê nhập kho
             var inboundData = db.StockInboundDetail
-                .Include("StockInbound")
-                .Include("Ingredient")
+                .Include(d => d.StockInbound)
+                .Include(d => d.Ingredient)
                 .Where(d => d.StockInbound.InboundDate >= from && d.StockInbound.InboundDate <= to)
                 .ToList();
 
@@ -1045,7 +1045,7 @@ namespace NhaHangLDP.Services.Management
 
             // Thống kê xuất kho/hỏng hóc
             var outboundData = db.DamagedStock
-                .Include("Ingredient")
+                .Include(d => d.Ingredient)
                 .Where(d => d.DamageDate >= from && d.DamageDate <= to)
                 .ToList();
 

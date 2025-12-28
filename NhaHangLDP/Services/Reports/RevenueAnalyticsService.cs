@@ -45,8 +45,8 @@ namespace NhaHangLDP.Services.Reports
 
             var paidBills = db.Bill
                 .Include(b => b.Order)
-                .Include(b => b.Order.OrderDetail)
-                .Include(b => b.Order.OrderDetail.Select(od => od.MenuItem))
+                    .ThenInclude(o => o.OrderDetails)
+                        .ThenInclude(od => od.MenuItem)
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
                 .ToList();
 
@@ -96,10 +96,11 @@ namespace NhaHangLDP.Services.Reports
             GetDateRange(period, out startDate, out endDate);
 
             var dishRevenue = db.OrderDetail
-                .Include(od => od.Order.Bill)
+                .Include(od => od.Order)
+                    .ThenInclude(o => o.Bills)
                 .Where(od => od.Order.OrderTime >= startDate
                           && od.Order.OrderTime < endDate
-                          && od.Order.Bill.Any(b => b.Status == "Paid"))
+                          && od.Order.Bills.Any(b => b.Status == "Paid"))
                 .Sum(od => (decimal?)(od.Quantity * od.PriceAtTime)) ?? 0;
 
             var totalBillRevenue = db.Bill
