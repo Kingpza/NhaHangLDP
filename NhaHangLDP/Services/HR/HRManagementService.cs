@@ -251,7 +251,7 @@ namespace NhaHangLDP.Services.HR
         {
             var query = _db.Set<Attendance>()
                 .Include(a => a.Employee)
-                .Include(a => a.Employee.Role)
+                    .ThenInclude(e => e.Role)
                 .Where(a => a.CheckInTime.Date >= startDate &&
                            a.CheckInTime.Date <= endDate);
 
@@ -702,7 +702,7 @@ namespace NhaHangLDP.Services.HR
         {
             var payrolls = _db.Set<Payroll>()
                 .Include(p => p.Employee)
-                .Include(p => p.Employee.Role)
+                    .ThenInclude(e => e.Role)
                 .Where(p => p.Month == month && p.Year == year)
                 .ToList();
 
@@ -836,7 +836,7 @@ namespace NhaHangLDP.Services.HR
         {
             var query = _db.Set<PerformanceReview>()
                 .Include(r => r.Employee)
-                .Include(r => r.Employee.Role)
+                    .ThenInclude(e => e.Role)
                 .AsQueryable();
 
             if (employeeId.HasValue)
@@ -894,7 +894,7 @@ namespace NhaHangLDP.Services.HR
 
             return _db.Set<PerformanceReview>()
                 .Include(r => r.Employee)
-                .Include(r => r.Employee.Role)
+                    .ThenInclude(e => e.Role)
                 .Where(r => r.ReviewDate.Year == thisYear)
                 .GroupBy(r => new { r.EmployeeId, r.Employee.FullName, RoleName = r.Employee.Role.RoleName })
                 .Select(g => new
@@ -977,7 +977,7 @@ namespace NhaHangLDP.Services.HR
         {
             return _db.EmployeeContract
                 .Include(c => c.Employee)
-                .Include(c => c.Employee.Role)
+                    .ThenInclude(e => e.Role)
                 .OrderByDescending(c => c.CreatedDate)
                 .ToList();
         }

@@ -141,7 +141,7 @@ namespace NhaHangLDP.Controllers
             // Lấy đơn hàng hiện tại (đang xử lý)
             var activeAssignment = _db.DeliveryAssignment
                 .Include(a => a.CustomerOrder)
-                .Include(a => a.CustomerOrder.CustomerOrderDetail)
+                    .ThenInclude(co => co.CustomerOrderDetails)
                 .FirstOrDefault(a => a.ShipperId == shipperId &&
                     (a.Status == "Assigned" || a.Status == "Accepted" || a.Status == "PickedUp" || a.Status == "Delivering"));
 
@@ -247,7 +247,7 @@ namespace NhaHangLDP.Controllers
 
             var assignment = _db.DeliveryAssignment
                 .Include(a => a.CustomerOrder)
-                .Include(a => a.CustomerOrder.CustomerOrderDetail)
+                    .ThenInclude(co => co.CustomerOrderDetails)
                 .FirstOrDefault(a => a.Id == id && a.ShipperId == shipperId);
 
             if (assignment == null)
@@ -260,7 +260,7 @@ namespace NhaHangLDP.Controllers
             {
                 Assignment = assignment,
                 Order = assignment.CustomerOrder,
-                OrderItems = assignment.CustomerOrder.CustomerOrderDetail?.ToList() ?? new List<CustomerOrderDetail>()
+                OrderItems = assignment.CustomerOrder.CustomerOrderDetails?.ToList() ?? new List<CustomerOrderDetail>()
             };
 
             return View(viewModel);

@@ -348,7 +348,7 @@ namespace NhaHangLDP.Controllers
 
             var payroll = _db.Payroll
                 .Include(p => p.Employee)
-                .Include(p => p.Employee.Role)
+                    .ThenInclude(e => e.Role)
                 .FirstOrDefault(p => p.Id == id);
 
             if (payroll == null)

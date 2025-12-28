@@ -64,7 +64,7 @@ namespace NhaHangLDP.Controllers
         public ActionResult Orders(string status = "all", int page = 1, int pageSize = 20)
         {
             var query = _db.CustomerOrder
-                .Include(o => o.CustomerOrderDetail)
+                .Include(o => o.CustomerOrderDetails)
                 .Where(o => o.OrderType == "Delivery");
 
             // Filter by status
