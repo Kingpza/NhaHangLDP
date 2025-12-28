@@ -219,8 +219,18 @@ namespace NhaHangLDP.Controllers
 
         private CustomerInfoViewModel GetCustomerInfo()
         {
-            // Check if customer is logged in
-            var customerId = HttpContext.Session.GetInt32("CustomerId");
+            // Check if customer is logged in - hỗ trợ cả GetInt32 và GetString để tương thích
+            int? customerId = HttpContext.Session.GetInt32("CustomerId");
+            if (!customerId.HasValue)
+            {
+                // Fallback: thử GetString nếu GetInt32 trả về null
+                var customerIdStr = HttpContext.Session.GetString("CustomerId");
+                if (!string.IsNullOrEmpty(customerIdStr) && int.TryParse(customerIdStr, out int parsedId))
+                {
+                    customerId = parsedId;
+                }
+            }
+
             if (customerId.HasValue)
             {
                 var customer = _db.Database.SqlQuery<CustomerBasicInfo>(

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +18,7 @@ namespace NhaHangLDP.Controllers
     public class CustomerAccountController : Controller
     {
         private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();
+        private const string CART_SESSION_KEY = "CustomerCart";
 
         #region Login
 
@@ -68,11 +70,17 @@ namespace NhaHangLDP.Controllers
                     return View(model);
                 }
 
-                // Set session - lưu đầy đủ thông tin khách hàng
-                HttpContext.Session.SetString("CustomerId", (customer.Id).ToString());
-                HttpContext.Session.SetString("CustomerName", (customer.FullName).ToString());
-                HttpContext.Session.SetString("CustomerEmail", (customer.Email).ToString());
-                HttpContext.Session.SetString("CustomerPhone", (customer.Phone).ToString());
+                // Lấy giỏ hàng session hiện tại (trước khi đăng nhập) để merge
+                var sessionCart = GetSessionCart();
+
+                // Set session - sử dụng SetInt32 cho CustomerId để nhất quán
+                HttpContext.Session.SetInt32("CustomerId", customer.Id);
+                HttpContext.Session.SetString("CustomerName", customer.FullName ?? "");
+                HttpContext.Session.SetString("CustomerEmail", customer.Email ?? "");
+                HttpContext.Session.SetString("CustomerPhone", customer.Phone ?? "");
+
+                // Merge giỏ hàng: session cart + database cart
+                MergeAndSyncCart(customer.Id, sessionCart);
 
                 // Update last login
                 _db.Database.ExecuteSqlRaw(
@@ -163,6 +171,9 @@ namespace NhaHangLDP.Controllers
                 // Hash password
                 var passwordHash = HashPassword(model.Password);
 
+                // Lấy giỏ hàng session hiện tại trước khi đăng ký
+                var sessionCart = GetSessionCart();
+
                 // Create customer
                 var sql = @"
                     INSERT INTO Customer (FullName, Email, Phone, PasswordHash, MembershipLevel, LoyaltyPoints, IsActive, EmailVerified, CreatedDate)
@@ -175,11 +186,17 @@ namespace NhaHangLDP.Controllers
                     model.Phone,
                     passwordHash).FirstOrDefault();
 
-                // Auto login - lưu đầy đủ thông tin khách hàng
+                // Auto login - sử dụng SetInt32 cho CustomerId
                 HttpContext.Session.SetInt32("CustomerId", (int)customerId);
                 HttpContext.Session.SetString("CustomerName", model.FullName);
                 HttpContext.Session.SetString("CustomerEmail", model.Email);
                 HttpContext.Session.SetString("CustomerPhone", model.Phone);
+
+                // Lưu giỏ hàng session vào database cho customer mới
+                if (sessionCart != null && sessionCart.Items.Any())
+                {
+                    SaveCartToDatabase((int)customerId, sessionCart);
+                }
 
                 TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà Hàng LDP.";
                 return RedirectToAction("Menu", "Public");
@@ -196,13 +213,13 @@ namespace NhaHangLDP.Controllers
         #region Logout
 
         /// <summary>
-        /// Đăng xuất
+        /// Đăng xuất - chỉ xóa session, giỏ hàng đã được lưu vào database
         /// </summary>
         public ActionResult Logout()
         {
+            // Giỏ hàng đã được lưu vào database khi thay đổi, 
+            // nên chỉ cần clear session và redirect
             HttpContext.Session.Clear();
-            // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
-            // FormsAuthentication not available in ASP.NET Core
             return RedirectToAction("Menu", "Public");
         }
 
@@ -251,11 +268,11 @@ namespace NhaHangLDP.Controllers
 
                 // Generate reset token (in production, you would send this via email)
                 var resetToken = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
-                
+
                 // For demo purposes, we'll just show the token
                 // In production, send email with reset link
                 TempData["Success"] = $"Mã đặt lại mật khẩu của bạn là: {resetToken} (Demo only - trong thực tế sẽ gửi qua email)";
-                
+
                 // You could store the token in database for verification later
                 // _db.Database.ExecuteSqlRaw(
                 //     "UPDATE Customer SET ResetToken = @p1, ResetTokenExpiry = DATEADD(HOUR, 1, GETDATE()) WHERE Id = @p0",
@@ -598,7 +615,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public JsonResult SaveAddress(int addressId, string receiverName, string receiverPhone, 
+        public JsonResult SaveAddress(int addressId, string receiverName, string receiverPhone,
             string addressLine, string ward, string district, string city, string addressType, bool isDefault = false)
         {
             try
@@ -624,436 +641,644 @@ namespace NhaHangLDP.Controllers
                         @"INSERT INTO CustomerAddress (CustomerId, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault, IsDeleted, CreatedDate)
                           VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, 0, GETDATE())",
                         customerId, receiverName, receiverPhone, addressLine, ward, district, city, addressType, isDefault);
-            
-            return Json(new { success = true, message = "Thêm địa chỉ thành công!" });
-        }
-        else
-        {
-            // Update existing address
-            _db.Database.ExecuteSqlRaw(
-                @"UPDATE CustomerAddress 
+
+                    return Json(new { success = true, message = "Thêm địa chỉ thành công!" });
+                }
+                else
+                {
+                    // Update existing address
+                    _db.Database.ExecuteSqlRaw(
+                        @"UPDATE CustomerAddress 
                   SET ReceiverName = @p1, ReceiverPhone = @p2, AddressLine = @p3, Ward = @p4, District = @p5, City = @p6, AddressType = @p7, IsDefault = @p8
                   WHERE Id = @p0 AND CustomerId = @p9",
-                addressId, receiverName, receiverPhone, addressLine, ward, district, city, addressType, isDefault, customerId);
-            
-            return Json(new { success = true, message = "Cập nhật địa chỉ thành công!" });
-        }
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = ex.Message });
-    }
-}
+                        addressId, receiverName, receiverPhone, addressLine, ward, district, city, addressType, isDefault, customerId);
 
-/// <summary>
-/// Đặt địa chỉ mặc định
-/// </summary>
-[HttpPost]
-public JsonResult SetDefaultAddress(int id)
-{
-    try
-    {
-        var customerId = GetCustomerId();
-        if (customerId == null)
+                    return Json(new { success = true, message = "Cập nhật địa chỉ thành công!" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Đặt địa chỉ mặc định
+        /// </summary>
+        [HttpPost]
+        public JsonResult SetDefaultAddress(int id)
         {
-            return Json(new { success = false, message = "Vui lòng đăng nhập!" });
+            try
+            {
+                var customerId = GetCustomerId();
+                if (customerId == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập!" });
+                }
+
+                // Reset all addresses to non-default
+                _db.Database.ExecuteSqlRaw(
+                    "UPDATE CustomerAddress SET IsDefault = 0 WHERE CustomerId = @p0",
+                    customerId);
+
+                // Set the selected one as default
+                _db.Database.ExecuteSqlRaw(
+                    "UPDATE CustomerAddress SET IsDefault = 1 WHERE Id = @p0 AND CustomerId = @p1",
+                    id, customerId);
+
+                return Json(new { success = true, message = "Đã đặt làm địa chỉ mặc định!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
-        // Reset all addresses to non-default
-        _db.Database.ExecuteSqlRaw(
-            "UPDATE CustomerAddress SET IsDefault = 0 WHERE CustomerId = @p0",
-            customerId);
-
-        // Set the selected one as default
-        _db.Database.ExecuteSqlRaw(
-            "UPDATE CustomerAddress SET IsDefault = 1 WHERE Id = @p0 AND CustomerId = @p1",
-            id, customerId);
-
-        return Json(new { success = true, message = "Đã đặt làm địa chỉ mặc định!" });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = ex.Message });
-    }
-}
-
-/// <summary>
-/// Xóa địa chỉ
-/// </summary>
-[HttpPost]
-public JsonResult DeleteAddress(int id)
-{
-    try
-    {
-        var customerId = GetCustomerId();
-        if (customerId == null)
+        /// <summary>
+        /// Xóa địa chỉ
+        /// </summary>
+        [HttpPost]
+        public JsonResult DeleteAddress(int id)
         {
-            return Json(new { success = false, message = "Vui lòng đăng nhập!" });
+            try
+            {
+                var customerId = GetCustomerId();
+                if (customerId == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập!" });
+                }
+
+                // Check if it's default address
+                var isDefault = _db.Database.SqlQuery<bool>(
+                    "SELECT IsDefault FROM CustomerAddress WHERE Id = @p0 AND CustomerId = @p1",
+                    id, customerId).FirstOrDefault();
+
+                if (isDefault)
+                {
+                    return Json(new { success = false, message = "Không thể xóa địa chỉ mặc định!" });
+                }
+
+                // Soft delete
+                _db.Database.ExecuteSqlRaw(
+                    "UPDATE CustomerAddress SET IsDeleted = 1 WHERE Id = @p0 AND CustomerId = @p1",
+                    id, customerId);
+
+                return Json(new { success = true, message = "Đã xóa địa chỉ!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
-        // Check if it's default address
-        var isDefault = _db.Database.SqlQuery<bool>(
-            "SELECT IsDefault FROM CustomerAddress WHERE Id = @p0 AND CustomerId = @p1",
-            id, customerId).FirstOrDefault();
-
-        if (isDefault)
+        /// <summary>
+        //// Xóa tài khoản
+        //// </summary>
+        [HttpPost]
+        public JsonResult DeleteAccount()
         {
-            return Json(new { success = false, message = "Không thể xóa địa chỉ mặc định!" });
+            try
+            {
+                var customerId = GetCustomerId();
+                if (customerId == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập!" });
+                }
+
+                // Soft delete customer
+                _db.Database.ExecuteSqlRaw(
+                    "UPDATE Customer SET IsActive = 0, Email = CONCAT(Email, '_deleted_', @p0) WHERE Id = @p0",
+                    customerId);
+
+                // Clear session
+                HttpContext.Session.Clear();
+                // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
+                // FormsAuthentication not available in ASP.NET Core
+
+                return Json(new { success = true, message = "Tài khoản đã bị xóa!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
-        // Soft delete
-        _db.Database.ExecuteSqlRaw(
-            "UPDATE CustomerAddress SET IsDeleted = 1 WHERE Id = @p0 AND CustomerId = @p1",
-            id, customerId);
+        #endregion
 
-        return Json(new { success = true, message = "Đã xóa địa chỉ!" });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = ex.Message });
-    }
-}
+        #region My Reservations
 
-/// <summary>
-/// Xóa tài khoản
-/// </summary>
-[HttpPost]
-public JsonResult DeleteAccount()
-{
-    try
-    {
-        var customerId = GetCustomerId();
-        if (customerId == null)
+        /// <summary>
+        /// Trang danh sách đặt bàn của tôi
+        /// </summary>
+        public ActionResult MyReservations()
         {
-            return Json(new { success = false, message = "Vui lòng đăng nhập!" });
-        }
+            var customerId = GetCustomerId();
+            if (customerId == null)
+            {
+                return RedirectToAction("Login", new { returnUrl = Url.Action("MyReservations") });
+            }
 
-        // Soft delete customer
-        _db.Database.ExecuteSqlRaw(
-            "UPDATE Customer SET IsActive = 0, Email = CONCAT(Email, '_deleted_', @p0) WHERE Id = @p0",
-            customerId);
-
-        // Clear session
-        HttpContext.Session.Clear();
-        // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
-        // FormsAuthentication not available in ASP.NET Core
-
-        return Json(new { success = true, message = "Tài khoản đã bị xóa!" });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = ex.Message });
-    }
-}
-
-#endregion
-
-#region My Reservations
-
-/// <summary>
-/// Trang danh sách đặt bàn của tôi
-/// </summary>
-public ActionResult MyReservations()
-{
-    var customerId = GetCustomerId();
-    if (customerId == null)
-    {
-        return RedirectToAction("Login", new { returnUrl = Url.Action("MyReservations") });
-    }
-
-    var reservations = _db.Database.SqlQuery<MyReservationInfo>(
-        @"SELECT r.Id, r.ReservationCode, r.CustomerName, r.CustomerPhone, r.CustomerEmail,
+            var reservations = _db.Database.SqlQuery<MyReservationInfo>(
+                @"SELECT r.Id, r.ReservationCode, r.CustomerName, r.CustomerPhone, r.CustomerEmail,
                  r.ReservationDate, r.ReservationTime, r.NumberOfGuests, r.TablePreference,
                  r.SpecialRequests, r.Status, r.CreatedDate, t.TableNumber as TableName
           FROM Reservation r
           LEFT JOIN RestaurantTable t ON r.TableId = t.Id
           WHERE r.CustomerId = @p0
           ORDER BY r.ReservationDate DESC, r.ReservationTime DESC",
-        customerId).ToList();
+                customerId).ToList();
 
-    var viewModel = reservations.Select(r => new MyReservationViewModel
-    {
-        Id = r.Id,
-        ReservationCode = r.ReservationCode,
-        CustomerName = r.CustomerName,
-        CustomerPhone = r.CustomerPhone,
-        ReservationDate = r.ReservationDate,
-        ReservationTime = r.ReservationTime,
-        NumberOfGuests = r.NumberOfGuests,
-        TablePreference = r.TablePreference,
-        TableName = r.TableName,
-        SpecialRequests = r.SpecialRequests,
-        Status = r.Status,
-        StatusClass = GetReservationStatusClass(r.Status),
-        StatusText = GetReservationStatusText(r.Status),
-        CanCancel = r.Status == "Pending" || r.Status == "Confirmed",
-        CanModify = r.Status == "Pending",
-        CreatedDate = r.CreatedDate,
-        IsUpcoming = r.ReservationDate >= DateTime.Today && (r.Status == "Pending" || r.Status == "Confirmed")
-    }).ToList();
+            var viewModel = reservations.Select(r => new MyReservationViewModel
+            {
+                Id = r.Id,
+                ReservationCode = r.ReservationCode,
+                CustomerName = r.CustomerName,
+                CustomerPhone = r.CustomerPhone,
+                ReservationDate = r.ReservationDate,
+                ReservationTime = r.ReservationTime,
+                NumberOfGuests = r.NumberOfGuests,
+                TablePreference = r.TablePreference,
+                TableName = r.TableName,
+                SpecialRequests = r.SpecialRequests,
+                Status = r.Status,
+                StatusClass = GetReservationStatusClass(r.Status),
+                StatusText = GetReservationStatusText(r.Status),
+                CanCancel = r.Status == "Pending" || r.Status == "Confirmed",
+                CanModify = r.Status == "Pending",
+                CreatedDate = r.CreatedDate,
+                IsUpcoming = r.ReservationDate >= DateTime.Today && (r.Status == "Pending" || r.Status == "Confirmed")
+            }).ToList();
 
-    return View(viewModel);
-}
-
-/// <summary>
-/// Hủy đặt bàn
-/// </summary>
-[HttpPost]
-public JsonResult CancelReservation(string code, string reason)
-{
-    try
-    {
-        var customerId = GetCustomerId();
-        if (customerId == null)
-        {
-            return Json(new { success = false, message = "Vui lòng đăng nhập!" });
+            return View(viewModel);
         }
 
-        // Verify ownership
-        var isOwner = _db.Database.SqlQuery<int>(
-            "SELECT COUNT(*) FROM Reservation WHERE ReservationCode = @p0 AND CustomerId = @p1",
-            code, customerId).FirstOrDefault();
-
-        if (isOwner == 0)
+        /// <summary>
+        //// Hủy đặt bàn
+        //// </summary>
+        [HttpPost]
+        public JsonResult CancelReservation(string code, string reason)
         {
-            return Json(new { success = false, message = "Không tìm thấy đặt bàn!" });
-        }
+            try
+            {
+                var customerId = GetCustomerId();
+                if (customerId == null)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập!" });
+                }
 
-        var sql = @"
+                // Verify ownership
+                var isOwner = _db.Database.SqlQuery<int>(
+                    "SELECT COUNT(*) FROM Reservation WHERE ReservationCode = @p0 AND CustomerId = @p1",
+                    code, customerId).FirstOrDefault();
+
+                if (isOwner == 0)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy đặt bàn!" });
+                }
+
+                var sql = @"
             UPDATE Reservation 
             SET Status = 'Cancelled', CancelReason = @p1, CancelledDate = GETDATE()
             WHERE ReservationCode = @p0 AND Status IN ('Pending', 'Confirmed')";
 
-        var affected = _db.Database.ExecuteSqlRaw(sql, code, reason ?? "Khách hàng hủy");
+                var affected = _db.Database.ExecuteSqlRaw(sql, code, reason ?? "Khách hàng hủy");
 
-        if (affected > 0)
-        {
-            return Json(new { success = true, message = "Đã hủy đặt bàn thành công!" });
+                if (affected > 0)
+                {
+                    return Json(new { success = true, message = "Đã hủy đặt bàn thành công!" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Không thể hủy đặt bàn này!" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
-        else
+
+        private string GetReservationStatusClass(string status)
         {
-            return Json(new { success = false, message = "Không thể hủy đặt bàn này!" });
+            switch (status)
+            {
+                case "Pending": return "warning";
+                case "Confirmed": return "success";
+                case "Completed": return "info";
+                case "Cancelled": return "danger";
+                case "NoShow": return "secondary";
+                default: return "secondary";
+            }
         }
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = ex.Message });
-    }
-}
 
-private string GetReservationStatusClass(string status)
-{
-    switch (status)
-    {
-        case "Pending": return "warning";
-        case "Confirmed": return "success";
-        case "Completed": return "info";
-        case "Cancelled": return "danger";
-        case "NoShow": return "secondary";
-        default: return "secondary";
-    }
-}
+        private string GetReservationStatusText(string status)
+        {
+            switch (status)
+            {
+                case "Pending": return "Chờ xác nhận";
+                case "Confirmed": return "Đã xác nhận";
+                case "Completed": return "Hoàn thành";
+                case "Cancelled": return "Đã hủy";
+                case "NoShow": return "Không đến";
+                default: return status;
+            }
+        }
 
-private string GetReservationStatusText(string status)
-{
-    switch (status)
-    {
-        case "Pending": return "Chờ xác nhận";
-        case "Confirmed": return "Đã xác nhận";
-        case "Completed": return "Hoàn thành";
-        case "Cancelled": return "Đã hủy";
-        case "NoShow": return "Không đến";
-        default: return status;
-    }
-}
+        private class MyReservationInfo
+        {
+            public int Id { get; set; }
+            public string ReservationCode { get; set; }
+            public string CustomerName { get; set; }
+            public string CustomerPhone { get; set; }
+            public string CustomerEmail { get; set; }
+            public DateTime ReservationDate { get; set; }
+            public TimeSpan ReservationTime { get; set; }
+            public int NumberOfGuests { get; set; }
+            public string TablePreference { get; set; }
+            public string SpecialRequests { get; set; }
+            public string Status { get; set; }
+            public DateTime CreatedDate { get; set; }
+            public string TableName { get; set; }
+        }
 
-private class MyReservationInfo
-{
-    public int Id { get; set; }
-    public string ReservationCode { get; set; }
-    public string CustomerName { get; set; }
-    public string CustomerPhone { get; set; }
-    public string CustomerEmail { get; set; }
-    public DateTime ReservationDate { get; set; }
-    public TimeSpan ReservationTime { get; set; }
-    public int NumberOfGuests { get; set; }
-    public string TablePreference { get; set; }
-    public string SpecialRequests { get; set; }
-    public string Status { get; set; }
-    public DateTime CreatedDate { get; set; }
-    public string TableName { get; set; }
-}
+        #endregion
 
-#endregion
+        #region Cart Sync Methods
 
-#region Helper Methods
+        /// <summary>
+        /// Lấy giỏ hàng từ session hiện tại
+        /// </summary>
+        private CartViewModel GetSessionCart()
+        {
+            var cartJson = HttpContext.Session.GetString(CART_SESSION_KEY);
+            if (!string.IsNullOrEmpty(cartJson))
+            {
+                try
+                {
+                    return JsonSerializer.Deserialize<CartViewModel>(cartJson);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            return null;
+        }
 
-private bool IsCustomerLoggedIn()
-{
-    return HttpContext.Session.GetString("CustomerId") != null;
-}
+        /// <summary>
+        /// Merge giỏ hàng session với giỏ hàng database và sync
+        /// </summary>
+        private void MergeAndSyncCart(int customerId, CartViewModel sessionCart)
+        {
+            try
+            {
+                // Load giỏ hàng từ database
+                var dbCart = LoadCartFromDatabase(customerId);
 
-private int? GetCustomerId()
-{
-    return HttpContext.Session.GetInt32("CustomerId");
-}
+                // Nếu có session cart, merge với database cart
+                if (sessionCart != null && sessionCart.Items.Any())
+                {
+                    foreach (var sessionItem in sessionCart.Items)
+                    {
+                        var existingItem = dbCart.Items.FirstOrDefault(i => i.MenuItemId == sessionItem.MenuItemId);
+                        if (existingItem != null)
+                        {
+                            // Cộng số lượng nếu món đã có
+                            existingItem.Quantity += sessionItem.Quantity;
+                            existingItem.Subtotal = existingItem.UnitPrice * existingItem.Quantity;
+                        }
+                        else
+                        {
+                            // Thêm món mới với Id mới
+                            sessionItem.Id = dbCart.Items.Count + 1;
+                            dbCart.Items.Add(sessionItem);
+                        }
+                    }
+                }
 
-private CustomerProfileViewModel GetCustomerProfile(int customerId)
-{
-    try
-    {
-        var customer = _db.Database.SqlQuery<CustomerProfileInfo>(
-            @"SELECT c.Id, c.FullName, c.Email, c.Phone, c.DateOfBirth, c.Gender, c.AvatarUrl,
+                // Cập nhật tổng tiền
+                UpdateCartTotals(dbCart);
+
+                // Lưu lại vào session và database
+                SaveSessionCart(dbCart);
+                SaveCartToDatabase(customerId, dbCart);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error merging cart: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Load giỏ hàng từ database
+        /// </summary>
+        private CartViewModel LoadCartFromDatabase(int customerId)
+        {
+            var cart = new CartViewModel
+            {
+                Items = new List<CartItemViewModel>(),
+                SubTotal = 0,
+                DeliveryFee = 0,
+                Discount = 0,
+                TotalAmount = 0,
+                TotalItems = 0
+            };
+
+            try
+            {
+                var dbCart = _db.Cart
+                    .Include(c => c.CartItems)
+                        .ThenInclude(ci => ci.MenuItem)
+                    .FirstOrDefault(c => c.CustomerId == customerId);
+
+                if (dbCart != null && dbCart.CartItems.Any())
+                {
+                    int itemId = 1;
+                    foreach (var dbItem in dbCart.CartItems)
+                    {
+                        if (dbItem.MenuItem != null && dbItem.MenuItem.IsAvailable)
+                        {
+                            cart.Items.Add(new CartItemViewModel
+                            {
+                                Id = itemId++,
+                                MenuItemId = dbItem.MenuItemId,
+                                Name = dbItem.MenuItem.Name,
+                                ImageUrl = dbItem.MenuItem.ImageUrl,
+                                Category = dbItem.MenuItem.Category,
+                                UnitPrice = dbItem.MenuItem.Price,
+                                Quantity = dbItem.Quantity,
+                                Subtotal = dbItem.MenuItem.Price * dbItem.Quantity,
+                                SpecialInstructions = dbItem.SpecialInstructions
+                            });
+                        }
+                    }
+
+                    UpdateCartTotals(cart);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading cart from database: {ex.Message}");
+            }
+
+            return cart;
+        }
+
+        /// <summary>
+        /// Lưu giỏ hàng vào session
+        /// </summary>
+        private void SaveSessionCart(CartViewModel cart)
+        {
+            var cartJson = JsonSerializer.Serialize(cart);
+            HttpContext.Session.SetString(CART_SESSION_KEY, cartJson);
+        }
+
+        /// <summary>
+        /// Lưu giỏ hàng vào database
+        /// </summary>
+        private void SaveCartToDatabase(int customerId, CartViewModel cart)
+        {
+            try
+            {
+                var dbCart = _db.Cart.FirstOrDefault(c => c.CustomerId == customerId);
+
+                if (dbCart == null)
+                {
+                    dbCart = new Data.Entities.Cart
+                    {
+                        CustomerId = customerId,
+                        CreatedDate = DateTime.Now,
+                        UpdatedDate = DateTime.Now
+                    };
+                    _db.Cart.Add(dbCart);
+                    _db.SaveChanges();
+                }
+                else
+                {
+                    dbCart.UpdatedDate = DateTime.Now;
+                }
+
+                // Xóa cart items cũ
+                var existingItems = _db.CartItem.Where(ci => ci.CartId == dbCart.Id).ToList();
+                _db.CartItem.RemoveRange(existingItems);
+
+                // Thêm cart items mới
+                foreach (var item in cart.Items)
+                {
+                    _db.CartItem.Add(new Data.Entities.CartItem
+                    {
+                        CartId = dbCart.Id,
+                        MenuItemId = item.MenuItemId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        SpecialInstructions = item.SpecialInstructions,
+                        AddedDate = DateTime.Now
+                    });
+                }
+
+                _db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving cart to database: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật tổng tiền giỏ hàng
+        /// </summary>
+        private void UpdateCartTotals(CartViewModel cart)
+        {
+            cart.SubTotal = cart.Items.Sum(i => i.Subtotal);
+            cart.TotalItems = cart.Items.Sum(i => i.Quantity);
+            cart.DeliveryFee = cart.SubTotal >= 300000 ? 0 : 25000;
+            cart.TotalAmount = cart.SubTotal + cart.DeliveryFee - cart.Discount;
+            if (cart.TotalAmount < 0) cart.TotalAmount = 0;
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private bool IsCustomerLoggedIn()
+        {
+            return GetCustomerId() != null;
+        }
+
+        /// <summary>
+        /// Lấy CustomerId từ session - hỗ trợ cả GetInt32 và GetString để tương thích
+        /// </summary>
+        private int? GetCustomerId()
+        {
+            int? customerId = HttpContext.Session.GetInt32("CustomerId");
+            if (!customerId.HasValue)
+            {
+                // Fallback: thử GetString nếu GetInt32 trả về null (tương thích ngược)
+                var customerIdStr = HttpContext.Session.GetString("CustomerId");
+                if (!string.IsNullOrEmpty(customerIdStr) && int.TryParse(customerIdStr, out int parsedId))
+                {
+                    customerId = parsedId;
+                }
+            }
+            return customerId;
+        }
+
+        private CustomerProfileViewModel GetCustomerProfile(int customerId)
+        {
+            try
+            {
+                var customer = _db.Database.SqlQuery<CustomerProfileInfo>(
+                    @"SELECT c.Id, c.FullName, c.Email, c.Phone, c.DateOfBirth, c.Gender, c.AvatarUrl,
                      c.LoyaltyPoints, c.MembershipLevel, c.CreatedDate,
                      (SELECT COUNT(*) FROM CustomerOrder WHERE CustomerId = c.Id) as TotalOrders,
                      (SELECT ISNULL(SUM(TotalAmount), 0) FROM CustomerOrder WHERE CustomerId = c.Id AND Status = 'Completed') as TotalSpent
               FROM Customer c
               WHERE c.Id = @p0", customerId).FirstOrDefault();
 
-        if (customer == null) return null;
+                if (customer == null) return null;
 
-        return new CustomerProfileViewModel
+                return new CustomerProfileViewModel
+                {
+                    Id = customer.Id,
+                    FullName = customer.FullName,
+                    Email = customer.Email,
+                    Phone = customer.Phone,
+                    DateOfBirth = customer.DateOfBirth,
+                    Gender = customer.Gender,
+                    AvatarUrl = customer.AvatarUrl,
+                    LoyaltyPoints = customer.LoyaltyPoints,
+                    MembershipLevel = customer.MembershipLevel,
+                    CreatedDate = customer.CreatedDate,
+                    TotalOrders = customer.TotalOrders,
+                    TotalSpent = customer.TotalSpent
+                };
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private string HashPassword(string password)
         {
-            Id = customer.Id,
-            FullName = customer.FullName,
-            Email = customer.Email,
-            Phone = customer.Phone,
-            DateOfBirth = customer.DateOfBirth,
-            Gender = customer.Gender,
-            AvatarUrl = customer.AvatarUrl,
-            LoyaltyPoints = customer.LoyaltyPoints,
-            MembershipLevel = customer.MembershipLevel,
-            CreatedDate = customer.CreatedDate,
-            TotalOrders = customer.TotalOrders,
-            TotalSpent = customer.TotalSpent
-        };
-    }
-    catch
-    {
-        return null;
-    }
-}
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(password);
+                var hash = sha256.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
+            }
+        }
 
-private string HashPassword(string password)
-{
-    using (var sha256 = SHA256.Create())
-    {
-        var bytes = Encoding.UTF8.GetBytes(password);
-        var hash = sha256.ComputeHash(bytes);
-        return Convert.ToBase64String(hash);
-    }
-}
+        private bool VerifyPassword(string password, string hash)
+        {
+            var inputHash = HashPassword(password);
+            return inputHash == hash;
+        }
 
-private bool VerifyPassword(string password, string hash)
-{
-    var inputHash = HashPassword(password);
-    return inputHash == hash;
-}
+        private string GetOrderStatusClass(string status)
+        {
+            switch (status)
+            {
+                case "Pending": return "warning";
+                case "Confirmed": return "info";
+                case "Preparing": return "info";
+                case "Ready": return "primary";
+                case "Delivering": return "primary";
+                case "Completed": return "success";
+                case "Cancelled": return "danger";
+                default: return "secondary";
+            }
+        }
 
-private string GetOrderStatusClass(string status)
-{
-    switch (status)
-    {
-        case "Pending": return "warning";
-        case "Confirmed": return "info";
-        case "Preparing": return "info";
-        case "Ready": return "primary";
-        case "Delivering": return "primary";
-        case "Completed": return "success";
-        case "Cancelled": return "danger";
-        default: return "secondary";
-    }
-}
+        private string GetOrderStatusText(string status)
+        {
+            switch (status)
+            {
+                case "Pending": return "Chờ xác nhận";
+                case "Confirmed": return "Đã xác nhận";
+                case "Preparing": return "Đang chuẩn bị";
+                case "Ready": return "Sẵn sàng";
+                case "Delivering": return "Đang giao";
+                case "Completed": return "Hoàn thành";
+                case "Cancelled": return "Đã hủy";
+                default: return status;
+            }
+        }
 
-private string GetOrderStatusText(string status)
-{
-    switch (status)
-    {
-        case "Pending": return "Chờ xác nhận";
-        case "Confirmed": return "Đã xác nhận";
-        case "Preparing": return "Đang chuẩn bị";
-        case "Ready": return "Sẵn sàng";
-        case "Delivering": return "Đang giao";
-        case "Completed": return "Hoàn thành";
-        case "Cancelled": return "Đã hủy";
-        default: return status;
-    }
-}
+        #endregion
 
-#endregion
+        #region Helper Classes
 
-#region Helper Classes
+        private class CustomerLoginInfo
+        {
+            public int Id { get; set; }
+            public string FullName { get; set; }
+            public string Email { get; set; }
+            public string Phone { get; set; }
+            public string PasswordHash { get; set; }
+            public bool IsActive { get; set; }
+        }
 
-private class CustomerLoginInfo
-{
-    public int Id { get; set; }
-    public string FullName { get; set; }
-    public string Email { get; set; }
-    public string Phone { get; set; }
-    public string PasswordHash { get; set; }
-    public bool IsActive { get; set; }
-}
+        private class CustomerProfileInfo
+        {
+            public int Id { get; set; }
+            public string FullName { get; set; }
+            public string Email { get; set; }
+            public string Phone { get; set; }
+            public DateTime? DateOfBirth { get; set; }
+            public string Gender { get; set; }
+            public string AvatarUrl { get; set; }
+            public int LoyaltyPoints { get; set; }
+            public string MembershipLevel { get; set; }
+            public DateTime CreatedDate { get; set; }
+            public int TotalOrders { get; set; }
+            public decimal TotalSpent { get; set; }
+        }
 
-private class CustomerProfileInfo
-{
-    public int Id { get; set; }
-    public string FullName { get; set; }
-    public string Email { get; set; }
-    public string Phone { get; set; }
-    public DateTime? DateOfBirth { get; set; }
-    public string Gender { get; set; }
-    public string AvatarUrl { get; set; }
-    public int LoyaltyPoints { get; set; }
-    public string MembershipLevel { get; set; }
-    public DateTime CreatedDate { get; set; }
-    public int TotalOrders { get; set; }
-    public decimal TotalSpent { get; set; }
-}
+        private class OrderSummaryInfo
+        {
+            public int Id { get; set; }
+            public string OrderCode { get; set; }
+            public DateTime OrderDate { get; set; }
+            public string Status { get; set; }
+            public decimal TotalAmount { get; set; }
+            public int ItemCount { get; set; }
+            public string FirstItemImage { get; set; }
+        }
 
-private class OrderSummaryInfo
-{
-    public int Id { get; set; }
-    public string OrderCode { get; set; }
-    public DateTime OrderDate { get; set; }
-    public string Status { get; set; }
-    public decimal TotalAmount { get; set; }
-    public int ItemCount { get; set; }
-    public string FirstItemImage { get; set; }
-}
+        private class WishlistItemInfo
+        {
+            public int Id { get; set; }
+            public int MenuItemId { get; set; }
+            public string Name { get; set; }
+            public decimal Price { get; set; }
+            public string ImageUrl { get; set; }
+            public string Category { get; set; }
+            public DateTime AddedDate { get; set; }
+        }
 
-private class WishlistItemInfo
-{
-    public int Id { get; set; }
-    public int MenuItemId { get; set; }
-    public string Name { get; set; }
-    public decimal Price { get; set; }
-    public string ImageUrl { get; set; }
-    public string Category { get; set; }
-    public DateTime AddedDate { get; set; }
-}
+        private class CustomerAddressInfo
+        {
+            public int Id { get; set; }
+            public string ReceiverName { get; set; }
+            public string ReceiverPhone { get; set; }
+            public string AddressLine { get; set; }
+            public string Ward { get; set; }
+            public string District { get; set; }
+            public string City { get; set; }
+            public string AddressType { get; set; }
+            public bool IsDefault { get; set; }
+        }
 
-private class CustomerAddressInfo
-{
-    public int Id { get; set; }
-    public string ReceiverName { get; set; }
-    public string ReceiverPhone { get; set; }
-    public string AddressLine { get; set; }
-    public string Ward { get; set; }
-    public string District { get; set; }
-    public string City { get; set; }
-    public string AddressType { get; set; }
-    public bool IsDefault { get; set; }
-}
+        #endregion
 
-#endregion
-
-protected override void Dispose(bool disposing)
-{
-    if (disposing)
-    {
-        _db.Dispose();
-    }
-    base.Dispose(disposing);
-}
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _db.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 }

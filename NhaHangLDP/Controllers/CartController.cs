@@ -22,6 +22,28 @@ namespace NhaHangLDP.Controllers
         private const string CART_SESSION_KEY = "CustomerCart";
         #endregion
 
+        #region Helper Properties
+
+        /// <summary>
+        /// Lấy CustomerId từ session - hỗ trợ cả GetInt32 và GetString để tương thích
+        /// </summary>
+        private int? GetCustomerId()
+        {
+            int? customerId = HttpContext.Session.GetInt32("CustomerId");
+            if (!customerId.HasValue)
+            {
+                // Fallback: thử GetString nếu GetInt32 trả về null
+                var customerIdStr = HttpContext.Session.GetString("CustomerId");
+                if (!string.IsNullOrEmpty(customerIdStr) && int.TryParse(customerIdStr, out int parsedId))
+                {
+                    customerId = parsedId;
+                }
+            }
+            return customerId;
+        }
+
+        #endregion
+
         #region Cart Page
 
         /// <summary>
@@ -379,7 +401,7 @@ namespace NhaHangLDP.Controllers
         #region Helper Methods
 
         /// <summary>
-        /// Lấy giỏ hàng từ Session
+        /// Lấy giỏ hàng từ Session (và sync từ database nếu đã đăng nhập)
         /// </summary>
         private CartViewModel GetCart()
         {
@@ -400,17 +422,145 @@ namespace NhaHangLDP.Controllers
                     TotalAmount = 0,
                     TotalItems = 0
                 };
+                
+                // Nếu đã đăng nhập và giỏ hàng session trống, load từ database
+                var customerId = GetCustomerId();
+                if (customerId.HasValue)
+                {
+                    cart = LoadCartFromDatabase(customerId.Value);
+                    if (cart.Items.Any())
+                    {
+                        SaveCart(cart);
+                    }
+                }
             }
             return cart;
         }
 
         /// <summary>
-        /// Lưu giỏ hàng vào Session
+        /// Load giỏ hàng từ database cho khách hàng đã đăng nhập
+        /// </summary>
+        private CartViewModel LoadCartFromDatabase(int customerId)
+        {
+            var cart = new CartViewModel
+            {
+                Items = new List<CartItemViewModel>(),
+                SubTotal = 0,
+                DeliveryFee = 0,
+                Discount = 0,
+                TotalAmount = 0,
+                TotalItems = 0
+            };
+
+            try
+            {
+                // Lấy thông tin cart từ database
+                var dbCart = _db.Cart
+                    .Include(c => c.CartItems)
+                        .ThenInclude(ci => ci.MenuItem)
+                    .FirstOrDefault(c => c.CustomerId == customerId);
+
+                if (dbCart != null && dbCart.CartItems.Any())
+                {
+                    int itemId = 1;
+                    foreach (var dbItem in dbCart.CartItems)
+                    {
+                        if (dbItem.MenuItem != null && dbItem.MenuItem.IsAvailable)
+                        {
+                            cart.Items.Add(new CartItemViewModel
+                            {
+                                Id = itemId++,
+                                MenuItemId = dbItem.MenuItemId,
+                                Name = dbItem.MenuItem.Name,
+                                ImageUrl = dbItem.MenuItem.ImageUrl,
+                                Category = dbItem.MenuItem.Category,
+                                UnitPrice = dbItem.MenuItem.Price, // Lấy giá hiện tại của món
+                                Quantity = dbItem.Quantity,
+                                Subtotal = dbItem.MenuItem.Price * dbItem.Quantity,
+                                SpecialInstructions = dbItem.SpecialInstructions
+                            });
+                        }
+                    }
+
+                    UpdateCartTotals(cart);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi nếu cần
+                System.Diagnostics.Debug.WriteLine($"Error loading cart from database: {ex.Message}");
+            }
+
+            return cart;
+        }
+
+        /// <summary>
+        /// Lưu giỏ hàng vào Session và Database (nếu đã đăng nhập)
         /// </summary>
         private void SaveCart(CartViewModel cart)
         {
             var cartJson = JsonSerializer.Serialize(cart);
             HttpContext.Session.SetString(CART_SESSION_KEY, cartJson);
+
+            // Nếu đã đăng nhập, lưu vào database để giữ cho lần sau
+            var customerId = GetCustomerId();
+            if (customerId.HasValue)
+            {
+                SaveCartToDatabase(customerId.Value, cart);
+            }
+        }
+
+        /// <summary>
+        /// Lưu giỏ hàng vào database cho khách hàng đã đăng nhập
+        /// </summary>
+        private void SaveCartToDatabase(int customerId, CartViewModel cart)
+        {
+            try
+            {
+                // Tìm hoặc tạo Cart trong database
+                var dbCart = _db.Cart.FirstOrDefault(c => c.CustomerId == customerId);
+                
+                if (dbCart == null)
+                {
+                    dbCart = new Data.Entities.Cart
+                    {
+                        CustomerId = customerId,
+                        CreatedDate = DateTime.Now,
+                        UpdatedDate = DateTime.Now
+                    };
+                    _db.Cart.Add(dbCart);
+                    _db.SaveChanges();
+                }
+                else
+                {
+                    dbCart.UpdatedDate = DateTime.Now;
+                }
+
+                // Xóa các cart items cũ
+                var existingItems = _db.CartItem.Where(ci => ci.CartId == dbCart.Id).ToList();
+                _db.CartItem.RemoveRange(existingItems);
+
+                // Thêm các cart items mới
+                foreach (var item in cart.Items)
+                {
+                    _db.CartItem.Add(new Data.Entities.CartItem
+                    {
+                        CartId = dbCart.Id,
+                        MenuItemId = item.MenuItemId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        SpecialInstructions = item.SpecialInstructions,
+                        AddedDate = DateTime.Now
+                    });
+                }
+
+                _db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi nếu cần, nhưng không throw để không ảnh hưởng UX
+                System.Diagnostics.Debug.WriteLine($"Error saving cart to database: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -456,3 +606,4 @@ namespace NhaHangLDP.Controllers
         }
     }
 }
+
