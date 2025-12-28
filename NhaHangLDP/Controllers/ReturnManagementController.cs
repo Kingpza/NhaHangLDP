@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using NhaHangLDP.Models;
 using Microsoft.AspNetCore.Http;
@@ -207,8 +208,8 @@ namespace NhaHangLDP.Controllers
                 {
                     var returnBill = new ReturnBill
                     {
-                        OriginalBillID = model.BillID,
-                        EmployeeID = model.EmployeeID,
+                        OriginalBillId = model.BillID,
+                        EmployeeId = model.EmployeeID,
                         ReturnDate = DateTime.Now,
                         TotalRefundAmount = model.TotalRefundAmount,
                         Reason = model.Reason
@@ -221,8 +222,8 @@ namespace NhaHangLDP.Controllers
                     {
                         var returnDetail = new ReturnBillDetail
                         {
-                            ReturnBillID = returnBill.ReturnBillID,
-                            MenuItemID = returnItem.MenuItemID,
+                            ReturnBillId = returnBill.ReturnBillId,
+                            MenuItemId = returnItem.MenuItemID,
                             Quantity = returnItem.ReturnQuantity,
                             UnitPrice = returnItem.UnitPrice,
                             IsDamaged = returnItem.IsDamaged

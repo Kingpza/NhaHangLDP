@@ -12,8 +12,17 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <!-- Entity Framework 6 for EDMX support -->
-    <PackageReference Include="EntityFramework" Version="6.5.1" />
+    <!-- Entity Framework Core -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     
     <!-- ASP.NET Core compatibility -->
     <PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters" Version="2.2.1" />
@@ -24,45 +33,5 @@
     
     <!-- Configuration support -->
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.1" />
-  </ItemGroup>
-  
-  <!-- EF6 EDMX file configuration -->
-  <ItemGroup>
-    <Compile Update="Models\NhaHangLDP.Context.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>NhaHangLDP.Context.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\NhaHangLDP.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>NhaHangLDP.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Models\NhaHangLDP.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>NhaHangLDP.edmx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Content Include="Models\NhaHangLDP.Context.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>NhaHangLDP.edmx</DependentUpon>
-      <LastGenOutput>NhaHangLDP.Context.cs</LastGenOutput>
-    </Content>
-    <Content Include="Models\NhaHangLDP.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>NhaHangLDP.edmx</DependentUpon>
-      <LastGenOutput>NhaHangLDP.cs</LastGenOutput>
-    </Content>
-    <EntityDeploy Include="Models\NhaHangLDP.edmx">
-      <Generator>EntityModelCodeGenerator</Generator>
-      <LastGenOutput>NhaHangLDP.Designer.cs</LastGenOutput>
-    </EntityDeploy>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
 </Project>

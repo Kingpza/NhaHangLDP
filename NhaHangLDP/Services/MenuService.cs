@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using NhaHangLDP.Models;
 

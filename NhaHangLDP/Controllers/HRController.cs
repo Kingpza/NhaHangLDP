@@ -1,9 +1,11 @@
+using NhaHangLDP.Data;
 using NhaHangLDP.Helpers;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services.HR;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -388,7 +390,7 @@ namespace NhaHangLDP.Controllers
             return View(new PerformanceReview
             {
                 ReviewerId = GetCurrentEmployeeId(),
-                ReviewDate = DateTime.Today
+                ReviewDate = DateOnly.FromDateTime(DateTime.Today)
             });
         }
 
@@ -451,7 +453,7 @@ namespace NhaHangLDP.Controllers
 
             ViewBag.Employees = new SelectList(_db.Employee.Where(e => e.IsActive).ToList(), "Id", "FullName");
             ViewBag.ContractTypes = GetContractTypes();
-            return View(new EmployeeContract { StartDate = DateTime.Today });
+            return View(new EmployeeContract { StartDate = DateOnly.FromDateTime(DateTime.Today) });
         }
 
         [HttpPost]
@@ -653,7 +655,7 @@ namespace NhaHangLDP.Controllers
         private void CreateHRTables()
         {
             // WorkShift
-            _db.Database.ExecuteSqlCommand(@"
+            _db.Database.ExecuteSqlRaw(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'WorkShift')
                 BEGIN
                     CREATE TABLE [dbo].[WorkShift](
@@ -670,7 +672,7 @@ namespace NhaHangLDP.Controllers
             ");
 
             // Attendance
-            _db.Database.ExecuteSqlCommand(@"
+            _db.Database.ExecuteSqlRaw(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Attendance')
                 BEGIN
                     CREATE TABLE [dbo].[Attendance](
@@ -689,7 +691,7 @@ namespace NhaHangLDP.Controllers
             ");
 
             // LeaveRequest
-            _db.Database.ExecuteSqlCommand(@"
+            _db.Database.ExecuteSqlRaw(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'LeaveRequest')
                 BEGIN
                     CREATE TABLE [dbo].[LeaveRequest](
@@ -710,7 +712,7 @@ namespace NhaHangLDP.Controllers
             ");
 
             // EmployeeContract
-            _db.Database.ExecuteSqlCommand(@"
+            _db.Database.ExecuteSqlRaw(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'EmployeeContract')
                 BEGIN
                     CREATE TABLE [dbo].[EmployeeContract](
@@ -731,7 +733,7 @@ namespace NhaHangLDP.Controllers
             ");
 
             // Payroll
-            _db.Database.ExecuteSqlCommand(@"
+            _db.Database.ExecuteSqlRaw(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Payroll')
                 BEGIN
                     CREATE TABLE [dbo].[Payroll](
@@ -760,7 +762,7 @@ namespace NhaHangLDP.Controllers
             ");
 
             // PerformanceReview
-            _db.Database.ExecuteSqlCommand(@"
+            _db.Database.ExecuteSqlRaw(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'PerformanceReview')
                 BEGIN
                     CREATE TABLE [dbo].[PerformanceReview](
@@ -787,7 +789,7 @@ namespace NhaHangLDP.Controllers
             ");
 
             // EmployeeSchedule
-            _db.Database.ExecuteSqlCommand(@"
+            _db.Database.ExecuteSqlRaw(@"
                 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'EmployeeSchedule')
                 BEGIN
                     CREATE TABLE [dbo].[EmployeeSchedule](
@@ -817,7 +819,7 @@ namespace NhaHangLDP.Controllers
             var shiftCount = _db.Database.SqlQuery<int>("SELECT COUNT(*) FROM WorkShift").FirstOrDefault();
             if (shiftCount == 0)
             {
-                _db.Database.ExecuteSqlCommand(@"
+                _db.Database.ExecuteSqlRaw(@"
                     INSERT INTO [dbo].[WorkShift] ([ShiftName], [StartTime], [EndTime], [WorkHours], [IsActive], [Description])
                     VALUES 
                         (N'Ca sáng', '06:00:00', '14:00:00', 8.0, 1, N'Ca làm việc buổi sáng từ 6h-14h'),
@@ -836,7 +838,7 @@ namespace NhaHangLDP.Controllers
                 if (hasContract == 0)
                 {
                     var salary = GetSalaryByRole(emp.RoleId);
-                    _db.Database.ExecuteSqlCommand(@"
+                    _db.Database.ExecuteSqlRaw(@"
                         INSERT INTO EmployeeContract (EmployeeId, ContractType, StartDate, BaseSalary, Allowance, Status, CreatedDate)
                         VALUES (@p0, 'FullTime', @p1, @p2, 500000, 'Active', GETDATE())
                     ", emp.Id, emp.HireDate, salary);
@@ -865,7 +867,7 @@ namespace NhaHangLDP.Controllers
                         var workHours = (decimal)(checkOut - checkIn).TotalHours;
                         var status = checkIn.TimeOfDay <= new TimeSpan(8, 15, 0) ? "OnTime" : "Late";
 
-                        _db.Database.ExecuteSqlCommand(@"
+                        _db.Database.ExecuteSqlRaw(@"
                             INSERT INTO Attendance (EmployeeId, CheckInTime, CheckOutTime, WorkHours, Status, Note)
                             VALUES (@p0, @p1, @p2, @p3, @p4, N'Chấm công tự động')
                         ", emp.Id, checkIn, checkOut, workHours, status);
@@ -889,7 +891,7 @@ namespace NhaHangLDP.Controllers
                     var score5 = 3 + random.Next(0, 3);
                     var overall = (score1 + score2 + score3 + score4 + score5) / 5.0m;
 
-                    _db.Database.ExecuteSqlCommand(@"
+                    _db.Database.ExecuteSqlRaw(@"
                         INSERT INTO PerformanceReview 
                         (EmployeeId, ReviewerId, ReviewDate, ReviewPeriod, ServiceQuality, Punctuality, Teamwork, Communication, WorkEfficiency, OverallScore, Strengths, AreasToImprove, Comments, CreatedDate)
                         VALUES (@p0, @p1, @p2, 'Monthly', @p3, @p4, @p5, @p6, @p7, @p8, N'Làm việc chăm chỉ, có tinh thần trách nhiệm', N'Cần cải thiện kỹ năng giao tiếp', N'Nhân viên có tiềm năng phát triển tốt', GETDATE())
@@ -921,8 +923,8 @@ namespace NhaHangLDP.Controllers
                     _db.Set<WorkShift>().Add(new WorkShift
                     {
                         ShiftName = "Ca sáng",
-                        StartTime = new TimeSpan(6, 0, 0),
-                        EndTime = new TimeSpan(14, 0, 0),
+                        StartTime = new TimeOnly(6, 0, 0),
+                        EndTime = new TimeOnly(14, 0, 0),
                         WorkHours = 8,
                         IsActive = true,
                         Description = "Ca làm việc buổi sáng"
@@ -930,8 +932,8 @@ namespace NhaHangLDP.Controllers
                     _db.Set<WorkShift>().Add(new WorkShift
                     {
                         ShiftName = "Ca chiều",
-                        StartTime = new TimeSpan(14, 0, 0),
-                        EndTime = new TimeSpan(22, 0, 0),
+                        StartTime = new TimeOnly(14, 0, 0),
+                        EndTime = new TimeOnly(22, 0, 0),
                         WorkHours = 8,
                         IsActive = true,
                         Description = "Ca làm việc buổi chiều"
@@ -939,8 +941,8 @@ namespace NhaHangLDP.Controllers
                     _db.Set<WorkShift>().Add(new WorkShift
                     {
                         ShiftName = "Ca tối",
-                        StartTime = new TimeSpan(17, 0, 0),
-                        EndTime = new TimeSpan(23, 0, 0),
+                        StartTime = new TimeOnly(17, 0, 0),
+                        EndTime = new TimeOnly(23, 0, 0),
                         WorkHours = 6,
                         IsActive = true,
                         Description = "Ca làm việc buổi tối"
@@ -956,7 +958,7 @@ namespace NhaHangLDP.Controllers
                         {
                             EmployeeId = emp.Id,
                             ContractType = "FullTime",
-                            StartDate = emp.HireDate,
+                            StartDate = DateOnly.FromDateTime(emp.HireDate),
                             BaseSalary = GetSalaryByRole(emp.RoleId),
                             Allowance = 500000,
                             Status = "Active",
@@ -975,7 +977,7 @@ namespace NhaHangLDP.Controllers
                     foreach (var emp in employees.Take(5))
                     {
                         if (!_db.Set<Attendance>().Any(a => a.EmployeeId == emp.Id &&
-                            System.Data.Entity.DbFunctions.TruncateTime(a.CheckInTime) == date))
+                            a.CheckInTime.Date == date))
                         {
                             var checkIn = date.AddHours(7).AddMinutes(random.Next(0, 60));
                             var checkOut = date.AddHours(17).AddMinutes(random.Next(-30, 60));
@@ -1028,3 +1030,4 @@ namespace NhaHangLDP.Controllers
         }
     }
 }
+

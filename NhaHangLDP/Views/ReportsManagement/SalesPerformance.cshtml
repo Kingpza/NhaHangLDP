@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewBag.Title = "Thống Kê Hiệu Suất Bán Hàng - Quản Lý Nhà Hàng";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
 }
@@ -567,7 +567,7 @@
         </div>
         <div class="shifts-grid" id="activeShifts">
             @{
-                var activeShifts = ViewBag.ActiveShifts as List<NhaHangLDP.Models.CashierShift>;
+                var activeShifts = ViewBag.ActiveShifts as List<NhaHangLDP.Data.Entities.CashierShift>;
                 if (activeShifts != null && activeShifts.Any())
                 {
                     foreach (var shift in activeShifts)
@@ -600,7 +600,7 @@
                                                 if (shift.Order != null)
                                                 {
                                                     shiftRevenue = shift.Order
-                                                        .SelectMany(o => o.Bill ?? new List<NhaHangLDP.Models.Bill>())
+                                                        .SelectMany(o => o.Bill ?? new List<NhaHangLDP.Data.Entities.Bill>())
                                                         .Where(b => b.Status == "Paid")
                                                         .Sum(b => (decimal?)b.FinalAmount) ?? 0;
                                                 }

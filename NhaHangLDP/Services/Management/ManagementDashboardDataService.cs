@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -71,29 +72,29 @@ namespace NhaHangLDP.Services.Management
                 var yesterday = today.AddDays(-1);
 
                 var todayRevenue = db.Order
-                    .Where(o => DbFunctions.TruncateTime(o.OrderTime) == today && o.Status == "Completed")
+                    .Where(o => o.OrderTime.Date == today && o.Status == "Completed")
                     .SelectMany(o => o.OrderDetail)
                     .Sum(od => (decimal?)od.Quantity * od.PriceAtTime) ?? 0;
 
                 var yesterdayRevenue = db.Order
-                    .Where(o => DbFunctions.TruncateTime(o.OrderTime) == yesterday && o.Status == "Completed")
+                    .Where(o => o.OrderTime.Date == yesterday && o.Status == "Completed")
                     .SelectMany(o => o.OrderDetail)
                     .Sum(od => (decimal?)od.Quantity * od.PriceAtTime) ?? 0;
 
                 var todayOrders = db.Order
-                    .Count(o => DbFunctions.TruncateTime(o.OrderTime) == today);
+                    .Count(o => o.OrderTime.Date == today);
 
                 var yesterdayOrders = db.Order
-                    .Count(o => DbFunctions.TruncateTime(o.OrderTime) == yesterday);
+                    .Count(o => o.OrderTime.Date == yesterday);
 
                 var todayCustomers = db.Order
-                    .Where(o => DbFunctions.TruncateTime(o.OrderTime) == today && (object)o.TableId != null)
+                    .Where(o => o.OrderTime.Date == today && (object)o.TableId != null)
                     .Select(o => o.TableId)
                     .Distinct()
                     .Count();
 
                 var yesterdayCustomers = db.Order
-                    .Where(o => DbFunctions.TruncateTime(o.OrderTime) == yesterday && (object)o.TableId != null)
+                    .Where(o => o.OrderTime.Date == yesterday && (object)o.TableId != null)
                     .Select(o => o.TableId)
                     .Distinct()
                     .Count();
@@ -182,7 +183,7 @@ namespace NhaHangLDP.Services.Management
                     {
                         InboundDate = s.InboundDate,
                         EmployeeName = s.Employee?.FullName ?? "N/A",
-                        SupplierName = s.Supplier?.Name ?? "Không có",
+                        SupplierName = s.Supplier?.Name ?? "Khï¿½ng cï¿½",
                         TotalCost = s.TotalCost,
                         ItemCount = s.StockInboundDetail?.Count ?? 0
                     })
@@ -200,7 +201,7 @@ namespace NhaHangLDP.Services.Management
                         IngredientName = d.Ingredient?.Name ?? "N/A",
                         Quantity = d.Quantity,
                         Unit = d.Ingredient?.Unit ?? "",
-                        Reason = d.Reason ?? "Không có lý do",
+                        Reason = d.Reason ?? "Khï¿½ng cï¿½ lï¿½ do",
                         ReportedBy = d.Employee?.FullName ?? "N/A",
                         EstimatedLoss = d.Quantity * (d.Ingredient?.EstimatedCost ?? 0)
                     })

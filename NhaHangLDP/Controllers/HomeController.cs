@@ -2,6 +2,7 @@ using System;
 using NhaHangLDP.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace NhaHangLDP.Controllers
 {
@@ -44,6 +45,21 @@ namespace NhaHangLDP.Controllers
             ViewBag.Message = "Your contact page.";
 
             return View();
+        }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public ActionResult Error()
+        {
+            var exceptionHandlerPathFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+            
+            var model = new ErrorViewModel
+            {
+                RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                Message = exceptionHandlerPathFeature?.Error?.Message,
+                StackTrace = exceptionHandlerPathFeature?.Error?.StackTrace
+            };
+
+            return View(model);
         }
 
         protected override void Dispose(bool disposing)

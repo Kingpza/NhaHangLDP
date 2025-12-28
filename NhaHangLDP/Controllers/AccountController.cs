@@ -1,24 +1,27 @@
-using System.Web.Security;
-using NhaHangLDP.Models;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using NhaHangLDP.Data;
+
 namespace NhaHangLDP.Controllers
 {
     public class AccountController : Controller
     {
         private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        
         // GET: Account
         [HttpGet]
         public ActionResult Login()
         {
             return View();
         }
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Login(string username, string password, string returnUrl)
@@ -39,40 +42,20 @@ namespace NhaHangLDP.Controllers
                 {
                     if (employee.IsActive)
                     {
-                        // Set Forms Authentication Cookie
-                        // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
-                                                // FormsAuthentication not available in ASP.NET Core - use proper authentication
-                        
-                        // Lưu thông tin vào Session với Role key chuẩn
-                        HttpContext.Session.SetString("Role", (employee.Role.RoleName).ToString()); // KEY QUAN TRỌNG!
-                        HttpContext.Session.SetString("UserRole", (employee.Role.RoleName).ToString()); // Backup key
-                        HttpContext.Session.SetString("Username", (employee.UserName).ToString());
-                        HttpContext.Session.SetString("FullName", (employee.FullName).ToString());
-                        HttpContext.Session.SetString("UserId", (employee.Id).ToString());
-                        HttpContext.Session.SetString("RoleId", (employee.RoleId).ToString());
-                        HttpContext.Session.SetString("CashierId", (employee.Id).ToString());
-                        HttpContext.Session.SetString("EmployeeId", (employee.Id).ToString());
-                        HttpContext.Session.SetString("LoginTime", (DateTime.Now).ToString());
-                        HttpContext.Session.SetString("IsEmployee", (true).ToString());
-
-                        // Log session info (for debugging)
-                        System.Diagnostics.Debug.WriteLine($"Login Success - Employee: {employee.UserName}, Role: {employee.Role.RoleName}");
+                        // Lưu thông tin vào Session
+                        HttpContext.Session.SetString("Role", employee.Role.RoleName);
+                        HttpContext.Session.SetString("UserRole", employee.Role.RoleName);
+                        HttpContext.Session.SetString("Username", employee.UserName);
+                        HttpContext.Session.SetString("FullName", employee.FullName);
+                        HttpContext.Session.SetString("UserId", employee.Id.ToString());
+                        HttpContext.Session.SetString("RoleId", employee.RoleId.ToString());
+                        HttpContext.Session.SetString("CashierId", employee.Id.ToString());
+                        HttpContext.Session.SetString("EmployeeId", employee.Id.ToString());
+                        HttpContext.Session.SetString("LoginTime", DateTime.Now.ToString());
+                        HttpContext.Session.SetString("IsEmployee", true.ToString());
 
                         // Redirect based on role
-                        switch (employee.Role.RoleName.ToLower())
-                        {
-                            case "admin":
-                            case "manager":
-                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Dashboard", "Management");
-                            case "cashier":
-                            case "thu ngân":
-                            case "thu_ngan":
-                                return RedirectToLocal(returnUrl) ?? RedirectToAction("OpenShift", "Cashier");
-                            case "staff":
-                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Menu", "Public");
-                            default:
-                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Index", "Home");
-                        }
+                        return RedirectByRole(employee.Role.RoleName, returnUrl);
                     }
                     else
                     {
@@ -88,44 +71,24 @@ namespace NhaHangLDP.Controllers
                 {
                     if (account.IsActive)
                     {
-                        // Set Forms Authentication Cookie
-                        // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
-                                                // FormsAuthentication not available in ASP.NET Core - use proper authentication
-                        
-                        // Lưu thông tin vào Session với Role key chuẩn
-                        HttpContext.Session.SetString("Role", (account.Role.RoleName).ToString()); // KEY QUAN TRỌNG!
-                        HttpContext.Session.SetString("UserRole", (account.Role.RoleName).ToString()); // Backup key
-                        HttpContext.Session.SetString("Username", (account.Username).ToString());
-                        HttpContext.Session.SetString("FullName", (account.FullName).ToString());
-                        HttpContext.Session.SetString("UserId", (account.Id).ToString());
-                        HttpContext.Session.SetString("RoleId", (account.RoleId).ToString());
-                        HttpContext.Session.SetString("CashierId", (account.Id).ToString());
-                        HttpContext.Session.SetString("EmployeeId", (account.Id).ToString());
-                        HttpContext.Session.SetString("LoginTime", (DateTime.Now).ToString());
-                        HttpContext.Session.SetString("IsEmployee", (false).ToString());
+                        // Lưu thông tin vào Session
+                        HttpContext.Session.SetString("Role", account.Role.RoleName);
+                        HttpContext.Session.SetString("UserRole", account.Role.RoleName);
+                        HttpContext.Session.SetString("Username", account.Username);
+                        HttpContext.Session.SetString("FullName", account.FullName);
+                        HttpContext.Session.SetString("UserId", account.Id.ToString());
+                        HttpContext.Session.SetString("RoleId", account.RoleId.ToString());
+                        HttpContext.Session.SetString("CashierId", account.Id.ToString());
+                        HttpContext.Session.SetString("EmployeeId", account.Id.ToString());
+                        HttpContext.Session.SetString("LoginTime", DateTime.Now.ToString());
+                        HttpContext.Session.SetString("IsEmployee", false.ToString());
 
                         // Update last login
                         account.LastLoginDate = DateTime.Now;
                         db.SaveChanges();
 
-                        // Log session info (for debugging)
-                        System.Diagnostics.Debug.WriteLine($"Login Success - Account: {account.Username}, Role: {account.Role.RoleName}");
-                        
                         // Redirect based on role
-                        switch (account.Role.RoleName.ToLower())
-                        {
-                            case "admin":
-                            case "manager":
-                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Dashboard", "Management");
-                            case "cashier":
-                            case "thu ngân":
-                            case "thu_ngan":
-                                return RedirectToLocal(returnUrl) ?? RedirectToAction("OpenShift", "Cashier");
-                            case "staff":
-                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Menu", "Public");
-                            default:
-                                return RedirectToLocal(returnUrl) ?? RedirectToAction("Index", "Home");
-                        }
+                        return RedirectByRole(account.Role.RoleName, returnUrl);
                     }
                     else
                     {
@@ -145,7 +108,28 @@ namespace NhaHangLDP.Controllers
             }
         }
 
-        // Helper method to redirect to return URL
+        private ActionResult RedirectByRole(string roleName, string returnUrl)
+        {
+            var localRedirect = RedirectToLocal(returnUrl);
+            if (localRedirect != null)
+                return localRedirect;
+
+            switch (roleName.ToLower())
+            {
+                case "admin":
+                case "manager":
+                    return RedirectToAction("Dashboard", "Management");
+                case "cashier":
+                case "thu ngân":
+                case "thu_ngan":
+                    return RedirectToAction("OpenShift", "Cashier");
+                case "staff":
+                    return RedirectToAction("Menu", "Public");
+                default:
+                    return RedirectToAction("Index", "Home");
+            }
+        }
+
         private ActionResult RedirectToLocal(string returnUrl)
         {
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -155,7 +139,6 @@ namespace NhaHangLDP.Controllers
             return null;
         }
 
-        // GET: /Account/Register (Giữ nguyên)
         [HttpGet]
         public ActionResult Register()
         {
@@ -163,7 +146,6 @@ namespace NhaHangLDP.Controllers
             return View();
         }
 
-        // POST: /Account/Register (Giữ nguyên)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Register(Account account, string ConfirmPassword)
@@ -221,11 +203,8 @@ namespace NhaHangLDP.Controllers
             return View(account);
         }
 
-        // POST: /Account/LogOut
         public ActionResult LogOut()
         {
-            // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
-            // FormsAuthentication not available in ASP.NET Core
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Account");
         }
@@ -234,6 +213,7 @@ namespace NhaHangLDP.Controllers
         {
             return View();
         }
+        
         private string HashPassword(string password)
         {
             using (SHA256 sha256Hash = SHA256.Create())

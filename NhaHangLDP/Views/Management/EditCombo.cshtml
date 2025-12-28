@@ -1,5 +1,5 @@
 
-@model NhaHangLDP.Models.MenuCombo
+@model NhaHangLDP.Data.Entities.MenuCombo
 @{
     ViewBag.Title = "Chỉnh Sửa Combo Món Ăn";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -173,7 +173,7 @@
                         @* Tự động lấy danh sách ID đã chọn từ Model *@
                         @{ var selectedIds = new HashSet<int>(Model.MenuComboItem.Select(ci => ci.MenuItemId)); }
 
-                        @foreach (var item in (List<NhaHangLDP.Models.MenuItem>)ViewBag.AvailableMenuItems)
+                        @foreach (var item in (List<NhaHangLDP.Data.Entities.MenuItem>)ViewBag.AvailableMenuItems)
                         {
                             var isSelected = selectedIds.Contains(item.Id); // Kiểm tra
 

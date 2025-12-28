@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.IngredientHistoryViewModel
+@model NhaHangLDP.Models.IngredientHistoryViewModel
 @{
     ViewBag.Title = $"Lịch Sử - {Model.Ingredient.Name}";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -201,7 +201,7 @@
 }
 
 @functions {
-    public static string GetSupplierName(NhaHangLDP.Models.Supplier supplier)
+    public static string GetSupplierName(NhaHangLDP.Data.Entities.Supplier supplier)
     {
         if (supplier == null)
             return "Chưa có nhà cung cấp";

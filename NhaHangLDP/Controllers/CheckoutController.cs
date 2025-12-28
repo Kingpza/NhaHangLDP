@@ -1,3 +1,5 @@
+using NhaHangLDP.Data;
+using Microsoft.EntityFrameworkCore;
 using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
@@ -353,7 +355,7 @@ namespace NhaHangLDP.Controllers
             // Insert order details
             foreach (var item in cart.Items)
             {
-                _db.Database.ExecuteSqlCommand(
+                _db.Database.ExecuteSqlRaw(
                     @"INSERT INTO CustomerOrderDetail (CustomerOrderId, MenuItemId, ItemName, Quantity, UnitPrice, Subtotal, SpecialInstructions)
                       VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6)",
                     orderIdInt, item.MenuItemId, item.Name, item.Quantity, item.UnitPrice, item.Subtotal, item.SpecialInstructions);
@@ -362,7 +364,7 @@ namespace NhaHangLDP.Controllers
             // Update voucher usage if applied
             if (!string.IsNullOrEmpty(cart.VoucherCode))
             {
-                _db.Database.ExecuteSqlCommand(
+                _db.Database.ExecuteSqlRaw(
                     @"UPDATE Voucher SET UsedCount = UsedCount + 1 WHERE Code = @p0;
                       INSERT INTO VoucherUsage (VoucherId, CustomerId, OrderId, DiscountAmount)
                       SELECT Id, @p1, @p2, @p3 FROM Voucher WHERE Code = @p0",

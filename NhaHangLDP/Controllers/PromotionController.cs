@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
@@ -85,8 +86,8 @@ namespace NhaHangLDP.Controllers
                         IsActive = p.IsActive,
                         ApplicableTo = p.ApplicableTo,
                         ApplicableDays = p.ApplicableDays,
-                        HappyHourStart = p.HappyHourStart,
-                        HappyHourEnd = p.HappyHourEnd
+                        HappyHourStart = p.HappyHourStart.HasValue ? p.HappyHourStart.Value.ToTimeSpan() : (TimeSpan?)null,
+                        HappyHourEnd = p.HappyHourEnd.HasValue ? p.HappyHourEnd.Value.ToTimeSpan() : (TimeSpan?)null
                     }).ToList(),
                     Stats = GetPromotionStats(),
                     SearchTerm = search,
@@ -163,8 +164,8 @@ namespace NhaHangLDP.Controllers
                         ApplicableTo = model.ApplicableTo,
                         ApplicableIds = model.ApplicableIds,
                         IsNewCustomerOnly = model.IsNewCustomerOnly,
-                        HappyHourStart = model.HappyHourStart,
-                        HappyHourEnd = model.HappyHourEnd,
+                        HappyHourStart = model.HappyHourStart.HasValue ? TimeOnly.FromTimeSpan(model.HappyHourStart.Value) : (TimeOnly?)null,
+                        HappyHourEnd = model.HappyHourEnd.HasValue ? TimeOnly.FromTimeSpan(model.HappyHourEnd.Value) : (TimeOnly?)null,
                         ApplicableDays = model.ApplicableDays,
                         IsActive = model.IsActive,
                         CreatedDate = DateTime.Now,
@@ -217,8 +218,8 @@ namespace NhaHangLDP.Controllers
                 ApplicableTo = promotion.ApplicableTo,
                 ApplicableIds = promotion.ApplicableIds,
                 IsNewCustomerOnly = promotion.IsNewCustomerOnly,
-                HappyHourStart = promotion.HappyHourStart,
-                HappyHourEnd = promotion.HappyHourEnd,
+                HappyHourStart = promotion.HappyHourStart.HasValue ? promotion.HappyHourStart.Value.ToTimeSpan() : (TimeSpan?)null,
+                HappyHourEnd = promotion.HappyHourEnd.HasValue ? promotion.HappyHourEnd.Value.ToTimeSpan() : (TimeSpan?)null,
                 ApplicableDays = promotion.ApplicableDays,
                 IsActive = promotion.IsActive,
                 IsEdit = true
@@ -271,8 +272,8 @@ namespace NhaHangLDP.Controllers
                     promotion.ApplicableTo = model.ApplicableTo;
                     promotion.ApplicableIds = model.ApplicableIds;
                     promotion.IsNewCustomerOnly = model.IsNewCustomerOnly;
-                    promotion.HappyHourStart = model.HappyHourStart;
-                    promotion.HappyHourEnd = model.HappyHourEnd;
+                    promotion.HappyHourStart = model.HappyHourStart.HasValue ? TimeOnly.FromTimeSpan(model.HappyHourStart.Value) : (TimeOnly?)null;
+                    promotion.HappyHourEnd = model.HappyHourEnd.HasValue ? TimeOnly.FromTimeSpan(model.HappyHourEnd.Value) : (TimeOnly?)null;
                     promotion.ApplicableDays = model.ApplicableDays;
                     promotion.IsActive = model.IsActive;
                     promotion.UpdatedDate = DateTime.Now;
@@ -500,13 +501,13 @@ namespace NhaHangLDP.Controllers
                 // Kiểm tra Happy Hour
                 if (promotion.HappyHourStart.HasValue && promotion.HappyHourEnd.HasValue)
                 {
-                    var currentTime = now.TimeOfDay;
+                    var currentTime = TimeOnly.FromTimeSpan(now.TimeOfDay);
                     if (currentTime < promotion.HappyHourStart.Value || currentTime > promotion.HappyHourEnd.Value)
                     {
                         return Json(new PromotionValidationResult
                         {
                             IsValid = false,
-                            Message = $"Mã chỉ áp dụng trong khung giờ {promotion.HappyHourStart.Value:hh\\:mm} - {promotion.HappyHourEnd.Value:hh\\:mm}"
+                            Message = $"Mã chỉ áp dụng trong khung giờ {promotion.HappyHourStart.Value:HH\\:mm} - {promotion.HappyHourEnd.Value:HH\\:mm}"
                         });
                     }
                 }

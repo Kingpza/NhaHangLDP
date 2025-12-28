@@ -1,10 +1,11 @@
-﻿using NhaHangLDP.Models;
+using NhaHangLDP.Models;
 using NhaHangLDP.Services.Management;
 using NhaHangLDP.Services;
 using NhaHangLDP.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.IO;
 using System.Linq;
 using System.Net;

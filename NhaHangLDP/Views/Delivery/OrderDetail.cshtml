@@ -1,8 +1,8 @@
-﻿@model NhaHangLDP.Models.DeliveryOrderDetailViewModel
+@model NhaHangLDP.Models.DeliveryOrderDetailViewModel
 @{
     ViewBag.Title = "Chi Tiết Đơn Giao Hàng";
     Layout = null;
-    var availableShippers = ViewBag.AvailableShippers as List<NhaHangLDP.Models.Shipper> ?? new List<NhaHangLDP.Models.Shipper>();
+    var availableShippers = ViewBag.AvailableShippers as List<NhaHangLDP.Data.Entities.Shipper> ?? new List<NhaHangLDP.Data.Entities.Shipper>();
     
     Func<string, string> GetStatusClass = (status) => {
         switch (status) {

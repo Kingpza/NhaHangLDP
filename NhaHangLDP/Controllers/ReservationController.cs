@@ -1,8 +1,9 @@
+using NhaHangLDP.Data;
+using Microsoft.EntityFrameworkCore;
 using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -79,7 +80,7 @@ namespace NhaHangLDP.Controllers
                     VALUES 
                     (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, 'Pending', GETDATE())";
 
-                _db.Database.ExecuteSqlCommand(sql,
+                _db.Database.ExecuteSqlRaw(sql,
                     reservationCode,           // @p0
                     customerId,                // @p1
                     model.CustomerName,        // @p2
@@ -198,7 +199,7 @@ namespace NhaHangLDP.Controllers
                     SET Status = 'Cancelled', CancelReason = @p1, CancelledDate = GETDATE()
                     WHERE ReservationCode = @p0 AND Status IN ('Pending', 'Confirmed')";
 
-                var affected = _db.Database.ExecuteSqlCommand(sql, code, reason);
+                var affected = _db.Database.ExecuteSqlRaw(sql, code, reason);
 
                 if (affected > 0)
                 {
@@ -448,3 +449,4 @@ namespace NhaHangLDP.Controllers
         }
     }
 }
+

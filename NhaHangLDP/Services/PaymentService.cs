@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -636,11 +637,11 @@ namespace NhaHangLDP.Services
                     // Tạo return bill
                     var returnBill = new ReturnBill
                     {
-                        OriginalBillID = bill.Id,
+                        OriginalBillId = bill.Id,
                         ReturnDate = DateTime.Now,
                         TotalRefundAmount = refundAmount,
                         Reason = request.Reason,
-                        EmployeeID = processedBy
+                        EmployeeId = processedBy
                     };
 
                     db.ReturnBill.Add(returnBill);

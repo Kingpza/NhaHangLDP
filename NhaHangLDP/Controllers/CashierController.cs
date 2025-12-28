@@ -1,7 +1,8 @@
 using System;
 using System.Text.Json;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
@@ -25,7 +26,6 @@ namespace NhaHangLDP.Controllers
         private readonly TableOperationService tableOperationService;
         private readonly EmployeeManagementService employeeService;
         private readonly MenuService menuService;
-        private readonly RequestHandlerService requestHandler;
 
         public CashierController()
         {
@@ -39,7 +39,6 @@ namespace NhaHangLDP.Controllers
             tableOperationService = new TableOperationService(db);
             employeeService = new EmployeeManagementService(db);
             menuService = new MenuService(db);
-            requestHandler = new RequestHandlerService();
         }
 
         #region Shift Management
@@ -404,17 +403,18 @@ namespace NhaHangLDP.Controllers
                 if (activeShift == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
+                var orderIdStr = Request.Form["orderId"].ToString();
                 int orderId;
-                string errorMessage;
-                if (!requestHandler.TryParseOrderId(Request, out orderId, out errorMessage))
-                    return Json(new { success = false, message = errorMessage });
+                if (!int.TryParse(orderIdStr, out orderId))
+                    return Json(new { success = false, message = "Mã đơn hàng không hợp lệ!" });
 
-                var status = Request.Form["status"];
+                var status = Request.Form["status"].ToString();
                 if (string.IsNullOrEmpty(status))
                     return Json(new { success = false, message = "Thiếu thông tin trạng thái!" });
 
                 status = StatusTextHelper.NormalizeStatus(status);
 
+                string errorMessage;
                 if (orderService.UpdateOrderStatus(orderId, status, out errorMessage))
                 {
                     return Json(new
@@ -437,11 +437,12 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
+                var orderIdStr = Request.Form["orderId"].ToString();
                 int orderId;
-                string errorMessage;
-                if (!requestHandler.TryParseOrderId(Request, out orderId, out errorMessage))
-                    return Json(new { success = false, message = errorMessage });
+                if (!int.TryParse(orderIdStr, out orderId))
+                    return Json(new { success = false, message = "Mã đơn hàng không hợp lệ!" });
 
+                string errorMessage;
                 if (orderService.CancelOrder(orderId, out errorMessage))
                     return Json(new { success = true, message = $"Đơn hàng #{orderId} đã được hủy thành công!" });
 
@@ -460,16 +461,24 @@ namespace NhaHangLDP.Controllers
             if (activeShift == null)
                 return Json(new { success = false, message = "Vui lòng mở ca trước khi thanh toán!" });
 
-            int orderId;
-            string paymentMethod;
-            decimal receivedAmount;
-            string errorMessage;
+            var orderIdStr = Request.Form["orderId"].ToString();
+            var paymentMethod = Request.Form["paymentMethod"].ToString();
+            var receivedAmountStr = Request.Form["receivedAmount"].ToString();
 
-            if (!requestHandler.TryParsePaymentRequest(Request, out orderId, out paymentMethod, out receivedAmount, out errorMessage))
-                return Json(new { success = false, message = errorMessage });
+            if (string.IsNullOrEmpty(orderIdStr) || string.IsNullOrEmpty(paymentMethod) || string.IsNullOrEmpty(receivedAmountStr))
+                return Json(new { success = false, message = "Thiếu thông tin thanh toán!" });
+
+            int orderId;
+            if (!int.TryParse(orderIdStr, out orderId))
+                return Json(new { success = false, message = "Mã đơn hàng không hợp lệ!" });
+
+            decimal receivedAmount;
+            if (!decimal.TryParse(receivedAmountStr, out receivedAmount))
+                return Json(new { success = false, message = "Số tiền nhận không hợp lệ!" });
 
             int billId;
             decimal changeAmount;
+            string errorMessage;
             if (paymentService.ProcessPayment(orderId, paymentMethod, receivedAmount, GetCurrentCashierIdFromSession(), activeShift.Id, out billId, out changeAmount, out errorMessage))
             {
                 return Json(new
@@ -554,32 +563,46 @@ namespace NhaHangLDP.Controllers
             if (shiftService.GetActiveShift() == null)
                 return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
-            RequestHandlerService.TableInfoRequest tableInfo;
-            string errorMessage;
-            if (!requestHandler.TryParseTableInfoRequest(Request, out tableInfo, out errorMessage))
-                return Json(new { success = false, message = errorMessage });
+            var tableIdStr = Request.Form["tableId"].ToString();
+            var customersStr = Request.Form["customers"].ToString();
+            
+            int tableId;
+            int customers;
+            
+            if (!int.TryParse(tableIdStr, out tableId))
+                return Json(new { success = false, message = "Mã bàn không hợp lệ!" });
+                
+            if (!int.TryParse(customersStr, out customers) || customers <= 0)
+                return Json(new { success = false, message = "Số khách không hợp lệ!" });
+
+            var action = Request.Form["action"].ToString();
+            var customerName = Request.Form["customerName"].ToString() ?? "";
+            var customerPhone = Request.Form["customerPhone"].ToString() ?? "";
+            var notes = Request.Form["notes"].ToString() ?? "";
+            var time = Request.Form["time"].ToString() ?? "";
 
             bool success = false;
             string message = "";
+            string errorMessage;
 
-            if (tableInfo.Action == "assign")
+            if (action == "assign")
             {
-                success = tableService.AssignTable(tableInfo.TableId, tableInfo.Customers, tableInfo.CustomerName, 
-                    tableInfo.CustomerPhone, tableInfo.Notes, out errorMessage);
+                success = tableService.AssignTable(tableId, customers, customerName, 
+                    customerPhone, notes, out errorMessage);
                 if (success)
                 {
-                    var table = db.RestaurantTable.Find(tableInfo.TableId);
-                    message = $"Đã xếp {tableInfo.Customers} khách vào bàn {table.TableNumber}";
+                    var table = db.RestaurantTable.Find(tableId);
+                    message = $"Đã xếp {customers} khách vào bàn {table.TableNumber}";
                 }
             }
-            else if (tableInfo.Action == "reserve")
+            else if (action == "reserve")
             {
-                success = tableService.ReserveTable(tableInfo.TableId, tableInfo.Customers, tableInfo.CustomerName, 
-                    tableInfo.CustomerPhone, tableInfo.Notes, tableInfo.Time, out errorMessage);
+                success = tableService.ReserveTable(tableId, customers, customerName, 
+                    customerPhone, notes, time, out errorMessage);
                 if (success)
                 {
-                    var table = db.RestaurantTable.Find(tableInfo.TableId);
-                    message = $"Đã đặt bàn {table.TableNumber} cho {tableInfo.Customers} khách lúc {tableInfo.Time}";
+                    var table = db.RestaurantTable.Find(tableId);
+                    message = $"Đã đặt bàn {table.TableNumber} cho {customers} khách lúc {time}";
                 }
             }
             else
@@ -596,11 +619,12 @@ namespace NhaHangLDP.Controllers
         [HttpPost]
         public JsonResult ConfirmReservationAPI()
         {
+            var tableIdStr = Request.Form["tableId"].ToString();
             int tableId;
-            string errorMessage;
-            if (!requestHandler.TryParseTableId(Request, out tableId, out errorMessage))
-                return Json(new { success = false, message = errorMessage });
+            if (!int.TryParse(tableIdStr, out tableId))
+                return Json(new { success = false, message = "Mã bàn không hợp lệ!" });
 
+            string errorMessage;
             if (tableService.ConfirmReservation(tableId, out errorMessage))
             {
                 var table = db.RestaurantTable.Find(tableId);
@@ -612,11 +636,12 @@ namespace NhaHangLDP.Controllers
         [HttpPost]
         public JsonResult CancelReservationAPI()
         {
+            var tableIdStr = Request.Form["tableId"].ToString();
             int tableId;
-            string errorMessage;
-            if (!requestHandler.TryParseTableId(Request, out tableId, out errorMessage))
-                return Json(new { success = false, message = errorMessage });
+            if (!int.TryParse(tableIdStr, out tableId))
+                return Json(new { success = false, message = "Mã bàn không hợp lệ!" });
 
+            string errorMessage;
             if (tableService.CancelReservation(tableId, out errorMessage))
             {
                 var table = db.RestaurantTable.Find(tableId);
@@ -628,11 +653,12 @@ namespace NhaHangLDP.Controllers
         [HttpPost]
         public JsonResult CheckoutTableAPI()
         {
+            var tableIdStr = Request.Form["tableId"].ToString();
             int tableId;
-            string errorMessage;
-            if (!requestHandler.TryParseTableId(Request, out tableId, out errorMessage))
-                return Json(new { success = false, message = errorMessage });
+            if (!int.TryParse(tableIdStr, out tableId))
+                return Json(new { success = false, message = "Mã bàn không hợp lệ!" });
 
+            string errorMessage;
             if (tableService.CheckoutTable(tableId, out errorMessage))
             {
                 var table = db.RestaurantTable.Find(tableId);
@@ -1148,13 +1174,14 @@ namespace NhaHangLDP.Controllers
                 DateTime filterDate;
                 if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out filterDate))
                 {
-                    query = query.Where(r => DbFunctions.TruncateTime(r.ReservationDate) == filterDate.Date);
+                    var filterDateOnly = DateOnly.FromDateTime(filterDate);
+                    query = query.Where(r => r.ReservationDate == filterDateOnly);
                 }
                 else
                 {
                     // Default: show today and future reservations
-                    var today = DateTime.Today;
-                    query = query.Where(r => r.ReservationDate >= today);
+                    var todayOnly = DateOnly.FromDateTime(DateTime.Today);
+                    query = query.Where(r => r.ReservationDate >= todayOnly);
                 }
 
                 var reservations = query
@@ -1427,7 +1454,7 @@ namespace NhaHangLDP.Controllers
                 if (reservation == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
 
-                var timeMinutes = (int)reservation.ReservationTime.TotalMinutes;
+                var timeMinutes = (int)reservation.ReservationTime.ToTimeSpan().TotalMinutes;
 
                 // Get tables that can accommodate guests and are not reserved at the same time
                 var tables = db.RestaurantTable
@@ -1444,7 +1471,7 @@ namespace NhaHangLDP.Controllers
                             r.TableId == t.Id &&
                             r.ReservationDate == reservation.ReservationDate &&
                             r.Status != "Cancelled" && r.Status != "NoShow" && r.Status != "Completed" &&
-                            Math.Abs((int)r.ReservationTime.TotalMinutes - timeMinutes) < 120)
+                            Math.Abs((int)r.ReservationTime.ToTimeSpan().TotalMinutes - timeMinutes) < 120)
                     })
                     .OrderBy(t => t.Capacity)
                     .ThenBy(t => t.TableNumber)
@@ -1463,8 +1490,8 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         private object GetReservationCounts()
         {
-            var today = DateTime.Today;
-            var reservations = db.Reservation.Where(r => r.ReservationDate >= today).ToList();
+            var todayOnly = DateOnly.FromDateTime(DateTime.Today);
+            var reservations = db.Reservation.Where(r => r.ReservationDate >= todayOnly).ToList();
 
             return new
             {

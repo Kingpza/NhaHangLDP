@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
@@ -766,9 +767,9 @@ namespace NhaHangLDP.Controllers
                 TotalPreparingTickets = db.KitchenOrderTicket.Count(t => t.Status == "Preparing"),
                 TotalReadyTickets = db.KitchenOrderTicket.Count(t => t.Status == "Ready"),
                 TotalCompletedToday = completedToday.Count,
-                OverdueTickets = db.KitchenOrderTicket.Count(t => 
+                OverdueTickets = db.KitchenOrderTicket.AsEnumerable().Count(t => 
                     (t.Status == "Pending" || t.Status == "Preparing") &&
-                    DbFunctions.DiffMinutes(t.StartedTime ?? t.CreatedTime, DateTime.Now) > t.EstimatedMinutes),
+                    (DateTime.Now - (t.StartedTime ?? t.CreatedTime)).TotalMinutes > t.EstimatedMinutes),
                 AveragePreparationTime = Math.Round(avgPrepTime, 1),
                 TotalItemsToday = db.KitchenOrderItem
                     .Count(i => i.KitchenOrderTicket.CreatedTime >= today && i.KitchenOrderTicket.CreatedTime < tomorrow)

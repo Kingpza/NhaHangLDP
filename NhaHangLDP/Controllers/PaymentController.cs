@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
@@ -647,15 +648,7 @@ namespace NhaHangLDP.Controllers
                         totalPaid = totalPaid
                     });
                 }
-                catch (System.Data.Entity.Validation.DbEntityValidationException ex)
-                {
-                    transaction.Rollback();
-                    var errors = ex.EntityValidationErrors
-                        .SelectMany(e => e.ValidationErrors)
-                        .Select(e => e.ErrorMessage);
-                    return Json(new { success = false, message = "Lỗi validation: " + string.Join(", ", errors) });
-                }
-                catch (System.Data.Entity.Infrastructure.DbUpdateException ex)
+                catch (DbUpdateException ex)
                 {
                     transaction.Rollback();
                     var innerMessage = ex.InnerException?.InnerException?.Message ?? ex.InnerException?.Message ?? ex.Message;

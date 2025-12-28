@@ -1,3 +1,5 @@
+using NhaHangLDP.Data;
+using Microsoft.EntityFrameworkCore;
 using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
@@ -73,7 +75,7 @@ namespace NhaHangLDP.Controllers
                 HttpContext.Session.SetString("CustomerPhone", (customer.Phone).ToString());
 
                 // Update last login
-                _db.Database.ExecuteSqlCommand(
+                _db.Database.ExecuteSqlRaw(
                     "UPDATE Customer SET LastLoginDate = GETDATE() WHERE Id = @p0",
                     customer.Id);
 
@@ -255,7 +257,7 @@ namespace NhaHangLDP.Controllers
                 TempData["Success"] = $"Mã đặt lại mật khẩu của bạn là: {resetToken} (Demo only - trong thực tế sẽ gửi qua email)";
                 
                 // You could store the token in database for verification later
-                // _db.Database.ExecuteSqlCommand(
+                // _db.Database.ExecuteSqlRaw(
                 //     "UPDATE Customer SET ResetToken = @p1, ResetTokenExpiry = DATEADD(HOUR, 1, GETDATE()) WHERE Id = @p0",
                 //     customer.Id, HashPassword(resetToken));
 
@@ -310,7 +312,7 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Vui lòng đăng nhập!" });
                 }
 
-                _db.Database.ExecuteSqlCommand(
+                _db.Database.ExecuteSqlRaw(
                     @"UPDATE Customer SET FullName = @p1, Phone = @p2, DateOfBirth = @p3, Gender = @p4 WHERE Id = @p0",
                     customerId, fullName, phone, dateOfBirth, gender);
 
@@ -432,7 +434,7 @@ namespace NhaHangLDP.Controllers
 
                 // Update password
                 var newHash = HashPassword(model.NewPassword);
-                _db.Database.ExecuteSqlCommand(
+                _db.Database.ExecuteSqlRaw(
                     "UPDATE Customer SET PasswordHash = @p1 WHERE Id = @p0",
                     customerId, newHash);
 
@@ -501,14 +503,14 @@ namespace NhaHangLDP.Controllers
 
                 if (exists > 0)
                 {
-                    _db.Database.ExecuteSqlCommand(
+                    _db.Database.ExecuteSqlRaw(
                         "DELETE FROM Wishlist WHERE CustomerId = @p0 AND MenuItemId = @p1",
                         customerId, menuItemId);
                     return Json(new { success = true, added = false, message = "Đã xóa khỏi yêu thích" });
                 }
                 else
                 {
-                    _db.Database.ExecuteSqlCommand(
+                    _db.Database.ExecuteSqlRaw(
                         "INSERT INTO Wishlist (CustomerId, MenuItemId, AddedDate) VALUES (@p0, @p1, GETDATE())",
                         customerId, menuItemId);
                     return Json(new { success = true, added = true, message = "Đã thêm vào yêu thích" });
@@ -610,7 +612,7 @@ namespace NhaHangLDP.Controllers
                 if (isDefault)
                 {
                     // Reset all other addresses to non-default
-                    _db.Database.ExecuteSqlCommand(
+                    _db.Database.ExecuteSqlRaw(
                         "UPDATE CustomerAddress SET IsDefault = 0 WHERE CustomerId = @p0",
                         customerId);
                 }
@@ -618,7 +620,7 @@ namespace NhaHangLDP.Controllers
                 if (addressId == 0)
                 {
                     // Insert new address
-                    _db.Database.ExecuteSqlCommand(
+                    _db.Database.ExecuteSqlRaw(
                         @"INSERT INTO CustomerAddress (CustomerId, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault, IsDeleted, CreatedDate)
                           VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, 0, GETDATE())",
                         customerId, receiverName, receiverPhone, addressLine, ward, district, city, addressType, isDefault);
@@ -628,7 +630,7 @@ namespace NhaHangLDP.Controllers
         else
         {
             // Update existing address
-            _db.Database.ExecuteSqlCommand(
+            _db.Database.ExecuteSqlRaw(
                 @"UPDATE CustomerAddress 
                   SET ReceiverName = @p1, ReceiverPhone = @p2, AddressLine = @p3, Ward = @p4, District = @p5, City = @p6, AddressType = @p7, IsDefault = @p8
                   WHERE Id = @p0 AND CustomerId = @p9",
@@ -658,12 +660,12 @@ public JsonResult SetDefaultAddress(int id)
         }
 
         // Reset all addresses to non-default
-        _db.Database.ExecuteSqlCommand(
+        _db.Database.ExecuteSqlRaw(
             "UPDATE CustomerAddress SET IsDefault = 0 WHERE CustomerId = @p0",
             customerId);
 
         // Set the selected one as default
-        _db.Database.ExecuteSqlCommand(
+        _db.Database.ExecuteSqlRaw(
             "UPDATE CustomerAddress SET IsDefault = 1 WHERE Id = @p0 AND CustomerId = @p1",
             id, customerId);
 
@@ -700,7 +702,7 @@ public JsonResult DeleteAddress(int id)
         }
 
         // Soft delete
-        _db.Database.ExecuteSqlCommand(
+        _db.Database.ExecuteSqlRaw(
             "UPDATE CustomerAddress SET IsDeleted = 1 WHERE Id = @p0 AND CustomerId = @p1",
             id, customerId);
 
@@ -727,7 +729,7 @@ public JsonResult DeleteAccount()
         }
 
         // Soft delete customer
-        _db.Database.ExecuteSqlCommand(
+        _db.Database.ExecuteSqlRaw(
             "UPDATE Customer SET IsActive = 0, Email = CONCAT(Email, '_deleted_', @p0) WHERE Id = @p0",
             customerId);
 
@@ -822,7 +824,7 @@ public JsonResult CancelReservation(string code, string reason)
             SET Status = 'Cancelled', CancelReason = @p1, CancelledDate = GETDATE()
             WHERE ReservationCode = @p0 AND Status IN ('Pending', 'Confirmed')";
 
-        var affected = _db.Database.ExecuteSqlCommand(sql, code, reason ?? "Khách hàng hủy");
+        var affected = _db.Database.ExecuteSqlRaw(sql, code, reason ?? "Khách hàng hủy");
 
         if (affected > 0)
         {

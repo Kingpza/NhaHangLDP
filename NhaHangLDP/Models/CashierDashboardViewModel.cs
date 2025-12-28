@@ -1,4 +1,5 @@
-﻿using System;
+using NhaHangLDP.Data.Entities;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace NhaHangLDP.Models

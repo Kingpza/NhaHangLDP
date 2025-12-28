@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.ShiftDetailsViewModel
+@model NhaHangLDP.Models.ShiftDetailsViewModel
 @{
     ViewBag.Title = "Thống Kê Hiệu Suất Bán Hàng - Quản Lý Nhà Hàng";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -15,7 +15,7 @@
     decimal avgChange = ViewBag.AvgValueGrowth ?? 0m;
     decimal cashiersChange = ViewBag.CashiersGrowth ?? 0m;
 
-    var activeShifts = ViewBag.ActiveShifts as List<NhaHangLDP.Models.CashierShift> ?? new List<NhaHangLDP.Models.CashierShift>();
+    var activeShifts = ViewBag.ActiveShifts as List<NhaHangLDP.Data.Entities.CashierShift> ?? new List<NhaHangLDP.Data.Entities.CashierShift>();
 }
 
 <style>
@@ -551,7 +551,7 @@
                                                 if (shift.Order != null)
                                                 {
                                                     shiftRevenue = shift.Order
-                                                        .SelectMany(o => o.Bill ?? new List<NhaHangLDP.Models.Bill>())
+                                                        .SelectMany(o => o.Bill ?? new List<NhaHangLDP.Data.Entities.Bill>())
                                                         .Where(b => b.Status == "Paid")
                                                         .Sum(b => (decimal?)b.FinalAmount) ?? 0;
                                                 }

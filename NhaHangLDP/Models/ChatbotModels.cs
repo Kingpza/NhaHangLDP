@@ -1,4 +1,5 @@
-﻿using System;
+using NhaHangLDP.Data.Entities;
+using System;
 using System.Collections.Generic;
 
 namespace NhaHangLDP.Models

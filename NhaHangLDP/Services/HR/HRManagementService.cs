@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
@@ -94,7 +95,7 @@ namespace NhaHangLDP.Services.HR
                 // Kiểm tra đã check-in chưa
                 var existingAttendance = _db.Set<Attendance>()
                     .FirstOrDefault(a => a.EmployeeId == employeeId &&
-                                        DbFunctions.TruncateTime(a.CheckInTime) == today);
+                                        a.CheckInTime.Date == today);
 
                 if (existingAttendance != null)
                 {
@@ -155,7 +156,7 @@ namespace NhaHangLDP.Services.HR
 
                 var attendance = _db.Set<Attendance>()
                     .FirstOrDefault(a => a.EmployeeId == employeeId &&
-                                        DbFunctions.TruncateTime(a.CheckInTime) == today &&
+                                        a.CheckInTime.Date == today &&
                                         a.CheckOutTime == null);
 
                 if (attendance == null)
@@ -216,7 +217,7 @@ namespace NhaHangLDP.Services.HR
                 .ToList();
 
             var todayRecords = _db.Set<Attendance>()
-                .Where(a => DbFunctions.TruncateTime(a.CheckInTime) == today)
+                .Where(a => a.CheckInTime.Date == today)
                 .ToList();
 
             var result = new List<AttendanceSummaryItem>();
@@ -251,8 +252,8 @@ namespace NhaHangLDP.Services.HR
             var query = _db.Set<Attendance>()
                 .Include(a => a.Employee)
                 .Include(a => a.Employee.Role)
-                .Where(a => DbFunctions.TruncateTime(a.CheckInTime) >= startDate &&
-                           DbFunctions.TruncateTime(a.CheckInTime) <= endDate);
+                .Where(a => a.CheckInTime.Date >= startDate &&
+                           a.CheckInTime.Date <= endDate);
 
             if (employeeId.HasValue)
             {
@@ -309,7 +310,7 @@ namespace NhaHangLDP.Services.HR
                 var date = checkIn.Date;
                 var existing = _db.Set<Attendance>()
                     .FirstOrDefault(a => a.EmployeeId == employeeId &&
-                                        DbFunctions.TruncateTime(a.CheckInTime) == date);
+                                        a.CheckInTime.Date == date);
 
                 if (existing != null)
                 {
@@ -377,7 +378,7 @@ namespace NhaHangLDP.Services.HR
                     };
                 }
 
-                var requestedDays = (request.EndDate - request.StartDate).Days + 1;
+                var requestedDays = (request.EndDate.DayNumber - request.StartDate.DayNumber) + 1;
 
                 // Kiểm tra số ngày phép còn lại (nếu là nghỉ phép năm)
                 if (request.LeaveType == "Annual")
@@ -564,7 +565,7 @@ namespace NhaHangLDP.Services.HR
                 .ToList();
 
             var annualUsed = leaves.Where(l => l.LeaveType == "Annual")
-                .Sum(l => (l.EndDate - l.StartDate).Days + 1);
+                .Sum(l => (l.EndDate.DayNumber - l.StartDate.DayNumber) + 1);
 
             return new LeaveBalanceStats
             {
@@ -572,9 +573,9 @@ namespace NhaHangLDP.Services.HR
                 UsedAnnualLeave = annualUsed,
                 RemainingAnnualLeave = ANNUAL_LEAVE_DAYS - annualUsed,
                 SickLeaveUsed = leaves.Where(l => l.LeaveType == "Sick")
-                    .Sum(l => (l.EndDate - l.StartDate).Days + 1),
+                    .Sum(l => (l.EndDate.DayNumber - l.StartDate.DayNumber) + 1),
                 UnpaidLeaveUsed = leaves.Where(l => l.LeaveType == "Unpaid")
-                    .Sum(l => (l.EndDate - l.StartDate).Days + 1)
+                    .Sum(l => (l.EndDate.DayNumber - l.StartDate.DayNumber) + 1)
             };
         }
 
@@ -616,11 +617,11 @@ namespace NhaHangLDP.Services.HR
 
                     if (existingPayroll != null) continue;
 
-                    // Lấy dữ liệu chấm công
+                    // Lấy dữ liệu chấn công
                     var attendance = _db.Set<Attendance>()
                         .Where(a => a.EmployeeId == emp.Id &&
-                                   DbFunctions.TruncateTime(a.CheckInTime) >= startDate &&
-                                   DbFunctions.TruncateTime(a.CheckInTime) <= endDate)
+                                   a.CheckInTime.Date >= startDate &&
+                                   a.CheckInTime.Date <= endDate)
                         .ToList();
 
                     var presentDays = attendance.Count;
@@ -857,7 +858,7 @@ namespace NhaHangLDP.Services.HR
                 EmployeeName = r.Employee?.FullName ?? "N/A",
                 RoleName = r.Employee?.Role?.RoleName ?? "N/A",
                 ReviewerName = GetEmployeeName(r.ReviewerId),
-                ReviewDate = r.ReviewDate,
+                ReviewDate = r.ReviewDate.ToDateTime(TimeOnly.MinValue),
                 ReviewPeriod = r.ReviewPeriod,
                 ServiceQuality = r.ServiceQuality,
                 Punctuality = r.Punctuality,
@@ -992,7 +993,7 @@ namespace NhaHangLDP.Services.HR
         {
             try
             {
-                shift.WorkHours = (decimal)(shift.EndTime - shift.StartTime).TotalHours;
+                shift.WorkHours = (decimal)(shift.EndTime.ToTimeSpan() - shift.StartTime.ToTimeSpan()).TotalHours;
                 _db.Set<WorkShift>().Add(shift);
                 _db.SaveChanges();
 
@@ -1019,8 +1020,9 @@ namespace NhaHangLDP.Services.HR
         {
             try
             {
+                var workDateOnly = DateOnly.FromDateTime(workDate);
                 var existing = _db.Set<EmployeeSchedule>()
-                    .FirstOrDefault(s => s.EmployeeId == employeeId && s.WorkDate == workDate);
+                    .FirstOrDefault(s => s.EmployeeId == employeeId && s.WorkDate == workDateOnly);
 
                 if (existing != null)
                 {
@@ -1033,7 +1035,7 @@ namespace NhaHangLDP.Services.HR
                     {
                         EmployeeId = employeeId,
                         WorkShiftId = shiftId,
-                        WorkDate = workDate,
+                        WorkDate = workDateOnly,
                         Status = "Scheduled"
                     });
                 }
@@ -1054,11 +1056,13 @@ namespace NhaHangLDP.Services.HR
         public ScheduleViewModel GetWeeklySchedule(DateTime weekStart)
         {
             var weekEnd = weekStart.AddDays(6);
+            var weekStartOnly = DateOnly.FromDateTime(weekStart);
+            var weekEndOnly = DateOnly.FromDateTime(weekEnd);
 
             var schedules = _db.Set<EmployeeSchedule>()
                 .Include(s => s.Employee)
                 .Include(s => s.WorkShift)
-                .Where(s => s.WorkDate >= weekStart && s.WorkDate <= weekEnd)
+                .Where(s => s.WorkDate >= weekStartOnly && s.WorkDate <= weekEndOnly)
                 .ToList();
 
             var shifts = GetAllWorkShifts();
@@ -1068,13 +1072,14 @@ namespace NhaHangLDP.Services.HR
             for (int i = 0; i < 7; i++)
             {
                 var date = weekStart.AddDays(i);
-                var daySchedules = schedules.Where(s => s.WorkDate == date).ToList();
+                var dateOnly = DateOnly.FromDateTime(date);
+                var daySchedules = schedules.Where(s => s.WorkDate == dateOnly).ToList();
 
                 days.Add(new ScheduleDayItem
                 {
                     Date = date,
                     DayName = date.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")),
-                    IsToday = date == DateTime.Today,
+                    IsToday = date.Date == DateTime.Today,
                     IsWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday,
                     Slots = daySchedules.Select(s => new ScheduleSlot
                     {
@@ -1082,8 +1087,8 @@ namespace NhaHangLDP.Services.HR
                         EmployeeName = s.Employee?.FullName ?? "N/A",
                         ShiftId = s.WorkShiftId,
                         ShiftName = s.WorkShift?.ShiftName ?? "N/A",
-                        StartTime = s.WorkShift?.StartTime ?? TimeSpan.Zero,
-                        EndTime = s.WorkShift?.EndTime ?? TimeSpan.Zero,
+                        StartTime = s.WorkShift?.StartTime.ToTimeSpan() ?? TimeSpan.Zero,
+                        EndTime = s.WorkShift?.EndTime.ToTimeSpan() ?? TimeSpan.Zero,
                         Status = s.Status
                     }).ToList()
                 });
@@ -1138,7 +1143,7 @@ namespace NhaHangLDP.Services.HR
             {
                 var date = DateTime.Today.AddDays(-i);
                 var records = _db.Set<Attendance>()
-                    .Where(a => DbFunctions.TruncateTime(a.CheckInTime) == date)
+                    .Where(a => a.CheckInTime.Date == date)
                     .ToList();
 
                 var present = records.Count;
@@ -1176,7 +1181,7 @@ namespace NhaHangLDP.Services.HR
                            l.Status == "Approved" &&
                            l.StartDate.Year == year)
                 .ToList()
-                .Sum(l => (l.EndDate - l.StartDate).Days + 1);
+                .Sum(l => (l.EndDate.DayNumber - l.StartDate.DayNumber) + 1);
         }
 
         private decimal CalculateMonthlyAttendanceRate(DateTime month)
@@ -1189,8 +1194,8 @@ namespace NhaHangLDP.Services.HR
             if (activeEmployees == 0 || workDays == 0) return 0;
 
             var presentDays = _db.Set<Attendance>()
-                .Where(a => DbFunctions.TruncateTime(a.CheckInTime) >= startDate &&
-                           DbFunctions.TruncateTime(a.CheckInTime) <= endDate)
+                .Where(a => a.CheckInTime.Date >= startDate &&
+                           a.CheckInTime.Date <= endDate)
                 .Count();
 
             var expectedDays = activeEmployees * workDays;
@@ -1203,8 +1208,8 @@ namespace NhaHangLDP.Services.HR
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
             var records = _db.Set<Attendance>()
-                .Where(a => DbFunctions.TruncateTime(a.CheckInTime) >= startDate &&
-                           DbFunctions.TruncateTime(a.CheckInTime) <= endDate &&
+                .Where(a => a.CheckInTime.Date >= startDate &&
+                           a.CheckInTime.Date <= endDate &&
                            a.WorkHours != null)
                 .ToList();
 
@@ -1284,9 +1289,9 @@ namespace NhaHangLDP.Services.HR
                 Id = l.Id,
                 EmployeeName = l.Employee?.FullName ?? "N/A",
                 LeaveType = l.LeaveType,
-                StartDate = l.StartDate,
-                EndDate = l.EndDate,
-                Days = (l.EndDate - l.StartDate).Days + 1,
+                StartDate = l.StartDate.ToDateTime(TimeOnly.MinValue),
+                EndDate = l.EndDate.ToDateTime(TimeOnly.MinValue),
+                Days = (l.EndDate.DayNumber - l.StartDate.DayNumber) + 1,
                 Status = l.Status,
                 StatusClass = GetLeaveStatusClass(l.Status),
                 Reason = l.Reason

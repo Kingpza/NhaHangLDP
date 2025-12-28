@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -417,7 +418,7 @@ namespace NhaHangLDP.Services
 
             var dailyRevenue = _db.Bill
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
-                .GroupBy(b => DbFunctions.TruncateTime(b.BillDate))
+                .GroupBy(b => b.BillDate.Date)
                 .Select(g => new { Date = g.Key, Revenue = g.Sum(b => b.FinalAmount) })
                 .OrderBy(x => x.Date)
                 .ToList();
@@ -450,7 +451,7 @@ namespace NhaHangLDP.Services
             {
                 predictions.Add(new PredictionDataPoint
                 {
-                    Label = day.Date?.ToString("dd/MM") ?? "",
+                    Label = day.Date.ToString("dd/MM"),
                     Value = day.Revenue,
                     IsActual = true
                 });
@@ -657,7 +658,7 @@ namespace NhaHangLDP.Services
 
             var dailyRevenue = _db.Bill
                 .Where(b => b.BillDate >= start && b.BillDate < end && b.Status == "Paid")
-                .GroupBy(b => DbFunctions.TruncateTime(b.BillDate))
+                .GroupBy(b => b.BillDate.Date)
                 .Select(g => new { Date = g.Key, Revenue = g.Sum(b => b.FinalAmount) })
                 .ToList();
 
@@ -682,7 +683,7 @@ namespace NhaHangLDP.Services
 
                     anomalies.Add(new AnomalyResult
                     {
-                        Date = day.Date ?? DateTime.MinValue,
+                        Date = day.Date,
                         Metric = "Doanh thu",
                         ActualValue = day.Revenue,
                         ExpectedValue = (decimal)mean,

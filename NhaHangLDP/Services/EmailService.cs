@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using NhaHangLDP.Models;
 
 namespace NhaHangLDP.Services
@@ -470,13 +471,13 @@ namespace NhaHangLDP.Services
 
             var stats = new EmailStatsViewModel
             {
-                TotalSentToday = _db.EmailLog.Count(e => e.Status == "Sent" && DbFunctions.TruncateTime(e.SentDate) == today),
+                TotalSentToday = _db.EmailLog.Count(e => e.Status == "Sent" && e.SentDate.HasValue && e.SentDate.Value.Date == today),
                 TotalSentThisWeek = _db.EmailLog.Count(e => e.Status == "Sent" && e.SentDate >= weekStart),
                 TotalSentThisMonth = _db.EmailLog.Count(e => e.Status == "Sent" && e.SentDate >= monthStart),
-                FailedToday = _db.EmailLog.Count(e => e.Status == "Failed" && DbFunctions.TruncateTime(e.CreatedDate) == today)
+                FailedToday = _db.EmailLog.Count(e => e.Status == "Failed" && e.CreatedDate.Date == today)
             };
 
-            var totalAttempts = _db.EmailLog.Count(e => DbFunctions.TruncateTime(e.CreatedDate) == today);
+            var totalAttempts = _db.EmailLog.Count(e => e.CreatedDate.Date == today);
             stats.SuccessRate = totalAttempts > 0 ? (stats.TotalSentToday * 100.0 / totalAttempts) : 100;
 
             stats.EmailsByType = _db.EmailLog

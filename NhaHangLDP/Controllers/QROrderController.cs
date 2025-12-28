@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
+using NhaHangLDP.Data.Entities;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
@@ -268,20 +269,20 @@ namespace NhaHangLDP.Controllers
 
                 if (order == null)
                 {
-                    order = new QROrder
+                    order = new Qrorder
                     {
-                        QROrderCode = "QR" + DateTime.Now.ToString("yyyyMMddHHmmss") + new Random().Next(100, 999),
+                        QrorderCode = "QR" + DateTime.Now.ToString("yyyyMMddHHmmss") + new Random().Next(100, 999),
                         SessionToken = dto.SessionToken,
                         TableId = dto.TableId,
                         Status = "Draft",
                         CreatedTime = DateTime.Now
                     };
-                    db.QROrder.Add(order);
+                    db.Qrorder.Add(order);
                     db.SaveChanges();
                 }
 
                 // Kiểm tra món đã có trong order chưa
-                var existingItem = order.QROrderDetail.FirstOrDefault(d => d.MenuItemId == dto.MenuItemId);
+                var existingItem = order.QrorderDetails.FirstOrDefault(d => d.MenuItemId == dto.MenuItemId);
                 if (existingItem != null)
                 {
                     existingItem.Quantity += dto.Quantity;
@@ -292,9 +293,9 @@ namespace NhaHangLDP.Controllers
                 }
                 else
                 {
-                    var detail = new QROrderDetail
+                    var detail = new QrorderDetail
                     {
-                        QROrderId = order.Id,
+                        QrorderId = order.Id,
                         MenuItemId = dto.MenuItemId,
                         Quantity = dto.Quantity,
                         UnitPrice = menuItem.Price,
@@ -302,7 +303,7 @@ namespace NhaHangLDP.Controllers
                         ItemStatus = "Draft",
                         AddedTime = DateTime.Now
                     };
-                    db.QROrderDetail.Add(detail);
+                    db.QrorderDetail.Add(detail);
                 }
 
                 db.SaveChanges();

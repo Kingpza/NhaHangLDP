@@ -1,3 +1,4 @@
+using NhaHangLDP.Data.Entities;
 using System;
 
 namespace NhaHangLDP.Models
