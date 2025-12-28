@@ -183,7 +183,7 @@ namespace NhaHangLDP.Services
                     return false;
                 }
 
-                var order = db.Order.Include(o => o.RestaurantTable).FirstOrDefault(o => o.Id == orderId);
+                var order = db.Order.Include(o => o.Table).FirstOrDefault(o => o.Id == orderId);
                 if (order == null)
                 {
                     errorMessage = "Không tìm thấy đơn hàng!";
@@ -194,7 +194,7 @@ namespace NhaHangLDP.Services
 
                 if (status == "Completed" || status == "Cancelled")
                 {
-                    order.RestaurantTable.Status = "Available";
+                    order.Table.Status = "Available";
                 }
 
                 db.SaveChanges();
@@ -216,8 +216,12 @@ namespace NhaHangLDP.Services
                 try
                 {
                     var order = db.Order
-                        .Include(o => o.RestaurantTable)
-                        .Include(o => o.OrderDetail.Select(od => od.MenuItem.MenuItemIngredient.Select(mi => mi.Ingredient)))
+                        .Include(o => o.Table)
+                        .Include(o => o.OrderDetails)
+                            .ThenInclude(od => od.MenuItem)
+                                .ThenInclude(mi => mi.MenuItemIngredients)
+                                    .ThenInclude(mii => mii.Ingredient)
+                        .Include(o => o.Bills)
                         .FirstOrDefault(o => o.Id == orderId);
 
                     if (order == null)
@@ -226,15 +230,15 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    if (order.Status == "Completed" || order.Bill.Any(b => b.Status == "Paid"))
+                    if (order.Status == "Completed" || order.Bills.Any(b => b.Status == "Paid"))
                     {
                         errorMessage = "Không thể hủy đơn hàng đã hoàn thành hoặc đã thanh toán!";
                         return false;
                     }
 
-                    foreach (var detail in order.OrderDetail)
+                    foreach (var detail in order.OrderDetails)
                     {
-                        var requiredIngredients = detail.MenuItem.MenuItemIngredient;
+                        var requiredIngredients = detail.MenuItem.MenuItemIngredients;
                         foreach (var reqIngredient in requiredIngredients)
                         {
                             var returnQuantity = reqIngredient.RequiredQuantity * detail.Quantity;
@@ -243,7 +247,7 @@ namespace NhaHangLDP.Services
                     }
 
                     order.Status = "Cancelled";
-                    order.RestaurantTable.Status = "Available";
+                    order.Table.Status = "Available";
 
                     db.SaveChanges();
                     transaction.Commit();

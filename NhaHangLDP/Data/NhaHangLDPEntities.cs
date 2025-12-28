@@ -6,32 +6,49 @@ namespace NhaHangLDP.Data
 {
     /// <summary>
     /// Adapter class để tương thích với code cũ sử dụng EF6 naming convention.
-    /// Dần dần migrate sang NhaHangLDPContext trực tiếp với DI.
+    /// Hỗ trợ cả DI injection và khởi tạo trực tiếp.
     /// </summary>
     public class NhaHangLDPEntities : NhaHangLDPContext
     {
-        private static DbContextOptions<NhaHangLDPContext> _options;
+        private static DbContextOptions<NhaHangLDPContext> _defaultOptions;
+        private static readonly object _lock = new object();
 
-        static NhaHangLDPEntities()
+        private static DbContextOptions<NhaHangLDPContext> GetDefaultOptions()
         {
-            // Đọc connection string từ appsettings.json
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .Build();
+            if (_defaultOptions == null)
+            {
+                lock (_lock)
+                {
+                    if (_defaultOptions == null)
+                    {
+                        // Đọc connection string từ appsettings.json
+                        var configuration = new ConfigurationBuilder()
+                            .SetBasePath(AppContext.BaseDirectory)
+                            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                            .Build();
 
-            var connectionString = configuration.GetConnectionString("DefaultConnection")
-                ?? "Data Source=LAPTOP-EHUTLUMK\\SQLEXPRESS;Initial Catalog=NhaHangLDP;Integrated Security=True;TrustServerCertificate=True;MultipleActiveResultSets=True";
+                        var connectionString = configuration.GetConnectionString("DefaultConnection")
+                            ?? "Data Source=LAPTOP-EHUTLUMK\\SQLEXPRESS;Initial Catalog=NhaHangLDP;Integrated Security=True;TrustServerCertificate=True;MultipleActiveResultSets=True";
 
-            var optionsBuilder = new DbContextOptionsBuilder<NhaHangLDPContext>();
-            optionsBuilder.UseSqlServer(connectionString);
-            _options = optionsBuilder.Options;
+                        var optionsBuilder = new DbContextOptionsBuilder<NhaHangLDPContext>();
+                        optionsBuilder.UseSqlServer(connectionString);
+                        _defaultOptions = optionsBuilder.Options;
+                    }
+                }
+            }
+            return _defaultOptions;
         }
 
-        public NhaHangLDPEntities() : base(_options)
+        /// <summary>
+        /// Constructor mặc định - dùng cho khởi tạo trực tiếp (backward compatibility)
+        /// </summary>
+        public NhaHangLDPEntities() : base(GetDefaultOptions())
         {
         }
 
+        /// <summary>
+        /// Constructor với DI options - dùng khi inject qua DI container
+        /// </summary>
         public NhaHangLDPEntities(DbContextOptions<NhaHangLDPContext> options) : base(options)
         {
         }

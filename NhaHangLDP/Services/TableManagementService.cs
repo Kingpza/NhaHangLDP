@@ -52,8 +52,12 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var sourceTable = db.RestaurantTable.Include("Order").FirstOrDefault(t => t.Id == sourceTableId);
-                    var targetTable = db.RestaurantTable.Include("Order").FirstOrDefault(t => t.Id == targetTableId);
+                    var sourceTable = db.RestaurantTable
+                        .Include(t => t.Orders)
+                        .FirstOrDefault(t => t.Id == sourceTableId);
+                    var targetTable = db.RestaurantTable
+                        .Include(t => t.Orders)
+                        .FirstOrDefault(t => t.Id == targetTableId);
 
                     if (sourceTable == null || targetTable == null)
                     {
@@ -61,7 +65,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var activeOrder = sourceTable.Order
+                    var activeOrder = sourceTable.Orders
                         .Where(o => o.Status != "Completed" && o.Status != "Cancelled")
                         .OrderByDescending(o => o.OrderTime)
                         .FirstOrDefault();
@@ -103,8 +107,14 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var mainTable = db.RestaurantTable.Include("Order.OrderDetail").FirstOrDefault(t => t.Id == mainTableId);
-                    var secTable = db.RestaurantTable.Include("Order.OrderDetail").FirstOrDefault(t => t.Id == secondaryTableId);
+                    var mainTable = db.RestaurantTable
+                        .Include(t => t.Orders)
+                            .ThenInclude(o => o.OrderDetails)
+                        .FirstOrDefault(t => t.Id == mainTableId);
+                    var secTable = db.RestaurantTable
+                        .Include(t => t.Orders)
+                            .ThenInclude(o => o.OrderDetails)
+                        .FirstOrDefault(t => t.Id == secondaryTableId);
 
                     if (mainTable == null || secTable == null)
                     {
@@ -112,8 +122,8 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var mainOrder = mainTable.Order.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
-                    var secOrder = secTable.Order.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
+                    var mainOrder = mainTable.Orders.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
+                    var secOrder = secTable.Orders.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
 
                     if (mainOrder == null || secOrder == null)
                     {
@@ -121,7 +131,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    foreach (var detail in secOrder.OrderDetail.ToList())
+                    foreach (var detail in secOrder.OrderDetails.ToList())
                     {
                         detail.OrderId = mainOrder.Id;
                     }
@@ -275,7 +285,8 @@ namespace NhaHangLDP.Services
                 try
                 {
                     var table = db.RestaurantTable
-                        .Include(t => t.Order.Select(o => o.Bill))
+                        .Include(t => t.Orders)
+                            .ThenInclude(o => o.Bills)
                         .FirstOrDefault(t => t.Id == tableId);
 
                     if (table == null)
@@ -290,7 +301,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var unpaidOrder = table.Order
+                    var unpaidOrder = table.Orders
                         .Where(o => o.Status != "Completed" && o.Status != "Cancelled")
                         .FirstOrDefault();
 

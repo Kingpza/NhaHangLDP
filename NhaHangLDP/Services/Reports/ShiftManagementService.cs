@@ -20,7 +20,7 @@ namespace NhaHangLDP.Services.Reports
         public List<object> GetActiveShifts()
         {
             var activeShifts = db.CashierShift
-                .Include(s => s.Employee)
+                .Include(s => s.Cashier)
                 .Where(s => s.Status == "Active")
                 .OrderBy(s => s.StartTime)
                 .ToList();
@@ -46,7 +46,7 @@ namespace NhaHangLDP.Services.Reports
                 shiftsData.Add(new
                 {
                     ShiftId = shift.Id,
-                    CashierName = shift.Employee?.FullName ?? "N/A",
+                    CashierName = shift.Cashier?.FullName ?? "N/A",
                     StartTime = shift.StartTime.ToString("HH:mm"),
                     Duration = $"{(int)(DateTime.Now - shift.StartTime).TotalHours}h {(DateTime.Now - shift.StartTime).Minutes % 60}m",
                     OrdersCount = orders.Count,
@@ -116,7 +116,7 @@ namespace NhaHangLDP.Services.Reports
             var endDate = startDate.AddDays(1);
 
             var shifts = db.CashierShift
-                .Include(s => s.Employee)
+                .Include(s => s.Cashier)
                 .Where(s => s.StartTime >= startDate && s.StartTime < endDate)
                 .ToList();
 
@@ -134,7 +134,7 @@ namespace NhaHangLDP.Services.Reports
                 comparison.Add(new
                 {
                     ShiftName = GetShiftDisplayName(shift.StartTime),
-                    CashierName = shift.Employee?.FullName ?? "N/A",
+                    CashierName = shift.Cashier?.FullName ?? "N/A",
                     Revenue = revenue,
                     OrdersCount = orders.Count,
                     AverageOrderValue = orders.Count > 0 ? revenue / orders.Count : 0,
@@ -149,14 +149,14 @@ namespace NhaHangLDP.Services.Reports
 
         public object SendCashierAlert(int shiftId, string alertType, string message)
         {
-            var shift = db.CashierShift.Include(s => s.Employee).FirstOrDefault(s => s.Id == shiftId);
+            var shift = db.CashierShift.Include(s => s.Cashier).FirstOrDefault(s => s.Id == shiftId);
             if (shift == null)
                 return null;
 
             return new
             {
                 ShiftId = shiftId,
-                CashierName = shift.Employee?.FullName,
+                CashierName = shift.Cashier?.FullName,
                 AlertType = alertType,
                 Message = message,
                 Timestamp = DateTime.Now,
@@ -166,14 +166,14 @@ namespace NhaHangLDP.Services.Reports
 
         public object GetShiftCashierLink(int shiftId)
         {
-            var shift = db.CashierShift.Include(s => s.Employee).FirstOrDefault(s => s.Id == shiftId);
+            var shift = db.CashierShift.Include(s => s.Cashier).FirstOrDefault(s => s.Id == shiftId);
             if (shift == null)
                 return null;
 
             return new
             {
                 Id = shift.Id,
-                CashierName = shift.Employee?.FullName,
+                CashierName = shift.Cashier?.FullName,
                 StartTime = shift.StartTime.ToString("dd/MM/yyyy HH:mm"),
                 Status = shift.Status
             };

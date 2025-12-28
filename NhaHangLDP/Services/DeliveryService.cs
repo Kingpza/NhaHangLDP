@@ -369,7 +369,7 @@ namespace NhaHangLDP.Services
             try
             {
                 var assignment = _db.DeliveryAssignment
-                    .Include(a => a.CustomerOrder)
+                    .Include(a => a.Order)
                     .Include(a => a.Shipper)
                     .FirstOrDefault(a => a.Id == assignmentId);
 
@@ -387,8 +387,8 @@ namespace NhaHangLDP.Services
 
                     case "PickedUp":
                         assignment.PickupTime = DateTime.Now;
-                        assignment.CustomerOrder.Status = "Delivering";
-                        assignment.CustomerOrder.DeliveringDate = DateTime.Now;
+                        assignment.Order.Status = "Delivering";
+                        assignment.Order.DeliveringDate = DateTime.Now;
                         break;
 
                     case "Delivering":
@@ -398,8 +398,8 @@ namespace NhaHangLDP.Services
                     case "Delivered":
                         assignment.DeliveryTime = DateTime.Now;
                         assignment.ProofImageUrl = proofImage;
-                        assignment.CustomerOrder.Status = "Completed";
-                        assignment.CustomerOrder.CompletedDate = DateTime.Now;
+                        assignment.Order.Status = "Completed";
+                        assignment.Order.CompletedDate = DateTime.Now;
                         
                         // Cập nhật shipper
                         assignment.Shipper.Status = "Available";
@@ -407,17 +407,17 @@ namespace NhaHangLDP.Services
                         assignment.Shipper.TotalEarnings += assignment.ShipperEarning;
 
                         // Cập nhật payment nếu COD
-                        if (assignment.CustomerOrder.PaymentMethod == "COD")
+                        if (assignment.Order.PaymentMethod == "COD")
                         {
-                            assignment.CustomerOrder.PaymentStatus = "Paid";
-                            assignment.CustomerOrder.PaidDate = DateTime.Now;
+                            assignment.Order.PaymentStatus = "Paid";
+                            assignment.Order.PaidDate = DateTime.Now;
                         }
                         break;
 
                     case "Failed":
                         assignment.FailureReason = failureReason;
                         assignment.Shipper.Status = "Available";
-                        assignment.CustomerOrder.Status = "Ready"; // Quay về trạng thái sẵn sàng để giao lại
+                        assignment.Order.Status = "Ready"; // Quay về trạng thái sẵn sàng để giao lại
                         break;
 
                     case "Cancelled":

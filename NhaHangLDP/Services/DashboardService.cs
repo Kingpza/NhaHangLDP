@@ -19,8 +19,9 @@ namespace NhaHangLDP.Services
         public CashierDashboardViewModel GetDashboardData(int shiftId)
         {
             var activeShift = db.CashierShift
-                .Include(cs => cs.Employee)
-                .Include(s => s.ShiftSupportStaff.Select(ss => ss.Employee))
+                .Include(cs => cs.Cashier)
+                .Include(s => s.ShiftSupportStaffs)
+                    .ThenInclude(ss => ss.Employee)
                 .FirstOrDefault(cs => cs.Id == shiftId && cs.Status == "Active");
 
             if (activeShift == null)
@@ -49,7 +50,7 @@ namespace NhaHangLDP.Services
                 ActiveShift = activeShift,
                 ShiftStartTime = activeShift.StartTime,
                 HasActiveShift = true,
-                CashierName = activeShift.Employee?.FullName ?? "Thu Ngân"
+                CashierName = activeShift.Cashier?.FullName ?? "Thu Ngân"
             };
 
             return viewModel;
@@ -78,7 +79,9 @@ namespace NhaHangLDP.Services
         public TableAreasViewModel GetTableAreasData()
         {
             var tableAreasWithTables = db.TableArea
-                .Include(a => a.RestaurantTable.Select(t => t.Order.Select(o => o.OrderDetail)))
+                .Include(a => a.RestaurantTables)
+                    .ThenInclude(t => t.Orders)
+                        .ThenInclude(o => o.OrderDetails)
                 .OrderBy(a => a.Name)
                 .ToList();
 
@@ -95,9 +98,9 @@ namespace NhaHangLDP.Services
                     Name = area.Name
                 };
 
-                foreach (var table in area.RestaurantTable.OrderBy(t => t.TableNumber))
+                foreach (var table in area.RestaurantTables.OrderBy(t => t.TableNumber))
                 {
-                    var activeOrder = table.Order
+                    var activeOrder = table.Orders
                         .Where(o => o.Status == "Pending" || o.Status == "Preparing" || o.Status == "Ready")
                         .OrderByDescending(o => o.OrderTime)
                         .FirstOrDefault();
@@ -111,7 +114,7 @@ namespace NhaHangLDP.Services
                         ActiveOrderId = activeOrder?.Id,
                         OrderTime = activeOrder?.OrderTime,
                         OrderTimeDisplay = activeOrder?.OrderTime.ToString("HH:mm"),
-                        ItemCount = activeOrder?.OrderDetail.Count ?? 0,
+                        ItemCount = activeOrder?.OrderDetails.Count ?? 0,
                         CustomerCount = 0,
                         StatusDisplay = table.Status == "Available" ? "Trống" :
                                        table.Status == "Occupied" ? "Có khách" :
@@ -137,7 +140,7 @@ namespace NhaHangLDP.Services
         public ShiftDetailsViewModel GetShiftDetails(int shiftId)
         {
             var shift = db.CashierShift
-                .Include(s => s.Employee)
+                .Include(s => s.Cashier)
                 .FirstOrDefault(s => s.Id == shiftId);
 
             if (shift == null)
@@ -146,10 +149,11 @@ namespace NhaHangLDP.Services
             }
 
             var ordersInShift = db.Order
-                .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                .Include(o => o.RestaurantTable)
-                .Include(o => o.Bill)
-                .Include(o => o.Employee)
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.MenuItem)
+                .Include(o => o.Table)
+                .Include(o => o.Bills)
+                .Include(o => o.Waiter)
                 .Where(o => o.ShiftId == shift.Id)
                 .OrderByDescending(o => o.OrderTime)
                 .ToList();
@@ -161,26 +165,26 @@ namespace NhaHangLDP.Services
                 CompletedOrders = ordersInShift.Count(o => o.Status == "Completed"),
                 CancelledOrders = ordersInShift.Count(o => o.Status == "Cancelled"),
                 TotalRevenue = ordersInShift
-                    .Where(o => o.Bill.Any(b => b.Status == "Paid"))
-                    .Sum(o => o.Bill.Where(b => b.Status == "Paid").Sum(b => b.FinalAmount)),
+                    .Where(o => o.Bills.Any(b => b.Status == "Paid"))
+                    .Sum(o => o.Bills.Where(b => b.Status == "Paid").Sum(b => b.FinalAmount)),
                 Orders = ordersInShift.Select(order =>
                 {
-                    var paidBill = order.Bill.FirstOrDefault(b => b.Status == "Paid");
+                    var paidBill = order.Bills.FirstOrDefault(b => b.Status == "Paid");
 
                     return new ShiftOrderViewModel
                     {
                         Id = order.Id,
-                        TableNumber = order.RestaurantTable.TableNumber,
+                        TableNumber = order.Table.TableNumber,
                         OrderTime = order.OrderTime,
                         Status = order.Status.ToLower(),
                         StatusDisplay = GetStatusTextVietnamese(order.Status),
-                        TotalAmount = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime),
+                        TotalAmount = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime),
                         PaymentMethod = paidBill?.PaymentMethod ?? "",
                         IsPaid = (paidBill != null),
-                        ItemCount = order.OrderDetail.Count,
-                        CashierName = order.Employee?.FullName ?? "N/A",
+                        ItemCount = order.OrderDetails.Count,
+                        CashierName = order.Waiter?.FullName ?? "N/A",
                         BillId = paidBill?.Id,
-                        Items = order.OrderDetail.Select(od => new ShiftOrderItemViewModel
+                        Items = order.OrderDetails.Select(od => new ShiftOrderItemViewModel
                         {
                             Name = od.MenuItem.Name,
                             Quantity = od.Quantity,

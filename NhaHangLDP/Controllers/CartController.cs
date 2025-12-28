@@ -195,7 +195,23 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
+                var customerId = GetCustomerId();
+                
+                // Xóa giỏ hàng session
                 HttpContext.Session.Remove(CART_SESSION_KEY);
+                
+                // Nếu đã đăng nhập, xóa luôn giỏ hàng database
+                if (customerId.HasValue)
+                {
+                    var dbCart = _db.Cart.FirstOrDefault(c => c.CustomerId == customerId.Value);
+                    if (dbCart != null)
+                    {
+                        var cartItems = _db.CartItem.Where(ci => ci.CartId == dbCart.Id).ToList();
+                        _db.CartItem.RemoveRange(cartItems);
+                        _db.SaveChanges();
+                    }
+                }
+                
                 return Json(new { success = true, message = "Đã xóa giỏ hàng!" });
             }
             catch (Exception ex)
@@ -405,12 +421,68 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         private CartViewModel GetCart()
         {
-            var cartJson = HttpContext.Session.GetString(CART_SESSION_KEY);
-            CartViewModel cart = null;
-            if (!string.IsNullOrEmpty(cartJson))
+            var customerId = GetCustomerId();
+            
+            // Nếu đã đăng nhập, ưu tiên load từ database
+            if (customerId.HasValue)
             {
-                cart = JsonSerializer.Deserialize<CartViewModel>(cartJson);
+                var dbCart = LoadCartFromDatabase(customerId.Value);
+                
+                // Nếu database có giỏ hàng, sử dụng nó và sync vào session
+                if (dbCart.Items.Any())
+                {
+                    SaveCart(dbCart);
+                    return dbCart;
+                }
+                
+                // Nếu database không có giỏ hàng, kiểm tra session
+                var cartJson = HttpContext.Session.GetString(CART_SESSION_KEY);
+                if (!string.IsNullOrEmpty(cartJson))
+                {
+                    try
+                    {
+                        var sessionCart = JsonSerializer.Deserialize<CartViewModel>(cartJson);
+                        if (sessionCart != null && sessionCart.Items.Any())
+                        {
+                            // Lưu giỏ hàng session vào database
+                            SaveCartToDatabase(customerId.Value, sessionCart);
+                            return sessionCart;
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore deserialization errors
+                    }
+                }
+                
+                // Nếu cả database và session đều trống, trả về giỏ hàng mới
+                return new CartViewModel
+                {
+                    Items = new List<CartItemViewModel>(),
+                    SubTotal = 0,
+                    DeliveryFee = 0,
+                    Discount = 0,
+                    TotalAmount = 0,
+                    TotalItems = 0
+                };
             }
+            
+            // Nếu chưa đăng nhập, chỉ dùng session
+            var cartJson2 = HttpContext.Session.GetString(CART_SESSION_KEY);
+            CartViewModel cart = null;
+            
+            if (!string.IsNullOrEmpty(cartJson2))
+            {
+                try
+                {
+                    cart = JsonSerializer.Deserialize<CartViewModel>(cartJson2);
+                }
+                catch
+                {
+                    // Ignore deserialization errors
+                }
+            }
+            
             if (cart == null)
             {
                 cart = new CartViewModel
@@ -422,18 +494,8 @@ namespace NhaHangLDP.Controllers
                     TotalAmount = 0,
                     TotalItems = 0
                 };
-                
-                // Nếu đã đăng nhập và giỏ hàng session trống, load từ database
-                var customerId = GetCustomerId();
-                if (customerId.HasValue)
-                {
-                    cart = LoadCartFromDatabase(customerId.Value);
-                    if (cart.Items.Any())
-                    {
-                        SaveCart(cart);
-                    }
-                }
             }
+            
             return cart;
         }
 

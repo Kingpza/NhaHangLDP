@@ -28,8 +28,12 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var sourceTable = db.RestaurantTable.Include("Order").FirstOrDefault(t => t.Id == sourceTableId);
-                    var targetTable = db.RestaurantTable.Include("Order").FirstOrDefault(t => t.Id == targetTableId);
+                    var sourceTable = db.RestaurantTable
+                        .Include(t => t.Orders)
+                        .FirstOrDefault(t => t.Id == sourceTableId);
+                    var targetTable = db.RestaurantTable
+                        .Include(t => t.Orders)
+                        .FirstOrDefault(t => t.Id == targetTableId);
 
                     if (sourceTable == null || targetTable == null)
                     {
@@ -37,7 +41,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var sourceOrder = sourceTable.Order.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
+                    var sourceOrder = sourceTable.Orders.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
                     if (sourceOrder == null)
                     {
                         errorMessage = "Bàn nguồn không có đơn!";

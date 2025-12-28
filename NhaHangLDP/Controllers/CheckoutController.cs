@@ -88,8 +88,21 @@ namespace NhaHangLDP.Controllers
                 // Create order using raw SQL (since entities are not in EDMX yet)
                 var orderId = CreateOrderInDatabase(orderCode, form, cart);
 
-                // Clear cart after successful order
+                // Clear cart after successful order - xóa cả session và database
+                var customerId = HttpContext.Session.GetInt32("CustomerId");
                 HttpContext.Session.Remove(CART_SESSION_KEY);
+                
+                // Nếu đã đăng nhập, xóa luôn giỏ hàng database
+                if (customerId.HasValue)
+                {
+                    var dbCart = _db.Cart.FirstOrDefault(c => c.CustomerId == customerId.Value);
+                    if (dbCart != null)
+                    {
+                        var cartItems = _db.CartItem.Where(ci => ci.CartId == dbCart.Id).ToList();
+                        _db.CartItem.RemoveRange(cartItems);
+                        _db.SaveChanges();
+                    }
+                }
 
                 return Json(new { 
                     success = true, 

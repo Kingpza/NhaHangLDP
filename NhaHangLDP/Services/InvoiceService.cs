@@ -29,16 +29,18 @@ namespace NhaHangLDP.Services
         public InvoiceViewModel GenerateInvoice(int orderId)
         {
             var order = db.Order
-                .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                .Include(o => o.RestaurantTable)
-                .Include(o => o.Bill.Select(b => b.Employee))
-                .Include(o => o.Employee)
+                .Include(o => o.OrderDetails)
+                    .ThenInclude(od => od.MenuItem)
+                .Include(o => o.Table)
+                .Include(o => o.Bills)
+                    .ThenInclude(b => b.Cashier)
+                .Include(o => o.Waiter)
                 .FirstOrDefault(o => o.Id == orderId);
 
             if (order == null) return null;
 
-            var bill = order.Bill.FirstOrDefault(b => b.Status == "Paid");
-            var subtotal = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+            var bill = order.Bills.FirstOrDefault(b => b.Status == "Paid");
+            var subtotal = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime);
             var vatPercent = GetVATPercent();
             var vat = Math.Round(subtotal * vatPercent / 100, 0);
             var total = subtotal + vat;
@@ -49,12 +51,12 @@ namespace NhaHangLDP.Services
             {
                 OrderId = order.Id.ToString("D6"),
                 BillId = bill?.Id.ToString() ?? "N/A",
-                TableNumber = order.RestaurantTable?.TableNumber ?? "N/A",
+                TableNumber = order.Table?.TableNumber ?? "N/A",
                 OrderTime = order.OrderTime,
                 BillDate = bill?.BillDate ?? DateTime.Now,
-                CashierName = bill?.Employee?.FullName ?? order.Employee?.FullName ?? "N/A",
+                CashierName = bill?.Cashier?.FullName ?? order.Waiter?.FullName ?? "N/A",
                 PaymentMethod = GetPaymentMethodText(bill?.PaymentMethod ?? "Chưa thanh toán"),
-                Items = order.OrderDetail.Select(od => new InvoiceItemViewModel
+                Items = order.OrderDetails.Select(od => new InvoiceItemViewModel
                 {
                     ItemName = od.MenuItem?.Name ?? "N/A",
                     Quantity = od.Quantity,
@@ -76,19 +78,25 @@ namespace NhaHangLDP.Services
         public BillDetailViewModel GenerateDetailedInvoice(int billId)
         {
             var bill = db.Bill
-                .Include(b => b.Order.OrderDetail.Select(od => od.MenuItem))
-                .Include(b => b.Order.RestaurantTable.TableArea)
-                .Include(b => b.Order.Employee)
-                .Include(b => b.Employee)
-                .Include(b => b.PromotionUsage.Select(pu => pu.Promotion))
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.OrderDetails)
+                        .ThenInclude(od => od.MenuItem)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.Table)
+                        .ThenInclude(t => t.TableArea)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.Waiter)
+                .Include(b => b.Cashier)
+                .Include(b => b.PromotionUsages)
+                    .ThenInclude(pu => pu.Promotion)
                 .FirstOrDefault(b => b.Id == billId);
 
             if (bill == null) return null;
 
             var settings = GetRestaurantSettings();
-            var subtotal = bill.Order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+            var subtotal = bill.Order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime);
             var vatAmount = bill.TotalAmount - subtotal;
-            var promotionUsage = bill.PromotionUsage.FirstOrDefault();
+            var promotionUsage = bill.PromotionUsages.FirstOrDefault();
 
             return new BillDetailViewModel
             {
@@ -101,13 +109,13 @@ namespace NhaHangLDP.Services
                 OrderCode = $"DH{bill.OrderId:D6}",
                 OrderTime = bill.Order.OrderTime,
 
-                TableNumber = bill.Order.RestaurantTable?.TableNumber ?? "N/A",
-                TableArea = bill.Order.RestaurantTable?.TableArea?.Name ?? "",
+                TableNumber = bill.Order.Table?.TableNumber ?? "N/A",
+                TableArea = bill.Order.Table?.TableArea?.Name ?? "",
 
-                CashierName = bill.Employee?.FullName ?? "N/A",
-                WaiterName = bill.Order.Employee?.FullName ?? "N/A",
+                CashierName = bill.Cashier?.FullName ?? "N/A",
+                WaiterName = bill.Order.Waiter?.FullName ?? "N/A",
 
-                Items = bill.Order.OrderDetail.Select(od => new BillItemViewModel
+                Items = bill.Order.OrderDetails.Select(od => new BillItemViewModel
                 {
                     Id = od.Id,
                     Name = od.MenuItem?.Name ?? "N/A",
@@ -149,16 +157,18 @@ namespace NhaHangLDP.Services
         public List<BillSummaryItem> GetCustomerInvoiceHistory(string customerPhone, int take = 10)
         {
             // Tìm các hóa đơn từ QROrder có phone matching
-            var qrOrders = db.QROrder
-                .Include(q => q.RestaurantTable)
+            var qrOrders = db.Qrorder
+                .Include(q => q.Table)
                 .Where(q => q.CustomerPhone == customerPhone && q.LinkedOrderId.HasValue)
                 .Select(q => q.LinkedOrderId.Value)
                 .ToList();
 
             var bills = db.Bill
-                .Include(b => b.Order.OrderDetail)
-                .Include(b => b.Order.RestaurantTable)
-                .Include(b => b.Employee)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.OrderDetails)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.Table)
+                .Include(b => b.Cashier)
                 .Where(b => qrOrders.Contains(b.OrderId))
                 .OrderByDescending(b => b.BillDate)
                 .Take(take)
@@ -170,15 +180,15 @@ namespace NhaHangLDP.Services
                 InvoiceNumber = GenerateInvoiceNumber(b.Id, b.BillDate),
                 OrderId = b.OrderId,
                 OrderCode = $"DH{b.OrderId:D6}",
-                TableNumber = b.Order.RestaurantTable?.TableNumber ?? "N/A",
+                TableNumber = b.Order.Table?.TableNumber ?? "N/A",
                 BillDate = b.BillDate,
                 TotalAmount = b.TotalAmount,
                 FinalAmount = b.FinalAmount,
                 DiscountAmount = b.DiscountAmount,
                 PaymentMethod = GetPaymentMethodText(b.PaymentMethod),
                 Status = b.Status,
-                CashierName = b.Employee?.FullName ?? "N/A",
-                ItemCount = b.Order.OrderDetail.Sum(od => od.Quantity)
+                CashierName = b.Cashier?.FullName ?? "N/A",
+                ItemCount = b.Order.OrderDetails.Sum(od => od.Quantity)
             }).ToList();
         }
 
@@ -188,9 +198,11 @@ namespace NhaHangLDP.Services
         public List<BillSummaryItem> GetShiftInvoices(int shiftId)
         {
             var bills = db.Bill
-                .Include(b => b.Order.OrderDetail)
-                .Include(b => b.Order.RestaurantTable)
-                .Include(b => b.Employee)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.OrderDetails)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.Table)
+                .Include(b => b.Cashier)
                 .Where(b => b.Order.ShiftId == shiftId)
                 .OrderByDescending(b => b.BillDate)
                 .ToList();
@@ -201,15 +213,15 @@ namespace NhaHangLDP.Services
                 InvoiceNumber = GenerateInvoiceNumber(b.Id, b.BillDate),
                 OrderId = b.OrderId,
                 OrderCode = $"DH{b.OrderId:D6}",
-                TableNumber = b.Order.RestaurantTable?.TableNumber ?? "N/A",
+                TableNumber = b.Order.Table?.TableNumber ?? "N/A",
                 BillDate = b.BillDate,
                 TotalAmount = b.TotalAmount,
                 FinalAmount = b.FinalAmount,
                 DiscountAmount = b.DiscountAmount,
                 PaymentMethod = GetPaymentMethodText(b.PaymentMethod),
                 Status = b.Status,
-                CashierName = b.Employee?.FullName ?? "N/A",
-                ItemCount = b.Order.OrderDetail.Sum(od => od.Quantity)
+                CashierName = b.Cashier?.FullName ?? "N/A",
+                ItemCount = b.Order.OrderDetails.Sum(od => od.Quantity)
             }).ToList();
         }
 
@@ -222,9 +234,11 @@ namespace NhaHangLDP.Services
             var endDate = startDate.AddDays(1);
 
             var bills = db.Bill
-                .Include(b => b.Order.OrderDetail)
-                .Include(b => b.Order.RestaurantTable)
-                .Include(b => b.Employee)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.OrderDetails)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.Table)
+                .Include(b => b.Cashier)
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate)
                 .OrderByDescending(b => b.BillDate)
                 .ToList();
@@ -235,15 +249,15 @@ namespace NhaHangLDP.Services
                 InvoiceNumber = GenerateInvoiceNumber(b.Id, b.BillDate),
                 OrderId = b.OrderId,
                 OrderCode = $"DH{b.OrderId:D6}",
-                TableNumber = b.Order.RestaurantTable?.TableNumber ?? "N/A",
+                TableNumber = b.Order.Table?.TableNumber ?? "N/A",
                 BillDate = b.BillDate,
                 TotalAmount = b.TotalAmount,
                 FinalAmount = b.FinalAmount,
                 DiscountAmount = b.DiscountAmount,
                 PaymentMethod = GetPaymentMethodText(b.PaymentMethod),
                 Status = b.Status,
-                CashierName = b.Employee?.FullName ?? "N/A",
-                ItemCount = b.Order.OrderDetail.Sum(od => od.Quantity)
+                CashierName = b.Cashier?.FullName ?? "N/A",
+                ItemCount = b.Order.OrderDetails.Sum(od => od.Quantity)
             }).ToList();
         }
 
@@ -265,9 +279,11 @@ namespace NhaHangLDP.Services
             if (keyword.StartsWith("hd") && int.TryParse(keyword.Replace("hd", ""), out int billId))
             {
                 var bill = db.Bill
-                    .Include(b => b.Order.OrderDetail)
-                    .Include(b => b.Order.RestaurantTable)
-                    .Include(b => b.Employee)
+                    .Include(b => b.Order)
+                        .ThenInclude(o => o.OrderDetails)
+                    .Include(b => b.Order)
+                        .ThenInclude(o => o.Table)
+                    .Include(b => b.Cashier)
                     .FirstOrDefault(b => b.Id == billId);
 
                 if (bill != null)
@@ -283,9 +299,11 @@ namespace NhaHangLDP.Services
             if (keyword.StartsWith("dh") && int.TryParse(keyword.Replace("dh", ""), out int orderId))
             {
                 var bills = db.Bill
-                    .Include(b => b.Order.OrderDetail)
-                    .Include(b => b.Order.RestaurantTable)
-                    .Include(b => b.Employee)
+                    .Include(b => b.Order)
+                        .ThenInclude(o => o.OrderDetails)
+                    .Include(b => b.Order)
+                        .ThenInclude(o => o.Table)
+                    .Include(b => b.Cashier)
                     .Where(b => b.OrderId == orderId)
                     .ToList();
 
@@ -294,12 +312,14 @@ namespace NhaHangLDP.Services
 
             // Tìm theo số bàn hoặc tên nhân viên
             var results = db.Bill
-                .Include(b => b.Order.OrderDetail)
-                .Include(b => b.Order.RestaurantTable)
-                .Include(b => b.Employee)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.OrderDetails)
+                .Include(b => b.Order)
+                    .ThenInclude(o => o.Table)
+                .Include(b => b.Cashier)
                 .Where(b => 
-                    b.Order.RestaurantTable.TableNumber.ToLower().Contains(keyword) ||
-                    b.Employee.FullName.ToLower().Contains(keyword))
+                    b.Order.Table.TableNumber.ToLower().Contains(keyword) ||
+                    b.Cashier.FullName.ToLower().Contains(keyword))
                 .OrderByDescending(b => b.BillDate)
                 .Take(20)
                 .ToList();
@@ -331,7 +351,7 @@ namespace NhaHangLDP.Services
                 RefundedBills = bills.Count(b => b.Status == "Refunded" || b.Status == "PartialRefund"),
                 TotalRevenue = paidBills.Sum(b => b.FinalAmount),
                 TotalDiscount = bills.Sum(b => b.DiscountAmount),
-                TotalVAT = paidBills.Sum(b => b.TotalAmount - (b.Order?.OrderDetail?.Sum(od => od.Quantity * od.PriceAtTime) ?? 0)),
+                TotalVAT = paidBills.Sum(b => b.TotalAmount - (b.Order?.OrderDetails?.Sum(od => od.Quantity * od.PriceAtTime) ?? 0)),
                 AverageOrderValue = paidBills.Count > 0 ? paidBills.Sum(b => b.FinalAmount) / paidBills.Count : 0,
                 RevenueByPaymentMethod = paidBills
                     .GroupBy(b => b.PaymentMethod ?? "Unknown")
@@ -351,7 +371,7 @@ namespace NhaHangLDP.Services
 
             return db.Bill
                 .Where(b => b.BillDate >= fromDate && b.BillDate < endDate && b.Status == "Paid")
-                .SelectMany(b => b.Order.OrderDetail)
+                .SelectMany(b => b.Order.OrderDetails)
                 .GroupBy(od => new { od.MenuItemId, od.MenuItem.Name, od.MenuItem.Category })
                 .Select(g => new TopSellingItem
                 {
@@ -519,7 +539,7 @@ namespace NhaHangLDP.Services
                 PaymentMethod = GetPaymentMethodText(b.PaymentMethod),
                 Status = b.Status,
                 CashierName = b.Employee?.FullName ?? "N/A",
-                ItemCount = b.Order?.OrderDetail?.Sum(od => od.Quantity) ?? 0
+                ItemCount = b.Order?.OrderDetails?.Sum(od => od.Quantity) ?? 0
             };
         }
 

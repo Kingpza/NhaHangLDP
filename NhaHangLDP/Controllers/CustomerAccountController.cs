@@ -93,6 +93,17 @@ namespace NhaHangLDP.Controllers
                     // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
                     // FormsAuthentication not available in ASP.NET Core - use proper authentication
                 }
+                
+                // Thông báo nếu có giỏ hàng đã lưu
+                var cartAfterMerge = LoadCartFromDatabase(customer.Id);
+                if (cartAfterMerge.Items.Any())
+                {
+                    TempData["Success"] = $"Đăng nhập thành công! Giỏ hàng của bạn có {cartAfterMerge.TotalItems} món đã được khôi phục.";
+                }
+                else
+                {
+                    TempData["Success"] = "Đăng nhập thành công!";
+                }
 
                 // Redirect
                 if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
@@ -213,13 +224,35 @@ namespace NhaHangLDP.Controllers
         #region Logout
 
         /// <summary>
-        /// Đăng xuất - chỉ xóa session, giỏ hàng đã được lưu vào database
+        /// Đăng xuất - Giữ giỏ hàng đã lưu trong database, chỉ xóa thông tin đăng nhập
         /// </summary>
         public ActionResult Logout()
         {
-            // Giỏ hàng đã được lưu vào database khi thay đổi, 
-            // nên chỉ cần clear session và redirect
-            HttpContext.Session.Clear();
+            // Lấy CustomerId trước khi clear session
+            var customerId = GetCustomerId();
+            
+            // Lấy giỏ hàng hiện tại để đảm bảo đã sync vào database
+            if (customerId.HasValue)
+            {
+                var sessionCart = GetSessionCart();
+                if (sessionCart != null && sessionCart.Items.Any())
+                {
+                    // Đảm bảo giỏ hàng được lưu vào database trước khi đăng xuất
+                    SaveCartToDatabase(customerId.Value, sessionCart);
+                }
+            }
+            
+            // Xóa thông tin đăng nhập nhưng GIỮ lại giỏ hàng session
+            // (Giỏ hàng đã được lưu vào database, sẽ được load lại khi login)
+            HttpContext.Session.Remove("CustomerId");
+            HttpContext.Session.Remove("CustomerName");
+            HttpContext.Session.Remove("CustomerEmail");
+            HttpContext.Session.Remove("CustomerPhone");
+            
+            // Xóa luôn giỏ hàng session để đảm bảo load lại từ database khi login
+            HttpContext.Session.Remove(CART_SESSION_KEY);
+            
+            TempData["Info"] = "Đã đăng xuất. Giỏ hàng của bạn đã được lưu và sẽ được khôi phục khi đăng nhập lại.";
             return RedirectToAction("Menu", "Public");
         }
 

@@ -105,8 +105,9 @@ namespace NhaHangLDP.Controllers
         public ActionResult Dashboard()
         {
             var activeShift = db.CashierShift
-                .Include(cs => cs.Employee)
-                .Include(s => s.ShiftSupportStaff.Select(ss => ss.Employee))
+                .Include(cs => cs.Cashier)
+                .Include(s => s.ShiftSupportStaffs)
+                    .ThenInclude(ss => ss.Employee)
                 .FirstOrDefault(cs => cs.Status == "Active");
 
             if (activeShift == null)
@@ -114,7 +115,7 @@ namespace NhaHangLDP.Controllers
 
             HttpContext.Session.SetString("ActiveShiftId", (activeShift.Id).ToString());
             HttpContext.Session.SetString("ShiftStartTime", (activeShift.StartTime).ToString());
-            HttpContext.Session.SetString("CashierName", (activeShift.Employee?.FullName ?? "Thu Ngân").ToString());
+            HttpContext.Session.SetString("CashierName", (activeShift.Cashier?.FullName ?? "Thu Ngân").ToString());
 
             return View(dashboardService.GetDashboardData(activeShift.Id));
         }
@@ -336,15 +337,16 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Vui lòng mở ca trước khi tạo hóa đơn!" });
 
                 var order = db.Order
-                    .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                    .Include(o => o.RestaurantTable)
-                    .Include(o => o.Bill)
+                    .Include(o => o.OrderDetails)
+                        .ThenInclude(od => od.MenuItem)
+                    .Include(o => o.Table)
+                    .Include(o => o.Bills)
                     .FirstOrDefault(o => o.Id == orderId);
 
                 if (order == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
 
-                var bill = order.Bill.FirstOrDefault();
+                var bill = order.Bills.FirstOrDefault();
                 var invoiceId = "HD" + DateTime.Now.ToString("yyyyMMddHHmmss");
 
                 return Json(new { success = true, message = "Tạo hóa đơn thành công!", invoiceId, billId = bill?.Id });

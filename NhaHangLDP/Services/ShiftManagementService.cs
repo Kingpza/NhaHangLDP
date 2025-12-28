@@ -69,7 +69,7 @@ namespace NhaHangLDP.Services
             try
             {
                 var activeShift = db.CashierShift
-                    .Include(s => s.ShiftSupportStaff)
+                    .Include(s => s.ShiftSupportStaffs)
                     .FirstOrDefault(s => s.Status == "Active");
 
                 if (activeShift == null)
@@ -110,23 +110,23 @@ namespace NhaHangLDP.Services
         public ShiftRevenueData CalculateShiftRevenue(int shiftId)
         {
             var orders = db.Order
-                .Include(o => o.Bill)
+                .Include(o => o.Bills)
                 .Where(o => o.ShiftId == shiftId)
                 .ToList();
 
             var totalRevenue = orders
-                .Where(o => o.Bill.Any(b => b.Status == "Paid"))
-                .Sum(o => o.Bill.Where(b => b.Status == "Paid").Sum(b => b.FinalAmount));
+                .Where(o => o.Bills.Any(b => b.Status == "Paid"))
+                .Sum(o => o.Bills.Where(b => b.Status == "Paid").Sum(b => b.FinalAmount));
 
             var cashRevenue = orders
-                .Where(o => o.Bill.Any(b => b.Status == "Paid" && b.PaymentMethod == "cash"))
-                .Sum(o => o.Bill.Where(b => b.Status == "Paid" && b.PaymentMethod == "cash").Sum(b => b.FinalAmount));
+                .Where(o => o.Bills.Any(b => b.Status == "Paid" && b.PaymentMethod == "cash"))
+                .Sum(o => o.Bills.Where(b => b.Status == "Paid" && b.PaymentMethod == "cash").Sum(b => b.FinalAmount));
 
             return new ShiftRevenueData
             {
                 TotalRevenue = totalRevenue,
                 CashRevenue = cashRevenue,
-                OrderCount = orders.Count(o => o.Bill.Any(b => b.Status == "Paid"))
+                OrderCount = orders.Count(o => o.Bills.Any(b => b.Status == "Paid"))
             };
         }
 
