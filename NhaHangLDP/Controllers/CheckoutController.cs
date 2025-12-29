@@ -163,11 +163,10 @@ namespace NhaHangLDP.Controllers
                 return RedirectToAction("TrackOrder");
             }
 
-            // Verify order belongs to this phone
-            var exists = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM CustomerOrder WHERE OrderCode = @p0 AND CustomerPhone = @p1",
-                orderCode, phone).FirstOrDefault();
+            // Verify order belongs to this phone using LINQ
+            var exists = _db.CustomerOrders.Any(o => o.OrderCode == orderCode && o.CustomerPhone == phone);
 
-            if (exists == 0)
+            if (!exists)
             {
                 TempData["Error"] = "Không tìm thấy đơn hàng phù hợp!";
                 return RedirectToAction("TrackOrder");

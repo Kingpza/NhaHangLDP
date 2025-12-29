@@ -970,14 +970,14 @@ namespace NhaHangLDP.Controllers
 
                     foreach (var emp in employees.Take(5))
                     {
-                        if (!_db.Set<Attendance>().Any(a => a.EmployeeId == emp.Id &&
-                            System.Data.Entity.a.CheckInTime.Date == date))
+                        if (!_db.Attendances.Any(a => a.EmployeeId == emp.Id &&
+                            a.CheckInTime.Date == date))
                         {
                             var checkIn = date.AddHours(7).AddMinutes(random.Next(0, 60));
                             var checkOut = date.AddHours(17).AddMinutes(random.Next(-30, 60));
                             var status = checkIn.TimeOfDay <= new TimeSpan(8, 15, 0) ? "OnTime" : "Late";
 
-                            _db.Set<Attendance>().Add(new Attendance
+                            _db.Attendances.Add(new Attendance
                             {
                                 EmployeeId = emp.Id,
                                 CheckInTime = checkIn,

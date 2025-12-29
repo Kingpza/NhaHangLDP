@@ -648,18 +648,10 @@ namespace NhaHangLDP.Controllers
                         totalPaid = totalPaid
                     });
                 }
-                catch (System.Data.Entity.Validation.DbEntityValidationException ex)
+                catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
                 {
                     transaction.Rollback();
-                    var errors = ex.EntityValidationErrors
-                        .SelectMany(e => e.ValidationErrors)
-                        .Select(e => e.ErrorMessage);
-                    return Json(new { success = false, message = "Lỗi validation: " + string.Join(", ", errors) });
-                }
-                catch (System.Data.Entity.Infrastructure.DbUpdateException ex)
-                {
-                    transaction.Rollback();
-                    var innerMessage = ex.InnerException?.InnerException?.Message ?? ex.InnerException?.Message ?? ex.Message;
+                    var innerMessage = ex.InnerException?.Message ?? ex.Message;
                     return Json(new { success = false, message = "Lỗi cập nhật DB: " + innerMessage });
                 }
                 catch (Exception ex)
