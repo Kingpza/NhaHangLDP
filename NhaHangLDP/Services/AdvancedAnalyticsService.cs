@@ -74,7 +74,7 @@ namespace NhaHangLDP.Services
                 .Where(b => b.BillDate >= start && b.BillDate < end && b.Status == "Paid")
                 .ToList();
 
-            var currentOrders = _db.Order
+            var currentOrders = _db.Orders
                 .Where(o => o.OrderTime >= start && o.OrderTime < end)
                 .ToList();
 
@@ -102,8 +102,8 @@ namespace NhaHangLDP.Services
             summary.AvgOrderGrowth = CalculateGrowth(summary.AvgOrderValue, prevAvgOrder);
 
             // Table utilization
-            var totalTables = _db.Table.Count();
-            var occupiedTables = _db.Table.Count(t => t.Status == "Occupied");
+            var totalTables = _db.RestaurantTables.Count();
+            var occupiedTables = _db.RestaurantTables.Count(t => t.Status == "Occupied");
             summary.TableUtilization = totalTables > 0 ? (decimal)occupiedTables / totalTables * 100 : 0;
 
             // Table turnover
@@ -112,7 +112,7 @@ namespace NhaHangLDP.Services
             summary.TableTurnover = totalTables > 0 ? (int)(totalSessions / (totalTables * (hoursOpen / 8))) : 0;
 
             // RevPASH (Revenue per Available Seat Hour)
-            var totalSeats = _db.Table.Sum(t => (int?)t.Capacity) ?? 0;
+            var totalSeats = _db.RestaurantTables.Sum(t => (int?)t.Capacity) ?? 0;
             summary.RevPASH = totalSeats > 0 && hoursOpen > 0 ? summary.TotalRevenue / (totalSeats * (decimal)hoursOpen) : 0;
 
             // Customer counts
@@ -240,7 +240,7 @@ namespace NhaHangLDP.Services
         {
             var orderDetails = _db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Orders)
+                .Include(od => od.Order)
                 .Where(od => od.Order.OrderTime >= start && od.Order.OrderTime < end)
                 .Where(od => od.Order.Bills.Any(b => b.Status == "Paid"))
                 .ToList();
@@ -267,7 +267,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public List<HeatmapData> GetPeakHoursHeatmap(DateTime start, DateTime end)
         {
-            var orders = _db.Order
+            var orders = _db.Orders
                 .Where(o => o.OrderTime >= start && o.OrderTime < end)
                 .ToList();
 
@@ -317,7 +317,7 @@ namespace NhaHangLDP.Services
             // Top dishes by revenue
             var topDishes = _db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Orders)
+                .Include(od => od.Order)
                 .Where(od => od.Order.OrderTime >= start && od.Order.OrderTime < end)
                 .Where(od => od.Order.Bills.Any(b => b.Status == "Paid"))
                 .GroupBy(od => new { od.MenuItemId, od.MenuItem.Name, od.MenuItem.ImageUrl })
@@ -417,7 +417,7 @@ namespace NhaHangLDP.Services
 
             var dailyRevenue = _db.Bills
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
-                .GroupBy(b => DbFunctions.TruncateTime(b.BillDate))
+                .GroupBy(b => b.BillDate.Date)
                 .Select(g => new { Date = g.Key, Revenue = g.Sum(b => b.FinalAmount) })
                 .OrderBy(x => x.Date)
                 .ToList();
@@ -505,7 +505,7 @@ namespace NhaHangLDP.Services
         {
             var orderDetails = _db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Orders)
+                .Include(od => od.Order)
                 .Where(od => od.Order.OrderTime >= start && od.Order.OrderTime < end)
                 .Where(od => od.Order.Bills.Any(b => b.Status == "Paid"))
                 .ToList();
@@ -599,7 +599,7 @@ namespace NhaHangLDP.Services
         {
             var items = _db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Orders)
+                .Include(od => od.Order)
                 .Where(od => od.Order.OrderTime >= start && od.Order.OrderTime < end)
                 .Where(od => od.Order.Bills.Any(b => b.Status == "Paid"))
                 .GroupBy(od => new { od.MenuItemId, od.MenuItem.Name })
@@ -657,7 +657,7 @@ namespace NhaHangLDP.Services
 
             var dailyRevenue = _db.Bills
                 .Where(b => b.BillDate >= start && b.BillDate < end && b.Status == "Paid")
-                .GroupBy(b => DbFunctions.TruncateTime(b.BillDate))
+                .GroupBy(b => b.BillDate.Date)
                 .Select(g => new { Date = g.Key, Revenue = g.Sum(b => b.FinalAmount) })
                 .ToList();
 
@@ -841,8 +841,8 @@ namespace NhaHangLDP.Services
             });
 
             // 4. Table Utilization
-            var totalTables = _db.Table.Count();
-            var occupiedTables = _db.Table.Count(t => t.Status == "Occupied");
+            var totalTables = _db.RestaurantTables.Count();
+            var occupiedTables = _db.RestaurantTables.Count(t => t.Status == "Occupied");
             var utilization = totalTables > 0 ? (decimal)occupiedTables / totalTables * 100 : 0;
 
             kpis.Add(new KPIMetric

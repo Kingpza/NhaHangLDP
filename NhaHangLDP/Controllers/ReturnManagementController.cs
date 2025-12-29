@@ -28,7 +28,7 @@ namespace NhaHangLDP.Controllers
             {
                 // Lấy danh sách tất cả các phiếu trả hàng
                 var returnBills = db.ReturnBills
-                    .Include(r => r.Bills)
+                    .Include(r => r.OriginalBill)
                     .Include(r => r.Employee)
                     .Include(r => r.ReturnBillDetail)
                     .OrderByDescending(r => r.ReturnDate)
@@ -85,8 +85,8 @@ namespace NhaHangLDP.Controllers
                 try
                 {
                     // Tối ưu hóa Include: Chỉ tải những gì cần thiết
-                    var bill = localDb.Bills
-                         .Include(b => b.Orders)
+                    var bill = localDb.OriginalBill
+                         .Include(b => b.Order)
                          .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
                          .FirstOrDefault(b => b.Id == billId && b.Status == "Paid");
 
@@ -184,7 +184,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 // Kiểm tra hóa đơn có tồn tại và đã được thanh toán
-                var originalBill = db.Bills
+                var originalBill = db.OriginalBill
                     .FirstOrDefault(b => b.Id == model.BillID && b.Status == "Paid");
 
                 if (originalBill == null)
@@ -275,7 +275,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var returnBill = db.ReturnBills
-                    .Include(r => r.Bills)
+                    .Include(r => r.OriginalBill)
                     .Include(r => r.Employee)
                     .Include(r => r.ReturnBillDetail).ThenInclude(rd => rd.MenuItem)
                     .FirstOrDefault(r => r.ReturnBillID == id);

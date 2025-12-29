@@ -94,7 +94,7 @@ namespace NhaHangLDP.Services.HR
                 // Kiểm tra đã check-in chưa
                 var existingAttendance = _db.Set<Attendance>()
                     .FirstOrDefault(a => a.EmployeeId == employeeId &&
-                                        DbFunctions.TruncateTime(a.CheckInTime) == today);
+                                        a.CheckInTime.Date == today);
 
                 if (existingAttendance != null)
                 {
@@ -155,7 +155,7 @@ namespace NhaHangLDP.Services.HR
 
                 var attendance = _db.Set<Attendance>()
                     .FirstOrDefault(a => a.EmployeeId == employeeId &&
-                                        DbFunctions.TruncateTime(a.CheckInTime) == today &&
+                                        a.CheckInTime.Date == today &&
                                         a.CheckOutTime == null);
 
                 if (attendance == null)
@@ -216,7 +216,7 @@ namespace NhaHangLDP.Services.HR
                 .ToList();
 
             var todayRecords = _db.Set<Attendance>()
-                .Where(a => DbFunctions.TruncateTime(a.CheckInTime) == today)
+                .Where(a => a.CheckInTime.Date == today)
                 .ToList();
 
             var result = new List<AttendanceSummaryItem>();
@@ -251,8 +251,8 @@ namespace NhaHangLDP.Services.HR
             var query = _db.Set<Attendance>()
                 .Include(a => a.Employee)
                 .Include(a => a.Employee.Role)
-                .Where(a => DbFunctions.TruncateTime(a.CheckInTime) >= startDate &&
-                           DbFunctions.TruncateTime(a.CheckInTime) <= endDate);
+                .Where(a => a.CheckInTime.Date >= startDate &&
+                           a.CheckInTime.Date <= endDate);
 
             if (employeeId.HasValue)
             {
@@ -309,7 +309,7 @@ namespace NhaHangLDP.Services.HR
                 var date = checkIn.Date;
                 var existing = _db.Set<Attendance>()
                     .FirstOrDefault(a => a.EmployeeId == employeeId &&
-                                        DbFunctions.TruncateTime(a.CheckInTime) == date);
+                                        a.CheckInTime.Date == date);
 
                 if (existing != null)
                 {
@@ -619,8 +619,8 @@ namespace NhaHangLDP.Services.HR
                     // Lấy dữ liệu chấm công
                     var attendance = _db.Set<Attendance>()
                         .Where(a => a.EmployeeId == emp.Id &&
-                                   DbFunctions.TruncateTime(a.CheckInTime) >= startDate &&
-                                   DbFunctions.TruncateTime(a.CheckInTime) <= endDate)
+                                   a.CheckInTime.Date >= startDate &&
+                                   a.CheckInTime.Date <= endDate)
                         .ToList();
 
                     var presentDays = attendance.Count;
@@ -1138,7 +1138,7 @@ namespace NhaHangLDP.Services.HR
             {
                 var date = DateTime.Today.AddDays(-i);
                 var records = _db.Set<Attendance>()
-                    .Where(a => DbFunctions.TruncateTime(a.CheckInTime) == date)
+                    .Where(a => a.CheckInTime.Date == date)
                     .ToList();
 
                 var present = records.Count;
@@ -1189,8 +1189,8 @@ namespace NhaHangLDP.Services.HR
             if (activeEmployees == 0 || workDays == 0) return 0;
 
             var presentDays = _db.Set<Attendance>()
-                .Where(a => DbFunctions.TruncateTime(a.CheckInTime) >= startDate &&
-                           DbFunctions.TruncateTime(a.CheckInTime) <= endDate)
+                .Where(a => a.CheckInTime.Date >= startDate &&
+                           a.CheckInTime.Date <= endDate)
                 .Count();
 
             var expectedDays = activeEmployees * workDays;
@@ -1203,8 +1203,8 @@ namespace NhaHangLDP.Services.HR
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
             var records = _db.Set<Attendance>()
-                .Where(a => DbFunctions.TruncateTime(a.CheckInTime) >= startDate &&
-                           DbFunctions.TruncateTime(a.CheckInTime) <= endDate &&
+                .Where(a => a.CheckInTime.Date >= startDate &&
+                           a.CheckInTime.Date <= endDate &&
                            a.WorkHours != null)
                 .ToList();
 

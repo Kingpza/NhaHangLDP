@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace NhaHangLDP.Controllers
 {
@@ -47,12 +47,19 @@ namespace NhaHangLDP.Controllers
                     return View(model);
                 }
 
-                // Find customer by email or phone
-                var customer = _db.Database.SqlQuery<CustomerLoginInfo>(
-                    @"SELECT Id, FullName, Email, Phone, PasswordHash, IsActive 
-                      FROM Customer 
-                      WHERE (Email = @p0 OR Phone = @p0) AND IsActive = 1",
-                    model.EmailOrPhone).FirstOrDefault();
+                // Find customer by email or phone using LINQ
+                var customer = _db.Customers
+                    .Where(c => (c.Email == model.EmailOrPhone || c.Phone == model.EmailOrPhone) && c.IsActive)
+                    .Select(c => new CustomerLoginInfo
+                    {
+                        Id = c.Id,
+                        FullName = c.FullName,
+                        Email = c.Email,
+                        Phone = c.Phone,
+                        PasswordHash = c.PasswordHash,
+                        IsActive = c.IsActive
+                    })
+                    .FirstOrDefault();
 
                 if (customer == null)
                 {
@@ -73,10 +80,13 @@ namespace NhaHangLDP.Controllers
                 HttpContext.Session.SetString("CustomerEmail", customer.Email?.ToString() ?? "");
                 HttpContext.Session.SetString("CustomerPhone", customer.Phone?.ToString() ?? "");
 
-                // Update last login
-                _db.Database.ExecuteSqlCommand(
-                    "UPDATE Customer SET LastLoginDate = GETDATE() WHERE Id = @p0",
-                    customer.Id);
+                // Update last login using EF Core
+                var dbCustomer = _db.Customers.Find(customer.Id);
+                if (dbCustomer != null)
+                {
+                    dbCustomer.LastLoginDate = DateTime.Now;
+                    _db.SaveChanges();
+                }
 
                 // Set auth cookie if remember me
                 if (model.RememberMe)
@@ -137,8 +147,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Check existing email
-                var existingEmail = _db.Database.SqlQuery<int>(
-                    "SELECT COUNT(*) FROM Customer WHERE Email = @p0",
+                var existingEmail = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM Customer WHERE Email = @p0",
                     model.Email).FirstOrDefault();
 
                 if (existingEmail > 0)
@@ -148,8 +157,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Check existing phone
-                var existingPhone = _db.Database.SqlQuery<int>(
-                    "SELECT COUNT(*) FROM Customer WHERE Phone = @p0",
+                var existingPhone = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM Customer WHERE Phone = @p0",
                     model.Phone).FirstOrDefault();
 
                 if (existingPhone > 0)
@@ -235,8 +243,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Check if email exists
-                var customer = _db.Database.SqlQuery<CustomerLoginInfo>(
-                    "SELECT Id, FullName, Email, Phone, PasswordHash, IsActive FROM Customer WHERE Email = @p0 AND IsActive = 1",
+                var customer = _db.Set<CustomerLoginInfo>().FromSqlRaw(@"SELECT Id, FullName, Email, Phone, PasswordHash, IsActive FROM Customer WHERE Email = @p0 AND IsActive = 1",
                     model.Email).FirstOrDefault();
 
                 if (customer == null)
@@ -254,7 +261,7 @@ namespace NhaHangLDP.Controllers
                 TempData["Success"] = $"Mã đặt lại mật khẩu của bạn là: {resetToken} (Demo only - trong thực tế sẽ gửi qua email)";
                 
                 // You could store the token in database for verification later
-                // _db.Database.ExecuteSqlCommand(
+                // _db.Database.ExecuteSqlRaw(
                 //     "UPDATE Customer SET ResetToken = @p1, ResetTokenExpiry = DATEADD(HOUR, 1, GETDATE()) WHERE Id = @p0",
                 //     customer.Id, HashPassword(resetToken));
 
@@ -309,7 +316,7 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Vui lòng đăng nhập!" });
                 }
 
-                _db.Database.ExecuteSqlCommand(
+                _db.Database.ExecuteSqlRaw(
                     @"UPDATE Customer SET FullName = @p1, Phone = @p2, DateOfBirth = @p3, Gender = @p4 WHERE Id = @p0",
                     customerId, fullName, phone, dateOfBirth, gender);
 
@@ -335,8 +342,7 @@ namespace NhaHangLDP.Controllers
             }
 
             var pageSize = 10;
-            var orders = _db.Database.SqlQuery<OrderSummaryInfo>(
-                @"SELECT o.Id, o.OrderCode, o.OrderDate, o.Status, o.TotalAmount,
+            var orders = _db.Set<OrderSummaryInfo>().FromSqlRaw(@"SELECT o.Id, o.OrderCode, o.OrderDate, o.Status, o.TotalAmount,
                          (SELECT COUNT(*) FROM OrderDetail WHERE OrderId = o.Id) as ItemCount,
                          (SELECT TOP 1 m.ImageUrl FROM OrderDetail od 
                           JOIN MenuItem m ON od.MenuItemId = m.Id WHERE od.OrderId = o.Id) as FirstItemImage
@@ -346,8 +352,7 @@ namespace NhaHangLDP.Controllers
                   OFFSET @p1 ROWS FETCH NEXT @p2 ROWS ONLY",
                 customerId, (page - 1) * pageSize, pageSize).ToList();
 
-            var totalOrders = _db.Database.SqlQuery<int>(
-                "SELECT COUNT(*) FROM CustomerOrder WHERE CustomerId = @p0",
+            var totalOrders = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM CustomerOrder WHERE CustomerId = @p0",
                 customerId).FirstOrDefault();
 
             var viewModel = new OrderListViewModel
@@ -386,8 +391,7 @@ namespace NhaHangLDP.Controllers
             }
 
             // Verify ownership
-            var isOwner = _db.Database.SqlQuery<int>(
-                "SELECT COUNT(*) FROM CustomerOrder WHERE OrderCode = @p0 AND CustomerId = @p1",
+            var isOwner = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM CustomerOrder WHERE OrderCode = @p0 AND CustomerId = @p1",
                 code, customerId).FirstOrDefault();
 
             if (isOwner == 0)
@@ -420,8 +424,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Verify current password
-                var currentHash = _db.Database.SqlQuery<string>(
-                    "SELECT PasswordHash FROM Customer WHERE Id = @p0",
+                var currentHash = _db.Set<string>().FromSqlRaw(@"SELECT PasswordHash FROM Customer WHERE Id = @p0",
                     customerId).FirstOrDefault();
 
                 if (!VerifyPassword(model.CurrentPassword, currentHash))
@@ -431,7 +434,7 @@ namespace NhaHangLDP.Controllers
 
                 // Update password
                 var newHash = HashPassword(model.NewPassword);
-                _db.Database.ExecuteSqlCommand(
+                _db.Database.ExecuteSqlRaw(
                     "UPDATE Customer SET PasswordHash = @p1 WHERE Id = @p0",
                     customerId, newHash);
 
@@ -458,8 +461,7 @@ namespace NhaHangLDP.Controllers
                 return RedirectToAction("Login");
             }
 
-            var items = _db.Database.SqlQuery<WishlistItemInfo>(
-                @"SELECT w.Id, w.MenuItemId, m.Name, m.Price, m.ImageUrl, m.Category, w.AddedDate
+            var items = _db.Set<WishlistItemInfo>().FromSqlRaw(@"SELECT w.Id, w.MenuItemId, m.Name, m.Price, m.ImageUrl, m.Category, w.AddedDate
                   FROM Wishlist w
                   JOIN MenuItem m ON w.MenuItemId = m.Id
                   WHERE w.CustomerId = @p0
@@ -494,20 +496,19 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Vui lòng đăng nhập!", needLogin = true });
                 }
 
-                var exists = _db.Database.SqlQuery<int>(
-                    "SELECT COUNT(*) FROM Wishlist WHERE CustomerId = @p0 AND MenuItemId = @p1",
+                var exists = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM Wishlist WHERE CustomerId = @p0 AND MenuItemId = @p1",
                     customerId, menuItemId).FirstOrDefault();
 
                 if (exists > 0)
                 {
-                    _db.Database.ExecuteSqlCommand(
+                    _db.Database.ExecuteSqlRaw(
                         "DELETE FROM Wishlist WHERE CustomerId = @p0 AND MenuItemId = @p1",
                         customerId, menuItemId);
                     return Json(new { success = true, added = false, message = "Đã xóa khỏi yêu thích" });
                 }
                 else
                 {
-                    _db.Database.ExecuteSqlCommand(
+                    _db.Database.ExecuteSqlRaw(
                         "INSERT INTO Wishlist (CustomerId, MenuItemId, AddedDate) VALUES (@p0, @p1, GETDATE())",
                         customerId, menuItemId);
                     return Json(new { success = true, added = true, message = "Đã thêm vào yêu thích" });
@@ -530,8 +531,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var addresses = _db.Database.SqlQuery<CustomerAddressInfo>(
-                    @"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault
+                var addresses = _db.Set<CustomerAddressInfo>().FromSqlRaw(@"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault
                       FROM CustomerAddress
                       WHERE CustomerId = @p0 AND IsDeleted = 0
                       ORDER BY IsDefault DESC, Id DESC",
@@ -571,8 +571,7 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Vui lòng đăng nhập!" });
                 }
 
-                var address = _db.Database.SqlQuery<CustomerAddressInfo>(
-                    @"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault
+                var address = _db.Set<CustomerAddressInfo>().FromSqlRaw(@"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault
                       FROM CustomerAddress
                       WHERE Id = @p0 AND CustomerId = @p1 AND IsDeleted = 0",
                     id, customerId).FirstOrDefault();
@@ -609,7 +608,7 @@ namespace NhaHangLDP.Controllers
                 if (isDefault)
                 {
                     // Reset all other addresses to non-default
-                    _db.Database.ExecuteSqlCommand(
+                    _db.Database.ExecuteSqlRaw(
                         "UPDATE CustomerAddress SET IsDefault = 0 WHERE CustomerId = @p0",
                         customerId);
                 }
@@ -617,7 +616,7 @@ namespace NhaHangLDP.Controllers
                 if (addressId == 0)
                 {
                     // Insert new address
-                    _db.Database.ExecuteSqlCommand(
+                    _db.Database.ExecuteSqlRaw(
                         @"INSERT INTO CustomerAddress (CustomerId, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault, IsDeleted, CreatedDate)
                           VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, 0, GETDATE())",
                         customerId, receiverName, receiverPhone, addressLine, ward, district, city, addressType, isDefault);
@@ -627,7 +626,7 @@ namespace NhaHangLDP.Controllers
         else
         {
             // Update existing address
-            _db.Database.ExecuteSqlCommand(
+            _db.Database.ExecuteSqlRaw(
                 @"UPDATE CustomerAddress 
                   SET ReceiverName = @p1, ReceiverPhone = @p2, AddressLine = @p3, Ward = @p4, District = @p5, City = @p6, AddressType = @p7, IsDefault = @p8
                   WHERE Id = @p0 AND CustomerId = @p9",
@@ -657,12 +656,12 @@ public JsonResult SetDefaultAddress(int id)
         }
 
         // Reset all addresses to non-default
-        _db.Database.ExecuteSqlCommand(
+        _db.Database.ExecuteSqlRaw(
             "UPDATE CustomerAddress SET IsDefault = 0 WHERE CustomerId = @p0",
             customerId);
 
         // Set the selected one as default
-        _db.Database.ExecuteSqlCommand(
+        _db.Database.ExecuteSqlRaw(
             "UPDATE CustomerAddress SET IsDefault = 1 WHERE Id = @p0 AND CustomerId = @p1",
             id, customerId);
 
@@ -689,8 +688,7 @@ public JsonResult DeleteAddress(int id)
         }
 
         // Check if it's default address
-        var isDefault = _db.Database.SqlQuery<bool>(
-            "SELECT IsDefault FROM CustomerAddress WHERE Id = @p0 AND CustomerId = @p1",
+        var isDefault = _db.Set<bool>().FromSqlRaw(@"SELECT IsDefault FROM CustomerAddress WHERE Id = @p0 AND CustomerId = @p1",
             id, customerId).FirstOrDefault();
 
         if (isDefault)
@@ -699,7 +697,7 @@ public JsonResult DeleteAddress(int id)
         }
 
         // Soft delete
-        _db.Database.ExecuteSqlCommand(
+        _db.Database.ExecuteSqlRaw(
             "UPDATE CustomerAddress SET IsDeleted = 1 WHERE Id = @p0 AND CustomerId = @p1",
             id, customerId);
 
@@ -726,7 +724,7 @@ public JsonResult DeleteAccount()
         }
 
         // Soft delete customer
-        _db.Database.ExecuteSqlCommand(
+        _db.Database.ExecuteSqlRaw(
             "UPDATE Customer SET IsActive = 0, Email = CONCAT(Email, '_deleted_', @p0) WHERE Id = @p0",
             customerId);
 
@@ -756,8 +754,7 @@ public ActionResult MyReservations()
         return RedirectToAction("Login", new { returnUrl = Url.Action("MyReservations") });
     }
 
-    var reservations = _db.Database.SqlQuery<MyReservationInfo>(
-        @"SELECT r.Id, r.ReservationCode, r.CustomerName, r.CustomerPhone, r.CustomerEmail,
+    var reservations = _db.Set<MyReservationInfo>().FromSqlRaw(@"SELECT r.Id, r.ReservationCode, r.CustomerName, r.CustomerPhone, r.CustomerEmail,
                  r.ReservationDate, r.ReservationTime, r.NumberOfGuests, r.TablePreference,
                  r.SpecialRequests, r.Status, r.CreatedDate, t.TableNumber as TableName
           FROM Reservation r
@@ -805,8 +802,7 @@ public JsonResult CancelReservation(string code, string reason)
         }
 
         // Verify ownership
-        var isOwner = _db.Database.SqlQuery<int>(
-            "SELECT COUNT(*) FROM Reservation WHERE ReservationCode = @p0 AND CustomerId = @p1",
+        var isOwner = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM Reservation WHERE ReservationCode = @p0 AND CustomerId = @p1",
             code, customerId).FirstOrDefault();
 
         if (isOwner == 0)
@@ -819,7 +815,7 @@ public JsonResult CancelReservation(string code, string reason)
             SET Status = 'Cancelled', CancelReason = @p1, CancelledDate = GETDATE()
             WHERE ReservationCode = @p0 AND Status IN ('Pending', 'Confirmed')";
 
-        var affected = _db.Database.ExecuteSqlCommand(sql, code, reason ?? "Khách hàng hủy");
+        var affected = _db.Database.ExecuteSqlRaw(sql, code, reason ?? "Khách hàng hủy");
 
         if (affected > 0)
         {
@@ -897,8 +893,7 @@ private CustomerProfileViewModel GetCustomerProfile(int customerId)
 {
     try
     {
-        var customer = _db.Database.SqlQuery<CustomerProfileInfo>(
-            @"SELECT c.Id, c.FullName, c.Email, c.Phone, c.DateOfBirth, c.Gender, c.AvatarUrl,
+        var customer = _db.Set<CustomerProfileInfo>().FromSqlRaw(@"SELECT c.Id, c.FullName, c.Email, c.Phone, c.DateOfBirth, c.Gender, c.AvatarUrl,
                      c.LoyaltyPoints, c.MembershipLevel, c.CreatedDate,
                      (SELECT COUNT(*) FROM CustomerOrder WHERE CustomerId = c.Id) as TotalOrders,
                      (SELECT ISNULL(SUM(TotalAmount), 0) FROM CustomerOrder WHERE CustomerId = c.Id AND Status = 'Completed') as TotalSpent

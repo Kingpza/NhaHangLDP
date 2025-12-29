@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
@@ -163,8 +164,7 @@ namespace NhaHangLDP.Controllers
             }
 
             // Verify order belongs to this phone
-            var exists = _db.Database.SqlQuery<int>(
-                "SELECT COUNT(*) FROM CustomerOrder WHERE OrderCode = @p0 AND CustomerPhone = @p1",
+            var exists = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM CustomerOrder WHERE OrderCode = @p0 AND CustomerPhone = @p1",
                 orderCode, phone).FirstOrDefault();
 
             if (exists == 0)
@@ -227,8 +227,7 @@ namespace NhaHangLDP.Controllers
             var customerIdStr = HttpContext.Session.GetString("CustomerId");
             if (!string.IsNullOrEmpty(customerIdStr) && int.TryParse(customerIdStr, out int customerId))
             {
-                var customer = _db.Database.SqlQuery<CustomerBasicInfo>(
-                    "SELECT Id, FullName, Email, Phone FROM Customer WHERE Id = @p0",
+                var customer = _db.Set<CustomerBasicInfo>().FromSqlRaw(@"SELECT Id, FullName, Email, Phone FROM Customer WHERE Id = @p0",
                     customerId).FirstOrDefault();
 
                 if (customer != null)
@@ -255,8 +254,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var addresses = _db.Database.SqlQuery<AddressInfo>(
-                    @"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault 
+                var addresses = _db.Set<AddressInfo>().FromSqlRaw(@"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault 
                       FROM CustomerAddress WHERE CustomerId = @p0 ORDER BY IsDefault DESC",
                     customerId).ToList();
 
@@ -284,8 +282,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var vouchers = _db.Database.SqlQuery<VoucherInfo>(
-                    @"SELECT Id, Code, Name, Description, DiscountType, DiscountValue, MaxDiscountAmount, MinOrderAmount, EndDate
+                var vouchers = _db.Set<VoucherInfo>().FromSqlRaw(@"SELECT Id, Code, Name, Description, DiscountType, DiscountValue, MaxDiscountAmount, MinOrderAmount, EndDate
                       FROM Voucher 
                       WHERE IsActive = 1 AND StartDate <= GETDATE() AND EndDate >= GETDATE()
                       AND (UsageLimit IS NULL OR UsedCount < UsageLimit)").ToList();
@@ -365,7 +362,7 @@ namespace NhaHangLDP.Controllers
             // Insert order details
             foreach (var item in cart.Items)
             {
-                _db.Database.ExecuteSqlCommand(
+                _db.Database.ExecuteSqlRaw(
                     @"INSERT INTO CustomerOrderDetail (CustomerOrderId, MenuItemId, ItemName, Quantity, UnitPrice, Subtotal, SpecialInstructions)
                       VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6)",
                     orderIdInt, item.MenuItemId, item.Name, item.Quantity, item.UnitPrice, item.Subtotal, item.SpecialInstructions);
@@ -374,7 +371,7 @@ namespace NhaHangLDP.Controllers
             // Update voucher usage if applied
             if (!string.IsNullOrEmpty(cart.VoucherCode))
             {
-                _db.Database.ExecuteSqlCommand(
+                _db.Database.ExecuteSqlRaw(
                     @"UPDATE Voucher SET UsedCount = UsedCount + 1 WHERE Code = @p0;
                       INSERT INTO VoucherUsage (VoucherId, CustomerId, OrderId, DiscountAmount)
                       SELECT Id, @p1, @p2, @p3 FROM Voucher WHERE Code = @p0",
@@ -388,16 +385,14 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var order = _db.Database.SqlQuery<OrderInfo>(
-                    @"SELECT Id, OrderCode, CustomerName, CustomerPhone, DeliveryAddress, Ward, District, City,
+                var order = _db.Set<OrderInfo>().FromSqlRaw(@"SELECT Id, OrderCode, CustomerName, CustomerPhone, DeliveryAddress, Ward, District, City,
                              PaymentMethod, PaymentStatus, SubTotal, DeliveryFee, Discount, TotalAmount, 
                              Status, OrderDate, EstimatedDeliveryTime
                       FROM CustomerOrder WHERE OrderCode = @p0", code).FirstOrDefault();
 
                 if (order == null) return null;
 
-                var items = _db.Database.SqlQuery<OrderItemInfo>(
-                    @"SELECT od.ItemName as Name, od.Quantity, od.UnitPrice, od.Subtotal, m.ImageUrl
+                var items = _db.Set<OrderItemInfo>().FromSqlRaw(@"SELECT od.ItemName as Name, od.Quantity, od.UnitPrice, od.Subtotal, m.ImageUrl
                       FROM CustomerOrderDetail od
                       LEFT JOIN MenuItem m ON od.MenuItemId = m.Id
                       WHERE od.CustomerOrderId = @p0", order.Id).ToList();

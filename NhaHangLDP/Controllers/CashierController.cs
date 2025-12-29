@@ -105,8 +105,8 @@ namespace NhaHangLDP.Controllers
         public ActionResult Dashboard()
         {
             var activeShift = db.CashierShifts
-                .Include(cs => cs.Employee)
-                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Employee)
+                .Include(cs => cs.Cashier)
+                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Cashier)
                 .FirstOrDefault(cs => cs.Status == "Active");
 
             if (activeShift == null)
@@ -1147,7 +1147,7 @@ namespace NhaHangLDP.Controllers
                 DateTime filterDate;
                 if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out filterDate))
                 {
-                    query = query.Where(r => DbFunctions.TruncateTime(r.ReservationDate) == filterDate.Date);
+                    query = query.Where(r => r.ReservationDate.Date == filterDate.Date);
                 }
                 else
                 {

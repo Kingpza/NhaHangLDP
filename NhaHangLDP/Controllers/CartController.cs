@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
@@ -42,7 +43,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var menuItem = _db.MenuItem.Find(menuItemId);
+                var menuItem = _db.MenuItems.Find(menuItemId);
                 if (menuItem == null || !menuItem.IsAvailable)
                 {
                     return Json(new { success = false, message = "Món ăn không tồn tại hoặc đã hết!" });
@@ -215,8 +216,7 @@ namespace NhaHangLDP.Controllers
                 var cart = GetCart();
                 
                 // Tìm voucher trong database
-                var voucher = _db.Database.SqlQuery<VoucherInfo>(
-                    "SELECT * FROM Voucher WHERE Code = @p0 AND IsActive = 1 AND StartDate <= GETDATE() AND EndDate >= GETDATE()",
+                var voucher = _db.Set<VoucherInfo>().FromSqlRaw(@"SELECT * FROM Voucher WHERE Code = @p0 AND IsActive = 1 AND StartDate <= GETDATE() AND EndDate >= GETDATE()",
                     voucherCode.Trim().ToUpper()).FirstOrDefault();
 
                 if (voucher == null)
@@ -321,7 +321,7 @@ namespace NhaHangLDP.Controllers
                 if (cartCategories.Any())
                 {
                     // Gợi ý các món cùng danh mục nhưng chưa có trong giỏ
-                    suggestedItems = _db.MenuItem
+                    suggestedItems = _db.MenuItems
                         .Where(m => m.IsAvailable && 
                                     cartCategories.Contains(m.Category) && 
                                     !cartMenuItemIds.Contains(m.Id))
@@ -335,7 +335,7 @@ namespace NhaHangLDP.Controllers
                         var existingIds = suggestedItems.Select(s => s.Id).ToList();
                         existingIds.AddRange(cartMenuItemIds);
 
-                        var additionalItems = _db.MenuItem
+                        var additionalItems = _db.MenuItems
                             .Where(m => m.IsAvailable && !existingIds.Contains(m.Id))
                             .OrderByDescending(m => m.SoldCount)
                             .Take(4 - suggestedItems.Count)
@@ -347,7 +347,7 @@ namespace NhaHangLDP.Controllers
                 else
                 {
                     // Nếu giỏ hàng trống hoặc không có danh mục, lấy các món bán chạy
-                    suggestedItems = _db.MenuItem
+                    suggestedItems = _db.MenuItems
                         .Where(m => m.IsAvailable)
                         .OrderByDescending(m => m.SoldCount)
                         .Take(4)

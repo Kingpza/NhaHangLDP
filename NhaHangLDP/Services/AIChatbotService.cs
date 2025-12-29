@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
+
 using Newtonsoft.Json;
 using NhaHangLDP.Models;
 
@@ -469,7 +469,7 @@ CÂU HỎI: {message}";
         {
             var response = new ChatBotResponseModel();
 
-            var topItems = _db.MenuItem
+            var topItems = _db.MenuItems
                 .Where(m => m.IsAvailable)
                 .OrderByDescending(m => m.SoldCount)
                 .Take(5)
@@ -508,7 +508,7 @@ CÂU HỎI: {message}";
             var response = new ChatBotResponseModel();
             decimal maxPrice = entities.MaxPrice ?? 100000;
 
-            var items = _db.MenuItem
+            var items = _db.MenuItems
                 .Where(m => m.IsAvailable && m.Price <= maxPrice)
                 .OrderBy(m => m.Price)
                 .Take(6)
@@ -547,7 +547,7 @@ CÂU HỎI: {message}";
             if (string.IsNullOrEmpty(category))
             {
                 // Liệt kê các danh mục
-                var categories = _db.MenuItem
+                var categories = _db.MenuItems
                     .Where(m => m.IsAvailable)
                     .GroupBy(m => m.Category)
                     .Select(g => new { Category = g.Key, Count = g.Count() })
@@ -560,7 +560,7 @@ CÂU HỎI: {message}";
                 return response;
             }
 
-            var items = _db.MenuItem
+            var items = _db.MenuItems
                 .Where(m => m.IsAvailable && m.Category.Contains(category))
                 .OrderByDescending(m => m.SoldCount)
                 .Take(6)
@@ -591,7 +591,7 @@ CÂU HỎI: {message}";
         {
             var response = new ChatBotResponseModel();
 
-            var items = _db.MenuItem
+            var items = _db.MenuItems
                 .Where(m => m.IsAvailable && m.IsNew)
                 .OrderByDescending(m => m.CreatedDate)
                 .Take(5)
@@ -621,7 +621,7 @@ CÂU HỎI: {message}";
         {
             var response = new ChatBotResponseModel();
 
-            var items = _db.MenuItem
+            var items = _db.MenuItems
                 .Where(m => m.IsAvailable && m.IsFeatured)
                 .OrderByDescending(m => m.Rating)
                 .Take(5)
@@ -669,17 +669,17 @@ CÂU HỎI: {message}";
             else
             {
                 // Tự động tạo combo suggestion
-                var mainDish = _db.MenuItem
+                var mainDish = _db.MenuItems
                     .Where(m => m.IsAvailable && m.Category == "Món Chính")
                     .OrderByDescending(m => m.SoldCount)
                     .FirstOrDefault();
 
-                var sideDish = _db.MenuItem
+                var sideDish = _db.MenuItems
                     .Where(m => m.IsAvailable && m.Category == "Món Khai Vị")
                     .OrderByDescending(m => m.SoldCount)
                     .FirstOrDefault();
 
-                var drink = _db.MenuItem
+                var drink = _db.MenuItems
                     .Where(m => m.IsAvailable && m.Category == "Đồ Uống")
                     .OrderByDescending(m => m.SoldCount)
                     .FirstOrDefault();
@@ -789,7 +789,7 @@ CÂU HỎI: {message}";
             var response = new ChatBotResponseModel();
 
             // Tìm kiếm trong database
-            var allItems = _db.MenuItem.Where(m => m.IsAvailable).ToList();
+            var allItems = _db.MenuItems.Where(m => m.IsAvailable).ToList();
 
             // Fuzzy search
             var results = allItems
@@ -874,7 +874,7 @@ CÂU HỎI: {message}";
         /// </summary>
         private string GetMenuContext()
         {
-            var topItems = _db.MenuItem
+            var topItems = _db.MenuItems
                 .Where(m => m.IsAvailable)
                 .OrderByDescending(m => m.SoldCount)
                 .Take(10)
@@ -898,7 +898,7 @@ CÂU HỎI: {message}";
         /// </summary>
         private List<MenuSuggestionModel> GetRelevantSuggestions(string responseText)
         {
-            var items = _db.MenuItem
+            var items = _db.MenuItems
                 .Where(m => m.IsAvailable)
                 .OrderByDescending(m => m.SoldCount)
                 .Take(3)
@@ -1063,7 +1063,7 @@ CÂU HỎI: {message}";
             if (bookingTime.HasValue && guestCount > 0)
             {
                 // Kiểm tra bàn trống
-                var availableTables = _db.Table
+                var availableTables = _db.RestaurantTables
                     .Where(t => t.Status == "Available" && t.Capacity >= guestCount)
                     .OrderBy(t => t.Capacity)
                     .Take(3)
@@ -1128,7 +1128,7 @@ CÂU HỎI: {message}";
         {
             var response = new ChatBotResponseModel();
 
-            var query = _db.MenuItem.Where(m => m.IsAvailable);
+            var query = _db.MenuItems.Where(m => m.IsAvailable);
 
             switch (preference)
             {

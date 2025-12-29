@@ -130,7 +130,7 @@ namespace NhaHangLDP.Services.Reports
         {
             return db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Orders)
+                .Include(od => od.Order)
                 .Where(od => od.Order.OrderTime >= start
                           && od.Order.OrderTime < end
                           && od.Order.Bills.Any(b => b.Status == "Paid"))

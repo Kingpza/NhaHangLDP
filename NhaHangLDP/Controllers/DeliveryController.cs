@@ -61,7 +61,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Orders(string status = "all", int page = 1, int pageSize = 20)
         {
-            var query = _db.CustomerOrder
+            var query = _db.CustomerOrders
                 .Include(o => o.CustomerOrderDetails)
                 .Where(o => o.OrderType == "Delivery");
 
@@ -128,14 +128,14 @@ namespace NhaHangLDP.Controllers
 
             ViewBag.StatusCounts = new Dictionary<string, int>
             {
-                { "all", _db.CustomerOrder.Count(o => o.OrderType == "Delivery") },
-                { "Pending", _db.CustomerOrder.Count(o => o.OrderType == "Delivery" && o.Status == "Pending") },
-                { "Confirmed", _db.CustomerOrder.Count(o => o.OrderType == "Delivery" && o.Status == "Confirmed") },
-                { "Preparing", _db.CustomerOrder.Count(o => o.OrderType == "Delivery" && o.Status == "Preparing") },
-                { "Ready", _db.CustomerOrder.Count(o => o.OrderType == "Delivery" && o.Status == "Ready") },
-                { "Delivering", _db.CustomerOrder.Count(o => o.OrderType == "Delivery" && o.Status == "Delivering") },
-                { "Completed", _db.CustomerOrder.Count(o => o.OrderType == "Delivery" && o.Status == "Completed") },
-                { "Cancelled", _db.CustomerOrder.Count(o => o.OrderType == "Delivery" && o.Status == "Cancelled") }
+                { "all", _db.CustomerOrders.Count(o => o.OrderType == "Delivery") },
+                { "Pending", _db.CustomerOrders.Count(o => o.OrderType == "Delivery" && o.Status == "Pending") },
+                { "Confirmed", _db.CustomerOrders.Count(o => o.OrderType == "Delivery" && o.Status == "Confirmed") },
+                { "Preparing", _db.CustomerOrders.Count(o => o.OrderType == "Delivery" && o.Status == "Preparing") },
+                { "Ready", _db.CustomerOrders.Count(o => o.OrderType == "Delivery" && o.Status == "Ready") },
+                { "Delivering", _db.CustomerOrders.Count(o => o.OrderType == "Delivery" && o.Status == "Delivering") },
+                { "Completed", _db.CustomerOrders.Count(o => o.OrderType == "Delivery" && o.Status == "Completed") },
+                { "Cancelled", _db.CustomerOrders.Count(o => o.OrderType == "Delivery" && o.Status == "Cancelled") }
             };
 
             return View(viewModel);
@@ -146,7 +146,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult OrderDetail(int id)
         {
-            var order = _db.CustomerOrder
+            var order = _db.CustomerOrders
                 .Include(o => o.CustomerOrderDetails).ThenInclude(d => d.MenuItem)
                 .FirstOrDefault(o => o.Id == id);
 
@@ -325,7 +325,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var order = _db.CustomerOrder.Find(orderId);
+                var order = _db.CustomerOrders.Find(orderId);
                 if (order == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
@@ -617,7 +617,7 @@ namespace NhaHangLDP.Controllers
         public ActionResult Tracking()
         {
             var activeDeliveries = _db.DeliveryAssignments
-                .Include(a => a.CustomerOrder)
+                .Include(a => a.Order)
                 .Include(a => a.Shipper)
                 .Where(a => a.Status == "Accepted" || a.Status == "PickedUp" || a.Status == "Delivering")
                 .ToList()
@@ -625,10 +625,10 @@ namespace NhaHangLDP.Controllers
                 {
                     AssignmentId = a.Id,
                     OrderId = a.OrderId,
-                    OrderCode = a.CustomerOrder.OrderCode,
-                    CustomerName = a.CustomerOrder.CustomerName,
-                    CustomerPhone = a.CustomerOrder.CustomerPhone,
-                    DeliveryAddress = a.CustomerOrder.DeliveryAddress,
+                    OrderCode = a.Order.OrderCode,
+                    CustomerName = a.Order.CustomerName,
+                    CustomerPhone = a.Order.CustomerPhone,
+                    DeliveryAddress = a.Order.DeliveryAddress,
                     ShipperId = a.ShipperId,
                     ShipperName = a.Shipper.FullName,
                     ShipperPhone = a.Shipper.Phone,
@@ -668,16 +668,16 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var deliveries = _db.DeliveryAssignments
-                    .Include(a => a.CustomerOrder)
+                    .Include(a => a.Order)
                     .Include(a => a.Shipper)
                     .Where(a => a.Status == "Accepted" || a.Status == "PickedUp" || a.Status == "Delivering")
                     .Select(a => new
                     {
                         a.Id,
                         a.OrderId,
-                        OrderCode = a.CustomerOrder.OrderCode,
-                        CustomerName = a.CustomerOrder.CustomerName,
-                        DeliveryAddress = a.CustomerOrder.DeliveryAddress,
+                        OrderCode = a.Order.OrderCode,
+                        CustomerName = a.Order.CustomerName,
+                        DeliveryAddress = a.Order.DeliveryAddress,
                         ShipperName = a.Shipper.FullName,
                         ShipperPhone = a.Shipper.Phone,
                         a.Status,

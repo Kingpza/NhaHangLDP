@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
-using System.Web;
+
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
@@ -34,8 +34,7 @@ namespace NhaHangLDP.Controllers
             var customerId = (int.TryParse(HttpContext.Session.GetString("CustomerId"), out int _pCustomerId) ? (int?)_pCustomerId : null);
             if (customerId.HasValue)
             {
-                var wishlistIds = db.Database.SqlQuery<int>(
-                    "SELECT MenuItemId FROM Wishlist WHERE CustomerId = @p0",
+                var wishlistIds = db.Set<int>().FromSqlRaw(@"SELECT MenuItemId FROM Wishlist WHERE CustomerId = @p0",
                     customerId.Value).ToList();
                 ViewBag.WishlistIds = wishlistIds;
             }

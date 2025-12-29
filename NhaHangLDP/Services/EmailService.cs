@@ -144,7 +144,7 @@ namespace NhaHangLDP.Services
             }
 
             // Lưu log
-            _db.EmailLog.Add(log);
+            _db.EmailLogs.Add(log);
             await _db.SaveChangesAsync();
             result.EmailLogId = log.Id;
 
@@ -339,7 +339,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public async Task<EmailSendResult> SendInvoiceEmailAsync(Bill bill, string customerEmail, string customerName)
         {
-            var order = _db.Order
+            var order = _db.Orders
                 .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
                 .Include(o => o.Table)
                 .FirstOrDefault(o => o.Id == bill.OrderId);
@@ -416,7 +416,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public async Task<int> RetryFailedEmailsAsync(int maxRetries = 3)
         {
-            var failedEmails = _db.EmailLog
+            var failedEmails = _db.EmailLogs
                 .Where(e => e.Status == "Failed" && e.RetryCount < maxRetries)
                 .OrderBy(e => e.CreatedDate)
                 .Take(10)
@@ -470,16 +470,16 @@ namespace NhaHangLDP.Services
 
             var stats = new EmailStatsViewModel
             {
-                TotalSentToday = _db.EmailLog.Count(e => e.Status == "Sent" && DbFunctions.TruncateTime(e.SentDate) == today),
-                TotalSentThisWeek = _db.EmailLog.Count(e => e.Status == "Sent" && e.SentDate >= weekStart),
-                TotalSentThisMonth = _db.EmailLog.Count(e => e.Status == "Sent" && e.SentDate >= monthStart),
-                FailedToday = _db.EmailLog.Count(e => e.Status == "Failed" && DbFunctions.TruncateTime(e.CreatedDate) == today)
+                TotalSentToday = _db.EmailLogs.Count(e => e.Status == "Sent" && e.SentDate.Date == today),
+                TotalSentThisWeek = _db.EmailLogs.Count(e => e.Status == "Sent" && e.SentDate >= weekStart),
+                TotalSentThisMonth = _db.EmailLogs.Count(e => e.Status == "Sent" && e.SentDate >= monthStart),
+                FailedToday = _db.EmailLogs.Count(e => e.Status == "Failed" && e.CreatedDate.Date == today)
             };
 
-            var totalAttempts = _db.EmailLog.Count(e => DbFunctions.TruncateTime(e.CreatedDate) == today);
+            var totalAttempts = _db.EmailLogs.Count(e => e.CreatedDate.Date == today);
             stats.SuccessRate = totalAttempts > 0 ? (stats.TotalSentToday * 100.0 / totalAttempts) : 100;
 
-            stats.EmailsByType = _db.EmailLog
+            stats.EmailsByType = _db.EmailLogs
                 .Where(e => e.SentDate >= monthStart)
                 .GroupBy(e => e.EmailType)
                 .Select(g => new { Type = g.Key, Count = g.Count() })

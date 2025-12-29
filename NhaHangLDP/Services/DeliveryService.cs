@@ -250,7 +250,7 @@ namespace NhaHangLDP.Services
 
             try
             {
-                var order = _db.CustomerOrder.Find(orderId);
+                var order = _db.CustomerOrders.Find(orderId);
                 if (order == null)
                 {
                     result.Success = false;
@@ -341,7 +341,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public AssignmentResult AutoAssignShipper(int orderId)
         {
-            var order = _db.CustomerOrder.Find(orderId);
+            var order = _db.CustomerOrders.Find(orderId);
             if (order == null)
             {
                 return new AssignmentResult { Success = false, Message = "Không tìm thấy đơn hàng" };
@@ -368,7 +368,7 @@ namespace NhaHangLDP.Services
             try
             {
                 var assignment = _db.DeliveryAssignments
-                    .Include(a => a.CustomerOrder)
+                    .Include(a => a.Order)
                     .Include(a => a.Shipper)
                     .FirstOrDefault(a => a.Id == assignmentId);
 
@@ -386,8 +386,8 @@ namespace NhaHangLDP.Services
 
                     case "PickedUp":
                         assignment.PickupTime = DateTime.Now;
-                        assignment.CustomerOrder.Status = "Delivering";
-                        assignment.CustomerOrder.DeliveringDate = DateTime.Now;
+                        assignment.Order.Status = "Delivering";
+                        assignment.Order.DeliveringDate = DateTime.Now;
                         break;
 
                     case "Delivering":
@@ -397,8 +397,8 @@ namespace NhaHangLDP.Services
                     case "Delivered":
                         assignment.DeliveryTime = DateTime.Now;
                         assignment.ProofImageUrl = proofImage;
-                        assignment.CustomerOrder.Status = "Completed";
-                        assignment.CustomerOrder.CompletedDate = DateTime.Now;
+                        assignment.Order.Status = "Completed";
+                        assignment.Order.CompletedDate = DateTime.Now;
                         
                         // Cập nhật shipper
                         assignment.Shipper.Status = "Available";
@@ -406,17 +406,17 @@ namespace NhaHangLDP.Services
                         assignment.Shipper.TotalEarnings += assignment.ShipperEarning;
 
                         // Cập nhật payment nếu COD
-                        if (assignment.CustomerOrder.PaymentMethod == "COD")
+                        if (assignment.Order.PaymentMethod == "COD")
                         {
-                            assignment.CustomerOrder.PaymentStatus = "Paid";
-                            assignment.CustomerOrder.PaidDate = DateTime.Now;
+                            assignment.Order.PaymentStatus = "Paid";
+                            assignment.Order.PaidDate = DateTime.Now;
                         }
                         break;
 
                     case "Failed":
                         assignment.FailureReason = failureReason;
                         assignment.Shipper.Status = "Available";
-                        assignment.CustomerOrder.Status = "Ready"; // Quay về trạng thái sẵn sàng để giao lại
+                        assignment.Order.Status = "Ready"; // Quay về trạng thái sẵn sàng để giao lại
                         break;
 
                     case "Cancelled":
@@ -440,7 +440,7 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var order = _db.CustomerOrder.Find(orderId);
+                var order = _db.CustomerOrders.Find(orderId);
                 if (order == null) return false;
 
                 order.Status = newStatus;
@@ -534,14 +534,14 @@ namespace NhaHangLDP.Services
 
             var viewModel = new DeliveryDashboardViewModel
             {
-                PendingOrders = _db.CustomerOrder
+                PendingOrders = _db.CustomerOrders
                     .Count(o => o.OrderType == "Delivery" && 
                                (o.Status == "Confirmed" || o.Status == "Ready")),
 
-                DeliveringOrders = _db.CustomerOrder
+                DeliveringOrders = _db.CustomerOrders
                     .Count(o => o.OrderType == "Delivery" && o.Status == "Delivering"),
 
-                CompletedOrdersToday = _db.CustomerOrder
+                CompletedOrdersToday = _db.CustomerOrders
                     .Count(o => o.OrderType == "Delivery" && 
                                o.Status == "Completed" &&
                                o.CompletedDate >= today && o.CompletedDate < tomorrow),
@@ -558,13 +558,13 @@ namespace NhaHangLDP.Services
 
                 TotalShippers = _db.Shippers.Count(s => s.IsActive),
 
-                TodayRevenue = _db.CustomerOrder
+                TodayRevenue = _db.CustomerOrders
                     .Where(o => o.OrderType == "Delivery" &&
                                o.Status == "Completed" &&
                                o.CompletedDate >= today && o.CompletedDate < tomorrow)
                     .Sum(o => (decimal?)o.TotalAmount) ?? 0,
 
-                TodayDeliveryFees = _db.CustomerOrder
+                TodayDeliveryFees = _db.CustomerOrders
                     .Where(o => o.OrderType == "Delivery" &&
                                o.Status == "Completed" &&
                                o.CompletedDate >= today && o.CompletedDate < tomorrow)
@@ -572,7 +572,7 @@ namespace NhaHangLDP.Services
             };
 
             // Recent deliveries
-            viewModel.RecentDeliveries = _db.CustomerOrder
+            viewModel.RecentDeliveries = _db.CustomerOrders
                 .Where(o => o.OrderType == "Delivery")
                 .OrderByDescending(o => o.OrderDate)
                 .Take(10)
@@ -616,7 +616,7 @@ namespace NhaHangLDP.Services
         {
             var nextDay = toDate.AddDays(1);
 
-            var orders = _db.CustomerOrder
+            var orders = _db.CustomerOrders
                 .Where(o => o.OrderType == "Delivery" &&
                            o.OrderDate >= fromDate && o.OrderDate < nextDay)
                 .ToList();

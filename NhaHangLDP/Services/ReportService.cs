@@ -19,7 +19,7 @@ namespace NhaHangLDP.Services
         {
             var shift = db.CashierShifts
                 .Include(s => s.Cashier)
-                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Employee)
+                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Cashier)
                 .FirstOrDefault(s => s.Id == shiftId);
 
             if (shift == null)
@@ -98,7 +98,7 @@ namespace NhaHangLDP.Services
                 .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
                 .Include(o => o.Table)
                 .Include(o => o.Bills)
-                .Include(o => o.Employee)
+                .Include(o => o.Waiter)
                 .FirstOrDefault(o => o.Id == orderId);
 
             if (order == null)

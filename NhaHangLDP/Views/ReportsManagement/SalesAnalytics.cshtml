@@ -551,7 +551,7 @@
                                                 if (shift.Orders != null)
                                                 {
                                                     shiftRevenue = shift.Orders
-                                                        .SelectMany(o => o.Bills ?? new List<NhaHangLDP.Models.Bills>())
+                                                        .SelectMany(o => o.Bills ?? new List<NhaHangLDP.Models.Bill>())
                                                         .Where(b => b.Status == "Paid")
                                                         .Sum(b => (decimal?)b.FinalAmount) ?? 0;
                                                 }

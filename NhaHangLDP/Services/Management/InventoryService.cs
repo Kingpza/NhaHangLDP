@@ -307,11 +307,11 @@ namespace NhaHangLDP.Services.Management
             return (from i in db.Ingredients
                     let lastInbound = db.StockInboundDetails
                         .Where(d => d.IngredientId == i.Id)
-                        .OrderByDescending(d => d.StockInbounds.InboundDate)
+                        .OrderByDescending(d => d.StockInbound.InboundDate)
                         .Select(d => new
                         {
-                            SupplierName = d.StockInbounds.Supplier.Name,
-                            InboundDate = d.StockInbounds.InboundDate,
+                            SupplierName = d.StockInbound.Supplier.Name,
+                            InboundDate = d.StockInbound.InboundDate,
                             UnitPrice = d.UnitPrice
                         })
                         .FirstOrDefault()
@@ -326,7 +326,7 @@ namespace NhaHangLDP.Services.Management
                         LatestSupplier = lastInbound != null ? lastInbound.SupplierName : null,
                         LastInboundDate = lastInbound != null ? lastInbound.InboundDate : (DateTime?)null,
                         LastInboundQuantity = lastInbound != null ? db.StockInboundDetails
-                            .Where(d => d.IngredientId == i.Id && d.StockInbounds.InboundDate == lastInbound.InboundDate)
+                            .Where(d => d.IngredientId == i.Id && d.StockInbound.InboundDate == lastInbound.InboundDate)
                             .Sum(d => (decimal?)d.Quantity) : null,
                         LastInboundUnitPrice = lastInbound != null ? lastInbound.UnitPrice : (decimal?)null
                     })
@@ -435,13 +435,13 @@ namespace NhaHangLDP.Services.Management
 
             var latestInbound = db.StockInboundDetails
                 .Where(d => d.IngredientId == id)
-                .OrderByDescending(d => d.StockInbounds.InboundDate)
+                .OrderByDescending(d => d.StockInbound.InboundDate)
                 .FirstOrDefault();
 
             string latestSupplier = null;
-            if (latestInbound != null && latestInbound.StockInbounds?.Supplier != null)
+            if (latestInbound != null && latestInbound.StockInbound?.Supplier != null)
             {
-                latestSupplier = latestInbound.StockInbounds.Supplier.Name;
+                latestSupplier = latestInbound.StockInbound.Supplier.Name;
             }
 
             string statusBadge;
@@ -462,16 +462,16 @@ namespace NhaHangLDP.Services.Management
 
             var recentInbound = db.StockInboundDetails
                 .Where(d => d.IngredientId == id)
-                .OrderByDescending(d => d.StockInbounds.InboundDate)
+                .OrderByDescending(d => d.StockInbound.InboundDate)
                 .Take(5)
                 .ToList()
                 .Select(d => new
                 {
-                    date = d.StockInbounds.InboundDate,
+                    date = d.StockInbound.InboundDate,
                     type = "in",
                     typeText = "Nhập kho",
                     quantity = d.Quantity,
-                    notes = d.StockInbounds.Notes ?? "Không có ghi chú"
+                    notes = d.StockInbound.Notes ?? "Không có ghi chú"
                 });
 
             recentTransactions.AddRange(recentInbound);
@@ -523,7 +523,7 @@ namespace NhaHangLDP.Services.Management
                     .Include("StockInbound")
                     .Include("StockInbound.Supplier")
                     .Where(d => d.IngredientId == id)
-                    .OrderByDescending(d => d.StockInbounds.InboundDate)
+                    .OrderByDescending(d => d.StockInbound.InboundDate)
                     .ToList(),
                 DamagedHistory = db.DamagedStocks
                     .Where(d => d.IngredientId == id)
@@ -626,11 +626,11 @@ namespace NhaHangLDP.Services.Management
                 {
                     var inbound = new StockInbound
                     {
-                        InboundCode = model.StockInbounds.InboundCode,
-                        InboundDate = model.StockInbounds.InboundDate,
-                        EmployeeId = model.StockInbounds.EmployeeId,
-                        SupplierId = model.StockInbounds.SupplierId,
-                        Notes = model.StockInbounds.Notes,
+                        InboundCode = model.StockInbound.InboundCode,
+                        InboundDate = model.StockInbound.InboundDate,
+                        EmployeeId = model.StockInbound.EmployeeId,
+                        SupplierId = model.StockInbound.SupplierId,
+                        Notes = model.StockInbound.Notes,
                         CreatedBy = createdBy,
                         Status = (submitType == "draft" ? "Draft" : "Completed")
                     };
@@ -691,7 +691,7 @@ namespace NhaHangLDP.Services.Management
                 Id = s.Id,
                 InboundCode = "IN" + s.Id.ToString().PadLeft(6, '0'),
                 InboundDate = s.InboundDate,
-                EmployeeName = s.Employee != null ? s.ReportedByEmployee?.FullName : "N/A",
+                EmployeeName = s.Cashier != null ? s.ReportedByEmployee?.FullName : "N/A",
                 SupplierName = s.Supplier != null ? GetSupplierName(s.Supplier) : "Không có",
                 TotalCost = s.TotalCost,
                 Status = "Hoàn thành",
@@ -1036,7 +1036,7 @@ namespace NhaHangLDP.Services.Management
             var inboundData = db.StockInboundDetails
                 .Include("StockInbound")
                 .Include("Ingredient")
-                .Where(d => d.StockInbounds.InboundDate >= from && d.StockInbounds.InboundDate <= to)
+                .Where(d => d.StockInbound.InboundDate >= from && d.StockInbound.InboundDate <= to)
                 .ToList();
 
             var totalInboundValue = inboundData.Sum(d => d.Quantity * d.UnitPrice);
@@ -1099,7 +1099,7 @@ namespace NhaHangLDP.Services.Management
             var dailyTrends = new List<DailyStockTrend>();
             for (var date = from; date <= to; date = date.AddDays(1))
             {
-                var dayInbound = inboundData.Where(d => d.StockInbounds.InboundDate.Date == date.Date).Sum(d => d.Quantity * d.UnitPrice);
+                var dayInbound = inboundData.Where(d => d.StockInbound.InboundDate.Date == date.Date).Sum(d => d.Quantity * d.UnitPrice);
                 var dayOutbound = outboundData.Where(d => d.DamageDate.Date == date.Date).Sum(d => d.Quantity * (d.Ingredient?.EstimatedCost ?? 0));
                 
                 dailyTrends.Add(new DailyStockTrend

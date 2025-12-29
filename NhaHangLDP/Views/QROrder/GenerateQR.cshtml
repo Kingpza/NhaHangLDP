@@ -1,7 +1,7 @@
 @{
     ViewBag.Title = "QR Code Bàn " + ViewBag.Table.TableNumber;
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
-    var table = ViewBag.Table as NhaHangLDP.Models.Table;
+    var table = ViewBag.Table as NhaHangLDP.Models.RestaurantTable;
     var qrUrl = ViewBag.QRUrl as string;
 }
 

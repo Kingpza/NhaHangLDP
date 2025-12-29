@@ -19,7 +19,7 @@ namespace NhaHangLDP.Services
         {
             var activeShift = db.CashierShifts
                 .Include(cs => cs.Cashier)
-                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Employee)
+                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Cashier)
                 .FirstOrDefault(cs => cs.Id == shiftId && cs.Status == "Active");
 
             if (activeShift == null)
@@ -148,7 +148,7 @@ namespace NhaHangLDP.Services
                 .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
                 .Include(o => o.Table)
                 .Include(o => o.Bills)
-                .Include(o => o.Employee)
+                .Include(o => o.Waiter)
                 .Where(o => o.ShiftId == shift.Id)
                 .OrderByDescending(o => o.OrderTime)
                 .ToList();

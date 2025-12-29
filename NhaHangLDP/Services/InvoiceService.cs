@@ -30,8 +30,8 @@ namespace NhaHangLDP.Services
             var order = db.Orders
                 .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
                 .Include(o => o.Table)
-                .Include(o => o.Bills).ThenInclude(b => b.Employee)
-                .Include(o => o.Employee)
+                .Include(o => o.Bills).ThenInclude(b => b.Cashier)
+                .Include(o => o.Waiter)
                 .FirstOrDefault(o => o.Id == orderId);
 
             if (order == null) return null;
@@ -78,7 +78,7 @@ namespace NhaHangLDP.Services
                 .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
                 .Include(b => b.Order.Table.TableArea)
                 .Include(b => b.Order.Employee)
-                .Include(b => b.Employee)
+                .Include(b => b.Cashier)
                 .Include(b => b.PromotionUsages).ThenInclude(pu => pu.Promotion)
                 .FirstOrDefault(b => b.Id == billId);
 
@@ -157,7 +157,7 @@ namespace NhaHangLDP.Services
             var bills = db.Bills
                 .Include(b => b.Order.OrderDetails)
                 .Include(b => b.Order.Table)
-                .Include(b => b.Employee)
+                .Include(b => b.Cashier)
                 .Where(b => qrOrders.Contains(b.OrderId))
                 .OrderByDescending(b => b.BillDate)
                 .Take(take)
@@ -189,7 +189,7 @@ namespace NhaHangLDP.Services
             var bills = db.Bills
                 .Include(b => b.Order.OrderDetails)
                 .Include(b => b.Order.Table)
-                .Include(b => b.Employee)
+                .Include(b => b.Cashier)
                 .Where(b => b.Order.ShiftId == shiftId)
                 .OrderByDescending(b => b.BillDate)
                 .ToList();
@@ -223,7 +223,7 @@ namespace NhaHangLDP.Services
             var bills = db.Bills
                 .Include(b => b.Order.OrderDetails)
                 .Include(b => b.Order.Table)
-                .Include(b => b.Employee)
+                .Include(b => b.Cashier)
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate)
                 .OrderByDescending(b => b.BillDate)
                 .ToList();
@@ -266,7 +266,7 @@ namespace NhaHangLDP.Services
                 var bill = db.Bills
                     .Include(b => b.Order.OrderDetails)
                     .Include(b => b.Order.Table)
-                    .Include(b => b.Employee)
+                    .Include(b => b.Cashier)
                     .FirstOrDefault(b => b.Id == billId);
 
                 if (bill != null)
@@ -284,7 +284,7 @@ namespace NhaHangLDP.Services
                 var bills = db.Bills
                     .Include(b => b.Order.OrderDetails)
                     .Include(b => b.Order.Table)
-                    .Include(b => b.Employee)
+                    .Include(b => b.Cashier)
                     .Where(b => b.OrderId == orderId)
                     .ToList();
 
@@ -295,7 +295,7 @@ namespace NhaHangLDP.Services
             var results = db.Bills
                 .Include(b => b.Order.OrderDetails)
                 .Include(b => b.Order.Table)
-                .Include(b => b.Employee)
+                .Include(b => b.Cashier)
                 .Where(b => 
                     b.Order.Table.TableNumber.ToLower().Contains(keyword) ||
                     b.ReportedByEmployee?.FullName.ToLower().Contains(keyword))

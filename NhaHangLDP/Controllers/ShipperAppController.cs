@@ -139,8 +139,8 @@ namespace NhaHangLDP.Controllers
 
             // Lấy đơn hàng hiện tại (đang xử lý)
             var activeAssignment = _db.DeliveryAssignments
-                .Include(a => a.CustomerOrder)
-                .Include(a => a.CustomerOrder.CustomerOrderDetails)
+                .Include(a => a.Order)
+                .Include(a => a.Order.CustomerOrderDetails)
                 .FirstOrDefault(a => a.ShipperId == shipperId &&
                     (a.Status == "Assigned" || a.Status == "Accepted" || a.Status == "PickedUp" || a.Status == "Delivering"));
 
@@ -164,20 +164,20 @@ namespace NhaHangLDP.Controllers
                 {
                     AssignmentId = activeAssignment.Id,
                     OrderId = activeAssignment.OrderId,
-                    OrderCode = activeAssignment.CustomerOrder.OrderCode,
-                    CustomerName = activeAssignment.CustomerOrder.CustomerName,
-                    CustomerPhone = activeAssignment.CustomerOrder.CustomerPhone,
-                    DeliveryAddress = activeAssignment.CustomerOrder.DeliveryAddress,
-                    District = activeAssignment.CustomerOrder.District,
-                    Ward = activeAssignment.CustomerOrder.Ward,
-                    TotalAmount = activeAssignment.CustomerOrder.TotalAmount,
-                    PaymentMethod = activeAssignment.CustomerOrder.PaymentMethod,
-                    PaymentStatus = activeAssignment.CustomerOrder.PaymentStatus,
-                    Note = activeAssignment.CustomerOrder.Note,
+                    OrderCode = activeAssignment.Order.OrderCode,
+                    CustomerName = activeAssignment.Order.CustomerName,
+                    CustomerPhone = activeAssignment.Order.CustomerPhone,
+                    DeliveryAddress = activeAssignment.Order.DeliveryAddress,
+                    District = activeAssignment.Order.District,
+                    Ward = activeAssignment.Order.Ward,
+                    TotalAmount = activeAssignment.Order.TotalAmount,
+                    PaymentMethod = activeAssignment.Order.PaymentMethod,
+                    PaymentStatus = activeAssignment.Order.PaymentStatus,
+                    Note = activeAssignment.Order.Note,
                     Status = activeAssignment.Status,
                     AssignedTime = activeAssignment.AssignedTime,
                     EstimatedArrival = activeAssignment.EstimatedArrival,
-                    Items = activeAssignment.CustomerOrder.CustomerOrderDetails?.Select(d => new OrderItemSummary
+                    Items = activeAssignment.Order.CustomerOrderDetails?.Select(d => new OrderItemSummary
                     {
                         ItemName = d.ItemName,
                         Quantity = d.Quantity,
@@ -210,7 +210,7 @@ namespace NhaHangLDP.Controllers
 
             // Lấy đơn hàng chưa được gán hoặc đang chờ shipper chấp nhận
             var pendingAssignments = _db.DeliveryAssignments
-                .Include(a => a.CustomerOrder)
+                .Include(a => a.Order)
                 .Where(a => a.ShipperId == shipperId && a.Status == "Assigned")
                 .OrderByDescending(a => a.AssignedTime)
                 .ToList()
@@ -218,15 +218,15 @@ namespace NhaHangLDP.Controllers
                 {
                     AssignmentId = a.Id,
                     OrderId = a.OrderId,
-                    OrderCode = a.CustomerOrder.OrderCode,
-                    CustomerName = a.CustomerOrder.CustomerName,
-                    CustomerPhone = a.CustomerOrder.CustomerPhone,
-                    DeliveryAddress = a.CustomerOrder.DeliveryAddress,
-                    District = a.CustomerOrder.District,
-                    TotalAmount = a.CustomerOrder.TotalAmount,
+                    OrderCode = a.Order.OrderCode,
+                    CustomerName = a.Order.CustomerName,
+                    CustomerPhone = a.Order.CustomerPhone,
+                    DeliveryAddress = a.Order.DeliveryAddress,
+                    District = a.Order.District,
+                    TotalAmount = a.Order.TotalAmount,
                     DeliveryFee = a.DeliveryFee,
                     ShipperEarning = a.ShipperEarning,
-                    PaymentMethod = a.CustomerOrder.PaymentMethod,
+                    PaymentMethod = a.Order.PaymentMethod,
                     Status = a.Status,
                     AssignedTime = a.AssignedTime,
                     EstimatedArrival = a.EstimatedArrival
@@ -245,8 +245,8 @@ namespace NhaHangLDP.Controllers
             if (shipperId == 0) return RedirectToAction("Login");
 
             var assignment = _db.DeliveryAssignments
-                .Include(a => a.CustomerOrder)
-                .Include(a => a.CustomerOrder.CustomerOrderDetails)
+                .Include(a => a.Order)
+                .Include(a => a.Order.CustomerOrderDetails)
                 .FirstOrDefault(a => a.Id == id && a.ShipperId == shipperId);
 
             if (assignment == null)
@@ -258,8 +258,8 @@ namespace NhaHangLDP.Controllers
             var viewModel = new ShipperOrderDetailViewModel
             {
                 Assignment = assignment,
-                Order = assignment.CustomerOrder,
-                OrderItems = assignment.CustomerOrder.CustomerOrderDetails?.ToList() ?? new List<CustomerOrderDetail>()
+                Order = assignment.Order,
+                OrderItems = assignment.Order.CustomerOrderDetails?.ToList() ?? new List<CustomerOrderDetail>()
             };
 
             return View(viewModel);
@@ -277,7 +277,7 @@ namespace NhaHangLDP.Controllers
             var to = (toDate ?? DateTime.Today).AddDays(1);
 
             var orders = _db.DeliveryAssignments
-                .Include(a => a.CustomerOrder)
+                .Include(a => a.Order)
                 .Where(a => a.ShipperId == shipperId &&
                            a.AssignedTime >= from && a.AssignedTime < to)
                 .OrderByDescending(a => a.AssignedTime)
@@ -286,10 +286,10 @@ namespace NhaHangLDP.Controllers
                 {
                     AssignmentId = a.Id,
                     OrderId = a.OrderId,
-                    OrderCode = a.CustomerOrder.OrderCode,
-                    CustomerName = a.CustomerOrder.CustomerName,
-                    DeliveryAddress = a.CustomerOrder.DeliveryAddress,
-                    TotalAmount = a.CustomerOrder.TotalAmount,
+                    OrderCode = a.Order.OrderCode,
+                    CustomerName = a.Order.CustomerName,
+                    DeliveryAddress = a.Order.DeliveryAddress,
+                    TotalAmount = a.Order.TotalAmount,
                     ShipperEarning = a.ShipperEarning,
                     Status = a.Status,
                     AssignedTime = a.AssignedTime,
@@ -479,7 +479,7 @@ namespace NhaHangLDP.Controllers
             {
                 var assignment = _db.DeliveryAssignments
                     .Include(a => a.Shipper)
-                    .Include(a => a.CustomerOrder)
+                    .Include(a => a.Order)
                     .FirstOrDefault(a => a.Id == assignmentId && a.ShipperId == shipperId);
 
                 if (assignment == null)
@@ -493,7 +493,7 @@ namespace NhaHangLDP.Controllers
                 assignment.Shipper.Status = "Available";
                 
                 // Đưa đơn về trạng thái Ready để gán shipper khác
-                assignment.CustomerOrder.Status = "Ready";
+                assignment.Order.Status = "Ready";
                 
                 _db.SaveChanges();
 
@@ -631,12 +631,12 @@ namespace NhaHangLDP.Controllers
             if (shipperId == 0) return RedirectToAction("Login");
 
             var assignment = _db.DeliveryAssignments
-                .Include(a => a.CustomerOrder)
+                .Include(a => a.Order)
                 .FirstOrDefault(a => a.Id == assignmentId && a.ShipperId == shipperId);
 
             if (assignment != null)
             {
-                return Redirect("tel:" + assignment.CustomerOrder.CustomerPhone);
+                return Redirect("tel:" + assignment.Order.CustomerPhone);
             }
 
             return RedirectToAction("Dashboard");
@@ -651,12 +651,12 @@ namespace NhaHangLDP.Controllers
             if (shipperId == 0) return RedirectToAction("Login");
 
             var assignment = _db.DeliveryAssignments
-                .Include(a => a.CustomerOrder)
+                .Include(a => a.Order)
                 .FirstOrDefault(a => a.Id == assignmentId && a.ShipperId == shipperId);
 
             if (assignment != null)
             {
-                var address = Uri.EscapeDataString(assignment.CustomerOrder.DeliveryAddress);
+                var address = Uri.EscapeDataString(assignment.Order.DeliveryAddress);
                 return Redirect($"https://www.google.com/maps/search/?api=1&query={address}");
             }
 
@@ -726,7 +726,7 @@ namespace NhaHangLDP.Controllers
             var tomorrow = today.AddDays(1);
 
             var activeAssignment = _db.DeliveryAssignments
-                .Include(a => a.CustomerOrder)
+                .Include(a => a.Order)
                 .FirstOrDefault(a => a.ShipperId == shipperId &&
                     (a.Status == "Assigned" || a.Status == "Accepted" || a.Status == "PickedUp"));
 
@@ -759,12 +759,12 @@ namespace NhaHangLDP.Controllers
                     {
                         activeAssignment.Id,
                         activeAssignment.OrderId,
-                        OrderCode = activeAssignment.CustomerOrder.OrderCode,
-                        CustomerName = activeAssignment.CustomerOrder.CustomerName,
-                        CustomerPhone = activeAssignment.CustomerOrder.CustomerPhone,
-                        DeliveryAddress = activeAssignment.CustomerOrder.DeliveryAddress,
-                        TotalAmount = activeAssignment.CustomerOrder.TotalAmount,
-                        PaymentMethod = activeAssignment.CustomerOrder.PaymentMethod,
+                        OrderCode = activeAssignment.Order.OrderCode,
+                        CustomerName = activeAssignment.Order.CustomerName,
+                        CustomerPhone = activeAssignment.Order.CustomerPhone,
+                        DeliveryAddress = activeAssignment.Order.DeliveryAddress,
+                        TotalAmount = activeAssignment.Order.TotalAmount,
+                        PaymentMethod = activeAssignment.Order.PaymentMethod,
                         activeAssignment.Status,
                         activeAssignment.ShipperEarning
                     } : null,
@@ -785,18 +785,18 @@ namespace NhaHangLDP.Controllers
                 return Json(new { success = false, message = "Chưa đăng nhập" });
 
             var orders = _db.DeliveryAssignments
-                .Include(a => a.CustomerOrder)
+                .Include(a => a.Order)
                 .Where(a => a.ShipperId == shipperId && a.Status == "Assigned")
                 .Select(a => new
                 {
                     a.Id,
                     a.OrderId,
-                    OrderCode = a.CustomerOrder.OrderCode,
-                    CustomerName = a.CustomerOrder.CustomerName,
-                    CustomerPhone = a.CustomerOrder.CustomerPhone,
-                    DeliveryAddress = a.CustomerOrder.DeliveryAddress,
-                    TotalAmount = a.CustomerOrder.TotalAmount,
-                    PaymentMethod = a.CustomerOrder.PaymentMethod,
+                    OrderCode = a.Order.OrderCode,
+                    CustomerName = a.Order.CustomerName,
+                    CustomerPhone = a.Order.CustomerPhone,
+                    DeliveryAddress = a.Order.DeliveryAddress,
+                    TotalAmount = a.Order.TotalAmount,
+                    PaymentMethod = a.Order.PaymentMethod,
                     a.DeliveryFee,
                     a.ShipperEarning,
                     a.AssignedTime,

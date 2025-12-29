@@ -43,7 +43,7 @@ namespace NhaHangLDP.Services.Reports
             GetDateRange(period, out startDate, out endDate);
 
             var paidBills = db.Bills
-                .Include(b => b.Orders)
+                .Include(b => b.Order)
                 .Include(b => b.Order.OrderDetails)
                 .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")

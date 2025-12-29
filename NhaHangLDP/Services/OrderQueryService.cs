@@ -74,7 +74,7 @@ namespace NhaHangLDP.Services
                 .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
                 .Include(o => o.Table)
                 .Include(o => o.Bills)
-                .Include(o => o.Employee)
+                .Include(o => o.Waiter)
                 .FirstOrDefault(o => o.Id == orderId);
 
             if (order == null)

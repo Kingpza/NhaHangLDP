@@ -402,7 +402,7 @@ namespace NhaHangLDP.Services
                 .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
                 .Include(b => b.Order.Table.TableArea)
                 .Include(b => b.Order.Employee)
-                .Include(b => b.Employee)
+                .Include(b => b.Cashier)
                 .Include(b => b.PromotionUsages).ThenInclude(pu => pu.Promotion)
                 .FirstOrDefault(b => b.Id == billId);
 
@@ -466,7 +466,7 @@ namespace NhaHangLDP.Services
             var query = db.Bills
                 .Include(b => b.Order.OrderDetails)
                 .Include(b => b.Order.Table)
-                .Include(b => b.Employee)
+                .Include(b => b.Cashier)
                 .AsQueryable();
 
             // Apply filters
@@ -695,7 +695,7 @@ namespace NhaHangLDP.Services
             var order = db.Orders
                 .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
                 .Include(o => o.Table.TableArea)
-                .Include(o => o.Employee)
+                .Include(o => o.Waiter)
                 .FirstOrDefault(o => o.Id == orderId);
 
             if (order == null) return null;

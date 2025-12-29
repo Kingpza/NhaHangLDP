@@ -80,27 +80,27 @@
             <table class="table table-borderless">
                 <tr>
                     <td class="fw-bold">Mã Hóa Đơn:</td>
-                    <td>HD-@Model.Bills.Id.ToString("D6")</td>
+                    <td>HD-@Model.OriginalBill.Id.ToString("D6")</td>
                 </tr>
                 <tr>
                     <td class="fw-bold">Ngày Lập:</td>
                     <td>
                         <i class="fas fa-calendar me-1"></i>
-                        @Model.Bills.BillDate.ToString("dd/MM/yyyy HH:mm")
+                        @Model.OriginalBill.BillDate.ToString("dd/MM/yyyy HH:mm")
                     </td>
                 </tr>
                 <tr>
                     <td class="fw-bold">Bàn:</td>
-                    <td>Bàn @(Model.Bills.Order?.Table?.TableNumber ?? "N/A")</td>
+                    <td>Bàn @(Model.OriginalBill.Order?.Table?.TableNumber ?? "N/A")</td>
                 </tr>
                 <tr>
                     <td class="fw-bold">Tổng Tiền Gốc:</td>
-                    <td>@Model.Bills.FinalAmount.ToString("N0") ₫</td>
+                    <td>@Model.OriginalBill.FinalAmount.ToString("N0") ₫</td>
                 </tr>
                 <tr>
                     <td class="fw-bold">Phương Thức TT:</td>
                     <td>
-                        <span class="badge bg-secondary">@Model.Bills.PaymentMethod</span>
+                        <span class="badge bg-secondary">@Model.OriginalBill.PaymentMethod</span>
                     </td>
                 </tr>
             </table>
@@ -213,7 +213,7 @@
             <div class="stat-icon" style="background: rgba(23, 162, 184, 0.2); color: #17a2b8;">
                 <i class="fas fa-percentage"></i>
             </div>
-            <h4>@Math.Round((decimal)Model.TotalRefundAmount / Model.Bills.FinalAmount * 100, 1)%</h4>
+            <h4>@Math.Round((decimal)Model.TotalRefundAmount / Model.OriginalBill.FinalAmount * 100, 1)%</h4>
             <p class="text-muted">Tỷ Lệ Hoàn Trả</p>
         </div>
     </div>
