@@ -29,7 +29,7 @@ namespace NhaHangLDP.Services.Reports
 
             if (!string.IsNullOrEmpty(cashierName))
             {
-                shiftsQuery = shiftsQuery.Where(s => s.ReportedByEmployee?.FullName.Contains(cashierName));
+                shiftsQuery = shiftsQuery.Where(s => s.Cashier != null && s.Cashier.FullName.Contains(cashierName));
             }
 
             var shifts = shiftsQuery.OrderBy(s => s.StartTime).ToList();

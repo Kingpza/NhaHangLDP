@@ -114,7 +114,7 @@ namespace NhaHangLDP.Controllers
 
             HttpContext.Session.SetString("ActiveShiftId", activeShift.Id.ToString());
             HttpContext.Session.SetString("ShiftStartTime", activeShift.StartTime.ToString());
-            HttpContext.Session.SetString("CashierName", activeShift.Employee?.FullName ?? "Thu Ngân");
+            HttpContext.Session.SetString("CashierName", activeShift.Cashier?.FullName ?? "Thu Ngân");
 
             return View(dashboardService.GetDashboardData(activeShift.Id));
         }
