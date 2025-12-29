@@ -418,17 +418,19 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         [HttpPost]
         [CustomAuthorize("Admin", "Manager", "Cashier")]
-        public JsonResult ProcessSplitBill(SplitBillRequest request)
+        public async System.Threading.Tasks.Task<JsonResult> ProcessSplitBill(SplitBillRequest request)
         {
             // Nếu request null, thử đọc từ Request.Body (JSON)
             if (request == null || request.OrderId == 0)
             {
                 try
                 {
+                    // Enable buffering so we can read the stream
+                    Request.EnableBuffering();
                     Request.Body.Position = 0;
-                    using (var reader = new System.IO.StreamReader(Request.Body))
+                    using (var reader = new System.IO.StreamReader(Request.Body, leaveOpen: true))
                     {
-                        var json = reader.ReadToEnd();
+                        var json = await reader.ReadToEndAsync();
                         if (!string.IsNullOrEmpty(json))
                         {
                             request = Newtonsoft.Json.JsonConvert.DeserializeObject<SplitBillRequest>(json);

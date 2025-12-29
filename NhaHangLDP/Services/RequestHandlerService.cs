@@ -8,7 +8,7 @@ namespace NhaHangLDP.Services
     {
         public bool TryParseTableId(HttpRequest request, out int tableId, out string errorMessage)
         {
-            var tableIdStr = request.Form["tableId"].ToString();
+            var tableIdStr = request.Form["tableId"].ToString() ?? "";
             if (!int.TryParse(tableIdStr, out tableId))
             {
                 errorMessage = "Mã bàn không hợp lệ!";
@@ -20,7 +20,7 @@ namespace NhaHangLDP.Services
 
         public bool TryParseOrderId(HttpRequest request, out int orderId, out string errorMessage)
         {
-            var orderIdStr = request.Form["orderId"].ToString();
+            var orderIdStr = request.Form["orderId"].ToString() ?? "";
             if (string.IsNullOrEmpty(orderIdStr))
             {
                 errorMessage = "Thiếu thông tin đơn hàng!";
@@ -41,9 +41,9 @@ namespace NhaHangLDP.Services
         public bool TryParsePaymentRequest(HttpRequest request, out int orderId, out string paymentMethod, 
             out decimal receivedAmount, out string errorMessage)
         {
-            var orderIdStr = request.Form["orderId"].ToString();
-            paymentMethod = request.Form["paymentMethod"].ToString();
-            var receivedAmountStr = request.Form["receivedAmount"].ToString();
+            var orderIdStr = request.Form["orderId"].ToString() ?? "";
+            paymentMethod = request.Form["paymentMethod"].ToString() ?? "";
+            var receivedAmountStr = request.Form["receivedAmount"].ToString() ?? "";
 
             if (string.IsNullOrEmpty(orderIdStr) || string.IsNullOrEmpty(paymentMethod) || string.IsNullOrEmpty(receivedAmountStr))
             {
@@ -72,8 +72,8 @@ namespace NhaHangLDP.Services
 
         public bool TryParseTableInfoRequest(HttpRequest request, out TableInfoRequest tableInfo, out string errorMessage)
         {
-            var tableIdStr = request.Form["tableId"].ToString();
-            var customersStr = request.Form["customers"].ToString();
+            var tableIdStr = request.Form["tableId"].ToString() ?? "";
+            var customersStr = request.Form["customers"].ToString() ?? "";
 
             int tableId;
             int customers;
@@ -96,7 +96,7 @@ namespace NhaHangLDP.Services
             {
                 TableId = tableId,
                 Customers = customers,
-                Action = request.Form["action"].ToString(),
+                Action = request.Form["action"].ToString() ?? "",
                 CustomerName = request.Form["customerName"].ToString() ?? "",
                 CustomerPhone = request.Form["customerPhone"].ToString() ?? "",
                 Notes = request.Form["notes"].ToString() ?? "",
