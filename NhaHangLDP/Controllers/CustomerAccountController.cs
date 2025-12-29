@@ -5,7 +5,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-using System.Web.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 
@@ -83,8 +82,7 @@ namespace NhaHangLDP.Controllers
                 if (model.RememberMe)
                 {
                     // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
-                    FormsAuthentication.SetAuthCookie(customer.Email, true);
-                }
+                    }
 
                 // Redirect
                 if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
@@ -200,9 +198,8 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Logout()
         {
-            Session.Clear();
+            HttpContext.Session.Clear();
             // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
-            FormsAuthentication.SignOut();
             return RedirectToAction("Menu", "Public");
         }
 
@@ -734,10 +731,8 @@ public JsonResult DeleteAccount()
             customerId);
 
         // Clear session
-        Session.Clear();
+        HttpContext.Session.Clear();
         // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
-        FormsAuthentication.SignOut();
-
         return Json(new { success = true, message = "Tài khoản đã bị xóa!" });
     }
     catch (Exception ex)

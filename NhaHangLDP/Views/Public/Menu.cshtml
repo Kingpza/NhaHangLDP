@@ -1,4 +1,4 @@
-﻿@model List<NhaHangLDP.Models.MenuItem>
+@model List<NhaHangLDP.Models.MenuItem>
 
 @{
     ViewBag.Title = "Thực đơn";
@@ -113,15 +113,15 @@
             </nav>
         </div>
         <div class="p-6 flex flex-col gap-4 flex-shrink-0 border-t border-border-light">
-            @if (Session["CustomerId"] != null)
+            @if (Context.Session.GetString("CustomerId") != null)
             {
                 <!-- User Account Section -->
                 <div class="bg-white rounded-2xl p-4 flex items-center gap-3 border border-border-light shadow-sm">
                     <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <span class="text-lg font-bold text-primary">@Session["CustomerName"].ToString().Substring(0, 1).ToUpper()</span>
+                        <span class="text-lg font-bold text-primary">@Context.Session.GetString("CustomerName").ToString().Substring(0, 1).ToUpper()</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="font-semibold text-text-primary text-sm truncate">@Session["CustomerName"]</p>
+                        <p class="font-semibold text-text-primary text-sm truncate">@Context.Session.GetString("CustomerName")</p>
                         <a href="@Url.Action("Profile", "CustomerAccount")" class="text-xs text-primary hover:underline">Xem tài khoản</a>
                     </div>
                 </div>
@@ -170,20 +170,20 @@
                     <a class="text-text-secondary text-sm font-medium hover:text-primary transition-colors" href="@Url.Action("TrackOrder", "Checkout")">Tra cứu đơn</a>
                 </div>
                 
-                @if (Session["CustomerId"] != null)
+                @if (Context.Session.GetString("CustomerId") != null)
                 {
                     <!-- User logged in -->
                     <div class="relative group">
                         <button class="flex items-center gap-2 h-10 px-4 rounded-full bg-sidebar-surface hover:bg-hover-light transition-colors border border-border-light">
                             <span class="material-symbols-outlined text-text-primary" style="font-size: 20px;">account_circle</span>
-                            <span class="hidden sm:inline text-sm font-medium text-text-primary">@Session["CustomerName"]</span>
+                            <span class="hidden sm:inline text-sm font-medium text-text-primary">@Context.Session.GetString("CustomerName")</span>
                             <span class="material-symbols-outlined text-text-secondary text-sm">expand_more</span>
                         </button>
                         <!-- Dropdown -->
                         <div class="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-lg border border-border-light opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                             <div class="p-4 border-b border-border-light">
-                                <p class="font-semibold text-text-primary">@Session["CustomerName"]</p>
-                                <p class="text-xs text-text-secondary">@Session["CustomerEmail"]</p>
+                                <p class="font-semibold text-text-primary">@Context.Session.GetString("CustomerName")</p>
+                                <p class="text-xs text-text-secondary">@Context.Session.GetString("CustomerEmail")</p>
                             </div>
                             <div class="py-2">
                                 <a href="@Url.Action("Profile", "CustomerAccount")" class="flex items-center gap-3 px-4 py-2 hover:bg-hover-light transition-colors">

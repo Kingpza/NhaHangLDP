@@ -115,7 +115,7 @@ namespace NhaHangLDP.Controllers
                 }
             }
 
-            Session.Clear();
+            HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
 

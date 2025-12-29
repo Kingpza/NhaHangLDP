@@ -8,7 +8,6 @@ using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -40,7 +39,7 @@ namespace NhaHangLDP.Controllers
 
         private bool IsAuthorized()
         {
-            return AuthorizationHelper.IsAdminOrManager(Session);
+            return AuthorizationHelper.IsAdminOrManager(HttpContext.Session);
         }
 
         private ActionResult RedirectUnauthorized()
@@ -413,12 +412,15 @@ namespace NhaHangLDP.Controllers
 
             if (ModelState.IsValid)
             {
-                if (model.ImageFile != null && model.ImageFile.ContentLength > 0)
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
                 {
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ImageFile.FileName);
                     string serverPath = Path.Combine(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/menu/"), fileName);
                     Directory.CreateDirectory(Path.GetDirectoryName(serverPath));
-                    model.ImageFile.SaveAs(serverPath);
+                    using (var stream = new FileStream(serverPath, FileMode.Create))
+                    {
+                        model.ImageFile.CopyTo(stream);
+                    }
                     model.MenuItem.ImageUrl = fileName;
                 }
 
@@ -470,12 +472,15 @@ namespace NhaHangLDP.Controllers
 
             if (ModelState.IsValid)
             {
-                if (model.ImageFile != null && model.ImageFile.ContentLength > 0)
+                if (model.ImageFile != null && model.ImageFile.Length > 0)
                 {
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(model.ImageFile.FileName);
                     string serverPath = Path.Combine(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/menu/"), fileName);
                     Directory.CreateDirectory(Path.GetDirectoryName(serverPath));
-                    model.ImageFile.SaveAs(serverPath);
+                    using (var stream = new FileStream(serverPath, FileMode.Create))
+                    {
+                        model.ImageFile.CopyTo(stream);
+                    }
                     model.MenuItem.ImageUrl = fileName;
                 }
 

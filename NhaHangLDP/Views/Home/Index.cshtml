@@ -1,13 +1,13 @@
-﻿@{
+@{
     ViewBag.Title = "Trang Chủ - Nhà Hàng";
     Layout = null;
     
     // Kiểm tra đăng nhập - hỗ trợ cả nhân viên và khách hàng
-    var isLoggedIn = Session["Username"] != null || Session["CustomerId"] != null;
-    var displayName = Session["FullName"]?.ToString() ?? Session["CustomerName"]?.ToString() ?? Session["Username"]?.ToString() ?? "User";
-    var userRole = Session["Role"]?.ToString() ?? Session["UserRole"]?.ToString();
-    var isEmployee = Session["Username"] != null && (userRole == "Admin" || userRole == "Manager" || userRole == "Cashier" || userRole == "Staff");
-    var isCustomer = Session["CustomerId"] != null;
+    var isLoggedIn = Context.Session.GetString("Username") != null || Context.Session.GetString("CustomerId") != null;
+    var displayName = Context.Session.GetString("FullName")?.ToString() ?? Context.Session.GetString("CustomerName")?.ToString() ?? Context.Session.GetString("Username")?.ToString() ?? "User";
+    var userRole = Context.Session.GetString("Role")?.ToString() ?? Context.Session.GetString("UserRole")?.ToString();
+    var isEmployee = Context.Session.GetString("Username") != null && (userRole == "Admin" || userRole == "Manager" || userRole == "Cashier" || userRole == "Staff");
+    var isCustomer = Context.Session.GetString("CustomerId") != null;
 }
 
 <!DOCTYPE html>
@@ -365,7 +365,7 @@
                         Khám phá thực đơn
                         <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </a>
-                    @if (Session["Username"] == null)
+                    @if (Context.Session.GetString("Username") == null)
                     {
                         <a href="@Url.Action("Index", "Reservation")" class="flex items-center gap-3 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full font-bold text-lg border-2 border-white hover:bg-white hover:text-primary transition-all">
                             <span class="material-symbols-outlined">event</span>

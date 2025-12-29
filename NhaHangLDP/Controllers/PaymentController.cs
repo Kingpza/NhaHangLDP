@@ -420,13 +420,13 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager", "Cashier")]
         public JsonResult ProcessSplitBill(SplitBillRequest request)
         {
-            // Nếu request null, thử đọc từ Request.InputStream (JSON)
+            // Nếu request null, thử đọc từ Request.Body (JSON)
             if (request == null || request.OrderId == 0)
             {
                 try
                 {
-                    Request.InputStream.Position = 0;
-                    using (var reader = new System.IO.StreamReader(Request.InputStream))
+                    Request.Body.Position = 0;
+                    using (var reader = new System.IO.StreamReader(Request.Body))
                     {
                         var json = reader.ReadToEnd();
                         if (!string.IsNullOrEmpty(json))

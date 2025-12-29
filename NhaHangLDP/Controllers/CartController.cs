@@ -2,8 +2,9 @@ using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace NhaHangLDP.Controllers
 {
@@ -169,7 +170,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                Session[CART_SESSION_KEY] = null;
+                HttpContext.Session.Remove(CART_SESSION_KEY);
                 return Json(new { success = true, message = "Đã xóa giỏ hàng!" });
             }
             catch (Exception ex)
@@ -379,7 +380,16 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         private CartViewModel GetCart()
         {
-            var cart = Session[CART_SESSION_KEY] as CartViewModel;
+            var cartJson = HttpContext.Session.GetString(CART_SESSION_KEY);
+            CartViewModel cart = null;
+            if (!string.IsNullOrEmpty(cartJson))
+            {
+                try
+                {
+                    cart = JsonConvert.DeserializeObject<CartViewModel>(cartJson);
+                }
+                catch { }
+            }
             if (cart == null)
             {
                 cart = new CartViewModel
@@ -400,7 +410,8 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         private void SaveCart(CartViewModel cart)
         {
-            Session[CART_SESSION_KEY] = cart;
+            var cartJson = JsonConvert.SerializeObject(cart);
+            HttpContext.Session.SetString(CART_SESSION_KEY, cartJson);
         }
 
         /// <summary>

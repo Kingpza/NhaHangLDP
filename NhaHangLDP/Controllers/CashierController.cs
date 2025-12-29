@@ -72,8 +72,8 @@ namespace NhaHangLDP.Controllers
 
             if (shiftService.CloseShift(out shiftSummary, out errorMessage))
             {
-                Session.Remove("ActiveShiftId");
-                Session.Remove("ShiftStartTime");
+                HttpContext.Session.Remove("ActiveShiftId");
+                HttpContext.Session.Remove("ShiftStartTime");
                 var summary = (dynamic)shiftSummary;
                 return Json(new
                 {
