@@ -612,9 +612,9 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                // Thử query một table để kiểm tra
-                var count = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'WorkShift'").FirstOrDefault();
-                return count > 0;
+                // Thử query một table để kiểm tra - sử dụng LINQ thay vì raw SQL
+                var count = _db.WorkShifts.Count();
+                return true;
             }
             catch
             {
@@ -814,7 +814,7 @@ namespace NhaHangLDP.Controllers
             if (!employees.Any()) return;
 
             // Tạo ca làm việc mẫu
-            var shiftCount = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM WorkShift").FirstOrDefault();
+            var shiftCount = _db.WorkShifts.Count();
             if (shiftCount == 0)
             {
                 _db.Database.ExecuteSqlRaw(@"
@@ -830,14 +830,14 @@ namespace NhaHangLDP.Controllers
             // Tạo hợp đồng mẫu cho nhân viên
             foreach (var emp in employees)
             {
-                var hasContract = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM EmployeeContract WHERE EmployeeId = @p0 AND Status = 'Active'", emp.Id).FirstOrDefault();
+                var hasContract = _db.EmployeeContracts.Any(c => c.EmployeeId == emp.Id && c.Status == "Active");
                 
-                if (hasContract == 0)
+                if (!hasContract)
                 {
                     var salary = GetSalaryByRole(emp.RoleId);
                     _db.Database.ExecuteSqlRaw(@"
                         INSERT INTO EmployeeContract (EmployeeId, ContractType, StartDate, BaseSalary, Allowance, Status, CreatedDate)
-                        VALUES (@p0, 'FullTime', @p1, @p2, 500000, 'Active', GETDATE())
+                        VALUES ({0}, 'FullTime', {1}, {2}, 500000, 'Active', GETDATE())
                     ", emp.Id, emp.HireDate, salary);
                 }
             }
@@ -851,10 +851,9 @@ namespace NhaHangLDP.Controllers
 
                 foreach (var emp in employees.Take(5))
                 {
-                    var hasAttendance = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM Attendance WHERE EmployeeId = @p0 AND CAST(CheckInTime AS DATE) = @p1", 
-                        emp.Id, date).FirstOrDefault();
+                    var hasAttendance = _db.Attendances.Any(a => a.EmployeeId == emp.Id && a.CheckInTime.Date == date.Date);
 
-                    if (hasAttendance == 0)
+                    if (!hasAttendance)
                     {
                         var checkInHour = 7 + random.Next(0, 2);
                         var checkInMinute = random.Next(0, 60);
@@ -865,7 +864,7 @@ namespace NhaHangLDP.Controllers
 
                         _db.Database.ExecuteSqlRaw(@"
                             INSERT INTO Attendance (EmployeeId, CheckInTime, CheckOutTime, WorkHours, Status, Note)
-                            VALUES (@p0, @p1, @p2, @p3, @p4, N'Chấm công tự động')
+                            VALUES ({0}, {1}, {2}, {3}, {4}, N'Chấm công tự động')
                         ", emp.Id, checkIn, checkOut, workHours, status);
                     }
                 }
@@ -875,9 +874,9 @@ namespace NhaHangLDP.Controllers
             var reviewerId = employees.FirstOrDefault(e => e.RoleId == 1 || e.RoleId == 2)?.Id ?? employees.First().Id;
             foreach (var emp in employees.Take(3).Where(e => e.Id != reviewerId))
             {
-                var hasReview = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM PerformanceReview WHERE EmployeeId = @p0", emp.Id).FirstOrDefault();
+                var hasReview = _db.PerformanceReviews.Any(r => r.EmployeeId == emp.Id);
 
-                if (hasReview == 0)
+                if (!hasReview)
                 {
                     var score1 = 3 + random.Next(0, 3);
                     var score2 = 3 + random.Next(0, 3);
@@ -889,7 +888,7 @@ namespace NhaHangLDP.Controllers
                     _db.Database.ExecuteSqlRaw(@"
                         INSERT INTO PerformanceReview 
                         (EmployeeId, ReviewerId, ReviewDate, ReviewPeriod, ServiceQuality, Punctuality, Teamwork, Communication, WorkEfficiency, OverallScore, Strengths, AreasToImprove, Comments, CreatedDate)
-                        VALUES (@p0, @p1, @p2, 'Monthly', @p3, @p4, @p5, @p6, @p7, @p8, N'Làm việc chăm chỉ, có tinh thần trách nhiệm', N'Cần cải thiện kỹ năng giao tiếp', N'Nhân viên có tiềm năng phát triển tốt', GETDATE())
+                        VALUES ({0}, {1}, {2}, 'Monthly', {3}, {4}, {5}, {6}, {7}, {8}, N'Làm việc chăm chỉ, có tinh thần trách nhiệm', N'Cần cải thiện kỹ năng giao tiếp', N'Nhân viên có tiềm năng phát triển tốt', GETDATE())
                     ", emp.Id, reviewerId, DateTime.Today.AddDays(-random.Next(1, 30)), score1, score2, score3, score4, score5, overall);
                 }
             }

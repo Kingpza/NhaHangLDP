@@ -34,8 +34,10 @@ namespace NhaHangLDP.Controllers
             var customerId = (int.TryParse(HttpContext.Session.GetString("CustomerId"), out int _pCustomerId) ? (int?)_pCustomerId : null);
             if (customerId.HasValue)
             {
-                var wishlistIds = db.Set<int>().FromSqlRaw(@"SELECT MenuItemId FROM Wishlist WHERE CustomerId = @p0",
-                    customerId.Value).ToList();
+                var wishlistIds = db.Wishlists
+                    .Where(w => w.CustomerId == customerId.Value)
+                    .Select(w => w.MenuItemId)
+                    .ToList();
                 ViewBag.WishlistIds = wishlistIds;
             }
             else

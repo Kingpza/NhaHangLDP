@@ -281,7 +281,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var ticket = db.KitchenOrderTickets
-                    .Include(t => t.KitchenOrderItem)
+                    .Include(t => t.KitchenOrderItems)
                     .FirstOrDefault(t => t.Id == ticketId);
 
                 if (ticket == null)
@@ -292,7 +292,7 @@ namespace NhaHangLDP.Controllers
                 ticket.Status = "Ready";
                 ticket.CompletedTime = DateTime.Now;
 
-                foreach (var item in ticket.KitchenOrderItem)
+                foreach (var item in ticket.KitchenOrderItems)
                 {
                     item.Status = "Completed";
                     item.CompletedQuantity = item.Quantity;
@@ -392,7 +392,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var ticket = db.KitchenOrderTickets
-                    .Include(t => t.KitchenOrderItem)
+                    .Include(t => t.KitchenOrderItems)
                     .FirstOrDefault(t => t.Id == ticketId);
 
                 if (ticket == null)
@@ -403,7 +403,7 @@ namespace NhaHangLDP.Controllers
                 ticket.Status = "Cancelled";
                 ticket.SpecialNotes = (ticket.SpecialNotes ?? "") + "\n[Hủy]: " + reason;
 
-                foreach (var item in ticket.KitchenOrderItem)
+                foreach (var item in ticket.KitchenOrderItems)
                 {
                     item.Status = "Cancelled";
                 }
@@ -465,7 +465,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var ticket = db.KitchenOrderTickets
-                    .Include(t => t.KitchenOrderItem).ThenInclude(i => i.MenuItem)
+                    .Include(t => t.KitchenOrderItems).ThenInclude(i => i.MenuItem)
                     .Include(t => t.Table)
                     .Include(t => t.Employee)
                     .FirstOrDefault(t => t.Id == ticketId);
@@ -656,7 +656,7 @@ namespace NhaHangLDP.Controllers
         private KitchenDisplayViewModel GetKitchenDisplayData(string station)
         {
             var query = db.KitchenOrderTickets
-                .Include(t => t.KitchenOrderItem).ThenInclude(i => i.MenuItem)
+                .Include(t => t.KitchenOrderItems).ThenInclude(i => i.MenuItem)
                 .Include(t => t.Table)
                 .Include(t => t.Employee)
                 .Where(t => t.Status != "Completed" && t.Status != "Cancelled");
@@ -664,7 +664,7 @@ namespace NhaHangLDP.Controllers
             if (!string.IsNullOrEmpty(station))
             {
                 query = query.Where(t => t.KitchenStation == station || 
-                                        t.KitchenOrderItem.Any(i => i.Station == station));
+                                        t.KitchenOrderItems.Any(i => i.Station == station));
             }
 
             var tickets = query
@@ -704,7 +704,7 @@ namespace NhaHangLDP.Controllers
                 KitchenStation = ticket.KitchenStation,
                 IsPrinted = ticket.IsPrinted,
                 PrintCount = ticket.PrintCount,
-                Items = ticket.KitchenOrderItem?.Select(i => new KitchenItemViewModel
+                Items = ticket.KitchenOrderItems?.Select(i => new KitchenItemViewModel
                 {
                     Id = i.Id,
                     KitchenOrderTicketId = i.KitchenOrderTicketId,
