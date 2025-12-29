@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace NhaHangLDP.Models;
 
-public partial class AppSetting
+public partial class VW_AppSetting
 {
     public string SettingKey { get; set; }
 

@@ -3,19 +3,15 @@ using System.Collections.Generic;
 
 namespace NhaHangLDP.Models;
 
-public partial class AppSetting
+public partial class DeliverySetting
 {
+    public int Id { get; set; }
+
     public string SettingKey { get; set; }
 
     public string SettingValue { get; set; }
 
     public string Description { get; set; }
 
-    public DateTime CreatedDate { get; set; }
-
-    public DateTime? UpdatedDate { get; set; }
-
-    public string CreatedBy { get; set; }
-
-    public string UpdatedBy { get; set; }
+    public DateTime UpdatedDate { get; set; }
 }
