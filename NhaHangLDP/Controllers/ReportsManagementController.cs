@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
@@ -12,7 +12,7 @@ namespace NhaHangLDP.Controllers
 {
     public partial class ReportsManagementController : Controller
     {
-        private readonly NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private readonly MyDbContext db = new MyDbContext();
         private readonly AdvancedAnalyticsService _analyticsService;
         private readonly DashboardReportService _dashboardService;
         private readonly BookingAnalyticsService _bookingService;
@@ -608,17 +608,17 @@ namespace NhaHangLDP.Controllers
                     DateRangeHelper.GetDateRange(period2, out start2, out end2);
                 }
 
-                var revenue1 = db.Bill
+                var revenue1 = db.Bills
                     .Where(b => b.BillDate >= start1 && b.BillDate < end1 && b.Status == "Paid")
                     .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
-                var orders1 = db.Order.Count(o => o.OrderTime >= start1 && o.OrderTime < end1);
+                var orders1 = db.Orders.Count(o => o.OrderTime >= start1 && o.OrderTime < end1);
 
-                var revenue2 = db.Bill
+                var revenue2 = db.Bills
                     .Where(b => b.BillDate >= start2 && b.BillDate < end2 && b.Status == "Paid")
                     .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
-                var orders2 = db.Order.Count(o => o.OrderTime >= start2 && o.OrderTime < end2);
+                var orders2 = db.Orders.Count(o => o.OrderTime >= start2 && o.OrderTime < end2);
 
                 var comparison = new ComparativeAnalysis
                 {

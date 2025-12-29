@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,9 +8,9 @@ namespace NhaHangLDP.Services
 {
     public class TableOperationService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public TableOperationService(NhaHangLDPEntities context)
+        public TableOperationService(MyDbContext context)
         {
             db = context;
         }
@@ -27,8 +27,8 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var sourceTable = db.RestaurantTable.Include("Order").FirstOrDefault(t => t.Id == sourceTableId);
-                    var targetTable = db.RestaurantTable.Include("Order").FirstOrDefault(t => t.Id == targetTableId);
+                    var sourceTable = db.RestaurantTables.Include("Order").FirstOrDefault(t => t.Id == sourceTableId);
+                    var targetTable = db.RestaurantTables.Include("Order").FirstOrDefault(t => t.Id == targetTableId);
 
                     if (sourceTable == null || targetTable == null)
                     {
@@ -36,7 +36,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var sourceOrder = sourceTable.Order.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
+                    var sourceOrder = sourceTable.Orders.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
                     if (sourceOrder == null)
                     {
                         errorMessage = "Bàn nguồn không có đơn!";
@@ -51,12 +51,12 @@ namespace NhaHangLDP.Services
                         WaiterId = sourceOrder.WaiterId,
                         ShiftId = sourceOrder.ShiftId
                     };
-                    db.Order.Add(newOrder);
+                    db.Orders.Add(newOrder);
                     db.SaveChanges();
 
                     foreach (var item in items)
                     {
-                        var originalDetail = db.OrderDetail.Find(item.OrderDetailId);
+                        var originalDetail = db.OrderDetails.Find(item.OrderDetailId);
                         if (originalDetail != null)
                         {
                             if (originalDetail.Quantity == item.Quantity)
@@ -75,7 +75,7 @@ namespace NhaHangLDP.Services
                                     PriceAtTime = originalDetail.PriceAtTime,
                                     Notes = originalDetail.Notes
                                 };
-                                db.OrderDetail.Add(newDetail);
+                                db.OrderDetails.Add(newDetail);
                             }
                         }
                     }

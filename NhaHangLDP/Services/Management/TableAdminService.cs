@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,33 +8,33 @@ namespace NhaHangLDP.Services.Management
 {
     public class TableAdminService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public TableAdminService(NhaHangLDPEntities context)
+        public TableAdminService(MyDbContext context)
         {
             db = context;
         }
 
         public List<RestaurantTable> GetAllTables()
         {
-            return db.RestaurantTable.Include("TableArea").ToList();
+            return db.RestaurantTables.Include("TableArea").ToList();
         }
 
         public RestaurantTable GetTableById(int id)
         {
-            return db.RestaurantTable.Find(id);
+            return db.RestaurantTables.Find(id);
         }
 
         public List<TableArea> GetAllTableAreas()
         {
-            return db.TableArea.ToList();
+            return db.TableAreas.ToList();
         }
 
         public bool CreateTable(RestaurantTable table, out string errorMessage)
         {
             try
             {
-                var existingTable = db.RestaurantTable
+                var existingTable = db.RestaurantTables
                     .FirstOrDefault(t => t.TableNumber == table.TableNumber && t.TableAreaId == table.TableAreaId);
 
                 if (existingTable != null)
@@ -44,7 +44,7 @@ namespace NhaHangLDP.Services.Management
                 }
 
                 table.Status = "Available";
-                db.RestaurantTable.Add(table);
+                db.RestaurantTables.Add(table);
                 db.SaveChanges();
 
                 errorMessage = null;
@@ -61,7 +61,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var existingTable = db.RestaurantTable
+                var existingTable = db.RestaurantTables
                     .FirstOrDefault(t => t.TableNumber == table.TableNumber &&
                                         t.TableAreaId == table.TableAreaId &&
                                         t.Id != table.Id);
@@ -89,21 +89,21 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var table = db.RestaurantTable.Find(id);
+                var table = db.RestaurantTables.Find(id);
                 if (table == null)
                 {
                     errorMessage = "Không tìm thấy bàn.";
                     return false;
                 }
 
-                var hasActiveOrders = db.Order.Any(o => o.TableId == id && (o.Status == "Pending" || o.Status == "Processing"));
+                var hasActiveOrders = db.Orders.Any(o => o.TableId == id && (o.Status == "Pending" || o.Status == "Processing"));
                 if (hasActiveOrders)
                 {
                     errorMessage = "Không thể xóa bàn đang có khách hoặc đang phục vụ.";
                     return false;
                 }
 
-                db.RestaurantTable.Remove(table);
+                db.RestaurantTables.Remove(table);
                 db.SaveChanges();
 
                 errorMessage = null;

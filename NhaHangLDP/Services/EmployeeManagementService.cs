@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
@@ -9,9 +9,9 @@ namespace NhaHangLDP.Services
 {
     public class EmployeeManagementService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public EmployeeManagementService(NhaHangLDPEntities context)
+        public EmployeeManagementService(MyDbContext context)
         {
             db = context;
         }
@@ -20,7 +20,7 @@ namespace NhaHangLDP.Services
         {
             var availableRoleIds = new List<int> { 1, 2, 3, 4, 5 };
 
-            var employees = db.Employee
+            var employees = db.Employees
                 .Where(e => e.IsActive
                             && availableRoleIds.Contains(e.RoleId)
                             && e.Id != currentEmployeeId)
@@ -38,7 +38,7 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var supportStaffEntry = await db.ShiftSupportStaff
+                var supportStaffEntry = await db.ShiftSupportStaffs
                     .FirstOrDefaultAsync(s => s.CashierShiftId == shiftId && s.EmployeeId == employeeId);
 
                 if (supportStaffEntry == null)
@@ -46,7 +46,7 @@ namespace NhaHangLDP.Services
                     return new OperationResult { Success = false, ErrorMessage = "Không tìm thấy nhân viên hỗ trợ này trong ca." };
                 }
 
-                db.ShiftSupportStaff.Remove(supportStaffEntry);
+                db.ShiftSupportStaffs.Remove(supportStaffEntry);
                 await db.SaveChangesAsync();
 
                 return new OperationResult { Success = true };
@@ -61,8 +61,8 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var activeShift = await db.CashierShift
-                    .Include(s => s.ShiftSupportStaff)
+                var activeShift = await db.CashierShifts
+                    .Include(s => s.ShiftSupportStaffs)
                     .FirstOrDefaultAsync(s => s.Id == shiftId && s.EndTime == null);
 
                 if (activeShift == null)
@@ -71,7 +71,7 @@ namespace NhaHangLDP.Services
                 }
 
                 bool isAlreadyInShift = activeShift.CashierId == employeeId ||
-                                        activeShift.ShiftSupportStaff.Any(s => s.EmployeeId == employeeId);
+                                        activeShift.ShiftSupportStaffs.Any(s => s.EmployeeId == employeeId);
 
                 if (isAlreadyInShift)
                 {
@@ -84,7 +84,7 @@ namespace NhaHangLDP.Services
                     EmployeeId = employeeId
                 };
 
-                db.ShiftSupportStaff.Add(supportStaff);
+                db.ShiftSupportStaffs.Add(supportStaff);
                 await db.SaveChangesAsync();
 
                 return new OperationResult { Success = true };
@@ -99,8 +99,8 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var shift = await db.CashierShift
-                    .Include(s => s.ShiftSupportStaff)
+                var shift = await db.CashierShifts
+                    .Include(s => s.ShiftSupportStaffs)
                     .FirstOrDefaultAsync(s => s.Id == shiftId && s.EndTime == null);
 
                 if (shift == null)
@@ -108,9 +108,9 @@ namespace NhaHangLDP.Services
                     return new OperationResult { Success = false, ErrorMessage = "Không tìm thấy ca làm việc." };
                 }
 
-                if (shift.ShiftSupportStaff != null && shift.ShiftSupportStaff.Any())
+                if (shift.ShiftSupportStaffs != null && shift.ShiftSupportStaffs.Any())
                 {
-                    db.ShiftSupportStaff.RemoveRange(shift.ShiftSupportStaff);
+                    db.ShiftSupportStaffs.RemoveRange(shift.ShiftSupportStaffs);
                 }
 
                 shift.CashierId = newEmployeeId;

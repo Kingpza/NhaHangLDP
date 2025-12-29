@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.Supplier
+@model NhaHangLDP.Models.Supplier
 @{
     ViewBag.Title = "Sửa Nhà Cung Cấp";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -142,7 +142,7 @@
                 <table class="table table-sm table-borderless">
                     <tr>
                         <td class="text-muted">Số phiếu nhập:</td>
-                        <td><strong>@(Model.StockInbound?.Count ?? 0)</strong></td>
+                        <td><strong>@(Model.StockInbounds?.Count ?? 0)</strong></td>
                     </tr>
                 </table>
             </div>

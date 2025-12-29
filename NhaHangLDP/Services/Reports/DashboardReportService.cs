@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,9 +8,9 @@ namespace NhaHangLDP.Services.Reports
 {
     public class DashboardReportService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public DashboardReportService(NhaHangLDPEntities context)
+        public DashboardReportService(MyDbContext context)
         {
             db = context;
         }
@@ -20,16 +20,16 @@ namespace NhaHangLDP.Services.Reports
             var today = DateTime.Today;
             var todayEnd = today.AddDays(1);
 
-            var todayOrders = db.Order
+            var todayOrders = db.Orders
                 .Where(o => o.OrderTime >= today && o.OrderTime < todayEnd)
                 .Count();
 
-            var todayRevenue = db.Bill
+            var todayRevenue = db.Bills
                 .Where(b => b.BillDate >= today && b.BillDate < todayEnd && b.Status == "Paid")
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
-            var totalTables = db.RestaurantTable.Count();
-            var occupiedTables = db.RestaurantTable.Count(t => t.Status == "Occupied");
+            var totalTables = db.RestaurantTables.Count();
+            var occupiedTables = db.RestaurantTables.Count(t => t.Status == "Occupied");
             var tableUtilization = totalTables > 0 ? (occupiedTables * 100 / totalTables) : 0;
 
             var avgOrderValue = todayOrders > 0 ? todayRevenue / todayOrders : 0;

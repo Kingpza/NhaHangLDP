@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.IngredientHistoryViewModel
+@model NhaHangLDP.Models.IngredientHistoryViewModel
 @{
     ViewBag.Title = $"Lịch Sử - {Model.Ingredient.Name}";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -91,24 +91,24 @@
                                         var totalPrice = record.Quantity * record.UnitPrice;
                                         <tr>
                                             <td>
-                                                <strong>@record.StockInbound.InboundDate.ToString("dd/MM/yyyy")</strong><br />
-                                                <small class="text-muted">@record.StockInbound.InboundDate.ToString("HH:mm")</small>
+                                                <strong>@record.StockInbounds.InboundDate.ToString("dd/MM/yyyy")</strong><br />
+                                                <small class="text-muted">@record.StockInbounds.InboundDate.ToString("HH:mm")</small>
                                             </td>
                                             <td><span class="badge bg-success">+@record.Quantity.ToString("N2") @Model.Ingredient.Unit</span></td>
                                             <td>@record.UnitPrice.ToString("N0") VNĐ</td>
                                             <td><strong>@totalPrice.ToString("N0") VNĐ</strong></td>
                                             <td>
-                                                @if (record.StockInbound.Supplier != null)
+                                                @if (record.StockInbounds.Supplier != null)
                                                 {
-                                                    <span class="badge bg-info text-dark">@GetSupplierName(record.StockInbound.Supplier)</span>
+                                                    <span class="badge bg-info text-dark">@GetSupplierName(record.StockInbounds.Supplier)</span>
                                                 }
                                                 else
                                                 {
                                                     <span class="text-muted">Nhập trực tiếp</span>
                                                 }
                                             </td>
-                                            <td>@(record.StockInbound.Employee?.FullName ?? "N/A")</td>
-                                            <td>@(record.StockInbound.Notes ?? "Không có")</td>
+                                            <td>@(record.StockInbounds.Cashier?.FullName ?? "N/A")</td>
+                                            <td>@(record.StockInbounds.Notes ?? "Không có")</td>
                                         </tr>
                                     }
                                 }
@@ -153,7 +153,7 @@
                                             <td><span class="badge bg-danger">-@record.Quantity.ToString("N2") @Model.Ingredient.Unit</span></td>
                                             <td><strong class="text-danger">@damageValue.ToString("N0") VNĐ</strong></td>
                                             <td>@record.Reason</td>
-                                            <td>@(record.Employee?.FullName ?? "N/A")</td>
+                                            <td>@(record.ReportedByEmployee?.FullName ?? "N/A")</td>
                                         </tr>
                                     }
                                 }

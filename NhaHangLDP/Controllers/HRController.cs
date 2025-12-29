@@ -3,7 +3,7 @@ using NhaHangLDP.Models;
 using NhaHangLDP.Services.HR;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
@@ -16,7 +16,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class HRController : Controller
     {
-        private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();
+        private readonly MyDbContext _db = new MyDbContext();
         private readonly HRManagementService _hrService;
 
         public HRController()
@@ -42,7 +42,7 @@ namespace NhaHangLDP.Controllers
             if (!string.IsNullOrEmpty(employeeIdStr) && int.TryParse(employeeIdStr, out int employeeId))
                 return employeeId;
 
-            var adminEmployee = _db.Employee.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive);
+            var adminEmployee = _db.Employees.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive);
             return adminEmployee?.Id ?? 1;
         }
 
@@ -116,7 +116,7 @@ namespace NhaHangLDP.Controllers
                 return RedirectUnauthorized();
 
             var todayAttendance = _hrService.GetTodayAttendance();
-            ViewBag.Employees = _db.Employee
+            ViewBag.Employees = _db.Employees
                 .Include(e => e.Role)
                 .Where(e => e.IsActive)
                 .OrderBy(e => e.FullName)
@@ -196,7 +196,7 @@ namespace NhaHangLDP.Controllers
 
             var pending = _hrService.GetPendingLeaveRequests();
             ViewBag.PendingRequests = pending;
-            ViewBag.Employees = _db.Employee.Where(e => e.IsActive).ToList();
+            ViewBag.Employees = _db.Employees.Where(e => e.IsActive).ToList();
             return View();
         }
 
@@ -371,7 +371,7 @@ namespace NhaHangLDP.Controllers
                 return RedirectUnauthorized();
 
             var viewModel = _hrService.GetPerformanceReviews(employeeId, period);
-            ViewBag.Employees = _db.Employee.Where(e => e.IsActive).ToList();
+            ViewBag.Employees = _db.Employees.Where(e => e.IsActive).ToList();
             return View(viewModel);
         }
 
@@ -383,7 +383,7 @@ namespace NhaHangLDP.Controllers
             if (!IsAuthorized())
                 return RedirectUnauthorized();
 
-            ViewBag.Employees = new SelectList(_db.Employee.Where(e => e.IsActive).ToList(), "Id", "FullName");
+            ViewBag.Employees = new SelectList(_db.Employees.Where(e => e.IsActive).ToList(), "Id", "FullName");
             ViewBag.Periods = GetReviewPeriods();
             return View(new PerformanceReview
             {
@@ -410,7 +410,7 @@ namespace NhaHangLDP.Controllers
                 TempData["Error"] = result.Message;
             }
 
-            ViewBag.Employees = new SelectList(_db.Employee.Where(e => e.IsActive).ToList(), "Id", "FullName");
+            ViewBag.Employees = new SelectList(_db.Employees.Where(e => e.IsActive).ToList(), "Id", "FullName");
             ViewBag.Periods = GetReviewPeriods();
             return View(review);
         }
@@ -449,7 +449,7 @@ namespace NhaHangLDP.Controllers
             if (!IsAuthorized())
                 return RedirectUnauthorized();
 
-            ViewBag.Employees = new SelectList(_db.Employee.Where(e => e.IsActive).ToList(), "Id", "FullName");
+            ViewBag.Employees = new SelectList(_db.Employees.Where(e => e.IsActive).ToList(), "Id", "FullName");
             ViewBag.ContractTypes = GetContractTypes();
             return View(new EmployeeContract { StartDate = DateTime.Today });
         }
@@ -472,7 +472,7 @@ namespace NhaHangLDP.Controllers
                 TempData["Error"] = result.Message;
             }
 
-            ViewBag.Employees = new SelectList(_db.Employee.Where(e => e.IsActive).ToList(), "Id", "FullName");
+            ViewBag.Employees = new SelectList(_db.Employees.Where(e => e.IsActive).ToList(), "Id", "FullName");
             ViewBag.ContractTypes = GetContractTypes();
             return View(contract);
         }
@@ -580,7 +580,7 @@ namespace NhaHangLDP.Controllers
             if (!IsAuthorized())
                 return RedirectUnauthorized();
 
-            var employee = _db.Employee.Include("Role").FirstOrDefault(e => e.Id == id);
+            var employee = _db.Employees.Include("Role").FirstOrDefault(e => e.Id == id);
             if (employee == null)
             {
                 TempData["Error"] = "Không tìm thấy nhân viên!";
@@ -810,7 +810,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         private void CreateInitialData()
         {
-            var employees = _db.Employee.Where(e => e.IsActive).ToList();
+            var employees = _db.Employees.Where(e => e.IsActive).ToList();
             if (!employees.Any()) return;
 
             // Tạo ca làm việc mẫu
@@ -913,7 +913,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var employees = _db.Employee.Where(e => e.IsActive).ToList();
+                var employees = _db.Employees.Where(e => e.IsActive).ToList();
 
                 // Tạo ca làm việc mẫu
                 if (!_db.Set<WorkShift>().Any())

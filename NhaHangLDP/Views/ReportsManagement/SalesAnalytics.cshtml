@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.ShiftDetailsViewModel
+@model NhaHangLDP.Models.ShiftDetailsViewModel
 @{
     ViewBag.Title = "Thống Kê Hiệu Suất Bán Hàng - Quản Lý Nhà Hàng";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -525,7 +525,7 @@
                     {
                         <div class="shift-card">
                             <div class="shift-cashier">
-                                <span>@(shift.Employee?.FullName ?? "Thu Ngân")</span>
+                                <span>@(shift.Cashier?.FullName ?? "Thu Ngân")</span>
                                 <span class="shift-status"></span>
                             </div>
                             <div class="shift-info">
@@ -539,7 +539,7 @@
                             </div>
                             <div class="shift-metrics">
                                 <div class="shift-metric">
-                                    <div class="metric-value">@(shift.Order?.Count ?? 0)</div>
+                                    <div class="metric-value">@(shift.Orders?.Count ?? 0)</div>
                                     <div class="metric-label">Đơn hàng</div>
                                 </div>
                                 <div class="shift-metric">
@@ -548,10 +548,10 @@
                                             decimal shiftRevenue = 0;
                                             try
                                             {
-                                                if (shift.Order != null)
+                                                if (shift.Orders != null)
                                                 {
-                                                    shiftRevenue = shift.Order
-                                                        .SelectMany(o => o.Bill ?? new List<NhaHangLDP.Models.Bill>())
+                                                    shiftRevenue = shift.Orders
+                                                        .SelectMany(o => o.Bills ?? new List<NhaHangLDP.Models.Bills>())
                                                         .Where(b => b.Status == "Paid")
                                                         .Sum(b => (decimal?)b.FinalAmount) ?? 0;
                                                 }

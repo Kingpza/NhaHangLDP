@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.ShiftDetailsViewModel
+@model NhaHangLDP.Models.ShiftDetailsViewModel
 @{
     ViewBag.Title = "Chi Tiết Ca Làm Việc";
     Layout = "~/Views/Shared/_CashierLayout.cshtml";
@@ -452,12 +452,12 @@
                         <span class="info-label">Thời gian làm việc</span>
                         <span class="info-value">@Model.WorkingTimeDisplay</span>
                     </div>
-                    @if (Model.ShiftInfo.ShiftSupportStaff != null && Model.ShiftInfo.ShiftSupportStaff.Any())
+                    @if (Model.ShiftInfo.ShiftSupportStaffs != null && Model.ShiftInfo.ShiftSupportStaffs.Any())
                     {
                         <div class="info-item" style="grid-column: 1 / -1;">
                             <span class="info-label">Nhân viên hỗ trợ</span>
                             <div>
-                                @foreach (var staff in Model.ShiftInfo.ShiftSupportStaff)
+                                @foreach (var staff in Model.ShiftInfo.ShiftSupportStaffs)
                                 {
                                     <span class="badge-staff"><i class="fas fa-user"></i>@staff.Employee.FullName</span>
                                 }

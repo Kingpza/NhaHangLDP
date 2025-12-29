@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Web;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ namespace NhaHangLDP.Controllers
 {
     public class PublicController : Controller
     {
-        private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private MyDbContext db = new MyDbContext();
         private AIChatbotService _chatbotService;
 
         public PublicController()
@@ -26,7 +26,7 @@ namespace NhaHangLDP.Controllers
         // GET: Public
         public ActionResult Menu()
         {
-            var menu = db.MenuItem
+            var menu = db.MenuItems
              .Where(m => m.IsAvailable == true)
              .ToList();
     
@@ -55,7 +55,7 @@ namespace NhaHangLDP.Controllers
                 return new StatusCodeResult((int) HttpStatusCode.BadRequest);
             }
 
-            var menuItem = db.MenuItem.Find(id.Value);
+            var menuItem = db.MenuItems.Find(id.Value);
 
             if (menuItem == null)
             {
@@ -63,7 +63,7 @@ namespace NhaHangLDP.Controllers
             }
 
             // Truy vấn nguyên liệu
-            var ingredients = db.MenuItemIngredient
+            var ingredients = db.MenuItemIngredients
                                 .Include(mi => mi.Ingredient)
                                 .Where(mi => mi.MenuItemId == id.Value)
                                 .Select(mi => new MenuItemIngredientViewModel
@@ -76,7 +76,7 @@ namespace NhaHangLDP.Controllers
                                 .ToList();
 
             // Lấy món ăn liên quan (cùng category, khác ID, lấy 4 món)
-            var relatedItems = db.MenuItem
+            var relatedItems = db.MenuItems
                                 .Where(m => m.IsAvailable && 
                                            m.Category == menuItem.Category && 
                                            m.Id != id.Value)
@@ -192,7 +192,7 @@ namespace NhaHangLDP.Controllers
 
                 query = query.ToLower();
 
-                var results = db.MenuItem
+                var results = db.MenuItems
                     .Where(m => m.IsAvailable &&
                         (m.Name.ToLower().Contains(query) ||
                          m.Description.ToLower().Contains(query) ||

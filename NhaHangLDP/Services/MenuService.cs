@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -7,16 +7,16 @@ namespace NhaHangLDP.Services
 {
     public class MenuService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public MenuService(NhaHangLDPEntities context)
+        public MenuService(MyDbContext context)
         {
             db = context;
         }
 
         public List<object> GetMenuItems(string category = "")
         {
-            var query = db.MenuItem.Where(m => m.IsAvailable == true);
+            var query = db.MenuItems.Where(m => m.IsAvailable == true);
 
             if (!string.IsNullOrEmpty(category) && category != "all")
             {

@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.ReturnManagementViewModel
+@model NhaHangLDP.Models.ReturnManagementViewModel
 
 @{
     ViewBag.Title = "Tạo Phiếu Trả Hàng";
@@ -153,7 +153,7 @@ var billId = $('#BillID').val();
                     success: function(response) {
                         if (response.Success) {
                             // Thành công: HIỂN THỊ CÁC BƯỚC TIẾP THEO
-                            displayBillInfo(response.Bill);
+                            displayBillInfo(response.Bills);
                             loadReturnItems(response.OrderDetails);
                             // Dòng lệnh quan trọng: HIỂN THỊ nút Tạo Phiếu Trả Hàng
                             $('#returnItemsSection, #submitSection').show();

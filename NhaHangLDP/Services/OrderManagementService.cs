@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Newtonsoft.Json;
 using NhaHangLDP.Models;
@@ -9,9 +9,9 @@ namespace NhaHangLDP.Services
 {
     public class OrderManagementService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public OrderManagementService(NhaHangLDPEntities context)
+        public OrderManagementService(MyDbContext context)
         {
             db = context;
         }
@@ -48,7 +48,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var table = db.RestaurantTable.Find(tableId);
+                    var table = db.RestaurantTables.Find(tableId);
                     if (table == null)
                     {
                         errorMessage = "Bàn không tồn tại!";
@@ -56,7 +56,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var existingOrder = db.Order
+                    var existingOrder = db.Orders
                         .Where(o => o.TableId == tableId && (o.Status == "Pending" || o.Status == "Preparing"))
                         .FirstOrDefault();
 
@@ -75,7 +75,7 @@ namespace NhaHangLDP.Services
                             OrderTime = DateTime.Now,
                             Status = "Pending"
                         };
-                        db.Order.Add(order);
+                        db.Orders.Add(order);
                         db.SaveChanges();
                         table.Status = "Occupied";
                     }
@@ -85,14 +85,14 @@ namespace NhaHangLDP.Services
 
                     foreach (var item in items)
                     {
-                        var menuItem = db.MenuItem.Find(item.Id);
+                        var menuItem = db.MenuItems.Find(item.Id);
                         if (menuItem == null || !menuItem.IsAvailable)
                         {
                             stockErrors.Add($"Món {item.Name} không khả dụng");
                             continue;
                         }
 
-                        var requiredIngredients = db.MenuItemIngredient
+                        var requiredIngredients = db.MenuItemIngredients
                             .Include(mi => mi.Ingredient)
                             .Where(mi => mi.MenuItemId == item.Id)
                             .ToList();
@@ -116,7 +116,7 @@ namespace NhaHangLDP.Services
 
                         if (stockErrors.Any()) continue;
 
-                        var existingDetail = db.OrderDetail
+                        var existingDetail = db.OrderDetails
                             .FirstOrDefault(od => od.OrderId == order.Id && od.MenuItemId == item.Id);
 
                         if (existingDetail != null)
@@ -133,7 +133,7 @@ namespace NhaHangLDP.Services
                                 PriceAtTime = menuItem.Price,
                                 Notes = customerNote
                             };
-                            db.OrderDetail.Add(orderDetail);
+                            db.OrderDetails.Add(orderDetail);
                         }
                     }
 
@@ -147,7 +147,7 @@ namespace NhaHangLDP.Services
 
                     foreach (var update in inventoryUpdates)
                     {
-                        var ingredient = db.Ingredient.Find(update.IngredientId);
+                        var ingredient = db.Ingredients.Find(update.IngredientId);
                         if (ingredient != null)
                         {
                             ingredient.AvailableStock -= update.RequiredQuantity;
@@ -182,7 +182,7 @@ namespace NhaHangLDP.Services
                     return false;
                 }
 
-                var order = db.Order.Include(o => o.RestaurantTable).FirstOrDefault(o => o.Id == orderId);
+                var order = db.Orders.Include(o => o.Table).FirstOrDefault(o => o.Id == orderId);
                 if (order == null)
                 {
                     errorMessage = "Không tìm thấy đơn hàng!";
@@ -193,7 +193,7 @@ namespace NhaHangLDP.Services
 
                 if (status == "Completed" || status == "Cancelled")
                 {
-                    order.RestaurantTable.Status = "Available";
+                    order.Table.Status = "Available";
                 }
 
                 db.SaveChanges();
@@ -214,9 +214,9 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var order = db.Order
-                        .Include(o => o.RestaurantTable)
-                        .Include(o => o.OrderDetail.Select(od => od.MenuItem.MenuItemIngredient.Select(mi => mi.Ingredient)))
+                    var order = db.Orders
+                        .Include(o => o.Table)
+                        .Include(o => o.OrderDetails.Select(od => od.MenuItem.MenuItemIngredients.Select(mi => mi.Ingredient)))
                         .FirstOrDefault(o => o.Id == orderId);
 
                     if (order == null)
@@ -225,15 +225,15 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    if (order.Status == "Completed" || order.Bill.Any(b => b.Status == "Paid"))
+                    if (order.Status == "Completed" || order.Bills.Any(b => b.Status == "Paid"))
                     {
                         errorMessage = "Không thể hủy đơn hàng đã hoàn thành hoặc đã thanh toán!";
                         return false;
                     }
 
-                    foreach (var detail in order.OrderDetail)
+                    foreach (var detail in order.OrderDetails)
                     {
-                        var requiredIngredients = detail.MenuItem.MenuItemIngredient;
+                        var requiredIngredients = detail.MenuItem.MenuItemIngredients;
                         foreach (var reqIngredient in requiredIngredients)
                         {
                             var returnQuantity = reqIngredient.RequiredQuantity * detail.Quantity;
@@ -242,7 +242,7 @@ namespace NhaHangLDP.Services
                     }
 
                     order.Status = "Cancelled";
-                    order.RestaurantTable.Status = "Available";
+                    order.Table.Status = "Available";
 
                     db.SaveChanges();
                     transaction.Commit();

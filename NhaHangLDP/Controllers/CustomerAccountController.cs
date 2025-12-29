@@ -15,7 +15,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class CustomerAccountController : Controller
     {
-        private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();
+        private readonly MyDbContext _db = new MyDbContext();
 
         #region Login
 

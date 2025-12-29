@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
@@ -15,7 +15,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class PaymentController : Controller
     {
-        private readonly NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private readonly MyDbContext db = new MyDbContext();
         private readonly PaymentService paymentService;
         private readonly InvoiceService invoiceService;
 
@@ -149,7 +149,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var now = DateTime.Now;
-                var promotions = db.Promotion
+                var promotions = db.Promotions
                     .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now)
                     .OrderByDescending(p => p.DiscountValue)
                     .ToList()
@@ -348,7 +348,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var refunds = db.ReturnBill
+                var refunds = db.ReturnBills
                     .Include(r => r.Employee)
                     .Where(r => r.OriginalBillID == billId)
                     .OrderByDescending(r => r.ReturnDate)
@@ -382,9 +382,9 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager", "Cashier")]
         public ActionResult SplitBill(int orderId)
         {
-            var order = db.Order
-                .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                .Include(o => o.RestaurantTable)
+            var order = db.Orders
+                .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                .Include(o => o.Table)
                 .FirstOrDefault(o => o.Id == orderId);
 
             if (order == null)
@@ -397,8 +397,8 @@ namespace NhaHangLDP.Controllers
             {
                 OrderId = order.Id,
                 OrderCode = $"DH{order.Id:D6}",
-                TableNumber = order.RestaurantTable?.TableNumber ?? "N/A",
-                Items = order.OrderDetail.Select(od => new SplitBillItem
+                TableNumber = order.Table?.TableNumber ?? "N/A",
+                Items = order.OrderDetails.Select(od => new SplitBillItem
                 {
                     Id = od.Id,
                     Name = od.MenuItem?.Name ?? "N/A",
@@ -407,7 +407,7 @@ namespace NhaHangLDP.Controllers
                     UnitPrice = od.PriceAtTime,
                     IsAssigned = false
                 }).ToList(),
-                TotalAmount = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime)
+                TotalAmount = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime)
             };
 
             return View(viewModel);
@@ -450,9 +450,9 @@ namespace NhaHangLDP.Controllers
                 try
                 {
                     // Lấy thông tin đơn hàng
-                    var order = db.Order
-                        .Include(o => o.OrderDetail)
-                        .Include(o => o.RestaurantTable)
+                    var order = db.Orders
+                        .Include(o => o.OrderDetails)
+                        .Include(o => o.Table)
                         .FirstOrDefault(o => o.Id == request.OrderId);
 
                     if (order == null)
@@ -469,11 +469,11 @@ namespace NhaHangLDP.Controllers
                     var cashierId = GetCurrentCashierId();
                     
                     // Kiểm tra cashier có tồn tại không
-                    var cashierExists = db.Employee.Any(e => e.Id == cashierId);
+                    var cashierExists = db.Employees.Any(e => e.Id == cashierId);
                     if (!cashierExists)
                     {
                         // Lấy bất kỳ employee nào có role Cashier hoặc Admin
-                        var defaultCashier = db.Employee
+                        var defaultCashier = db.Employees
                             .Include(e => e.Role)
                             .FirstOrDefault(e => e.Role.RoleName == "Cashier" || e.Role.RoleName == "Admin");
                         if (defaultCashier != null)
@@ -483,7 +483,7 @@ namespace NhaHangLDP.Controllers
                         else
                         {
                             // Lấy employee đầu tiên có IsActive = true
-                            var anyEmployee = db.Employee.FirstOrDefault(e => e.IsActive);
+                            var anyEmployee = db.Employees.FirstOrDefault(e => e.IsActive);
                             if (anyEmployee != null)
                             {
                                 cashierId = anyEmployee.Id;
@@ -491,7 +491,7 @@ namespace NhaHangLDP.Controllers
                             else
                             {
                                 // Lấy employee bất kỳ
-                                var firstEmployee = db.Employee.FirstOrDefault();
+                                var firstEmployee = db.Employees.FirstOrDefault();
                                 if (firstEmployee != null)
                                 {
                                     cashierId = firstEmployee.Id;
@@ -508,7 +508,7 @@ namespace NhaHangLDP.Controllers
                     var now = DateTime.Now;
                     var createdBillIds = new List<int>();
                     decimal totalPaid = 0;
-                    var totalOrderAmount = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+                    var totalOrderAmount = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime);
 
                     // Xử lý từng phần bill
                     if (request.Parts != null && request.Parts.Count > 0)
@@ -542,7 +542,7 @@ namespace NhaHangLDP.Controllers
                                 {
                                     foreach (var item in part.Items)
                                     {
-                                        var orderDetail = order.OrderDetail.FirstOrDefault(od => od.Id == item.OrderDetailId);
+                                        var orderDetail = order.OrderDetails.FirstOrDefault(od => od.Id == item.OrderDetailId);
                                         if (orderDetail != null)
                                         {
                                             partTotal += orderDetail.PriceAtTime * item.Quantity;
@@ -579,7 +579,7 @@ namespace NhaHangLDP.Controllers
                                 Status = "Paid"
                             };
 
-                            db.Bill.Add(bill);
+                            db.Bills.Add(bill);
                             db.SaveChanges();
                             createdBillIds.Add(bill.Id);
                             totalPaid += partTotal;
@@ -587,7 +587,7 @@ namespace NhaHangLDP.Controllers
                             // Cập nhật doanh thu ca
                             if (shiftId.HasValue)
                             {
-                                var activeShift = db.CashierShift.FirstOrDefault(s => s.Id == shiftId.Value);
+                                var activeShift = db.CashierShifts.FirstOrDefault(s => s.Id == shiftId.Value);
                                 if (activeShift != null)
                                 {
                                     activeShift.TotalRevenue = (activeShift.TotalRevenue ?? 0) + partTotal;
@@ -612,7 +612,7 @@ namespace NhaHangLDP.Controllers
                             Status = "Paid"
                         };
 
-                        db.Bill.Add(bill);
+                        db.Bills.Add(bill);
                         db.SaveChanges();
                         createdBillIds.Add(bill.Id);
                         totalPaid = totalOrderAmount;
@@ -622,15 +622,15 @@ namespace NhaHangLDP.Controllers
                     order.Status = "Completed";
 
                     // Giải phóng bàn
-                    if (order.RestaurantTable != null)
+                    if (order.Table != null)
                     {
-                        order.RestaurantTable.Status = "Available";
+                        order.Table.Status = "Available";
                     }
 
                     // Cập nhật số lượng bán của món ăn
-                    foreach (var detail in order.OrderDetail)
+                    foreach (var detail in order.OrderDetails)
                     {
-                        var menuItem = db.MenuItem.Find(detail.MenuItemId);
+                        var menuItem = db.MenuItems.Find(detail.MenuItemId);
                         if (menuItem != null)
                         {
                             menuItem.SoldCount = menuItem.SoldCount + detail.Quantity;
@@ -799,8 +799,8 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var order = db.Order
-                    .Include(o => o.OrderDetail)
+                var order = db.Orders
+                    .Include(o => o.OrderDetails)
                     .FirstOrDefault(o => o.Id == orderId);
 
                 if (order == null)
@@ -808,9 +808,9 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
                 }
 
-                var subTotal = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+                var subTotal = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime);
                 var vatPercent = 10m;
-                var vatSetting = db.AppSetting.FirstOrDefault(s => s.SettingKey == "DefaultVAT");
+                var vatSetting = db.AppSettings.FirstOrDefault(s => s.SettingKey == "DefaultVAT");
                 if (vatSetting != null && decimal.TryParse(vatSetting.SettingValue, out decimal vat))
                 {
                     vatPercent = vat;
@@ -884,7 +884,7 @@ namespace NhaHangLDP.Controllers
             var shiftId = (int.TryParse(HttpContext.Session.GetString("ActiveShiftId"), out int _pActiveShiftId) ? (int?)_pActiveShiftId : null);
             if (!shiftId.HasValue)
             {
-                var activeShift = db.CashierShift.FirstOrDefault(s => s.Status == "Active");
+                var activeShift = db.CashierShifts.FirstOrDefault(s => s.Status == "Active");
                 shiftId = activeShift?.Id;
             }
             return shiftId;

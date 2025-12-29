@@ -1,5 +1,5 @@
-﻿using System;
-using System.Data.Entity;
+using System;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -7,9 +7,9 @@ namespace NhaHangLDP.Services
 {
     public class TableManagementService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public TableManagementService(NhaHangLDPEntities context)
+        public TableManagementService(MyDbContext context)
         {
             db = context;
         }
@@ -25,7 +25,7 @@ namespace NhaHangLDP.Services
                     return false;
                 }
 
-                var table = db.RestaurantTable.Find(tableId);
+                var table = db.RestaurantTables.Find(tableId);
                 if (table == null)
                 {
                     errorMessage = "Không tìm thấy bàn!";
@@ -51,8 +51,8 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var sourceTable = db.RestaurantTable.Include("Order").FirstOrDefault(t => t.Id == sourceTableId);
-                    var targetTable = db.RestaurantTable.Include("Order").FirstOrDefault(t => t.Id == targetTableId);
+                    var sourceTable = db.RestaurantTables.Include("Order").FirstOrDefault(t => t.Id == sourceTableId);
+                    var targetTable = db.RestaurantTables.Include("Order").FirstOrDefault(t => t.Id == targetTableId);
 
                     if (sourceTable == null || targetTable == null)
                     {
@@ -102,8 +102,8 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var mainTable = db.RestaurantTable.Include("Order.OrderDetail").FirstOrDefault(t => t.Id == mainTableId);
-                    var secTable = db.RestaurantTable.Include("Order.OrderDetail").FirstOrDefault(t => t.Id == secondaryTableId);
+                    var mainTable = db.RestaurantTables.Include("Order.OrderDetails").FirstOrDefault(t => t.Id == mainTableId);
+                    var secTable = db.RestaurantTables.Include("Order.OrderDetails").FirstOrDefault(t => t.Id == secondaryTableId);
 
                     if (mainTable == null || secTable == null)
                     {
@@ -111,8 +111,8 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var mainOrder = mainTable.Order.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
-                    var secOrder = secTable.Order.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
+                    var mainOrder = mainTable.Orders.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
+                    var secOrder = secTable.Orders.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
 
                     if (mainOrder == null || secOrder == null)
                     {
@@ -120,7 +120,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    foreach (var detail in secOrder.OrderDetail.ToList())
+                    foreach (var detail in secOrder.OrderDetails.ToList())
                     {
                         detail.OrderId = mainOrder.Id;
                     }
@@ -149,7 +149,7 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var table = db.RestaurantTable.Find(tableId);
+                    var table = db.RestaurantTables.Find(tableId);
                     if (table == null)
                     {
                         errorMessage = "Không tìm thấy bàn!";
@@ -180,7 +180,7 @@ namespace NhaHangLDP.Services
                         CreatedDate = DateTime.Now
                     };
 
-                    db.Booking.Add(booking);
+                    db.Bookings.Add(booking);
                     table.Status = "Occupied";
 
                     db.SaveChanges();
@@ -204,7 +204,7 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var table = db.RestaurantTable.Find(tableId);
+                    var table = db.RestaurantTables.Find(tableId);
                     if (table == null)
                     {
                         errorMessage = "Không tìm thấy bàn!";
@@ -249,7 +249,7 @@ namespace NhaHangLDP.Services
                         CreatedDate = DateTime.Now
                     };
 
-                    db.Booking.Add(booking);
+                    db.Bookings.Add(booking);
                     table.Status = "Reserved";
 
                     db.SaveChanges();
@@ -273,8 +273,8 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var table = db.RestaurantTable
-                        .Include(t => t.Order.Select(o => o.Bill))
+                    var table = db.RestaurantTables
+                        .Include(t => t.Orders).ThenInclude(o => o.Bills)
                         .FirstOrDefault(t => t.Id == tableId);
 
                     if (table == null)
@@ -289,7 +289,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var unpaidOrder = table.Order
+                    var unpaidOrder = table.Orders
                         .Where(o => o.Status != "Completed" && o.Status != "Cancelled")
                         .FirstOrDefault();
 
@@ -299,7 +299,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var activeBooking = db.Booking
+                    var activeBooking = db.Bookings
                         .Where(b => b.TableId == tableId && (b.Status == "Confirmed" || b.Status == "Pending"))
                         .OrderByDescending(b => b.BookingDateTime)
                         .FirstOrDefault();
@@ -331,7 +331,7 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var table = db.RestaurantTable.Find(tableId);
+                    var table = db.RestaurantTables.Find(tableId);
                     if (table == null)
                     {
                         errorMessage = "Không tìm thấy bàn!";
@@ -344,7 +344,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var activeBooking = db.Booking
+                    var activeBooking = db.Bookings
                         .Where(b => b.TableId == tableId && b.Status == "Pending")
                         .OrderByDescending(b => b.BookingDateTime)
                         .FirstOrDefault();
@@ -376,7 +376,7 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var table = db.RestaurantTable.Find(tableId);
+                    var table = db.RestaurantTables.Find(tableId);
                     if (table == null)
                     {
                         errorMessage = "Không tìm thấy bàn!";
@@ -389,7 +389,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var activeBooking = db.Booking
+                    var activeBooking = db.Bookings
                         .Where(b => b.TableId == tableId && b.Status == "Pending")
                         .OrderByDescending(b => b.BookingDateTime)
                         .FirstOrDefault();

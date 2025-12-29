@@ -173,9 +173,9 @@
 @using (Html.BeginForm("StockInbound", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
 {
     @Html.AntiForgeryToken()
-    @Html.HiddenFor(m => m.StockInbound.InboundCode)
-    @Html.HiddenFor(m => m.StockInbound.CreatedBy)
-    @Html.HiddenFor(m => m.StockInbound.Status)
+    @Html.HiddenFor(m => m.StockInbounds.InboundCode)
+    @Html.HiddenFor(m => m.StockInbounds.CreatedBy)
+    @Html.HiddenFor(m => m.StockInbounds.Status)
 
     <div class="row">
         <!-- LEFT: Thông tin phiếu + form thêm nguyên liệu -->
@@ -190,25 +190,25 @@
                         <small class="text-muted">Tự động tạo</small>
                     </div>
                     <div class="col-md-6 mb-3">
-                        @Html.LabelFor(m => m.StockInbound.InboundDate, "Ngày nhập", new { @class = "form-label" })
-                        @Html.TextBoxFor(m => m.StockInbound.InboundDate, new { @class = "form-control", type = "datetime-local", required = "required" })
-                        @Html.ValidationMessageFor(m => m.StockInbound.InboundDate, "", new { @class = "text-danger small" })
+                        @Html.LabelFor(m => m.StockInbounds.InboundDate, "Ngày nhập", new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.StockInbounds.InboundDate, new { @class = "form-control", type = "datetime-local", required = "required" })
+                        @Html.ValidationMessageFor(m => m.StockInbounds.InboundDate, "", new { @class = "text-danger small" })
                     </div>
                     <div class="col-md-6 mb-3">
-                        @Html.LabelFor(m => m.StockInbound.EmployeeId, "Nhân viên", new { @class = "form-label" })
-                        @Html.DropDownListFor(m => m.StockInbound.EmployeeId,
+                        @Html.LabelFor(m => m.StockInbounds.EmployeeId, "Nhân viên", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.StockInbounds.EmployeeId,
                             new SelectList(ViewBag.Employees as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "FullName", Context.Session.GetString("UserId")),
                             "-- Chọn --", new { @class = "form-select", required = "required" })
                     </div>
                     <div class="col-md-6 mb-3">
-                        @Html.LabelFor(m => m.StockInbound.SupplierId, "Nhà cung cấp", new { @class = "form-label" })
-                        @Html.DropDownListFor(m => m.StockInbound.SupplierId,
+                        @Html.LabelFor(m => m.StockInbounds.SupplierId, "Nhà cung cấp", new { @class = "form-label" })
+                        @Html.DropDownListFor(m => m.StockInbounds.SupplierId,
                             new SelectList(ViewBag.Suppliers as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "Name"),
                             "-- Chọn (tùy chọn) --", new { @class = "form-select" })
                     </div>
                     <div class="col-12 mb-3">
-                        @Html.LabelFor(m => m.StockInbound.Notes, "Ghi chú", new { @class = "form-label" })
-                        @Html.TextAreaFor(m => m.StockInbound.Notes, new { @class = "form-control", rows = 2, placeholder = "Ghi chú về phiếu nhập..." })
+                        @Html.LabelFor(m => m.StockInbounds.Notes, "Ghi chú", new { @class = "form-label" })
+                        @Html.TextAreaFor(m => m.StockInbounds.Notes, new { @class = "form-control", rows = 2, placeholder = "Ghi chú về phiếu nhập..." })
                     </div>
                 </div>
 

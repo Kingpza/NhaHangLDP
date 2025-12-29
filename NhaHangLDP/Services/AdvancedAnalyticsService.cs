@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -12,14 +12,14 @@ namespace NhaHangLDP.Services
     /// </summary>
     public class AdvancedAnalyticsService
     {
-        private readonly NhaHangLDPEntities _db;
+        private readonly MyDbContext _db;
 
         public AdvancedAnalyticsService()
         {
-            _db = new NhaHangLDPEntities();
+            _db = new MyDbContext();
         }
 
-        public AdvancedAnalyticsService(NhaHangLDPEntities db)
+        public AdvancedAnalyticsService(MyDbContext db)
         {
             _db = db;
         }
@@ -70,7 +70,7 @@ namespace NhaHangLDP.Services
             var summary = new DashboardSummary();
 
             // Current period
-            var currentBills = _db.Bill
+            var currentBills = _db.Bills
                 .Where(b => b.BillDate >= start && b.BillDate < end && b.Status == "Paid")
                 .ToList();
 
@@ -87,12 +87,12 @@ namespace NhaHangLDP.Services
             summary.ProfitMargin = summary.TotalRevenue > 0 ? (summary.NetProfit / summary.TotalRevenue) * 100 : 0;
 
             // Previous period for growth calculation
-            var prevBills = _db.Bill
+            var prevBills = _db.Bills
                 .Where(b => b.BillDate >= prevStart && b.BillDate < prevEnd && b.Status == "Paid")
                 .ToList();
 
             var prevRevenue = prevBills.Sum(b => b.FinalAmount);
-            var prevOrders = _db.Order.Count(o => o.OrderTime >= prevStart && o.OrderTime < prevEnd);
+            var prevOrders = _db.Orders.Count(o => o.OrderTime >= prevStart && o.OrderTime < prevEnd);
 
             // Growth rates
             summary.RevenueGrowth = CalculateGrowth(summary.TotalRevenue, prevRevenue);
@@ -102,17 +102,17 @@ namespace NhaHangLDP.Services
             summary.AvgOrderGrowth = CalculateGrowth(summary.AvgOrderValue, prevAvgOrder);
 
             // Table utilization
-            var totalTables = _db.RestaurantTable.Count();
-            var occupiedTables = _db.RestaurantTable.Count(t => t.Status == "Occupied");
+            var totalTables = _db.Table.Count();
+            var occupiedTables = _db.Table.Count(t => t.Status == "Occupied");
             summary.TableUtilization = totalTables > 0 ? (decimal)occupiedTables / totalTables * 100 : 0;
 
             // Table turnover
-            var totalSessions = _db.Order.Count(o => o.OrderTime >= start && o.OrderTime < end);
+            var totalSessions = _db.Orders.Count(o => o.OrderTime >= start && o.OrderTime < end);
             var hoursOpen = Math.Max(1, (end - start).TotalHours);
             summary.TableTurnover = totalTables > 0 ? (int)(totalSessions / (totalTables * (hoursOpen / 8))) : 0;
 
             // RevPASH (Revenue per Available Seat Hour)
-            var totalSeats = _db.RestaurantTable.Sum(t => (int?)t.Capacity) ?? 0;
+            var totalSeats = _db.Table.Sum(t => (int?)t.Capacity) ?? 0;
             summary.RevPASH = totalSeats > 0 && hoursOpen > 0 ? summary.TotalRevenue / (totalSeats * (decimal)hoursOpen) : 0;
 
             // Customer counts
@@ -137,7 +137,7 @@ namespace NhaHangLDP.Services
         public List<RevenueDataPoint> GetRevenueChart(DateTime start, DateTime end, string period)
         {
             var dataPoints = new List<RevenueDataPoint>();
-            var bills = _db.Bill
+            var bills = _db.Bills
                 .Where(b => b.BillDate >= start && b.BillDate < end && b.Status == "Paid")
                 .ToList();
 
@@ -238,11 +238,11 @@ namespace NhaHangLDP.Services
         /// </summary>
         public List<CategoryRevenue> GetCategoryBreakdown(DateTime start, DateTime end)
         {
-            var orderDetails = _db.OrderDetail
+            var orderDetails = _db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Order)
+                .Include(od => od.Orders)
                 .Where(od => od.Order.OrderTime >= start && od.Order.OrderTime < end)
-                .Where(od => od.Order.Bill.Any(b => b.Status == "Paid"))
+                .Where(od => od.Order.Bills.Any(b => b.Status == "Paid"))
                 .ToList();
 
             var totalRevenue = orderDetails.Sum(od => od.Quantity * od.PriceAtTime);
@@ -285,7 +285,7 @@ namespace NhaHangLDP.Services
                     var revenue = 0m;
                     foreach (var order in dayOrders)
                     {
-                        revenue += _db.Bill
+                        revenue += _db.Bills
                             .Where(b => b.OrderId == order.Id && b.Status == "Paid")
                             .Sum(b => (decimal?)b.FinalAmount) ?? 0;
                     }
@@ -315,11 +315,11 @@ namespace NhaHangLDP.Services
             var performers = new List<TopPerformer>();
 
             // Top dishes by revenue
-            var topDishes = _db.OrderDetail
+            var topDishes = _db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Order)
+                .Include(od => od.Orders)
                 .Where(od => od.Order.OrderTime >= start && od.Order.OrderTime < end)
-                .Where(od => od.Order.Bill.Any(b => b.Status == "Paid"))
+                .Where(od => od.Order.Bills.Any(b => b.Status == "Paid"))
                 .GroupBy(od => new { od.MenuItemId, od.MenuItem.Name, od.MenuItem.ImageUrl })
                 .Select(g => new
                 {
@@ -355,7 +355,7 @@ namespace NhaHangLDP.Services
         public List<TopPerformer> GetTopCashiers(DateTime start, DateTime end, int limit = 5)
         {
             var shifts = _db.CashierShift
-                .Include(s => s.Employee)
+                .Include(s => s.Cashier)
                 .Where(s => s.StartTime >= start && s.StartTime < end)
                 .ToList();
 
@@ -363,16 +363,16 @@ namespace NhaHangLDP.Services
 
             foreach (var shift in shifts)
             {
-                var orders = _db.Order.Where(o => o.ShiftId == shift.Id).ToList();
+                var orders = _db.Orders.Where(o => o.ShiftId == shift.Id).ToList();
                 var revenue = 0m;
                 foreach (var order in orders)
                 {
-                    revenue += _db.Bill
+                    revenue += _db.Bills
                         .Where(b => b.OrderId == order.Id && b.Status == "Paid")
                         .Sum(b => (decimal?)b.FinalAmount) ?? 0;
                 }
 
-                var name = shift.Employee?.FullName ?? "N/A";
+                var name = shift.Cashier?.FullName ?? "N/A";
                 if (cashierPerformance.ContainsKey(name))
                 {
                     cashierPerformance[name] = (
@@ -415,7 +415,7 @@ namespace NhaHangLDP.Services
             var endDate = DateTime.Today;
             var startDate = endDate.AddDays(-30);
 
-            var dailyRevenue = _db.Bill
+            var dailyRevenue = _db.Bills
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
                 .GroupBy(b => DbFunctions.TruncateTime(b.BillDate))
                 .Select(g => new { Date = g.Key, Revenue = g.Sum(b => b.FinalAmount) })
@@ -477,7 +477,7 @@ namespace NhaHangLDP.Services
             
             // Calculate average order value
             var avgRevenue = dailyRevenue.Count > 0 ? dailyRevenue.Average(d => d.Revenue) : 0m;
-            var totalOrdersInPeriod = _db.Order.Count(o => o.OrderTime >= startDate && o.OrderTime < endDate);
+            var totalOrdersInPeriod = _db.Orders.Count(o => o.OrderTime >= startDate && o.OrderTime < endDate);
             var avgOrderValue = totalOrdersInPeriod > 0 && avgRevenue > 0 
                 ? avgRevenue / (totalOrdersInPeriod / (decimal)n) 
                 : 100000m;
@@ -503,11 +503,11 @@ namespace NhaHangLDP.Services
         /// </summary>
         public List<MenuEngineeringItem> GetMenuEngineering(DateTime start, DateTime end)
         {
-            var orderDetails = _db.OrderDetail
+            var orderDetails = _db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Order)
+                .Include(od => od.Orders)
                 .Where(od => od.Order.OrderTime >= start && od.Order.OrderTime < end)
-                .Where(od => od.Order.Bill.Any(b => b.Status == "Paid"))
+                .Where(od => od.Order.Bills.Any(b => b.Status == "Paid"))
                 .ToList();
 
             var menuItems = orderDetails
@@ -525,7 +525,7 @@ namespace NhaHangLDP.Services
                     var revenue = g.Sum(od => od.Quantity * od.PriceAtTime);
                     
                     // Calculate cost from ingredients
-                    var ingredients = _db.MenuItemIngredient
+                    var ingredients = _db.MenuItemIngredients
                         .Include(mi => mi.Ingredient)
                         .Where(mi => mi.MenuItemId == g.Key.MenuItemId)
                         .ToList();
@@ -597,11 +597,11 @@ namespace NhaHangLDP.Services
         /// </summary>
         public List<ABCAnalysisItem> GetABCAnalysis(DateTime start, DateTime end)
         {
-            var items = _db.OrderDetail
+            var items = _db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Order)
+                .Include(od => od.Orders)
                 .Where(od => od.Order.OrderTime >= start && od.Order.OrderTime < end)
-                .Where(od => od.Order.Bill.Any(b => b.Status == "Paid"))
+                .Where(od => od.Order.Bills.Any(b => b.Status == "Paid"))
                 .GroupBy(od => new { od.MenuItemId, od.MenuItem.Name })
                 .Select(g => new
                 {
@@ -655,7 +655,7 @@ namespace NhaHangLDP.Services
         {
             var anomalies = new List<AnomalyResult>();
 
-            var dailyRevenue = _db.Bill
+            var dailyRevenue = _db.Bills
                 .Where(b => b.BillDate >= start && b.BillDate < end && b.Status == "Paid")
                 .GroupBy(b => DbFunctions.TruncateTime(b.BillDate))
                 .Select(g => new { Date = g.Key, Revenue = g.Sum(b => b.FinalAmount) })
@@ -728,7 +728,7 @@ namespace NhaHangLDP.Services
             }
 
             // 2. Revenue target alert
-            var todayRevenue = _db.Bill
+            var todayRevenue = _db.Bills
                 .Where(b => b.BillDate >= today && b.Status == "Paid")
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
@@ -779,11 +779,11 @@ namespace NhaHangLDP.Services
             var kpis = new List<KPIMetric>();
 
             // 1. Revenue
-            var currentRevenue = _db.Bill
+            var currentRevenue = _db.Bills
                 .Where(b => b.BillDate >= start && b.BillDate < end && b.Status == "Paid")
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
-            var prevRevenue = _db.Bill
+            var prevRevenue = _db.Bills
                 .Where(b => b.BillDate >= prevStart && b.BillDate < prevEnd && b.Status == "Paid")
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
@@ -804,8 +804,8 @@ namespace NhaHangLDP.Services
             });
 
             // 2. Orders
-            var currentOrders = _db.Order.Count(o => o.OrderTime >= start && o.OrderTime < end);
-            var prevOrders = _db.Order.Count(o => o.OrderTime >= prevStart && o.OrderTime < prevEnd);
+            var currentOrders = _db.Orders.Count(o => o.OrderTime >= start && o.OrderTime < end);
+            var prevOrders = _db.Orders.Count(o => o.OrderTime >= prevStart && o.OrderTime < prevEnd);
             var ordersTarget = 50;
 
             kpis.Add(new KPIMetric
@@ -841,8 +841,8 @@ namespace NhaHangLDP.Services
             });
 
             // 4. Table Utilization
-            var totalTables = _db.RestaurantTable.Count();
-            var occupiedTables = _db.RestaurantTable.Count(t => t.Status == "Occupied");
+            var totalTables = _db.Table.Count();
+            var occupiedTables = _db.Table.Count(t => t.Status == "Occupied");
             var utilization = totalTables > 0 ? (decimal)occupiedTables / totalTables * 100 : 0;
 
             kpis.Add(new KPIMetric

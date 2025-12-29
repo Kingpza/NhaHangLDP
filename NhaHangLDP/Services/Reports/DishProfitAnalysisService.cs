@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,9 +8,9 @@ namespace NhaHangLDP.Services.Reports
 {
     public class DishProfitAnalysisService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public DishProfitAnalysisService(NhaHangLDPEntities context)
+        public DishProfitAnalysisService(MyDbContext context)
         {
             db = context;
         }
@@ -112,7 +112,7 @@ namespace NhaHangLDP.Services.Reports
             DateTime startDate, endDate, prevStartDate, prevEndDate;
             GetDateRanges(period, out startDate, out endDate, out prevStartDate, out prevEndDate);
 
-            var totalRevenue = db.Bill
+            var totalRevenue = db.Bills
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
@@ -128,12 +128,12 @@ namespace NhaHangLDP.Services.Reports
 
         private List<OrderDetail> GetOrderDetailsInRange(DateTime start, DateTime end)
         {
-            return db.OrderDetail
+            return db.OrderDetails
                 .Include(od => od.MenuItem)
-                .Include(od => od.Order)
+                .Include(od => od.Orders)
                 .Where(od => od.Order.OrderTime >= start
                           && od.Order.OrderTime < end
-                          && od.Order.Bill.Any(b => b.Status == "Paid"))
+                          && od.Order.Bills.Any(b => b.Status == "Paid"))
                 .ToList();
         }
 
@@ -143,7 +143,7 @@ namespace NhaHangLDP.Services.Reports
 
             var menuItemIds = details.Select(od => od.MenuItemId).Distinct().ToList();
 
-            var allIngredients = db.MenuItemIngredient
+            var allIngredients = db.MenuItemIngredients
                 .Include(mi => mi.Ingredient)
                 .Where(mi => menuItemIds.Contains(mi.MenuItemId))
                 .ToList();

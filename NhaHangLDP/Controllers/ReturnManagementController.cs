@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +11,7 @@ namespace NhaHangLDP.Controllers
 {
     public class ReturnManagementController : Controller
     {
-        private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private MyDbContext db = new MyDbContext();
 
         // GET: ReturnManagement
         public ActionResult Index()
@@ -27,8 +27,8 @@ namespace NhaHangLDP.Controllers
             try
             {
                 // Lấy danh sách tất cả các phiếu trả hàng
-                var returnBills = db.ReturnBill
-                    .Include(r => r.Bill)
+                var returnBills = db.ReturnBills
+                    .Include(r => r.Bills)
                     .Include(r => r.Employee)
                     .Include(r => r.ReturnBillDetail)
                     .OrderByDescending(r => r.ReturnDate)
@@ -57,7 +57,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 // Tạo danh sách nhân viên cho dropdown
-                ViewBag.Employees = db.Employee
+                ViewBag.Employees = db.Employees
                              .Where(e => e.IsActive == true)
                              .Select(e => new SelectListItem
                              {
@@ -80,14 +80,14 @@ namespace NhaHangLDP.Controllers
         [HttpPost]
         public JsonResult FindBill(int billId)
         {
-            using (var localDb = new NhaHangLDPEntities())
+            using (var localDb = new MyDbContext())
             {
                 try
                 {
                     // Tối ưu hóa Include: Chỉ tải những gì cần thiết
-                    var bill = localDb.Bill
-                         .Include(b => b.Order)
-                         .Include(b => b.Order.OrderDetail.Select(od => od.MenuItem))
+                    var bill = localDb.Bills
+                         .Include(b => b.Orders)
+                         .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
                          .FirstOrDefault(b => b.Id == billId && b.Status == "Paid");
 
                     if (bill == null)
@@ -100,7 +100,7 @@ namespace NhaHangLDP.Controllers
                     }
 
                     // Kiểm tra xem hóa đơn đã được trả hàng chưa
-                    var existingReturn = localDb.ReturnBill
+                    var existingReturn = localDb.ReturnBills
                                                 .FirstOrDefault(r => r.OriginalBillID == billId);
 
                     if (existingReturn != null)
@@ -113,7 +113,7 @@ namespace NhaHangLDP.Controllers
                     }
 
                     // Tạo danh sách chi tiết đơn hàng cho ViewModel
-                    var orderDetails = bill.Order.OrderDetail.Select(od => new OrderDetailViewModel
+                    var orderDetails = bill.Order.OrderDetails.Select(od => new OrderDetailViewModel
                     {
                         OrderDetailID = od.Id,
                         MenuItemID = od.MenuItemId,
@@ -166,7 +166,7 @@ namespace NhaHangLDP.Controllers
             // Tải lại ViewBag cho Dropdown nếu có lỗi xảy ra
             Func<ReturnManagementViewModel, ActionResult> ReloadViewWithError = (currentModel) =>
             {
-                ViewBag.Employees = db.Employee
+                ViewBag.Employees = db.Employees
                    .Where(e => e.IsActive == true)
                    .Select(e => new SelectListItem
                    {
@@ -184,7 +184,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 // Kiểm tra hóa đơn có tồn tại và đã được thanh toán
-                var originalBill = db.Bill
+                var originalBill = db.Bills
                     .FirstOrDefault(b => b.Id == model.BillID && b.Status == "Paid");
 
                 if (originalBill == null)
@@ -194,7 +194,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Kiểm tra xem hóa đơn đã được trả hàng chưa
-                var existingReturn = db.ReturnBill
+                var existingReturn = db.ReturnBills
                     .FirstOrDefault(r => r.OriginalBillID == model.BillID);
 
                 if (existingReturn != null)
@@ -225,7 +225,7 @@ namespace NhaHangLDP.Controllers
                         Reason = model.Reason
                     };
 
-                    db.ReturnBill.Add(returnBill);
+                    db.ReturnBills.Add(returnBill);
                     db.SaveChanges(); // Lưu để lấy ReturnBillID
 
                     // Tạo chi tiết phiếu trả hàng
@@ -240,7 +240,7 @@ namespace NhaHangLDP.Controllers
                             IsDamaged = returnItem.IsDamaged
                         };
 
-                        db.ReturnBillDetail.Add(returnDetail);
+                        db.ReturnBillDetails.Add(returnDetail);
                     }
 
                     db.SaveChanges();
@@ -274,10 +274,10 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var returnBill = db.ReturnBill
-                    .Include(r => r.Bill)
+                var returnBill = db.ReturnBills
+                    .Include(r => r.Bills)
                     .Include(r => r.Employee)
-                    .Include(r => r.ReturnBillDetail.Select(rd => rd.MenuItem))
+                    .Include(r => r.ReturnBillDetail).ThenInclude(rd => rd.MenuItem)
                     .FirstOrDefault(r => r.ReturnBillID == id);
 
                 if (returnBill == null)
@@ -301,7 +301,7 @@ namespace NhaHangLDP.Controllers
             foreach (var returnItem in returnItems)
             {
                 // Tải nguyên liệu cần thiết cho món ăn
-                var menuItemIngredients = db.MenuItemIngredient
+                var menuItemIngredients = db.MenuItemIngredients
                     .Include(mi => mi.Ingredient)
                     .Where(mi => mi.MenuItemId == returnItem.MenuItemID)
                     .ToList();
@@ -322,7 +322,7 @@ namespace NhaHangLDP.Controllers
                             ReportedByEmployeeId = GetCurrentEmployeeId()
                         };
 
-                        db.DamagedStock.Add(damagedStock);
+                        db.DamagedStocks.Add(damagedStock);
                     }
                     else
                     {
@@ -344,7 +344,7 @@ namespace NhaHangLDP.Controllers
             {
                 return employeeId;
             }
-            var adminEmployee = db.Employee.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive == true);
+            var adminEmployee = db.Employees.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive == true);
             return adminEmployee?.Id ?? 1;
         }
 

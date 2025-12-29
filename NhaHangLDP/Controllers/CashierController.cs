@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
@@ -13,7 +13,7 @@ namespace NhaHangLDP.Controllers
 {
     public class CashierController : Controller
     {
-        private readonly NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private readonly MyDbContext db = new MyDbContext();
         private readonly ShiftManagementService shiftService;
         private readonly OrderManagementService orderService;
         private readonly PaymentService paymentService;
@@ -104,9 +104,9 @@ namespace NhaHangLDP.Controllers
 
         public ActionResult Dashboard()
         {
-            var activeShift = db.CashierShift
+            var activeShift = db.CashierShifts
                 .Include(cs => cs.Employee)
-                .Include(s => s.ShiftSupportStaff.Select(ss => ss.Employee))
+                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Employee)
                 .FirstOrDefault(cs => cs.Status == "Active");
 
             if (activeShift == null)
@@ -256,7 +256,7 @@ namespace NhaHangLDP.Controllers
             string errorMessage;
             if (tableService.UpdateTableStatus(tableId, status, out errorMessage))
             {
-                var table = db.RestaurantTable.Find(tableId);
+                var table = db.RestaurantTables.Find(tableId);
                 return Json(new
                 {
                     success = true,
@@ -335,16 +335,16 @@ namespace NhaHangLDP.Controllers
                 if (shiftService.GetActiveShift() == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước khi tạo hóa đơn!" });
 
-                var order = db.Order
-                    .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                    .Include(o => o.RestaurantTable)
-                    .Include(o => o.Bill)
+                var order = db.Orders
+                    .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                    .Include(o => o.Table)
+                    .Include(o => o.Bills)
                     .FirstOrDefault(o => o.Id == orderId);
 
                 if (order == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
 
-                var bill = order.Bill.FirstOrDefault();
+                var bill = order.Bills.FirstOrDefault();
                 var invoiceId = "HD" + DateTime.Now.ToString("yyyyMMddHHmmss");
 
                 return Json(new { success = true, message = "Tạo hóa đơn thành công!", invoiceId, billId = bill?.Id });
@@ -567,7 +567,7 @@ namespace NhaHangLDP.Controllers
                     tableInfo.CustomerPhone, tableInfo.Notes, out errorMessage);
                 if (success)
                 {
-                    var table = db.RestaurantTable.Find(tableInfo.TableId);
+                    var table = db.RestaurantTables.Find(tableInfo.TableId);
                     message = $"Đã xếp {tableInfo.Customers} khách vào bàn {table.TableNumber}";
                 }
             }
@@ -577,7 +577,7 @@ namespace NhaHangLDP.Controllers
                     tableInfo.CustomerPhone, tableInfo.Notes, tableInfo.Time, out errorMessage);
                 if (success)
                 {
-                    var table = db.RestaurantTable.Find(tableInfo.TableId);
+                    var table = db.RestaurantTables.Find(tableInfo.TableId);
                     message = $"Đã đặt bàn {table.TableNumber} cho {tableInfo.Customers} khách lúc {tableInfo.Time}";
                 }
             }
@@ -602,7 +602,7 @@ namespace NhaHangLDP.Controllers
 
             if (tableService.ConfirmReservation(tableId, out errorMessage))
             {
-                var table = db.RestaurantTable.Find(tableId);
+                var table = db.RestaurantTables.Find(tableId);
                 return Json(new { success = true, message = $"Khách đã đến bàn {table.TableNumber}" });
             }
             return Json(new { success = false, message = errorMessage });
@@ -618,7 +618,7 @@ namespace NhaHangLDP.Controllers
 
             if (tableService.CancelReservation(tableId, out errorMessage))
             {
-                var table = db.RestaurantTable.Find(tableId);
+                var table = db.RestaurantTables.Find(tableId);
                 return Json(new { success = true, message = $"Đã hủy đặt bàn {table.TableNumber}" });
             }
             return Json(new { success = false, message = errorMessage });
@@ -634,7 +634,7 @@ namespace NhaHangLDP.Controllers
 
             if (tableService.CheckoutTable(tableId, out errorMessage))
             {
-                var table = db.RestaurantTable.Find(tableId);
+                var table = db.RestaurantTables.Find(tableId);
                 return Json(new { success = true, message = $"Bàn {table.TableNumber} đã được trả" });
             }
             return Json(new { success = false, message = errorMessage });
@@ -649,7 +649,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var activeShift = db.CashierShift.FirstOrDefault(s => s.Status == "Active");
+                var activeShift = db.CashierShifts.FirstOrDefault(s => s.Status == "Active");
                 if (activeShift == null)
                     return Json(new List<object>());
 
@@ -922,7 +922,7 @@ namespace NhaHangLDP.Controllers
                 if (shiftService.GetActiveShift() == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
-                var order = db.CustomerOrder.Find(orderId);
+                var order = db.CustomerOrders.Find(orderId);
                 if (order == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
 
@@ -951,12 +951,12 @@ namespace NhaHangLDP.Controllers
                     order.PaymentStatus = "Paid";
 
                     // Cập nhật shipper status
-                    var assignment = db.DeliveryAssignment
+                    var assignment = db.DeliveryAssignments
                         .FirstOrDefault(a => a.OrderId == orderId && (a.Status == "Assigned" || a.Status == "PickedUp"));
                     if (assignment != null)
                     {
                         assignment.Status = "Delivered";
-                        var shipper = db.Shipper.Find(assignment.ShipperId);
+                        var shipper = db.Shippers.Find(assignment.ShipperId);
                         if (shipper != null)
                         {
                             shipper.Status = "Available";
@@ -990,7 +990,7 @@ namespace NhaHangLDP.Controllers
                 if (shiftService.GetActiveShift() == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
-                var order = db.CustomerOrder.Find(orderId);
+                var order = db.CustomerOrders.Find(orderId);
                 if (order == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
 
@@ -1003,12 +1003,12 @@ namespace NhaHangLDP.Controllers
                 order.CancelReason = reason;
 
                 // Hủy assignment nếu có
-                var assignment = db.DeliveryAssignment
+                var assignment = db.DeliveryAssignments
                     .FirstOrDefault(a => a.OrderId == orderId && a.Status != "Cancelled" && a.Status != "Delivered");
                 if (assignment != null)
                 {
                     assignment.Status = "Cancelled";
-                    var shipper = db.Shipper.Find(assignment.ShipperId);
+                    var shipper = db.Shippers.Find(assignment.ShipperId);
                     if (shipper != null) shipper.Status = "Available";
                 }
 
@@ -1032,7 +1032,7 @@ namespace NhaHangLDP.Controllers
                 if (shiftService.GetActiveShift() == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
-                var order = db.CustomerOrder.Find(orderId);
+                var order = db.CustomerOrders.Find(orderId);
                 if (order == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
 
@@ -1042,7 +1042,7 @@ namespace NhaHangLDP.Controllers
                 if (order.Status != "Ready")
                     return Json(new { success = false, message = "Đơn hàng chưa sẵn sàng để giao!" });
 
-                var shipper = db.Shipper.Find(shipperId);
+                var shipper = db.Shippers.Find(shipperId);
                 if (shipper == null || !shipper.IsActive)
                     return Json(new { success = false, message = "Shipper không hợp lệ!" });
 
@@ -1060,7 +1060,7 @@ namespace NhaHangLDP.Controllers
                     ShipperEarning = order.DeliveryFee * 0.8m // 80% phí ship
                 };
 
-                db.DeliveryAssignment.Add(assignment);
+                db.DeliveryAssignments.Add(assignment);
                 shipper.Status = "Busy";
                 order.Status = "Delivering";
                 order.DeliveringDate = DateTime.Now;
@@ -1083,7 +1083,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var shippers = db.Shipper
+                var shippers = db.Shippers
                     .Where(s => s.IsActive && s.Status == "Available")
                     .Select(s => new
                     {
@@ -1135,7 +1135,7 @@ namespace NhaHangLDP.Controllers
                 if (shiftService.GetActiveShift() == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
-                var query = db.Reservation.AsQueryable();
+                var query = db.Reservations.AsQueryable();
 
                 // Filter by status
                 if (!string.IsNullOrEmpty(status) && status != "all")
@@ -1200,7 +1200,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var reservation = db.Reservation
+                var reservation = db.Reservations
                     .Where(r => r.Id == id)
                     .Select(r => new
                     {
@@ -1232,7 +1232,7 @@ namespace NhaHangLDP.Controllers
                 string tableName = null;
                 if (reservation.TableId.HasValue)
                 {
-                    var table = db.RestaurantTable.Find(reservation.TableId.Value);
+                    var table = db.RestaurantTables.Find(reservation.TableId.Value);
                     tableName = table?.TableNumber;
                 }
 
@@ -1285,7 +1285,7 @@ namespace NhaHangLDP.Controllers
                 if (shiftService.GetActiveShift() == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
-                var reservation = db.Reservation.Find(id);
+                var reservation = db.Reservations.Find(id);
                 if (reservation == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
 
@@ -1321,7 +1321,7 @@ namespace NhaHangLDP.Controllers
                 if (shiftService.GetActiveShift() == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
-                var reservation = db.Reservation.Find(id);
+                var reservation = db.Reservations.Find(id);
                 if (reservation == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
 
@@ -1353,7 +1353,7 @@ namespace NhaHangLDP.Controllers
                 if (shiftService.GetActiveShift() == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
-                var reservation = db.Reservation.Find(id);
+                var reservation = db.Reservations.Find(id);
                 if (reservation == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
 
@@ -1365,7 +1365,7 @@ namespace NhaHangLDP.Controllers
                 // Update table status if assigned
                 if (reservation.TableId.HasValue)
                 {
-                    var table = db.RestaurantTable.Find(reservation.TableId.Value);
+                    var table = db.RestaurantTables.Find(reservation.TableId.Value);
                     if (table != null)
                     {
                         table.Status = "Occupied";
@@ -1393,7 +1393,7 @@ namespace NhaHangLDP.Controllers
                 if (shiftService.GetActiveShift() == null)
                     return Json(new { success = false, message = "Vui lòng mở ca trước!" });
 
-                var reservation = db.Reservation.Find(id);
+                var reservation = db.Reservations.Find(id);
                 if (reservation == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
 
@@ -1422,14 +1422,14 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var reservation = db.Reservation.Find(reservationId);
+                var reservation = db.Reservations.Find(reservationId);
                 if (reservation == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
 
                 var timeMinutes = (int)reservation.ReservationTime.TotalMinutes;
 
                 // Get tables that can accommodate guests and are not reserved at the same time
-                var tables = db.RestaurantTable
+                var tables = db.RestaurantTables
                     .Where(t => t.Capacity >= reservation.NumberOfGuests)
                     .ToList()
                     .Select(t => new
@@ -1438,7 +1438,7 @@ namespace NhaHangLDP.Controllers
                         t.TableNumber,
                         t.Capacity,
                         t.Status,
-                        IsAvailable = !db.Reservation.Any(r =>
+                        IsAvailable = !db.Reservations.Any(r =>
                             r.Id != reservationId &&
                             r.TableId == t.Id &&
                             r.ReservationDate == reservation.ReservationDate &&
@@ -1463,7 +1463,7 @@ namespace NhaHangLDP.Controllers
         private object GetReservationCounts()
         {
             var today = DateTime.Today;
-            var reservations = db.Reservation.Where(r => r.ReservationDate >= today).ToList();
+            var reservations = db.Reservations.Where(r => r.ReservationDate >= today).ToList();
 
             return new
             {

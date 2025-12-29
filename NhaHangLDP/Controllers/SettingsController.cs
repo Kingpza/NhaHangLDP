@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NhaHangLDP.Models;
@@ -9,7 +9,7 @@ namespace NhaHangLDP.Controllers
 {
     public class SettingsController : Controller
     {
-        private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private MyDbContext db = new MyDbContext();
         public ActionResult Index()
         {
             var userRole = HttpContext.Session.GetString("UserRole");
@@ -23,7 +23,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var allSettings = db.AppSetting.ToList();
+                var allSettings = db.AppSettings.ToList();
 
                 var viewModel = new SettingsViewModel
                 {
@@ -125,14 +125,14 @@ namespace NhaHangLDP.Controllers
                 {
                     SystemVersion = "1.0.0",
                     DatabaseVersion = "SQL Server 2019",
-                    TotalOrders = db.Order.Count(),
-                    TotalCustomers = db.Order.Select(o => o.Id).Distinct().Count(),
-                    TotalRevenue = db.Bill.Where(b => b.Status == "Paid").Sum(b => (decimal?)b.FinalAmount) ?? 0,
+                    TotalOrders = db.Orders.Count(),
+                    TotalCustomers = db.Orders.Select(o => o.Id).Distinct().Count(),
+                    TotalRevenue = db.Bills.Where(b => b.Status == "Paid").Sum(b => (decimal?)b.FinalAmount) ?? 0,
                     LastStartupTime = DateTime.Now.AddHours(-2),
                     DatabaseSize = "128 MB",
-                    TableCount = db.RestaurantTable.Count(),
-                    EmployeeCount = db.Employee.Count(e => e.IsActive),
-                    MenuItemCount = db.MenuItem.Count(m => m.IsAvailable)
+                    TableCount = db.RestaurantTables.Count(),
+                    EmployeeCount = db.Employees.Count(e => e.IsActive),
+                    MenuItemCount = db.MenuItems.Count(m => m.IsAvailable)
                 };
 
                 return View(systemInfo);
@@ -155,7 +155,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var allSettings = db.AppSetting.ToList();
+                var allSettings = db.AppSettings.ToList();
 
                 var groups = new List<SettingsGroupViewModel>
                 {
@@ -235,7 +235,7 @@ namespace NhaHangLDP.Controllers
 
         private void UpsertSetting(string key, string value, string description, string updatedBy)
         {
-            var existing = db.AppSetting.FirstOrDefault(s => s.SettingKey == key);
+            var existing = db.AppSettings.FirstOrDefault(s => s.SettingKey == key);
 
             if (existing != null)
             {
@@ -253,7 +253,7 @@ namespace NhaHangLDP.Controllers
                     CreatedDate = DateTime.Now,
                     CreatedBy = updatedBy
                 };
-                db.AppSetting.Add(newSetting);
+                db.AppSettings.Add(newSetting);
             }
         }
 

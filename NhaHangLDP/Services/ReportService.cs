@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,18 +8,18 @@ namespace NhaHangLDP.Services
 {
     public class ReportService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public ReportService(NhaHangLDPEntities context)
+        public ReportService(MyDbContext context)
         {
             db = context;
         }
 
         public ShiftRevenueReportViewModel GenerateShiftReport(int shiftId)
         {
-            var shift = db.CashierShift
-                .Include(s => s.Employee)
-                .Include(s => s.ShiftSupportStaff.Select(ss => ss.Employee))
+            var shift = db.CashierShifts
+                .Include(s => s.Cashier)
+                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Employee)
                 .FirstOrDefault(s => s.Id == shiftId);
 
             if (shift == null)
@@ -27,12 +27,12 @@ namespace NhaHangLDP.Services
                 return null;
             }
 
-            var billQuery = db.Bill.Where(b => b.Order.ShiftId == shiftId && b.Status == "Paid");
+            var billQuery = db.Bills.Where(b => b.Order.ShiftId == shiftId && b.Status == "Paid");
 
             var totalRevenue = billQuery.Sum(b => (decimal?)b.FinalAmount) ?? 0;
-            var totalOrders = db.Order.Count(o => o.ShiftId == shiftId);
-            var completedOrders = db.Order.Count(o => o.ShiftId == shiftId && o.Status == "Completed");
-            var cancelledOrders = db.Order.Count(o => o.ShiftId == shiftId && o.Status == "Cancelled");
+            var totalOrders = db.Orders.Count(o => o.ShiftId == shiftId);
+            var completedOrders = db.Orders.Count(o => o.ShiftId == shiftId && o.Status == "Completed");
+            var cancelledOrders = db.Orders.Count(o => o.ShiftId == shiftId && o.Status == "Cancelled");
 
             var paymentMethods = billQuery
                 .GroupBy(b => b.PaymentMethod)
@@ -48,30 +48,30 @@ namespace NhaHangLDP.Services
                 p.Percentage = (totalRevenue > 0) ? (p.TotalAmount / totalRevenue) * 100 : 0
             );
 
-            var topOrders = db.Bill
+            var topOrders = db.Bills
                 .Where(b => b.Order.ShiftId == shiftId && b.Order.Status == "Completed")
                 .OrderByDescending(b => b.FinalAmount)
                 .Take(10)
                 .Select(b => new OrderSummary
                 {
                     OrderId = b.OrderId.ToString(),
-                    TableName = b.Order.RestaurantTable.TableNumber,
+                    TableName = b.Order.Table.TableNumber,
                     OrderTime = b.Order.OrderTime,
                     PaymentMethod = b.PaymentMethod,
                     TotalAmount = b.FinalAmount
                 })
                 .ToList();
 
-            var supportNames = shift.ShiftSupportStaff
-                                    .Select(ss => ss.Employee.FullName)
+            var supportNames = shift.ShiftSupportStaffs
+                                    .Select(ss => ss.ReportedByEmployee?.FullName)
                                     .ToList();
 
-            var appSettings = db.AppSetting.ToList();
+            var appSettings = db.AppSettings.ToList();
 
             var viewModel = new ShiftRevenueReportViewModel
             {
                 ShiftId = shift.Id.ToString(),
-                CashierName = shift.Employee.FullName,
+                CashierName = shift.ReportedByEmployee?.FullName,
                 SupportStaffNames = supportNames,
                 ShiftStartTime = shift.StartTime,
                 ShiftEndTime = shift.EndTime ?? DateTime.Now,
@@ -94,10 +94,10 @@ namespace NhaHangLDP.Services
 
         public InvoiceViewModel GenerateInvoice(int orderId)
         {
-            var order = db.Order
-                .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                .Include(o => o.RestaurantTable)
-                .Include(o => o.Bill)
+            var order = db.Orders
+                .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                .Include(o => o.Table)
+                .Include(o => o.Bills)
                 .Include(o => o.Employee)
                 .FirstOrDefault(o => o.Id == orderId);
 
@@ -106,8 +106,8 @@ namespace NhaHangLDP.Services
                 return null;
             }
 
-            var bill = order.Bill.FirstOrDefault(b => b.Status == "Paid");
-            var subtotal = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+            var bill = order.Bills.FirstOrDefault(b => b.Status == "Paid");
+            var subtotal = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime);
             var vat = Math.Round(subtotal * 0.1m);
             var total = subtotal + vat;
 
@@ -115,12 +115,12 @@ namespace NhaHangLDP.Services
             {
                 OrderId = order.Id.ToString("D6"),
                 BillId = bill?.Id.ToString() ?? "N/A",
-                TableNumber = order.RestaurantTable.TableNumber,
+                TableNumber = order.Table.TableNumber,
                 OrderTime = order.OrderTime,
                 BillDate = bill?.BillDate ?? DateTime.Now,
-                CashierName = order.Employee?.FullName ?? (bill?.Employee?.FullName ?? "N/A"),
+                CashierName = order.Waiter?.FullName ?? (bill?.Employee?.FullName ?? "N/A"),
                 PaymentMethod = GetPaymentMethodText(bill?.PaymentMethod ?? "Chưa thanh toán"),
-                Items = order.OrderDetail.Select(od => new InvoiceItemViewModel
+                Items = order.OrderDetails.Select(od => new InvoiceItemViewModel
                 {
                     ItemName = od.MenuItem.Name,
                     Quantity = od.Quantity,

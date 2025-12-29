@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,9 +8,9 @@ namespace NhaHangLDP.Services.Management
 {
     public class InventoryService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public InventoryService(NhaHangLDPEntities context)
+        public InventoryService(MyDbContext context)
         {
             db = context;
         }
@@ -21,7 +21,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var ingredients = db.Ingredient.ToList();
+                var ingredients = db.Ingredients.ToList();
 
                 var totalIngredients = ingredients.Count;
                 var lowStockItems = ingredients.Count(i => i.AvailableStock <= i.LowStockThreshold);
@@ -46,7 +46,7 @@ namespace NhaHangLDP.Services.Management
 
                 // Tính giá trị hàng hỏng trong tháng
                 var startOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                var monthlyDamageValue = db.DamagedStock
+                var monthlyDamageValue = db.DamagedStocks
                     .Where(d => d.DamageDate >= startOfMonth)
                     .ToList()
                     .Sum(d => d.Quantity * (d.Ingredient?.EstimatedCost ?? 0));
@@ -86,7 +86,7 @@ namespace NhaHangLDP.Services.Management
             var today = DateTime.Today;
             var thresholdDate = today.AddDays(daysThreshold);
 
-            var expiringItems = db.StockInboundDetail
+            var expiringItems = db.StockInboundDetails
                 .Include("Ingredient")
                 .Include("StockInbound")
                 .Where(d => d.ExpiryDate.HasValue && d.ExpiryDate.Value <= thresholdDate)
@@ -122,26 +122,26 @@ namespace NhaHangLDP.Services.Management
 
         public List<Supplier> GetSupplierList()
         {
-            return db.Supplier.OrderBy(s => s.Name).ToList();
+            return db.Suppliers.OrderBy(s => s.Name).ToList();
         }
 
         public Supplier GetSupplierById(int id)
         {
-            return db.Supplier.Find(id);
+            return db.Suppliers.Find(id);
         }
 
         public bool CreateSupplier(Supplier supplier, out string errorMessage)
         {
             try
             {
-                var existing = db.Supplier.FirstOrDefault(s => s.Name == supplier.Name);
+                var existing = db.Suppliers.FirstOrDefault(s => s.Name == supplier.Name);
                 if (existing != null)
                 {
                     errorMessage = "Tên nhà cung cấp đã tồn tại.";
                     return false;
                 }
 
-                db.Supplier.Add(supplier);
+                db.Suppliers.Add(supplier);
                 db.SaveChanges();
 
                 errorMessage = null;
@@ -158,7 +158,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var supplierInDb = db.Supplier.Find(formData.Id);
+                var supplierInDb = db.Suppliers.Find(formData.Id);
                 if (supplierInDb == null)
                 {
                     errorMessage = "Không tìm thấy nhà cung cấp.";
@@ -166,7 +166,7 @@ namespace NhaHangLDP.Services.Management
                 }
 
                 // Kiểm tra trùng tên
-                var duplicate = db.Supplier.FirstOrDefault(s => s.Name == formData.Name && s.Id != formData.Id);
+                var duplicate = db.Suppliers.FirstOrDefault(s => s.Name == formData.Name && s.Id != formData.Id);
                 if (duplicate != null)
                 {
                     errorMessage = "Tên nhà cung cấp đã tồn tại.";
@@ -194,7 +194,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var supplier = db.Supplier.Find(id);
+                var supplier = db.Suppliers.Find(id);
                 if (supplier == null)
                 {
                     errorMessage = "Không tìm thấy nhà cung cấp.";
@@ -202,14 +202,14 @@ namespace NhaHangLDP.Services.Management
                 }
 
                 // Kiểm tra xem nhà cung cấp có đang được sử dụng không
-                bool isUsed = db.StockInbound.Any(s => s.SupplierId == id);
+                bool isUsed = db.StockInbounds.Any(s => s.SupplierId == id);
                 if (isUsed)
                 {
                     errorMessage = "Không thể xóa: Nhà cung cấp đang được sử dụng trong các phiếu nhập kho.";
                     return false;
                 }
 
-                db.Supplier.Remove(supplier);
+                db.Suppliers.Remove(supplier);
                 db.SaveChanges();
 
                 errorMessage = null;
@@ -224,11 +224,11 @@ namespace NhaHangLDP.Services.Management
 
         public SupplierDetailViewModel GetSupplierDetail(int id)
         {
-            var supplier = db.Supplier.Find(id);
+            var supplier = db.Suppliers.Find(id);
             if (supplier == null)
                 return null;
 
-            var inboundHistory = db.StockInbound
+            var inboundHistory = db.StockInbounds
                 .Include("StockInboundDetail")
                 .Include("StockInboundDetail.Ingredient")
                 .Where(s => s.SupplierId == id)
@@ -236,8 +236,8 @@ namespace NhaHangLDP.Services.Management
                 .Take(10)
                 .ToList();
 
-            var totalOrders = db.StockInbound.Count(s => s.SupplierId == id);
-            var totalValue = db.StockInbound
+            var totalOrders = db.StockInbounds.Count(s => s.SupplierId == id);
+            var totalValue = db.StockInbounds
                 .Where(s => s.SupplierId == id)
                 .Sum(s => (decimal?)s.TotalCost) ?? 0;
 
@@ -253,7 +253,7 @@ namespace NhaHangLDP.Services.Management
                     InboundDate = s.InboundDate,
                     TotalCost = s.TotalCost,
                     Status = s.Status ?? "Hoàn thành",
-                    ItemCount = s.StockInboundDetail?.Count ?? 0
+                    ItemCount = s.StockInboundDetails?.Count ?? 0
                 }).ToList()
             };
         }
@@ -262,7 +262,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                if (db.Supplier.Any())
+                if (db.Suppliers.Any())
                 {
                     errorMessage = "Đã có dữ liệu nhà cung cấp trong hệ thống!";
                     count = 0;
@@ -281,7 +281,7 @@ namespace NhaHangLDP.Services.Management
 
                 foreach (var supplier in sampleSuppliers)
                 {
-                    db.Supplier.Add(supplier);
+                    db.Suppliers.Add(supplier);
                 }
 
                 db.SaveChanges();
@@ -304,14 +304,14 @@ namespace NhaHangLDP.Services.Management
 
         public List<IngredientWithLatestSupplierViewModel> GetIngredientsWithSupplier()
         {
-            return (from i in db.Ingredient
-                    let lastInbound = db.StockInboundDetail
+            return (from i in db.Ingredients
+                    let lastInbound = db.StockInboundDetails
                         .Where(d => d.IngredientId == i.Id)
-                        .OrderByDescending(d => d.StockInbound.InboundDate)
+                        .OrderByDescending(d => d.StockInbounds.InboundDate)
                         .Select(d => new
                         {
-                            SupplierName = d.StockInbound.Supplier.Name,
-                            InboundDate = d.StockInbound.InboundDate,
+                            SupplierName = d.StockInbounds.Supplier.Name,
+                            InboundDate = d.StockInbounds.InboundDate,
                             UnitPrice = d.UnitPrice
                         })
                         .FirstOrDefault()
@@ -325,8 +325,8 @@ namespace NhaHangLDP.Services.Management
                         EstimatedCost = i.EstimatedCost,
                         LatestSupplier = lastInbound != null ? lastInbound.SupplierName : null,
                         LastInboundDate = lastInbound != null ? lastInbound.InboundDate : (DateTime?)null,
-                        LastInboundQuantity = lastInbound != null ? db.StockInboundDetail
-                            .Where(d => d.IngredientId == i.Id && d.StockInbound.InboundDate == lastInbound.InboundDate)
+                        LastInboundQuantity = lastInbound != null ? db.StockInboundDetails
+                            .Where(d => d.IngredientId == i.Id && d.StockInbounds.InboundDate == lastInbound.InboundDate)
                             .Sum(d => (decimal?)d.Quantity) : null,
                         LastInboundUnitPrice = lastInbound != null ? lastInbound.UnitPrice : (decimal?)null
                     })
@@ -336,14 +336,14 @@ namespace NhaHangLDP.Services.Management
 
         public Ingredient GetIngredientById(int id)
         {
-            return db.Ingredient.Find(id);
+            return db.Ingredients.Find(id);
         }
 
         public bool CreateIngredient(Ingredient ingredient, out string errorMessage)
         {
             try
             {
-                var existingIngredient = db.Ingredient.FirstOrDefault(i => i.Name == ingredient.Name);
+                var existingIngredient = db.Ingredients.FirstOrDefault(i => i.Name == ingredient.Name);
                 if (existingIngredient != null)
                 {
                     errorMessage = "Tên nguyên liệu đã tồn tại.";
@@ -354,7 +354,7 @@ namespace NhaHangLDP.Services.Management
                 if (!ingredient.LowStockThreshold.HasValue)
                     ingredient.LowStockThreshold = 10;
 
-                db.Ingredient.Add(ingredient);
+                db.Ingredients.Add(ingredient);
                 db.SaveChanges();
 
                 errorMessage = null;
@@ -371,7 +371,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var ingredientInDb = db.Ingredient.Find(formData.Id);
+                var ingredientInDb = db.Ingredients.Find(formData.Id);
                 if (ingredientInDb == null)
                 {
                     errorMessage = "Không tìm thấy nguyên liệu.";
@@ -400,21 +400,21 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var ingredient = db.Ingredient.Find(id);
+                var ingredient = db.Ingredients.Find(id);
                 if (ingredient == null)
                 {
                     errorMessage = "Không tìm thấy nguyên liệu.";
                     return false;
                 }
 
-                bool isUsed = db.StockInboundDetail.Any(d => d.IngredientId == id);
+                bool isUsed = db.StockInboundDetails.Any(d => d.IngredientId == id);
                 if (isUsed)
                 {
                     errorMessage = "Không thể xóa: Nguyên liệu đang được sử dụng.";
                     return false;
                 }
 
-                db.Ingredient.Remove(ingredient);
+                db.Ingredients.Remove(ingredient);
                 db.SaveChanges();
 
                 errorMessage = null;
@@ -429,19 +429,19 @@ namespace NhaHangLDP.Services.Management
 
         public object GetIngredientDetail(int id)
         {
-            var ingredient = db.Ingredient.Find(id);
+            var ingredient = db.Ingredients.Find(id);
             if (ingredient == null)
                 return null;
 
-            var latestInbound = db.StockInboundDetail
+            var latestInbound = db.StockInboundDetails
                 .Where(d => d.IngredientId == id)
-                .OrderByDescending(d => d.StockInbound.InboundDate)
+                .OrderByDescending(d => d.StockInbounds.InboundDate)
                 .FirstOrDefault();
 
             string latestSupplier = null;
-            if (latestInbound != null && latestInbound.StockInbound?.Supplier != null)
+            if (latestInbound != null && latestInbound.StockInbounds?.Supplier != null)
             {
-                latestSupplier = latestInbound.StockInbound.Supplier.Name;
+                latestSupplier = latestInbound.StockInbounds.Supplier.Name;
             }
 
             string statusBadge;
@@ -460,23 +460,23 @@ namespace NhaHangLDP.Services.Management
 
             var recentTransactions = new List<object>();
 
-            var recentInbound = db.StockInboundDetail
+            var recentInbound = db.StockInboundDetails
                 .Where(d => d.IngredientId == id)
-                .OrderByDescending(d => d.StockInbound.InboundDate)
+                .OrderByDescending(d => d.StockInbounds.InboundDate)
                 .Take(5)
                 .ToList()
                 .Select(d => new
                 {
-                    date = d.StockInbound.InboundDate,
+                    date = d.StockInbounds.InboundDate,
                     type = "in",
                     typeText = "Nhập kho",
                     quantity = d.Quantity,
-                    notes = d.StockInbound.Notes ?? "Không có ghi chú"
+                    notes = d.StockInbounds.Notes ?? "Không có ghi chú"
                 });
 
             recentTransactions.AddRange(recentInbound);
 
-            var recentDamaged = db.DamagedStock
+            var recentDamaged = db.DamagedStocks
                 .Where(d => d.IngredientId == id)
                 .OrderByDescending(d => d.DamageDate)
                 .Take(5)
@@ -512,20 +512,20 @@ namespace NhaHangLDP.Services.Management
 
         public IngredientHistoryViewModel GetIngredientHistory(int id)
         {
-            var ingredient = db.Ingredient.Find(id);
+            var ingredient = db.Ingredients.Find(id);
             if (ingredient == null)
                 return null;
 
             return new IngredientHistoryViewModel
             {
                 Ingredient = ingredient,
-                InboundHistory = db.StockInboundDetail
+                InboundHistory = db.StockInboundDetails
                     .Include("StockInbound")
                     .Include("StockInbound.Supplier")
                     .Where(d => d.IngredientId == id)
-                    .OrderByDescending(d => d.StockInbound.InboundDate)
+                    .OrderByDescending(d => d.StockInbounds.InboundDate)
                     .ToList(),
-                DamagedHistory = db.DamagedStock
+                DamagedHistory = db.DamagedStocks
                     .Where(d => d.IngredientId == id)
                     .OrderByDescending(d => d.DamageDate)
                     .ToList()
@@ -536,7 +536,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                if (db.Ingredient.Any())
+                if (db.Ingredients.Any())
                 {
                     errorMessage = "Đã có dữ liệu nguyên liệu trong hệ thống!";
                     count = 0;
@@ -569,7 +569,7 @@ namespace NhaHangLDP.Services.Management
 
                 foreach (var ingredient in sampleIngredients)
                 {
-                    db.Ingredient.Add(ingredient);
+                    db.Ingredients.Add(ingredient);
                 }
 
                 db.SaveChanges();
@@ -591,7 +591,7 @@ namespace NhaHangLDP.Services.Management
         /// </summary>
         public List<string> GetIngredientCategories()
         {
-            return db.Ingredient
+            return db.Ingredients
                 .Where(i => !string.IsNullOrEmpty(i.Category))
                 .Select(i => i.Category)
                 .Distinct()
@@ -605,17 +605,17 @@ namespace NhaHangLDP.Services.Management
 
         public List<Ingredient> GetAllIngredients()
         {
-            return db.Ingredient.OrderBy(i => i.Name).ToList();
+            return db.Ingredients.OrderBy(i => i.Name).ToList();
         }
 
         public List<Employee> GetActiveEmployees()
         {
-            return db.Employee.Where(e => e.IsActive).ToList();
+            return db.Employees.Where(e => e.IsActive).ToList();
         }
 
         public List<Supplier> GetAllSuppliers()
         {
-            return db.Supplier.ToList();
+            return db.Suppliers.ToList();
         }
 
         public bool ProcessStockInbound(StockInboundViewModel model, string submitType, string createdBy, out string errorMessage)
@@ -626,15 +626,15 @@ namespace NhaHangLDP.Services.Management
                 {
                     var inbound = new StockInbound
                     {
-                        InboundCode = model.StockInbound.InboundCode,
-                        InboundDate = model.StockInbound.InboundDate,
-                        EmployeeId = model.StockInbound.EmployeeId,
-                        SupplierId = model.StockInbound.SupplierId,
-                        Notes = model.StockInbound.Notes,
+                        InboundCode = model.StockInbounds.InboundCode,
+                        InboundDate = model.StockInbounds.InboundDate,
+                        EmployeeId = model.StockInbounds.EmployeeId,
+                        SupplierId = model.StockInbounds.SupplierId,
+                        Notes = model.StockInbounds.Notes,
                         CreatedBy = createdBy,
                         Status = (submitType == "draft" ? "Draft" : "Completed")
                     };
-                    db.StockInbound.Add(inbound);
+                    db.StockInbounds.Add(inbound);
                     db.SaveChanges();
 
                     foreach (var d in model.Details)
@@ -648,11 +648,11 @@ namespace NhaHangLDP.Services.Management
                             ExpiryDate = d.ExpiryDate,
                             BatchNumber = d.BatchNumber
                         };
-                        db.StockInboundDetail.Add(detail);
+                        db.StockInboundDetails.Add(detail);
 
                         if (submitType != "draft")
                         {
-                            var ing = db.Ingredient.Find(d.IngredientId);
+                            var ing = db.Ingredients.Find(d.IngredientId);
                             if (ing != null)
                             {
                                 ing.AvailableStock += d.Quantity;
@@ -678,7 +678,7 @@ namespace NhaHangLDP.Services.Management
 
         public StockInboundListViewModel GetStockInboundList()
         {
-            var inboundListRaw = db.StockInbound
+            var inboundListRaw = db.StockInbounds
                 .Include("Employee")
                 .Include("Supplier")
                 .Include("StockInboundDetail")
@@ -691,12 +691,12 @@ namespace NhaHangLDP.Services.Management
                 Id = s.Id,
                 InboundCode = "IN" + s.Id.ToString().PadLeft(6, '0'),
                 InboundDate = s.InboundDate,
-                EmployeeName = s.Employee != null ? s.Employee.FullName : "N/A",
+                EmployeeName = s.Employee != null ? s.ReportedByEmployee?.FullName : "N/A",
                 SupplierName = s.Supplier != null ? GetSupplierName(s.Supplier) : "Không có",
                 TotalCost = s.TotalCost,
                 Status = "Hoàn thành",
-                ItemCount = s.StockInboundDetail != null ? s.StockInboundDetail.Count : 0,
-                Details = s.StockInboundDetail != null ? s.StockInboundDetail.Select(d => new StockInboundDetailItem
+                ItemCount = s.StockInboundDetails != null ? s.StockInboundDetails.Count : 0,
+                Details = s.StockInboundDetails != null ? s.StockInboundDetails.Select(d => new StockInboundDetailItem
                 {
                     IngredientName = d.Ingredient != null ? d.Ingredient.Name : "N/A",
                     Quantity = d.Quantity,
@@ -710,7 +710,7 @@ namespace NhaHangLDP.Services.Management
 
         public StockInboundViewPageModel GetStockInboundDetail(int id)
         {
-            var inbound = db.StockInbound
+            var inbound = db.StockInbounds
                 .Include("Employee")
                 .Include("Supplier")
                 .Include("StockInboundDetail")
@@ -725,12 +725,12 @@ namespace NhaHangLDP.Services.Management
                 Id = inbound.Id,
                 InboundCode = "IN" + inbound.Id.ToString().PadLeft(6, '0'),
                 InboundDate = inbound.InboundDate,
-                EmployeeName = inbound.Employee?.FullName ?? "N/A",
+                EmployeeName = inbound.ReportedByEmployee?.FullName ?? "N/A",
                 SupplierName = inbound.Supplier != null ? GetSupplierName(inbound.Supplier) : "Không có",
                 Notes = inbound.Notes,
                 Status = inbound.Status ?? "Hoàn thành",
                 TotalCost = inbound.TotalCost,
-                Details = inbound.StockInboundDetail?.Select(d => new StockInboundDetailItem
+                Details = inbound.StockInboundDetails?.Select(d => new StockInboundDetailItem
                 {
                     IngredientName = d.Ingredient?.Name ?? "N/A",
                     Quantity = d.Quantity,
@@ -748,14 +748,14 @@ namespace NhaHangLDP.Services.Management
 
         public List<Ingredient> GetIngredientsWithStock()
         {
-            return db.Ingredient.Where(i => i.AvailableStock > 0).OrderBy(i => i.Name).ToList();
+            return db.Ingredients.Where(i => i.AvailableStock > 0).OrderBy(i => i.Name).ToList();
         }
 
         public bool ProcessStockOutbound(int ingredientId, decimal quantity, string purpose, string notes, int employeeId, out string errorMessage)
         {
             try
             {
-                var ingredient = db.Ingredient.Find(ingredientId);
+                var ingredient = db.Ingredients.Find(ingredientId);
                 if (ingredient == null)
                 {
                     errorMessage = "Không tìm thấy nguyên liệu.";
@@ -781,7 +781,7 @@ namespace NhaHangLDP.Services.Management
                         ReportedByEmployeeId = employeeId
                     };
 
-                    db.DamagedStock.Add(damagedStock);
+                    db.DamagedStocks.Add(damagedStock);
                 }
 
                 db.SaveChanges();
@@ -798,7 +798,7 @@ namespace NhaHangLDP.Services.Management
 
         public StockOutboundListViewModel GetStockOutboundList()
         {
-            var outboundListRaw = db.DamagedStock
+            var outboundListRaw = db.DamagedStocks
                 .Include("Ingredient")
                 .Include("Employee")
                 .OrderByDescending(d => d.DamageDate)
@@ -809,7 +809,7 @@ namespace NhaHangLDP.Services.Management
                 Id = d.Id,
                 OutboundCode = "OUT" + d.Id.ToString().PadLeft(6, '0'),
                 OutboundDate = d.DamageDate,
-                EmployeeName = d.Employee != null ? d.Employee.FullName : "N/A",
+                EmployeeName = d.Employee != null ? d.ReportedByEmployee?.FullName : "N/A",
                 Purpose = d.Reason ?? "Xuất kho",
                 TotalCost = d.Quantity * (d.Ingredient != null ? d.Ingredient.EstimatedCost : 0),
                 Status = "Hoàn thành",
@@ -824,7 +824,7 @@ namespace NhaHangLDP.Services.Management
 
         public StockOutboundViewPageModel GetStockOutboundDetail(int id)
         {
-            var outbound = db.DamagedStock
+            var outbound = db.DamagedStocks
                 .Include("Ingredient")
                 .Include("Employee")
                 .FirstOrDefault(d => d.Id == id);
@@ -837,7 +837,7 @@ namespace NhaHangLDP.Services.Management
                 Id = outbound.Id,
                 OutboundCode = "OUT" + outbound.Id.ToString().PadLeft(6, '0'),
                 OutboundDate = outbound.DamageDate,
-                EmployeeName = outbound.Employee?.FullName ?? "N/A",
+                EmployeeName = outbound.ReportedByEmployee?.FullName ?? "N/A",
                 Reason = outbound.Reason ?? "Xuất kho",
                 Status = "Hoàn thành",
                 IngredientName = outbound.Ingredient?.Name ?? "N/A",
@@ -854,7 +854,7 @@ namespace NhaHangLDP.Services.Management
 
         public List<DamagedStock> GetDamagedStockList()
         {
-            return db.DamagedStock
+            return db.DamagedStocks
                 .Include("Ingredient")
                 .Include("Employee")
                 .OrderByDescending(d => d.DamageDate)
@@ -865,7 +865,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var ingredient = db.Ingredient.Find(model.IngredientId);
+                var ingredient = db.Ingredients.Find(model.IngredientId);
                 if (ingredient == null)
                 {
                     errorMessage = "Không tìm thấy nguyên liệu.";
@@ -878,7 +878,7 @@ namespace NhaHangLDP.Services.Management
                     return false;
                 }
 
-                db.DamagedStock.Add(model);
+                db.DamagedStocks.Add(model);
 
                 if (submitType == "submit")
                 {
@@ -912,7 +912,7 @@ namespace NhaHangLDP.Services.Management
                     return false;
                 }
 
-                var ingredient = db.Ingredient.Find(ingredientId);
+                var ingredient = db.Ingredients.Find(ingredientId);
                 if (ingredient == null)
                 {
                     errorMessage = "Không tìm thấy nguyên liệu!";
@@ -929,7 +929,7 @@ namespace NhaHangLDP.Services.Management
                     Notes = notes ?? "Nhập kho nhanh"
                 };
 
-                db.StockInbound.Add(stockInbound);
+                db.StockInbounds.Add(stockInbound);
                 db.SaveChanges();
 
                 var inboundDetail = new StockInboundDetail
@@ -940,7 +940,7 @@ namespace NhaHangLDP.Services.Management
                     UnitPrice = unitPrice
                 };
 
-                db.StockInboundDetail.Add(inboundDetail);
+                db.StockInboundDetails.Add(inboundDetail);
 
                 ingredient.AvailableStock += quantity;
 
@@ -974,7 +974,7 @@ namespace NhaHangLDP.Services.Management
                     return false;
                 }
 
-                var ingredient = db.Ingredient.Find(ingredientId);
+                var ingredient = db.Ingredients.Find(ingredientId);
                 if (ingredient == null)
                 {
                     errorMessage = "Không tìm thấy nguyên liệu!";
@@ -1000,7 +1000,7 @@ namespace NhaHangLDP.Services.Management
                         ReportedByEmployeeId = employeeId
                     };
 
-                    db.DamagedStock.Add(damagedStock);
+                    db.DamagedStocks.Add(damagedStock);
                 }
 
                 ingredient.AvailableStock -= quantity;
@@ -1030,20 +1030,20 @@ namespace NhaHangLDP.Services.Management
             var from = fromDate ?? DateTime.Today.AddDays(-30);
             var to = toDate ?? DateTime.Today;
 
-            var ingredients = db.Ingredient.ToList();
+            var ingredients = db.Ingredients.ToList();
 
             // Thống kê nhập kho
-            var inboundData = db.StockInboundDetail
+            var inboundData = db.StockInboundDetails
                 .Include("StockInbound")
                 .Include("Ingredient")
-                .Where(d => d.StockInbound.InboundDate >= from && d.StockInbound.InboundDate <= to)
+                .Where(d => d.StockInbounds.InboundDate >= from && d.StockInbounds.InboundDate <= to)
                 .ToList();
 
             var totalInboundValue = inboundData.Sum(d => d.Quantity * d.UnitPrice);
             var totalInboundQuantity = inboundData.Sum(d => d.Quantity);
 
             // Thống kê xuất kho/hỏng hóc
-            var outboundData = db.DamagedStock
+            var outboundData = db.DamagedStocks
                 .Include("Ingredient")
                 .Where(d => d.DamageDate >= from && d.DamageDate <= to)
                 .ToList();
@@ -1099,7 +1099,7 @@ namespace NhaHangLDP.Services.Management
             var dailyTrends = new List<DailyStockTrend>();
             for (var date = from; date <= to; date = date.AddDays(1))
             {
-                var dayInbound = inboundData.Where(d => d.StockInbound.InboundDate.Date == date.Date).Sum(d => d.Quantity * d.UnitPrice);
+                var dayInbound = inboundData.Where(d => d.StockInbounds.InboundDate.Date == date.Date).Sum(d => d.Quantity * d.UnitPrice);
                 var dayOutbound = outboundData.Where(d => d.DamageDate.Date == date.Date).Sum(d => d.Quantity * (d.Ingredient?.EstimatedCost ?? 0));
                 
                 dailyTrends.Add(new DailyStockTrend

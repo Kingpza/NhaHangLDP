@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,9 +8,9 @@ namespace NhaHangLDP.Services.Reports
 {
     public class BookingAnalyticsService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public BookingAnalyticsService(NhaHangLDPEntities context)
+        public BookingAnalyticsService(MyDbContext context)
         {
             db = context;
         }
@@ -20,7 +20,7 @@ namespace NhaHangLDP.Services.Reports
             DateTime startDate, endDate;
             GetDateRange(period, fromDate, toDate, out startDate, out endDate);
 
-            var bookingsInPeriod = db.Booking
+            var bookingsInPeriod = db.Bookings
                 .Where(b => b.BookingDateTime >= startDate && b.BookingDateTime <= endDate)
                 .ToList();
 
@@ -38,24 +38,24 @@ namespace NhaHangLDP.Services.Reports
             var bookingRevenue = 0m;
             if (successfulBookingTableIds.Any())
             {
-                bookingRevenue = db.Order
+                bookingRevenue = db.Orders
                     .Where(o => o.OrderTime >= startDate && o.OrderTime <= endDate)
                     .Where(o => successfulBookingTableIds.Contains(o.TableId))
-                    .SelectMany(o => db.Bill.Where(b => b.OrderId == o.Id && b.Status == "Paid"))
+                    .SelectMany(o => db.Bills.Where(b => b.OrderId == o.Id && b.Status == "Paid"))
                     .Sum(b => (decimal?)b.FinalAmount) ?? 0;
             }
 
-            var walkInRevenue = db.Order
+            var walkInRevenue = db.Orders
                 .Where(o => o.OrderTime >= startDate && o.OrderTime <= endDate)
                 .Where(o => !successfulBookingTableIds.Contains(o.TableId))
-                .SelectMany(o => db.Bill.Where(b => b.OrderId == o.Id && b.Status == "Paid"))
+                .SelectMany(o => db.Bills.Where(b => b.OrderId == o.Id && b.Status == "Paid"))
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
             var averagePartySize = bookingsInPeriod.Any() ?
                 bookingsInPeriod.Average(b => (decimal)b.NumberOfGuests) : 0;
 
-            var totalTables = db.RestaurantTable.Count();
-            var occupiedTables = db.RestaurantTable.Count(t => t.Status == "Occupied");
+            var totalTables = db.RestaurantTables.Count();
+            var occupiedTables = db.RestaurantTables.Count(t => t.Status == "Occupied");
             var tableUtilizationRate = totalTables > 0 ? Math.Round((decimal)occupiedTables / totalTables * 100, 1) : 0;
 
             var averageBookingValue = totalBookings > 0 && bookingRevenue > 0 ?
@@ -86,7 +86,7 @@ namespace NhaHangLDP.Services.Reports
             DateTime startDate, endDate;
             GetDateRange(period, null, null, out startDate, out endDate);
 
-            var bookingsInPeriod = db.Booking
+            var bookingsInPeriod = db.Bookings
                 .Where(b => b.BookingDateTime >= startDate && b.BookingDateTime <= endDate)
                 .ToList();
 
@@ -97,7 +97,7 @@ namespace NhaHangLDP.Services.Reports
                 .Take(6)
                 .ToList();
 
-            var tableUtilization = db.RestaurantTable
+            var tableUtilization = db.RestaurantTables
                 .GroupBy(t => t.Capacity <= 2 ? "Bàn đôi" : t.Capacity <= 4 ? "Bàn 4 người" : "Bàn lớn")
                 .Select(g => new
                 {

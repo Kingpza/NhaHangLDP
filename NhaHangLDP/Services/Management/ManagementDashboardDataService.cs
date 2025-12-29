@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,9 +8,9 @@ namespace NhaHangLDP.Services.Management
 {
     public class ManagementDashboardDataService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public ManagementDashboardDataService(NhaHangLDPEntities context)
+        public ManagementDashboardDataService(MyDbContext context)
         {
             db = context;
         }
@@ -21,14 +21,14 @@ namespace NhaHangLDP.Services.Management
             var today = DateTime.Today;
             var sevenDaysAgo = today.AddDays(-7);
 
-            viewModel.RecentOrders = db.Order
-                .Include(o => o.RestaurantTable)
-                .Include(o => o.Bill)
+            viewModel.RecentOrders = db.Orders
+                .Include(o => o.Table)
+                .Include(o => o.Bills)
                 .OrderByDescending(o => o.OrderTime)
                 .Take(5)
                 .ToList();
 
-            var paidBills = db.Bill
+            var paidBills = db.Bills
                 .Where(b => b.BillDate >= sevenDaysAgo && b.Status == "Paid")
                 .ToList();
 
@@ -48,7 +48,7 @@ namespace NhaHangLDP.Services.Management
             }
             viewModel.RevenueLast7Days = revenueData;
 
-            viewModel.PopularItems = db.OrderDetail
+            viewModel.PopularItems = db.OrderDetails
                 .Where(od => od.Order.OrderTime >= sevenDaysAgo)
                 .GroupBy(od => od.MenuItem.Name)
                 .Select(g => new PopularItem
@@ -69,37 +69,39 @@ namespace NhaHangLDP.Services.Management
             {
                 var today = DateTime.Today;
                 var yesterday = today.AddDays(-1);
+                var tomorrow = today.AddDays(1);
+                var dayAfterYesterday = yesterday.AddDays(1);
 
-                var todayRevenue = db.Order
-                    .Where(o => DbFunctions.TruncateTime(o.OrderTime) == today && o.Status == "Completed")
-                    .SelectMany(o => o.OrderDetail)
+                var todayRevenue = db.Orders
+                    .Where(o => o.OrderTime >= today && o.OrderTime < tomorrow && o.Status == "Completed")
+                    .SelectMany(o => o.OrderDetails)
                     .Sum(od => (decimal?)od.Quantity * od.PriceAtTime) ?? 0;
 
-                var yesterdayRevenue = db.Order
-                    .Where(o => DbFunctions.TruncateTime(o.OrderTime) == yesterday && o.Status == "Completed")
-                    .SelectMany(o => o.OrderDetail)
+                var yesterdayRevenue = db.Orders
+                    .Where(o => o.OrderTime >= yesterday && o.OrderTime < dayAfterYesterday && o.Status == "Completed")
+                    .SelectMany(o => o.OrderDetails)
                     .Sum(od => (decimal?)od.Quantity * od.PriceAtTime) ?? 0;
 
-                var todayOrders = db.Order
-                    .Count(o => DbFunctions.TruncateTime(o.OrderTime) == today);
+                var todayOrders = db.Orders
+                    .Count(o => o.OrderTime >= today && o.OrderTime < tomorrow);
 
-                var yesterdayOrders = db.Order
-                    .Count(o => DbFunctions.TruncateTime(o.OrderTime) == yesterday);
+                var yesterdayOrders = db.Orders
+                    .Count(o => o.OrderTime >= yesterday && o.OrderTime < dayAfterYesterday);
 
-                var todayCustomers = db.Order
-                    .Where(o => DbFunctions.TruncateTime(o.OrderTime) == today && (object)o.TableId != null)
+                var todayCustomers = db.Orders
+                    .Where(o => o.OrderTime >= today && o.OrderTime < tomorrow && (object)o.TableId != null)
                     .Select(o => o.TableId)
                     .Distinct()
                     .Count();
 
-                var yesterdayCustomers = db.Order
-                    .Where(o => DbFunctions.TruncateTime(o.OrderTime) == yesterday && (object)o.TableId != null)
+                var yesterdayCustomers = db.Orders
+                    .Where(o => o.OrderTime >= yesterday && o.OrderTime < dayAfterYesterday && (object)o.TableId != null)
                     .Select(o => o.TableId)
                     .Distinct()
                     .Count();
 
-                var occupiedTables = db.RestaurantTable.Count(t => t.Status == "Occupied");
-                var totalTables = db.RestaurantTable.Count();
+                var occupiedTables = db.RestaurantTables.Count(t => t.Status == "Occupied");
+                var totalTables = db.RestaurantTables.Count();
 
                 return new DashboardViewModel
                 {
@@ -124,7 +126,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var ingredients = db.Ingredient.ToList();
+                var ingredients = db.Ingredients.ToList();
                 var now = DateTime.Now;
                 var startOfMonth = new DateTime(now.Year, now.Month, 1);
 
@@ -133,13 +135,13 @@ namespace NhaHangLDP.Services.Management
                 var lowStockCount = ingredients.Count(i => i.LowStockThreshold.HasValue && i.AvailableStock <= i.LowStockThreshold.Value);
                 var outOfStockCount = ingredients.Count(i => i.AvailableStock <= 0);
 
-                var monthlyInbound = db.StockInbound
+                var monthlyInbound = db.StockInbounds
                     .Where(s => s.InboundDate >= startOfMonth)
                     .Sum(s => (decimal?)s.TotalCost) ?? 0;
 
-                var monthlyDamage = db.DamagedStock
+                var monthlyDamage = db.DamagedStocks
                     .Where(d => d.DamageDate >= startOfMonth)
-                    .Join(db.Ingredient, d => d.IngredientId, i => i.Id, (d, i) => new { d.Quantity, i.EstimatedCost })
+                    .Join(db.Ingredients, d => d.IngredientId, i => i.Id, (d, i) => new { d.Quantity, i.EstimatedCost })
                     .Sum(x => (decimal?)(x.Quantity * x.EstimatedCost)) ?? 0;
 
                 var highValueIngredients = ingredients
@@ -172,25 +174,25 @@ namespace NhaHangLDP.Services.Management
                     .OrderBy(i => i.AvailableStock)
                     .ToList();
 
-                var recentInbounds = db.StockInbound
-                    .Include("Employee")
-                    .Include("Supplier")
+                var recentInbounds = db.StockInbounds
+                    .Include(s => s.Cashier)
+                    .Include(s => s.Supplier)
                     .OrderByDescending(s => s.InboundDate)
                     .Take(10)
                     .ToList()
                     .Select(s => new InboundActivityModel
                     {
                         InboundDate = s.InboundDate,
-                        EmployeeName = s.Employee?.FullName ?? "N/A",
-                        SupplierName = s.Supplier?.Name ?? "Không có",
+                        EmployeeName = s.Cashier?.FullName ?? "N/A",
+                        SupplierName = s.Supplier?.Name ?? "KhÃ´ng cÃ³",
                         TotalCost = s.TotalCost,
-                        ItemCount = s.StockInboundDetail?.Count ?? 0
+                        ItemCount = s.StockInboundDetails?.Count ?? 0
                     })
                     .ToList();
 
-                var recentDamages = db.DamagedStock
-                    .Include("Ingredient")
-                    .Include("Employee")
+                var recentDamages = db.DamagedStocks
+                    .Include(d => d.Ingredient)
+                    .Include(d => d.ReportedByEmployee)
                     .OrderByDescending(d => d.DamageDate)
                     .Take(10)
                     .ToList()
@@ -200,8 +202,8 @@ namespace NhaHangLDP.Services.Management
                         IngredientName = d.Ingredient?.Name ?? "N/A",
                         Quantity = d.Quantity,
                         Unit = d.Ingredient?.Unit ?? "",
-                        Reason = d.Reason ?? "Không có lý do",
-                        ReportedBy = d.Employee?.FullName ?? "N/A",
+                        Reason = d.Reason ?? "KhÃ´ng cÃ³ lÃ½ do",
+                        ReportedBy = d.ReportedByEmployee?.FullName ?? "N/A",
                         EstimatedLoss = d.Quantity * (d.Ingredient?.EstimatedCost ?? 0)
                     })
                     .ToList();

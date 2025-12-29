@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
@@ -15,7 +15,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class QROrderController : Controller
     {
-        private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private MyDbContext db = new MyDbContext();
 
         #region Public Pages - Khách hàng truy cập
 
@@ -29,7 +29,7 @@ namespace NhaHangLDP.Controllers
                 return View("Error", (object)"Mã QR không hợp lệ. Vui lòng quét lại.");
             }
 
-            var table = db.RestaurantTable
+            var table = db.RestaurantTables
                 .Include(t => t.TableArea)
                 .FirstOrDefault(t => t.Id == tableId.Value);
 
@@ -39,7 +39,7 @@ namespace NhaHangLDP.Controllers
             }
 
             // Kiểm tra session hiện có
-            var existingSession = db.TableSession
+            var existingSession = db.TableSessions
                 .Where(s => s.TableId == tableId.Value && s.Status == "Active")
                 .OrderByDescending(s => s.StartTime)
                 .FirstOrDefault();
@@ -61,7 +61,7 @@ namespace NhaHangLDP.Controllers
                     StartTime = DateTime.Now,
                     Status = "Active"
                 };
-                db.TableSession.Add(newSession);
+                db.TableSessions.Add(newSession);
                 db.SaveChanges();
             }
 
@@ -79,7 +79,7 @@ namespace NhaHangLDP.Controllers
             }
 
             // Validate session
-            var session = db.TableSession
+            var session = db.TableSessions
                 .FirstOrDefault(s => s.TableId == tableId && s.SessionToken == token && s.Status == "Active");
 
             if (session == null)
@@ -87,7 +87,7 @@ namespace NhaHangLDP.Controllers
                 return RedirectToAction("Scan", new { tableId = tableId });
             }
 
-            var table = db.RestaurantTable
+            var table = db.RestaurantTables
                 .Include(t => t.TableArea)
                 .FirstOrDefault(t => t.Id == tableId);
 
@@ -97,7 +97,7 @@ namespace NhaHangLDP.Controllers
             }
 
             // Lấy menu items
-            var menuItems = db.MenuItem
+            var menuItems = db.MenuItems
                 .Where(m => m.IsAvailable)
                 .OrderBy(m => m.Category)
                 .ThenBy(m => m.Name)
@@ -130,8 +130,8 @@ namespace NhaHangLDP.Controllers
                 }).ToList();
 
             // Lấy order hiện tại nếu có
-            var currentOrder = db.QROrder
-                .Include(o => o.QROrderDetail.Select(d => d.MenuItem))
+            var currentOrder = db.QROrders
+                .Include(o => o.QROrderDetails).ThenInclude(d => d.MenuItem)
                 .Where(o => o.SessionToken == token && o.TableId == tableId &&
                            (o.Status == "Draft" || o.Status == "Submitted"))
                 .OrderByDescending(o => o.CreatedTime)
@@ -144,8 +144,8 @@ namespace NhaHangLDP.Controllers
             }
 
             // Restaurant info
-            var restaurantName = db.AppSetting.FirstOrDefault(s => s.SettingKey == "RestaurantName")?.SettingValue ?? "Nhà Hàng LDP";
-            var restaurantPhone = db.AppSetting.FirstOrDefault(s => s.SettingKey == "PhoneNumber")?.SettingValue ?? "";
+            var restaurantName = db.AppSettings.FirstOrDefault(s => s.SettingKey == "RestaurantName")?.SettingValue ?? "Nhà Hàng LDP";
+            var restaurantPhone = db.AppSettings.FirstOrDefault(s => s.SettingKey == "PhoneNumber")?.SettingValue ?? "";
 
             var viewModel = new QRMenuViewModel
             {
@@ -193,9 +193,9 @@ namespace NhaHangLDP.Controllers
                 return RedirectToAction("Scan", new { tableId = tableId });
             }
 
-            var order = db.QROrder
-                .Include(o => o.QROrderDetail.Select(d => d.MenuItem))
-                .Include(o => o.RestaurantTable)
+            var order = db.QROrders
+                .Include(o => o.QROrderDetails).ThenInclude(d => d.MenuItem)
+                .Include(o => o.Table)
                 .Where(o => o.SessionToken == token && o.TableId == tableId &&
                            (o.Status == "Draft" || o.Status == "Submitted"))
                 .OrderByDescending(o => o.CreatedTime)
@@ -223,9 +223,9 @@ namespace NhaHangLDP.Controllers
                 return RedirectToAction("Scan", new { tableId = tableId });
             }
 
-            var orders = db.QROrder
-                .Include(o => o.QROrderDetail.Select(d => d.MenuItem))
-                .Include(o => o.RestaurantTable)
+            var orders = db.QROrders
+                .Include(o => o.QROrderDetails).ThenInclude(d => d.MenuItem)
+                .Include(o => o.Table)
                 .Where(o => o.SessionToken == token && o.TableId == tableId)
                 .OrderByDescending(o => o.CreatedTime)
                 .ToList();
@@ -253,15 +253,15 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Phiên làm việc không hợp lệ" });
                 }
 
-                var menuItem = db.MenuItem.Find(dto.MenuItemId);
+                var menuItem = db.MenuItems.Find(dto.MenuItemId);
                 if (menuItem == null || !menuItem.IsAvailable)
                 {
                     return Json(new { success = false, message = "Món ăn không còn khả dụng" });
                 }
 
                 // Tìm hoặc tạo order draft
-                var order = db.QROrder
-                    .Include(o => o.QROrderDetail)
+                var order = db.QROrders
+                    .Include(o => o.QROrderDetails)
                     .FirstOrDefault(o => o.SessionToken == dto.SessionToken &&
                                         o.TableId == dto.TableId &&
                                         o.Status == "Draft");
@@ -276,12 +276,12 @@ namespace NhaHangLDP.Controllers
                         Status = "Draft",
                         CreatedTime = DateTime.Now
                     };
-                    db.QROrder.Add(order);
+                    db.QROrders.Add(order);
                     db.SaveChanges();
                 }
 
                 // Kiểm tra món đã có trong order chưa
-                var existingItem = order.QROrderDetail.FirstOrDefault(d => d.MenuItemId == dto.MenuItemId);
+                var existingItem = order.QROrderDetails.FirstOrDefault(d => d.MenuItemId == dto.MenuItemId);
                 if (existingItem != null)
                 {
                     existingItem.Quantity += dto.Quantity;
@@ -302,17 +302,17 @@ namespace NhaHangLDP.Controllers
                         ItemStatus = "Draft",
                         AddedTime = DateTime.Now
                     };
-                    db.QROrderDetail.Add(detail);
+                    db.QROrderDetails.Add(detail);
                 }
 
                 db.SaveChanges();
 
                 // Tính tổng
-                var total = db.QROrderDetail
+                var total = db.QROrderDetails
                     .Where(d => d.QROrderId == order.Id)
                     .Sum(d => d.Quantity * d.UnitPrice);
 
-                var itemCount = db.QROrderDetail
+                var itemCount = db.QROrderDetails
                     .Where(d => d.QROrderId == order.Id)
                     .Sum(d => d.Quantity);
 
@@ -339,7 +339,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var detail = db.QROrderDetail
+                var detail = db.QROrderDetails
                     .Include(d => d.QROrder)
                     .FirstOrDefault(d => d.Id == dto.OrderDetailId);
 
@@ -361,7 +361,7 @@ namespace NhaHangLDP.Controllers
                 if (dto.Quantity <= 0)
                 {
                     // Xóa item
-                    db.QROrderDetail.Remove(detail);
+                    db.QROrderDetails.Remove(detail);
                 }
                 else
                 {
@@ -372,11 +372,11 @@ namespace NhaHangLDP.Controllers
 
                 // Tính lại tổng
                 var orderId = detail.QROrderId;
-                var total = db.QROrderDetail
+                var total = db.QROrderDetails
                     .Where(d => d.QROrderId == orderId)
                     .Sum(d => (decimal?)(d.Quantity * d.UnitPrice)) ?? 0;
 
-                var itemCount = db.QROrderDetail
+                var itemCount = db.QROrderDetails
                     .Where(d => d.QROrderId == orderId)
                     .Sum(d => (int?)d.Quantity) ?? 0;
 
@@ -404,8 +404,8 @@ namespace NhaHangLDP.Controllers
             {
                 try
                 {
-                    var order = db.QROrder
-                        .Include(o => o.QROrderDetail)
+                    var order = db.QROrders
+                        .Include(o => o.QROrderDetails)
                         .FirstOrDefault(o => o.SessionToken == dto.SessionToken &&
                                             o.TableId == dto.TableId &&
                                             o.Status == "Draft");
@@ -415,7 +415,7 @@ namespace NhaHangLDP.Controllers
                         return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
                     }
 
-                    if (!order.QROrderDetail.Any())
+                    if (!order.QROrderDetails.Any())
                     {
                         return Json(new { success = false, message = "Đơn hàng chưa có món nào" });
                     }
@@ -425,7 +425,7 @@ namespace NhaHangLDP.Controllers
                     if (!string.IsNullOrEmpty(dto.PromotionCode))
                     {
                         var promoResult = ValidatePromotionForOrder(dto.PromotionCode,
-                            order.QROrderDetail.Sum(d => d.Quantity * d.UnitPrice),
+                            order.QROrderDetails.Sum(d => d.Quantity * d.UnitPrice),
                             dto.CustomerPhone);
 
                         if (promoResult.IsValid)
@@ -443,13 +443,13 @@ namespace NhaHangLDP.Controllers
                     order.SubmittedTime = DateTime.Now;
 
                     // Cập nhật status các items
-                    foreach (var item in order.QROrderDetail)
+                    foreach (var item in order.QROrderDetails)
                     {
                         item.ItemStatus = "Pending";
                     }
 
                     // Cập nhật trạng thái bàn
-                    var table = db.RestaurantTable.Find(dto.TableId);
+                    var table = db.RestaurantTables.Find(dto.TableId);
                     if (table != null && table.Status == "Available")
                     {
                         table.Status = "Occupied";
@@ -485,8 +485,8 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var order = db.QROrder
-                    .Include(o => o.QROrderDetail.Select(d => d.MenuItem))
+                var order = db.QROrders
+                    .Include(o => o.QROrderDetails).ThenInclude(d => d.MenuItem)
                     .Where(o => o.SessionToken == token && o.TableId == tableId &&
                                (o.Status == "Draft" || o.Status == "Submitted"))
                     .OrderByDescending(o => o.CreatedTime)
@@ -514,8 +514,8 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var order = db.QROrder
-                    .Include(o => o.QROrderDetail.Select(d => d.MenuItem))
+                var order = db.QROrders
+                    .Include(o => o.QROrderDetails).ThenInclude(d => d.MenuItem)
                     .FirstOrDefault(o => o.Id == orderId && o.SessionToken == token);
 
                 if (order == null)
@@ -545,7 +545,7 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Phiên không hợp lệ" });
                 }
 
-                var table = db.RestaurantTable.Find(tableId);
+                var table = db.RestaurantTables.Find(tableId);
                 if (table == null)
                 {
                     return Json(new { success = false, message = "Bàn không tồn tại" });
@@ -562,7 +562,7 @@ namespace NhaHangLDP.Controllers
                     IsRead = false,
                     Level = requestType == "bill" ? "High" : "Normal"
                 };
-                db.Notification.Add(notification);
+                db.Notifications.Add(notification);
                 db.SaveChanges();
 
                 return Json(new { success = true, message = "Đã gọi nhân viên. Vui lòng chờ trong giây lát!" });
@@ -583,9 +583,9 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager", "Cashier")]
         public ActionResult PendingOrders()
         {
-            var orders = db.QROrder
-                .Include(o => o.QROrderDetail.Select(d => d.MenuItem))
-                .Include(o => o.RestaurantTable)
+            var orders = db.QROrders
+                .Include(o => o.QROrderDetails).ThenInclude(d => d.MenuItem)
+                .Include(o => o.Table)
                 .Where(o => o.Status == "Submitted" || o.Status == "Confirmed")
                 .OrderBy(o => o.SubmittedTime)
                 .ToList();
@@ -612,9 +612,9 @@ namespace NhaHangLDP.Controllers
             {
                 try
                 {
-                    var qrOrder = db.QROrder
-                        .Include(o => o.QROrderDetail.Select(d => d.MenuItem))
-                        .Include(o => o.RestaurantTable)
+                    var qrOrder = db.QROrders
+                        .Include(o => o.QROrderDetails).ThenInclude(d => d.MenuItem)
+                        .Include(o => o.Table)
                         .FirstOrDefault(o => o.Id == orderId);
 
                     if (qrOrder == null)
@@ -628,7 +628,7 @@ namespace NhaHangLDP.Controllers
                     }
 
                     // Tạo Order chính thức
-                    var activeShift = db.CashierShift.FirstOrDefault(s => s.Status == "Active");
+                    var activeShift = db.CashierShifts.FirstOrDefault(s => s.Status == "Active");
 
                     var order = new Order
                     {
@@ -638,11 +638,11 @@ namespace NhaHangLDP.Controllers
                         OrderTime = DateTime.Now,
                         Status = "Pending"
                     };
-                    db.Order.Add(order);
+                    db.Orders.Add(order);
                     db.SaveChanges();
 
                     // Tạo OrderDetails
-                    foreach (var qrItem in qrOrder.QROrderDetail)
+                    foreach (var qrItem in qrOrder.QROrderDetails)
                     {
                         var detail = new OrderDetail
                         {
@@ -652,7 +652,7 @@ namespace NhaHangLDP.Controllers
                             PriceAtTime = qrItem.UnitPrice,
                             Notes = qrItem.ItemNotes
                         };
-                        db.OrderDetail.Add(detail);
+                        db.OrderDetails.Add(detail);
 
                         qrItem.ItemStatus = "Confirmed";
                     }
@@ -664,7 +664,7 @@ namespace NhaHangLDP.Controllers
                     qrOrder.ConfirmedByEmployeeId = GetCurrentEmployeeId();
 
                     // Cập nhật bàn
-                    var table = qrOrder.RestaurantTable;
+                    var table = qrOrder.Table;
                     if (table != null)
                     {
                         table.Status = "Occupied";
@@ -697,7 +697,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var order = db.QROrder.Find(orderId);
+                var order = db.QROrders.Find(orderId);
                 if (order == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
@@ -707,7 +707,7 @@ namespace NhaHangLDP.Controllers
                 order.Notes = (order.Notes ?? "") + "\n[Từ chối]: " + reason;
 
                 // Cập nhật items
-                foreach (var item in db.QROrderDetail.Where(d => d.QROrderId == orderId))
+                foreach (var item in db.QROrderDetails.Where(d => d.QROrderId == orderId))
                 {
                     item.ItemStatus = "Cancelled";
                 }
@@ -728,7 +728,7 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult GenerateQR(int tableId)
         {
-            var table = db.RestaurantTable.Include(t => t.TableArea).FirstOrDefault(t => t.Id == tableId);
+            var table = db.RestaurantTables.Include(t => t.TableArea).FirstOrDefault(t => t.Id == tableId);
             if (table == null)
             {
                 return NotFound();
@@ -751,7 +751,7 @@ namespace NhaHangLDP.Controllers
         {
             if (string.IsNullOrEmpty(token)) return false;
 
-            return db.TableSession.Any(s => s.TableId == tableId &&
+            return db.TableSessions.Any(s => s.TableId == tableId &&
                                            s.SessionToken == token &&
                                            s.Status == "Active");
         }
@@ -794,7 +794,7 @@ namespace NhaHangLDP.Controllers
                 QROrderCode = order.QROrderCode,
                 SessionToken = order.SessionToken,
                 TableId = order.TableId,
-                TableNumber = order.RestaurantTable?.TableNumber ?? "",
+                TableNumber = order.Table?.TableNumber ?? "",
                 CustomerName = order.CustomerName,
                 CustomerPhone = order.CustomerPhone,
                 Status = order.Status,
@@ -805,7 +805,7 @@ namespace NhaHangLDP.Controllers
                 CompletedTime = order.CompletedTime,
                 LinkedOrderId = order.LinkedOrderId,
                 AppliedPromotionCode = order.AppliedPromotionCode,
-                Items = order.QROrderDetail?.Select(d => new QROrderItemViewModel
+                Items = order.QROrderDetails?.Select(d => new QROrderItemViewModel
                 {
                     Id = d.Id,
                     QROrderId = d.QROrderId,
@@ -824,7 +824,7 @@ namespace NhaHangLDP.Controllers
         private PromotionValidationResult ValidatePromotionForOrder(string code, decimal orderTotal, string customerPhone)
         {
             // Sử dụng logic từ PromotionController
-            var promotion = db.Promotion.FirstOrDefault(p => p.Code == code && p.IsActive);
+            var promotion = db.Promotions.FirstOrDefault(p => p.Code == code && p.IsActive);
             if (promotion == null)
             {
                 return new PromotionValidationResult { IsValid = false, Message = "Mã không hợp lệ" };

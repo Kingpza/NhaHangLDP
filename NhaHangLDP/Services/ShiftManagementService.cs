@@ -1,5 +1,5 @@
-﻿using System;
-using System.Data.Entity;
+using System;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -7,21 +7,21 @@ namespace NhaHangLDP.Services
 {
     public class ShiftManagementService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public ShiftManagementService(NhaHangLDPEntities context)
+        public ShiftManagementService(MyDbContext context)
         {
             db = context;
         }
 
         public CashierShift GetActiveShift()
         {
-            return db.CashierShift.FirstOrDefault(s => s.Status == "Active");
+            return db.CashierShifts.FirstOrDefault(s => s.Status == "Active");
         }
 
         public CashierShift GetActiveShiftByCashier(int cashierId)
         {
-            return db.CashierShift.FirstOrDefault(s => s.CashierId == cashierId && s.Status == "Active");
+            return db.CashierShifts.FirstOrDefault(s => s.CashierId == cashierId && s.Status == "Active");
         }
 
         public bool StartShift(int cashierId, decimal openingAmount, string notes, out string errorMessage)
@@ -50,7 +50,7 @@ namespace NhaHangLDP.Services
                     TotalRevenue = 0
                 };
 
-                db.CashierShift.Add(cashierShift);
+                db.CashierShifts.Add(cashierShift);
                 db.SaveChanges();
 
                 errorMessage = null;
@@ -67,8 +67,8 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var activeShift = db.CashierShift
-                    .Include(s => s.ShiftSupportStaff)
+                var activeShift = db.CashierShifts
+                    .Include(s => s.ShiftSupportStaffs)
                     .FirstOrDefault(s => s.Status == "Active");
 
                 if (activeShift == null)
@@ -108,24 +108,24 @@ namespace NhaHangLDP.Services
 
         public ShiftRevenueData CalculateShiftRevenue(int shiftId)
         {
-            var orders = db.Order
-                .Include(o => o.Bill)
+            var orders = db.Orders
+                .Include(o => o.Bills)
                 .Where(o => o.ShiftId == shiftId)
                 .ToList();
 
             var totalRevenue = orders
-                .Where(o => o.Bill.Any(b => b.Status == "Paid"))
-                .Sum(o => o.Bill.Where(b => b.Status == "Paid").Sum(b => b.FinalAmount));
+                .Where(o => o.Bills.Any(b => b.Status == "Paid"))
+                .Sum(o => o.Bills.Where(b => b.Status == "Paid").Sum(b => b.FinalAmount));
 
             var cashRevenue = orders
-                .Where(o => o.Bill.Any(b => b.Status == "Paid" && b.PaymentMethod == "cash"))
-                .Sum(o => o.Bill.Where(b => b.Status == "Paid" && b.PaymentMethod == "cash").Sum(b => b.FinalAmount));
+                .Where(o => o.Bills.Any(b => b.Status == "Paid" && b.PaymentMethod == "cash"))
+                .Sum(o => o.Bills.Where(b => b.Status == "Paid" && b.PaymentMethod == "cash").Sum(b => b.FinalAmount));
 
             return new ShiftRevenueData
             {
                 TotalRevenue = totalRevenue,
                 CashRevenue = cashRevenue,
-                OrderCount = orders.Count(o => o.Bill.Any(b => b.Status == "Paid"))
+                OrderCount = orders.Count(o => o.Bills.Any(b => b.Status == "Paid"))
             };
         }
 

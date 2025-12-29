@@ -13,7 +13,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class ReservationController : Controller
     {
-        private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();
+        private readonly MyDbContext _db = new MyDbContext();
 
         #region Public Views
 

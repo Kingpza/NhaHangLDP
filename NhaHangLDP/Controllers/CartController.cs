@@ -13,7 +13,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class CartController : Controller
     {
-        private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();
+        private readonly MyDbContext _db = new MyDbContext();
 
         #region Session Keys
         private const string CART_SESSION_KEY = "CustomerCart";

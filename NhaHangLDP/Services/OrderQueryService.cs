@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,19 +8,19 @@ namespace NhaHangLDP.Services
 {
     public class OrderQueryService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public OrderQueryService(NhaHangLDPEntities context)
+        public OrderQueryService(MyDbContext context)
         {
             db = context;
         }
 
         public List<object> GetOrdersData(int shiftId, string status = "all")
         {
-            var query = db.Order
-                .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                .Include(o => o.RestaurantTable)
-                .Include(o => o.Bill)
+            var query = db.Orders
+                .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                .Include(o => o.Table)
+                .Include(o => o.Bills)
                 .Where(o => o.ShiftId == shiftId);
 
             if (status != "all")
@@ -31,10 +31,10 @@ namespace NhaHangLDP.Services
                         query = query.Where(o => o.Status == "Pending" || o.Status == "Preparing" || o.Status == "Ready");
                         break;
                     case "completed":
-                        query = query.Where(o => o.Status == "Completed" || o.Bill.Any(b => b.Status == "Paid"));
+                        query = query.Where(o => o.Status == "Completed" || o.Bills.Any(b => b.Status == "Paid"));
                         break;
                     case "paid":
-                        query = query.Where(o => o.Bill.Any(b => b.Status == "Paid"));
+                        query = query.Where(o => o.Bills.Any(b => b.Status == "Paid"));
                         break;
                     default:
                         query = query.Where(o => o.Status == status);
@@ -48,20 +48,20 @@ namespace NhaHangLDP.Services
                 .Select(order => new
                 {
                     id = order.Id.ToString(),
-                    table = order.RestaurantTable.TableNumber,
+                    table = order.Table.TableNumber,
                     status = order.Status.ToLower(),
                     statusText = GetStatusTextVietnamese(order.Status),
                     time = order.OrderTime.ToString("HH:mm"),
-                    paymentStatus = order.Bill.Any(b => b.Status == "Paid") ? "paid" : "unpaid",
-                    paymentMethod = order.Bill.FirstOrDefault(b => b.Status == "Paid")?.PaymentMethod ?? "",
-                    items = order.OrderDetail.Select(od => new
+                    paymentStatus = order.Bills.Any(b => b.Status == "Paid") ? "paid" : "unpaid",
+                    paymentMethod = order.Bills.FirstOrDefault(b => b.Status == "Paid")?.PaymentMethod ?? "",
+                    items = order.OrderDetails.Select(od => new
                     {
                         name = od.MenuItem.Name,
                         quantity = od.Quantity,
                         price = od.PriceAtTime,
                         description = od.MenuItem.Description ?? ""
                     }).ToList(),
-                    total = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime)
+                    total = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime)
                 })
                 .ToList<object>();
 
@@ -70,10 +70,10 @@ namespace NhaHangLDP.Services
 
         public object GetOrderDetail(int orderId)
         {
-            var order = db.Order
-                .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                .Include(o => o.RestaurantTable)
-                .Include(o => o.Bill)
+            var order = db.Orders
+                .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                .Include(o => o.Table)
+                .Include(o => o.Bills)
                 .Include(o => o.Employee)
                 .FirstOrDefault(o => o.Id == orderId);
 
@@ -82,23 +82,23 @@ namespace NhaHangLDP.Services
                 return null;
             }
 
-            var bill = order.Bill.FirstOrDefault();
-            var subtotal = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+            var bill = order.Bills.FirstOrDefault();
+            var subtotal = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime);
             var vat = Math.Round(subtotal * 0.1m);
             var total = subtotal + vat;
 
             var orderDetail = new
             {
                 id = order.Id.ToString(),
-                table = order.RestaurantTable.TableNumber,
+                table = order.Table.TableNumber,
                 status = order.Status.ToLower(),
                 statusText = GetStatusTextVietnamese(order.Status),
                 time = order.OrderTime.ToString("HH:mm"),
                 date = order.OrderTime.ToString("dd/MM/yyyy"),
                 paymentStatus = bill?.Status == "Paid" ? "paid" : "unpaid",
                 paymentMethod = bill?.PaymentMethod ?? "",
-                waiter = order.Employee?.FullName ?? "N/A",
-                items = order.OrderDetail.Select(od => new
+                waiter = order.Waiter?.FullName ?? "N/A",
+                items = order.OrderDetails.Select(od => new
                 {
                     name = od.MenuItem.Name,
                     quantity = od.Quantity,
@@ -117,8 +117,8 @@ namespace NhaHangLDP.Services
 
         public object GetTableStatus(int tableId)
         {
-            var table = db.RestaurantTable
-                .Include(t => t.Order.Select(o => o.OrderDetail))
+            var table = db.RestaurantTables
+                .Include(t => t.Orders).ThenInclude(o => o.OrderDetails)
                 .Include(t => t.TableArea)
                 .FirstOrDefault(t => t.Id == tableId);
 
@@ -127,7 +127,7 @@ namespace NhaHangLDP.Services
                 return null;
             }
 
-            var activeOrder = table.Order
+            var activeOrder = table.Orders
                 .Where(o => o.Status == "Pending" || o.Status == "Preparing")
                 .OrderByDescending(o => o.OrderTime)
                 .FirstOrDefault();
@@ -140,7 +140,7 @@ namespace NhaHangLDP.Services
                 Capacity = table.Capacity,
                 OrderId = activeOrder?.Id,
                 OrderTime = activeOrder?.OrderTime.ToString("HH:mm"),
-                ItemCount = activeOrder?.OrderDetail.Count ?? 0,
+                ItemCount = activeOrder?.OrderDetails.Count ?? 0,
                 LastUpdate = DateTime.Now
             };
 
@@ -149,15 +149,15 @@ namespace NhaHangLDP.Services
 
         public List<object> GetTablesData()
         {
-            var tablesData = db.RestaurantTable
+            var tablesData = db.RestaurantTables
                 .Include(t => t.TableArea)
-                .Include(t => t.Order.Select(o => o.OrderDetail))
+                .Include(t => t.Orders).ThenInclude(o => o.OrderDetails)
                 .OrderBy(t => t.TableArea.Name)
                 .ThenBy(t => t.TableNumber)
                 .ToList()
                 .Select(table =>
                 {
-                    var activeOrder = table.Order
+                    var activeOrder = table.Orders
                         .Where(o => o.Status == "Pending" || o.Status == "Preparing" || o.Status == "Ready")
                         .OrderByDescending(o => o.OrderTime)
                         .FirstOrDefault();
@@ -174,7 +174,7 @@ namespace NhaHangLDP.Services
                         areaName = table.TableArea?.Name ?? "Không xác định",
                         activeOrderId = activeOrder?.Id,
                         orderTime = activeOrder?.OrderTime.ToString("HH:mm"),
-                        itemCount = activeOrder?.OrderDetail?.Count ?? 0
+                        itemCount = activeOrder?.OrderDetails?.Count ?? 0
                     };
                 })
                 .ToList<object>();
@@ -184,8 +184,8 @@ namespace NhaHangLDP.Services
 
         public List<object> GetTableOrderItems(int tableId)
         {
-            var table = db.RestaurantTable
-                .Include(t => t.Order.Select(o => o.OrderDetail.Select(od => od.MenuItem)))
+            var table = db.RestaurantTables
+                .Include(t => t.Orders).ThenInclude(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
                 .FirstOrDefault(t => t.Id == tableId);
 
             if (table == null)
@@ -193,13 +193,13 @@ namespace NhaHangLDP.Services
                 return null;
             }
 
-            var order = table.Order.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
+            var order = table.Orders.FirstOrDefault(o => o.Status != "Completed" && o.Status != "Cancelled");
             if (order == null)
             {
                 return null;
             }
 
-            var items = order.OrderDetail.Select(d => new
+            var items = order.OrderDetails.Select(d => new
             {
                 orderDetailId = d.Id,
                 name = d.MenuItem.Name,
@@ -212,7 +212,7 @@ namespace NhaHangLDP.Services
 
         public int? GetLastPaidOrderId(int shiftId)
         {
-            var lastBill = db.Bill
+            var lastBill = db.Bills
                 .Where(b => b.Order.ShiftId == shiftId && b.Status == "Paid")
                 .OrderByDescending(b => b.BillDate)
                 .FirstOrDefault();
@@ -240,8 +240,8 @@ namespace NhaHangLDP.Services
         /// </summary>
         public List<OnlineOrderViewModel> GetOnlineOrders(string status = "all", string orderType = "all")
         {
-            var query = db.CustomerOrder
-                .Include(o => o.CustomerOrderDetail)
+            var query = db.CustomerOrders
+                .Include(o => o.CustomerOrderDetails)
                 .AsQueryable();
 
             // Filter by status
@@ -332,8 +332,8 @@ namespace NhaHangLDP.Services
                     OrderDate = o.OrderDate,
                     OrderDateText = o.OrderDate.ToString("HH:mm dd/MM/yyyy"),
                     EstimatedDeliveryTime = o.EstimatedDeliveryTime,
-                    ItemCount = o.CustomerOrderDetail?.Count ?? 0,
-                    Items = o.CustomerOrderDetail?.Select(d => new OnlineOrderItemViewModel
+                    ItemCount = o.CustomerOrderDetails?.Count ?? 0,
+                    Items = o.CustomerOrderDetails?.Select(d => new OnlineOrderItemViewModel
                     {
                         Id = d.Id,
                         ItemName = d.ItemName,
@@ -353,14 +353,14 @@ namespace NhaHangLDP.Services
         /// </summary>
         public OnlineOrderViewModel GetOnlineOrderDetail(int orderId)
         {
-            var order = db.CustomerOrder
-                .Include(o => o.CustomerOrderDetail.Select(d => d.MenuItem))
+            var order = db.CustomerOrders
+                .Include(o => o.CustomerOrderDetails).ThenInclude(d => d.MenuItem)
                 .FirstOrDefault(o => o.Id == orderId);
 
             if (order == null) return null;
 
             // Lấy thông tin shipper nếu có
-            var assignment = db.DeliveryAssignment
+            var assignment = db.DeliveryAssignments
                 .Include(a => a.Shipper)
                 .FirstOrDefault(a => a.OrderId == orderId && a.Status != "Cancelled" && a.Status != "Rejected");
 
@@ -394,8 +394,8 @@ namespace NhaHangLDP.Services
                 OrderDate = order.OrderDate,
                 OrderDateText = order.OrderDate.ToString("HH:mm dd/MM/yyyy"),
                 EstimatedDeliveryTime = order.EstimatedDeliveryTime,
-                ItemCount = order.CustomerOrderDetail?.Count ?? 0,
-                Items = order.CustomerOrderDetail?.Select(d => new OnlineOrderItemViewModel
+                ItemCount = order.CustomerOrderDetails?.Count ?? 0,
+                Items = order.CustomerOrderDetails?.Select(d => new OnlineOrderItemViewModel
                 {
                     Id = d.Id,
                     MenuItemId = d.MenuItemId,
@@ -421,14 +421,14 @@ namespace NhaHangLDP.Services
         {
             var counts = new Dictionary<string, int>
             {
-                { "all", db.CustomerOrder.Count() },
-                { "pending", db.CustomerOrder.Count(o => o.Status == "Pending") },
-                { "confirmed", db.CustomerOrder.Count(o => o.Status == "Confirmed") },
-                { "preparing", db.CustomerOrder.Count(o => o.Status == "Preparing") },
-                { "ready", db.CustomerOrder.Count(o => o.Status == "Ready") },
-                { "delivering", db.CustomerOrder.Count(o => o.Status == "Delivering") },
-                { "completed", db.CustomerOrder.Count(o => o.Status == "Completed") },
-                { "cancelled", db.CustomerOrder.Count(o => o.Status == "Cancelled") }
+                { "all", db.CustomerOrders.Count() },
+                { "pending", db.CustomerOrders.Count(o => o.Status == "Pending") },
+                { "confirmed", db.CustomerOrders.Count(o => o.Status == "Confirmed") },
+                { "preparing", db.CustomerOrders.Count(o => o.Status == "Preparing") },
+                { "ready", db.CustomerOrders.Count(o => o.Status == "Ready") },
+                { "delivering", db.CustomerOrders.Count(o => o.Status == "Delivering") },
+                { "completed", db.CustomerOrders.Count(o => o.Status == "Completed") },
+                { "cancelled", db.CustomerOrders.Count(o => o.Status == "Cancelled") }
             };
 
             return counts;
@@ -441,7 +441,7 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var order = db.CustomerOrder.Find(orderId);
+                var order = db.CustomerOrders.Find(orderId);
                 if (order == null)
                 {
                     errorMessage = "Không tìm thấy đơn hàng!";

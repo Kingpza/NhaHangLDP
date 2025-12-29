@@ -4,7 +4,7 @@ using NhaHangLDP.Services;
 using NhaHangLDP.Helpers;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -17,7 +17,7 @@ namespace NhaHangLDP.Controllers
 {
     public class ManagementController : Controller
     {
-        private readonly NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private readonly MyDbContext db = new MyDbContext();
         private readonly TableAdminService tableService;
         private readonly EmployeeAdminService employeeService;
         private readonly MenuAdminService menuService;
@@ -1371,7 +1371,7 @@ namespace NhaHangLDP.Controllers
                         break;
                 }
 
-                var orders = db.CustomerOrder
+                var orders = db.CustomerOrders
                     .Where(o => o.OrderDate >= startDate)
                     .ToList();
 
@@ -1616,7 +1616,7 @@ namespace NhaHangLDP.Controllers
             if (HttpContext.Session.GetString("EmployeeId") != null)
                 return (int.TryParse(HttpContext.Session.GetString("EmployeeId"), out int _tempEmployeeId) ? _tempEmployeeId : 0);
 
-            var adminEmployee = db.Employee.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive);
+            var adminEmployee = db.Employees.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive);
             return adminEmployee?.Id ?? 1;
         }
 

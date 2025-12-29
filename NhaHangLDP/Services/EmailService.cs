@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using NhaHangLDP.Models;
 
 namespace NhaHangLDP.Services
@@ -14,14 +14,14 @@ namespace NhaHangLDP.Services
     /// </summary>
     public class EmailService
     {
-        private readonly NhaHangLDPEntities _db;
+        private readonly MyDbContext _db;
 
         public EmailService()
         {
-            _db = new NhaHangLDPEntities();
+            _db = new MyDbContext();
         }
 
-        public EmailService(NhaHangLDPEntities db)
+        public EmailService(MyDbContext db)
         {
             _db = db;
         }
@@ -267,7 +267,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public async Task<EmailSendResult> SendOrderConfirmationAsync(QROrder order, string customerEmail)
         {
-            var orderItems = _db.QROrderDetail
+            var orderItems = _db.QROrderDetails
                 .Include(d => d.MenuItem)
                 .Where(d => d.QROrderId == order.Id)
                 .ToList();
@@ -281,7 +281,7 @@ namespace NhaHangLDP.Services
             {
                 { "CustomerName", order.CustomerName ?? "Quý khách" },
                 { "OrderCode", order.QROrderCode },
-                { "TableNumber", order.RestaurantTable?.TableNumber ?? "" },
+                { "TableNumber", order.Table?.TableNumber ?? "" },
                 { "OrderTime", order.CreatedTime.ToString("HH:mm dd/MM/yyyy") },
                 { "OrderItems", itemsHtml },
                 { "TotalAmount", totalAmount.ToString("N0") },
@@ -340,8 +340,8 @@ namespace NhaHangLDP.Services
         public async Task<EmailSendResult> SendInvoiceEmailAsync(Bill bill, string customerEmail, string customerName)
         {
             var order = _db.Order
-                .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                .Include(o => o.RestaurantTable)
+                .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                .Include(o => o.Table)
                 .FirstOrDefault(o => o.Id == bill.OrderId);
 
             if (order == null)
@@ -353,7 +353,7 @@ namespace NhaHangLDP.Services
                 };
             }
 
-            var itemsHtml = string.Join("", order.OrderDetail.Select(i =>
+            var itemsHtml = string.Join("", order.OrderDetails.Select(i =>
                 $"<tr><td>{i.MenuItem.Name}</td><td>{i.Quantity}</td><td>{i.PriceAtTime:N0}đ</td><td>{(i.Quantity * i.PriceAtTime):N0}đ</td></tr>"));
 
             var placeholders = new Dictionary<string, string>
@@ -361,7 +361,7 @@ namespace NhaHangLDP.Services
                 { "CustomerName", customerName ?? "Quý khách" },
                 { "BillCode", $"HD{bill.Id:D6}" },
                 { "BillDate", bill.BillDate.ToString("HH:mm dd/MM/yyyy") },
-                { "TableNumber", order.RestaurantTable?.TableNumber ?? "" },
+                { "TableNumber", order.Table?.TableNumber ?? "" },
                 { "OrderItems", itemsHtml },
                 { "SubTotal", bill.TotalAmount.ToString("N0") },
                 { "Discount", bill.DiscountAmount.ToString("N0") },

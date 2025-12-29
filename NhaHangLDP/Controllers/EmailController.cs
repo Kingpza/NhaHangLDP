@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
@@ -16,7 +16,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class EmailController : Controller
     {
-        private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private MyDbContext db = new MyDbContext();
         private EmailService _emailService;
 
         public EmailController()
@@ -32,9 +32,9 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult Settings()
         {
-            var config = db.EmailConfig.FirstOrDefault(c => c.IsActive) ?? new EmailConfig();
-            var templates = db.EmailTemplate.OrderBy(t => t.Name).ToList();
-            var recentLogs = db.EmailLog.OrderByDescending(l => l.CreatedDate).Take(10).ToList();
+            var config = db.EmailConfigs.FirstOrDefault(c => c.IsActive) ?? new EmailConfig();
+            var templates = db.EmailTemplates.OrderBy(t => t.Name).ToList();
+            var recentLogs = db.EmailLogs.OrderByDescending(l => l.CreatedDate).Take(10).ToList();
 
             var viewModel = new EmailSettingsViewModel
             {
@@ -92,7 +92,7 @@ namespace NhaHangLDP.Controllers
                     EmailConfig config;
                     if (model.Id > 0)
                     {
-                        config = db.EmailConfig.Find(model.Id);
+                        config = db.EmailConfigs.Find(model.Id);
                         if (config == null)
                         {
                             TempData["Error"] = "Không tìm thấy cấu hình";
@@ -102,7 +102,7 @@ namespace NhaHangLDP.Controllers
                     else
                     {
                         config = new EmailConfig { CreatedDate = DateTime.Now };
-                        db.EmailConfig.Add(config);
+                        db.EmailConfigs.Add(config);
                     }
 
                     config.SmtpServer = model.SmtpServer;
@@ -122,7 +122,7 @@ namespace NhaHangLDP.Controllers
                     // Deactivate other configs if this is active
                     if (model.IsActive)
                     {
-                        foreach (var other in db.EmailConfig.Where(c => c.Id != config.Id))
+                        foreach (var other in db.EmailConfigs.Where(c => c.Id != config.Id))
                         {
                             other.IsActive = false;
                         }
@@ -177,7 +177,7 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult Templates()
         {
-            var templates = db.EmailTemplate.OrderBy(t => t.Name).ToList();
+            var templates = db.EmailTemplates.OrderBy(t => t.Name).ToList();
             var viewModel = new EmailTemplateListViewModel
             {
                 Templates = templates.Select(t => new EmailTemplateViewModel
@@ -214,7 +214,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                if (db.EmailTemplate.Any(t => t.TemplateCode == model.TemplateCode))
+                if (db.EmailTemplates.Any(t => t.TemplateCode == model.TemplateCode))
                 {
                     ModelState.AddModelError("TemplateCode", "Mã template đã tồn tại");
                 }
@@ -233,7 +233,7 @@ namespace NhaHangLDP.Controllers
                         CreatedDate = DateTime.Now
                     };
 
-                    db.EmailTemplate.Add(template);
+                    db.EmailTemplates.Add(template);
                     db.SaveChanges();
 
                     TempData["Success"] = "Đã tạo template thành công!";
@@ -255,7 +255,7 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult EditTemplate(int id)
         {
-            var template = db.EmailTemplate.Find(id);
+            var template = db.EmailTemplates.Find(id);
             if (template == null)
             {
                 TempData["Error"] = "Không tìm thấy template";
@@ -286,14 +286,14 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                if (db.EmailTemplate.Any(t => t.TemplateCode == model.TemplateCode && t.Id != model.Id))
+                if (db.EmailTemplates.Any(t => t.TemplateCode == model.TemplateCode && t.Id != model.Id))
                 {
                     ModelState.AddModelError("TemplateCode", "Mã template đã tồn tại");
                 }
 
                 if (ModelState.IsValid)
                 {
-                    var template = db.EmailTemplate.Find(model.Id);
+                    var template = db.EmailTemplates.Find(model.Id);
                     if (template == null)
                     {
                         TempData["Error"] = "Không tìm thấy template";
@@ -334,13 +334,13 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var template = db.EmailTemplate.Find(id);
+                var template = db.EmailTemplates.Find(id);
                 if (template == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy template" });
                 }
 
-                db.EmailTemplate.Remove(template);
+                db.EmailTemplates.Remove(template);
                 db.SaveChanges();
 
                 return Json(new { success = true, message = "Đã xóa template" });
@@ -391,7 +391,7 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult Logs(string status = "", string type = "", int page = 1)
         {
-            var query = db.EmailLog.AsQueryable();
+            var query = db.EmailLogs.AsQueryable();
 
             if (!string.IsNullOrEmpty(status))
             {
@@ -431,9 +431,9 @@ namespace NhaHangLDP.Controllers
                     ReferenceType = l.ReferenceType
                 }).ToList(),
                 TotalLogs = totalLogs,
-                SentCount = db.EmailLog.Count(l => l.Status == "Sent"),
-                FailedCount = db.EmailLog.Count(l => l.Status == "Failed"),
-                PendingCount = db.EmailLog.Count(l => l.Status == "Pending"),
+                SentCount = db.EmailLogs.Count(l => l.Status == "Sent"),
+                FailedCount = db.EmailLogs.Count(l => l.Status == "Failed"),
+                PendingCount = db.EmailLogs.Count(l => l.Status == "Pending"),
                 StatusFilter = status,
                 TypeFilter = type,
                 CurrentPage = page,
@@ -451,7 +451,7 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult LogDetail(int id)
         {
-            var log = db.EmailLog.Find(id);
+            var log = db.EmailLogs.Find(id);
             if (log == null)
             {
                 TempData["Error"] = "Không tìm thấy log";
@@ -487,7 +487,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var log = db.EmailLog.Find(logId);
+                var log = db.EmailLogs.Find(logId);
                 if (log == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy log" });
@@ -570,7 +570,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var booking = db.Booking.Find(bookingId);
+                var booking = db.Bookings.Find(bookingId);
                 if (booking == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy đặt bàn" });
@@ -594,7 +594,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var bill = db.Bill.Find(billId);
+                var bill = db.Bills.Find(billId);
                 if (bill == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy hóa đơn" });
@@ -632,7 +632,7 @@ namespace NhaHangLDP.Controllers
 
         private List<SelectListItem> GetEmailTypes()
         {
-            var types = db.EmailLog.Select(l => l.EmailType).Distinct().ToList();
+            var types = db.EmailLogs.Select(l => l.EmailType).Distinct().ToList();
             return types.Select(t => new SelectListItem { Value = t, Text = t }).ToList();
         }
 

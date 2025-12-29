@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -10,16 +10,16 @@ namespace NhaHangLDP.Services.Management
 {
     public class MenuAdminService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public MenuAdminService(NhaHangLDPEntities context)
+        public MenuAdminService(MyDbContext context)
         {
             db = context;
         }
 
         public List<MenuItem> GetFilteredMenuItems(string search, string category, string status)
         {
-            var query = db.MenuItem.AsQueryable();
+            var query = db.MenuItems.AsQueryable();
             
             if (!string.IsNullOrEmpty(category))
             {
@@ -58,8 +58,8 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                return db.MenuCombo
-                    .Include(mc => mc.MenuComboItem.Select(mci => mci.MenuItem))
+                return db.MenuCombos
+                    .Include(mc => mc.MenuComboItems).ThenInclude(mci => mci.MenuItem)
                     .ToList();
             }
             catch (Exception)
@@ -73,32 +73,32 @@ namespace NhaHangLDP.Services.Management
             int comboCount = 0;
             try
             {
-                comboCount = db.MenuCombo.Count();
+                comboCount = db.MenuCombos.Count();
             }
             catch (Exception) { }
 
             return new MenuStatsViewModel
             {
-                TotalItems = db.MenuItem.Count(),
-                AvailableItems = db.MenuItem.Count(m => m.IsAvailable),
-                UnavailableItems = db.MenuItem.Count(m => !m.IsAvailable),
+                TotalItems = db.MenuItems.Count(),
+                AvailableItems = db.MenuItems.Count(m => m.IsAvailable),
+                UnavailableItems = db.MenuItems.Count(m => !m.IsAvailable),
                 TotalCombos = comboCount
             };
         }
 
         public List<Ingredient> GetAllIngredients()
         {
-            return db.Ingredient.OrderBy(i => i.Name).ToList();
+            return db.Ingredients.OrderBy(i => i.Name).ToList();
         }
 
         public MenuItem GetMenuItemById(int id)
         {
-            return db.MenuItem.Find(id);
+            return db.MenuItems.Find(id);
         }
 
         public List<MenuItemIngredientViewModel> GetMenuItemIngredients(int menuItemId)
         {
-            return db.MenuItemIngredient
+            return db.MenuItemIngredients
                 .Where(mii => mii.MenuItemId == menuItemId)
                 .Include(mii => mii.Ingredient)
                 .Select(mii => new MenuItemIngredientViewModel
@@ -125,7 +125,7 @@ namespace NhaHangLDP.Services.Management
                         menuItem.OriginalPrice = menuItem.Price;
                     }
 
-                    db.MenuItem.Add(menuItem);
+                    db.MenuItems.Add(menuItem);
                     db.SaveChanges();
 
                     if (ingredients != null && ingredients.Any())
@@ -139,7 +139,7 @@ namespace NhaHangLDP.Services.Management
                                 RequiredQuantity = ing.RequiredQuantity,
                                 Unit = ing.Unit
                             };
-                            db.MenuItemIngredient.Add(newMenuItemIngredient);
+                            db.MenuItemIngredients.Add(newMenuItemIngredient);
                         }
                         db.SaveChanges();
                     }
@@ -163,7 +163,7 @@ namespace NhaHangLDP.Services.Management
             {
                 try
                 {
-                    var itemInDb = db.MenuItem.Find(menuItem.Id);
+                    var itemInDb = db.MenuItems.Find(menuItem.Id);
                     if (itemInDb == null)
                     {
                         errorMessage = "Không tìm thấy món ăn.";
@@ -178,8 +178,8 @@ namespace NhaHangLDP.Services.Management
                     itemInDb.IsAvailable = menuItem.IsAvailable;
                     itemInDb.ImageUrl = menuItem.ImageUrl ?? itemInDb.ImageUrl;
 
-                    var oldIngredients = db.MenuItemIngredient.Where(mi => mi.MenuItemId == itemInDb.Id);
-                    db.MenuItemIngredient.RemoveRange(oldIngredients);
+                    var oldIngredients = db.MenuItemIngredients.Where(mi => mi.MenuItemId == itemInDb.Id);
+                    db.MenuItemIngredients.RemoveRange(oldIngredients);
 
                     if (ingredients != null)
                     {
@@ -192,7 +192,7 @@ namespace NhaHangLDP.Services.Management
                                 RequiredQuantity = ing.RequiredQuantity,
                                 Unit = ing.Unit
                             };
-                            db.MenuItemIngredient.Add(newMenuItemIngredient);
+                            db.MenuItemIngredients.Add(newMenuItemIngredient);
                         }
                     }
 
@@ -216,7 +216,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var menuItem = db.MenuItem.Find(id);
+                var menuItem = db.MenuItems.Find(id);
                 if (menuItem == null)
                 {
                     errorMessage = "Không tìm thấy món ăn";
@@ -244,21 +244,21 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var menuItem = db.MenuItem.Find(id);
+                var menuItem = db.MenuItems.Find(id);
                 if (menuItem == null)
                 {
                     errorMessage = "Không tìm thấy món ăn.";
                     return false;
                 }
 
-                bool isInOrder = db.OrderDetail.Any(od => od.MenuItemId == id);
+                bool isInOrder = db.OrderDetails.Any(od => od.MenuItemId == id);
                 if (isInOrder)
                 {
                     errorMessage = "Không thể xóa món ăn đã có trong lịch sử bán hàng. Bạn nên 'Tạm ngưng' (ẩn) món ăn này.";
                     return false;
                 }
 
-                db.MenuItem.Remove(menuItem);
+                db.MenuItems.Remove(menuItem);
                 db.SaveChanges();
 
                 errorMessage = null;
@@ -275,14 +275,14 @@ namespace NhaHangLDP.Services.Management
 
         public MenuCombo GetComboById(int id)
         {
-            return db.MenuCombo
-                .Include(c => c.MenuComboItem.Select(ci => ci.MenuItem))
+            return db.MenuCombos
+                .Include(c => c.MenuComboItems).ThenInclude(ci => ci.MenuItem)
                 .FirstOrDefault(c => c.Id == id);
         }
 
         public List<MenuItem> GetAvailableMenuItems()
         {
-            return db.MenuItem
+            return db.MenuItems
                 .Where(m => m.IsAvailable)
                 .OrderBy(m => m.Name)
                 .ToList();
@@ -297,7 +297,7 @@ namespace NhaHangLDP.Services.Management
                     combo.StartDate = DateTime.Now;
                     combo.IsActive = true;
 
-                    db.MenuCombo.Add(combo);
+                    db.MenuCombos.Add(combo);
                     db.SaveChanges();
 
                     foreach (int menuItemId in selectedMenuItems)
@@ -307,7 +307,7 @@ namespace NhaHangLDP.Services.Management
                             MenuComboId = combo.Id,
                             MenuItemId = menuItemId
                         };
-                        db.MenuComboItem.Add(comboItem);
+                        db.MenuComboItems.Add(comboItem);
                     }
 
                     db.SaveChanges();
@@ -331,8 +331,8 @@ namespace NhaHangLDP.Services.Management
             {
                 try
                 {
-                    var comboInDb = db.MenuCombo
-                        .Include(c => c.MenuComboItem)
+                    var comboInDb = db.MenuCombos
+                        .Include(c => c.MenuComboItems)
                         .FirstOrDefault(c => c.Id == combo.Id);
 
                     if (comboInDb == null)
@@ -346,13 +346,13 @@ namespace NhaHangLDP.Services.Management
                     comboInDb.ComboPrice = combo.ComboPrice;
                     comboInDb.StartDate = DateTime.Now;
 
-                    var currentItemIds = comboInDb.MenuComboItem
+                    var currentItemIds = comboInDb.MenuComboItems
                         .Select(ci => ci.MenuItemId)
                         .ToList();
 
                     var newItemIds = selectedMenuItems ?? new List<int>();
 
-                    var itemsToRemove = comboInDb.MenuComboItem
+                    var itemsToRemove = comboInDb.MenuComboItems
                         .Where(ci => !newItemIds.Contains(ci.MenuItemId))
                         .ToList();
 
@@ -360,11 +360,11 @@ namespace NhaHangLDP.Services.Management
                         .Where(id => !currentItemIds.Contains(id))
                         .ToList();
 
-                    db.MenuComboItem.RemoveRange(itemsToRemove);
+                    db.MenuComboItems.RemoveRange(itemsToRemove);
 
                     foreach (int menuItemId in itemIdsToAdd)
                     {
-                        db.MenuComboItem.Add(new MenuComboItem
+                        db.MenuComboItems.Add(new MenuComboItem
                         {
                             MenuComboId = comboInDb.Id,
                             MenuItemId = menuItemId
@@ -390,14 +390,14 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var combo = db.MenuCombo.Find(id);
+                var combo = db.MenuCombos.Find(id);
                 if (combo == null)
                 {
                     errorMessage = "Không tìm thấy combo.";
                     return false;
                 }
 
-                db.MenuCombo.Remove(combo);
+                db.MenuCombos.Remove(combo);
                 db.SaveChanges();
 
                 errorMessage = null;

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
@@ -16,7 +16,7 @@ namespace NhaHangLDP.Controllers
     [CustomAuthorize("Admin", "Manager", "Delivery")]
     public class DeliveryController : Controller
     {
-        private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();
+        private readonly MyDbContext _db = new MyDbContext();
         private readonly DeliveryService _deliveryService;
 
         public DeliveryController()
@@ -62,7 +62,7 @@ namespace NhaHangLDP.Controllers
         public ActionResult Orders(string status = "all", int page = 1, int pageSize = 20)
         {
             var query = _db.CustomerOrder
-                .Include(o => o.CustomerOrderDetail)
+                .Include(o => o.CustomerOrderDetails)
                 .Where(o => o.OrderType == "Delivery");
 
             // Filter by status
@@ -81,7 +81,7 @@ namespace NhaHangLDP.Controllers
             // Map to ViewModel
             var orderViewModels = orders.Select(o =>
             {
-                var assignment = _db.DeliveryAssignment
+                var assignment = _db.DeliveryAssignments
                     .Include(a => a.Shipper)
                     .FirstOrDefault(a => a.OrderId == o.Id && a.Status != "Cancelled");
 
@@ -107,7 +107,7 @@ namespace NhaHangLDP.Controllers
                     ShipperName = assignment?.Shipper?.FullName,
                     ShipperPhone = assignment?.Shipper?.Phone,
                     DeliveryStatus = assignment?.Status,
-                    Items = o.CustomerOrderDetail?.Select(d => new OrderItemSummary
+                    Items = o.CustomerOrderDetails?.Select(d => new OrderItemSummary
                     {
                         ItemName = d.ItemName,
                         Quantity = d.Quantity,
@@ -147,7 +147,7 @@ namespace NhaHangLDP.Controllers
         public ActionResult OrderDetail(int id)
         {
             var order = _db.CustomerOrder
-                .Include(o => o.CustomerOrderDetail.Select(d => d.MenuItem))
+                .Include(o => o.CustomerOrderDetails).ThenInclude(d => d.MenuItem)
                 .FirstOrDefault(o => o.Id == id);
 
             if (order == null)
@@ -156,7 +156,7 @@ namespace NhaHangLDP.Controllers
                 return RedirectToAction("Orders");
             }
 
-            var assignment = _db.DeliveryAssignment
+            var assignment = _db.DeliveryAssignments
                 .Include(a => a.Shipper)
                 .FirstOrDefault(a => a.OrderId == id && a.Status != "Cancelled");
 
@@ -165,11 +165,11 @@ namespace NhaHangLDP.Controllers
                 Order = order,
                 Assignment = assignment,
                 Shipper = assignment?.Shipper,
-                OrderItems = order.CustomerOrderDetail?.ToList() ?? new List<CustomerOrderDetail>(),
+                OrderItems = order.CustomerOrderDetails?.ToList() ?? new List<CustomerOrderDetail>(),
                 TrackingSteps = GetOrderTrackingSteps(order, assignment)
             };
 
-            ViewBag.AvailableShippers = _db.Shipper
+            ViewBag.AvailableShippers = _db.Shippers
                 .Where(s => s.Status == "Available" && s.IsActive)
                 .OrderByDescending(s => s.Rating)
                 .ToList();
@@ -336,7 +336,7 @@ namespace NhaHangLDP.Controllers
                 order.CancelReason = reason;
 
                 // Hủy assignment nếu có
-                var assignment = _db.DeliveryAssignment
+                var assignment = _db.DeliveryAssignments
                     .Include(a => a.Shipper)
                     .FirstOrDefault(a => a.OrderId == orderId && a.Status != "Cancelled" && a.Status != "Delivered");
 
@@ -386,7 +386,7 @@ namespace NhaHangLDP.Controllers
         [HttpGet]
         public JsonResult GetAvailableShippers()
         {
-            var shippers = _db.Shipper
+            var shippers = _db.Shippers
                 .Where(s => s.Status == "Available" && s.IsActive)
                 .Select(s => new
                 {
@@ -412,7 +412,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Shippers()
         {
-            var shippers = _db.Shipper.OrderByDescending(s => s.IsActive).ThenBy(s => s.FullName).ToList();
+            var shippers = _db.Shippers.OrderByDescending(s => s.IsActive).ThenBy(s => s.FullName).ToList();
 
             var viewModel = new ShipperManagementViewModel
             {
@@ -449,7 +449,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 // Kiểm tra số điện thoại đã tồn tại
-                if (_db.Shipper.Any(s => s.Phone == model.Phone))
+                if (_db.Shippers.Any(s => s.Phone == model.Phone))
                 {
                     ModelState.AddModelError("Phone", "Số điện thoại đã được sử dụng");
                     return View(model);
@@ -468,7 +468,7 @@ namespace NhaHangLDP.Controllers
                     CreatedDate = DateTime.Now
                 };
 
-                _db.Shipper.Add(shipper);
+                _db.Shippers.Add(shipper);
                 _db.SaveChanges();
 
                 TempData["Success"] = "Đã thêm shipper thành công";
@@ -486,7 +486,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult EditShipper(int id)
         {
-            var shipper = _db.Shipper.Find(id);
+            var shipper = _db.Shippers.Find(id);
             if (shipper == null)
             {
                 TempData["Error"] = "Không tìm thấy shipper";
@@ -521,7 +521,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var shipper = _db.Shipper.Find(model.Id);
+                var shipper = _db.Shippers.Find(model.Id);
                 if (shipper == null)
                 {
                     TempData["Error"] = "Không tìm thấy shipper";
@@ -529,7 +529,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Kiểm tra số điện thoại trùng
-                if (_db.Shipper.Any(s => s.Phone == model.Phone && s.Id != model.Id))
+                if (_db.Shippers.Any(s => s.Phone == model.Phone && s.Id != model.Id))
                 {
                     ModelState.AddModelError("Phone", "Số điện thoại đã được sử dụng");
                     return View(model);
@@ -562,7 +562,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var shipper = _db.Shipper.Find(id);
+                var shipper = _db.Shippers.Find(id);
                 if (shipper == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy shipper" });
@@ -616,7 +616,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Tracking()
         {
-            var activeDeliveries = _db.DeliveryAssignment
+            var activeDeliveries = _db.DeliveryAssignments
                 .Include(a => a.CustomerOrder)
                 .Include(a => a.Shipper)
                 .Where(a => a.Status == "Accepted" || a.Status == "PickedUp" || a.Status == "Delivering")
@@ -642,7 +642,7 @@ namespace NhaHangLDP.Controllers
             var viewModel = new DeliveryTrackingViewModel
             {
                 ActiveDeliveries = activeDeliveries,
-                ShipperLocations = _db.Shipper
+                ShipperLocations = _db.Shippers
                     .Where(s => s.IsActive && s.CurrentLatitude.HasValue)
                     .Select(s => new ShipperLocationViewModel
                     {
@@ -667,7 +667,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var deliveries = _db.DeliveryAssignment
+                var deliveries = _db.DeliveryAssignments
                     .Include(a => a.CustomerOrder)
                     .Include(a => a.Shipper)
                     .Where(a => a.Status == "Accepted" || a.Status == "PickedUp" || a.Status == "Delivering")
@@ -704,7 +704,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Zones()
         {
-            var zones = _db.DeliveryZone.OrderBy(z => z.DisplayOrder).ThenBy(z => z.District).ToList();
+            var zones = _db.DeliveryZones.OrderBy(z => z.DisplayOrder).ThenBy(z => z.District).ToList();
             return View(zones);
         }
 
@@ -722,7 +722,7 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Vui lòng nhập đầy đủ thông tin" });
                 }
 
-                _db.DeliveryZone.Add(zone);
+                _db.DeliveryZones.Add(zone);
                 _db.SaveChanges();
 
                 return Json(new { success = true, message = "Đã thêm khu vực", zone = zone });
@@ -742,7 +742,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var existing = _db.DeliveryZone.Find(zone.Id);
+                var existing = _db.DeliveryZones.Find(zone.Id);
                 if (existing == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy khu vực" });
@@ -776,13 +776,13 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var zone = _db.DeliveryZone.Find(id);
+                var zone = _db.DeliveryZones.Find(id);
                 if (zone == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy khu vực" });
                 }
 
-                _db.DeliveryZone.Remove(zone);
+                _db.DeliveryZones.Remove(zone);
                 _db.SaveChanges();
 
                 return Json(new { success = true, message = "Đã xóa khu vực" });

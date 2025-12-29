@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NhaHangLDP.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +6,7 @@ namespace NhaHangLDP.Controllers
 {
     public class HomeController : Controller
     {
-        private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private MyDbContext db = new MyDbContext();
 
         public ActionResult Index()
         {

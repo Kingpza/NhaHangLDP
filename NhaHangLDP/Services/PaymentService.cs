@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -11,10 +11,10 @@ namespace NhaHangLDP.Services
     /// </summary>
     public class PaymentService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
         private const decimal DEFAULT_VAT_PERCENT = 10m;
 
-        public PaymentService(NhaHangLDPEntities context)
+        public PaymentService(MyDbContext context)
         {
             db = context;
         }
@@ -31,9 +31,9 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var order = db.Order
-                        .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                        .Include(o => o.RestaurantTable)
+                    var order = db.Orders
+                        .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                        .Include(o => o.Table)
                         .FirstOrDefault(o => o.Id == orderId);
 
                     if (order == null)
@@ -53,7 +53,7 @@ namespace NhaHangLDP.Services
                     }
 
                     // Tính toán
-                    var calculatedTotal = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+                    var calculatedTotal = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime);
                     var vatPercent = GetVATPercent();
                     var vat = Math.Round(calculatedTotal * vatPercent / 100, 0);
                     var finalAmount = calculatedTotal + vat;
@@ -79,28 +79,28 @@ namespace NhaHangLDP.Services
                         Status = "Paid"
                     };
 
-                    db.Bill.Add(bill);
+                    db.Bills.Add(bill);
                     
                     // Cập nhật trạng thái đơn hàng
                     order.Status = "Completed";
                     
                     // Giải phóng bàn
-                    if (order.RestaurantTable != null)
+                    if (order.Table != null)
                     {
-                        order.RestaurantTable.Status = "Available";
+                        order.Table.Status = "Available";
                     }
 
                     // Cập nhật doanh thu ca
-                    var activeShift = db.CashierShift.FirstOrDefault(s => s.Id == shiftId);
+                    var activeShift = db.CashierShifts.FirstOrDefault(s => s.Id == shiftId);
                     if (activeShift != null)
                     {
                         activeShift.TotalRevenue = (activeShift.TotalRevenue ?? 0) + finalAmount;
                     }
 
                     // Cập nhật số lượng bán của món ăn
-                    foreach (var detail in order.OrderDetail)
+                    foreach (var detail in order.OrderDetails)
                     {
-                        var menuItem = db.MenuItem.Find(detail.MenuItemId);
+                        var menuItem = db.MenuItems.Find(detail.MenuItemId);
                         if (menuItem != null)
                         {
                             menuItem.SoldCount = menuItem.SoldCount + detail.Quantity;
@@ -135,10 +135,10 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var order = db.Order
-                        .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                        .Include(o => o.RestaurantTable)
-                        .Include(o => o.Bill)
+                    var order = db.Orders
+                        .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                        .Include(o => o.Table)
+                        .Include(o => o.Bills)
                         .FirstOrDefault(o => o.Id == request.OrderId);
 
                     if (order == null)
@@ -146,13 +146,13 @@ namespace NhaHangLDP.Services
                         return new PaymentResult { Success = false, Message = "Không tìm thấy đơn hàng!" };
                     }
 
-                    if (order.Status == "Completed" || order.Bill.Any(b => b.Status == "Paid"))
+                    if (order.Status == "Completed" || order.Bills.Any(b => b.Status == "Paid"))
                     {
                         return new PaymentResult { Success = false, Message = "Đơn hàng đã được thanh toán!" };
                     }
 
                     // Tính toán
-                    var subTotal = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+                    var subTotal = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime);
                     var vatPercent = GetVATPercent();
                     var vatAmount = Math.Round(subTotal * vatPercent / 100, 0);
                     decimal discountAmount = 0;
@@ -193,7 +193,7 @@ namespace NhaHangLDP.Services
                         Status = "Paid"
                     };
 
-                    db.Bill.Add(bill);
+                    db.Bills.Add(bill);
                     db.SaveChanges();
 
                     // Lưu sử dụng khuyến mãi
@@ -207,10 +207,10 @@ namespace NhaHangLDP.Services
                             UsedDate = DateTime.Now,
                             CustomerPhone = request.CustomerPhone
                         };
-                        db.PromotionUsage.Add(promotionUsage);
+                        db.PromotionUsages.Add(promotionUsage);
 
                         // Cập nhật số lần sử dụng promotion
-                        var promotion = db.Promotion.Find(promotionId.Value);
+                        var promotion = db.Promotions.Find(promotionId.Value);
                         if (promotion != null)
                         {
                             promotion.UsedCount = promotion.UsedCount + 1;
@@ -221,22 +221,22 @@ namespace NhaHangLDP.Services
                     order.Status = "Completed";
 
                     // Giải phóng bàn
-                    if (order.RestaurantTable != null)
+                    if (order.Table != null)
                     {
-                        order.RestaurantTable.Status = "Available";
+                        order.Table.Status = "Available";
                     }
 
                     // Cập nhật doanh thu ca
-                    var activeShift = db.CashierShift.FirstOrDefault(s => s.Id == shiftId);
+                    var activeShift = db.CashierShifts.FirstOrDefault(s => s.Id == shiftId);
                     if (activeShift != null)
                     {
                         activeShift.TotalRevenue = (activeShift.TotalRevenue ?? 0) + finalAmount;
                     }
 
                     // Cập nhật số lượng bán
-                    foreach (var detail in order.OrderDetail)
+                    foreach (var detail in order.OrderDetails)
                     {
-                        var menuItem = db.MenuItem.Find(detail.MenuItemId);
+                        var menuItem = db.MenuItems.Find(detail.MenuItemId);
                         if (menuItem != null)
                         {
                             menuItem.SoldCount = menuItem.SoldCount + detail.Quantity;
@@ -279,7 +279,7 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var promotion = db.Promotion.FirstOrDefault(p => p.Code == code && p.IsActive);
+                var promotion = db.Promotions.FirstOrDefault(p => p.Code == code && p.IsActive);
                 
                 if (promotion == null)
                 {
@@ -335,7 +335,7 @@ namespace NhaHangLDP.Services
                 // Kiểm tra số lần sử dụng của khách hàng
                 if (!string.IsNullOrEmpty(customerPhone) && promotion.MaxUsagePerCustomer.HasValue)
                 {
-                    var customerUsageCount = db.PromotionUsage
+                    var customerUsageCount = db.PromotionUsages
                         .Count(pu => pu.PromotionId == promotion.Id && pu.CustomerPhone == customerPhone);
 
                     if (customerUsageCount >= promotion.MaxUsagePerCustomer.Value)
@@ -398,18 +398,18 @@ namespace NhaHangLDP.Services
         /// </summary>
         public BillDetailViewModel GetBillDetail(int billId)
         {
-            var bill = db.Bill
-                .Include(b => b.Order.OrderDetail.Select(od => od.MenuItem))
-                .Include(b => b.Order.RestaurantTable.TableArea)
+            var bill = db.Bills
+                .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
+                .Include(b => b.Order.Table.TableArea)
                 .Include(b => b.Order.Employee)
                 .Include(b => b.Employee)
-                .Include(b => b.PromotionUsage.Select(pu => pu.Promotion))
+                .Include(b => b.PromotionUsages).ThenInclude(pu => pu.Promotion)
                 .FirstOrDefault(b => b.Id == billId);
 
             if (bill == null) return null;
 
             var settings = GetRestaurantSettings();
-            var promotionUsage = bill.PromotionUsage.FirstOrDefault();
+            var promotionUsage = bill.PromotionUsages.FirstOrDefault();
 
             return new BillDetailViewModel
             {
@@ -422,13 +422,13 @@ namespace NhaHangLDP.Services
                 OrderCode = $"DH{bill.OrderId:D6}",
                 OrderTime = bill.Order.OrderTime,
 
-                TableNumber = bill.Order.RestaurantTable?.TableNumber ?? "N/A",
-                TableArea = bill.Order.RestaurantTable?.TableArea?.Name ?? "",
+                TableNumber = bill.Order.Table?.TableNumber ?? "N/A",
+                TableArea = bill.Order.Table?.TableArea?.Name ?? "",
 
-                CashierName = bill.Employee?.FullName ?? "N/A",
+                CashierName = bill.Cashier?.FullName ?? "N/A",
                 WaiterName = bill.Order.Employee?.FullName ?? "N/A",
 
-                Items = bill.Order.OrderDetail.Select(od => new BillItemViewModel
+                Items = bill.Order.OrderDetails.Select(od => new BillItemViewModel
                 {
                     Id = od.Id,
                     Name = od.MenuItem?.Name ?? "N/A",
@@ -439,9 +439,9 @@ namespace NhaHangLDP.Services
                     Notes = od.Notes
                 }).ToList(),
 
-                SubTotal = bill.Order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime),
+                SubTotal = bill.Order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime),
                 VATPercent = GetVATPercent(),
-                VATAmount = bill.TotalAmount - bill.Order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime),
+                VATAmount = bill.TotalAmount - bill.Order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime),
                 DiscountAmount = bill.DiscountAmount,
                 DiscountCode = promotionUsage?.Promotion?.Code,
                 DiscountDescription = promotionUsage?.Promotion?.Name,
@@ -463,9 +463,9 @@ namespace NhaHangLDP.Services
         /// </summary>
         public BillListViewModel GetBillList(BillFilterModel filter)
         {
-            var query = db.Bill
-                .Include(b => b.Order.OrderDetail)
-                .Include(b => b.Order.RestaurantTable)
+            var query = db.Bills
+                .Include(b => b.Order.OrderDetails)
+                .Include(b => b.Order.Table)
                 .Include(b => b.Employee)
                 .AsQueryable();
 
@@ -515,8 +515,8 @@ namespace NhaHangLDP.Services
             {
                 var search = filter.Search.ToLower();
                 query = query.Where(b => 
-                    b.Order.RestaurantTable.TableNumber.ToLower().Contains(search) ||
-                    b.Employee.FullName.ToLower().Contains(search));
+                    b.Order.Table.TableNumber.ToLower().Contains(search) ||
+                    b.ReportedByEmployee?.FullName.ToLower().Contains(search));
             }
 
             // Statistics
@@ -564,15 +564,15 @@ namespace NhaHangLDP.Services
                     InvoiceNumber = $"HD{b.Id:D8}",
                     OrderId = b.OrderId,
                     OrderCode = $"DH{b.OrderId:D6}",
-                    TableNumber = b.Order.RestaurantTable?.TableNumber ?? "N/A",
+                    TableNumber = b.Order.Table?.TableNumber ?? "N/A",
                     BillDate = b.BillDate,
                     TotalAmount = b.TotalAmount,
                     FinalAmount = b.FinalAmount,
                     DiscountAmount = b.DiscountAmount,
                     PaymentMethod = GetPaymentMethodDisplay(b.PaymentMethod),
                     Status = b.Status,
-                    CashierName = b.Employee?.FullName ?? "N/A",
-                    ItemCount = b.Order.OrderDetail.Sum(od => od.Quantity)
+                    CashierName = b.Cashier?.FullName ?? "N/A",
+                    ItemCount = b.Order.OrderDetails.Sum(od => od.Quantity)
                 }).ToList();
 
             return new BillListViewModel
@@ -599,9 +599,9 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var bill = db.Bill
-                        .Include(b => b.Order.OrderDetail)
-                        .Include(b => b.ReturnBill)
+                    var bill = db.Bills
+                        .Include(b => b.Order.OrderDetails)
+                        .Include(b => b.ReturnBills)
                         .FirstOrDefault(b => b.Id == request.BillId);
 
                     if (bill == null)
@@ -643,7 +643,7 @@ namespace NhaHangLDP.Services
                         EmployeeID = processedBy
                     };
 
-                    db.ReturnBill.Add(returnBill);
+                    db.ReturnBills.Add(returnBill);
 
                     // Cập nhật trạng thái bill
                     if (request.IsFullRefund)
@@ -657,7 +657,7 @@ namespace NhaHangLDP.Services
                     }
 
                     // Cập nhật doanh thu ca (nếu cùng ca)
-                    var activeShift = db.CashierShift.FirstOrDefault(s => s.Status == "Active");
+                    var activeShift = db.CashierShifts.FirstOrDefault(s => s.Status == "Active");
                     if (activeShift != null)
                     {
                         activeShift.TotalRevenue = (activeShift.TotalRevenue ?? 0) - refundAmount;
@@ -692,15 +692,15 @@ namespace NhaHangLDP.Services
         /// </summary>
         public PaymentPageViewModel GetPaymentPageData(int orderId)
         {
-            var order = db.Order
-                .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                .Include(o => o.RestaurantTable.TableArea)
+            var order = db.Orders
+                .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                .Include(o => o.Table.TableArea)
                 .Include(o => o.Employee)
                 .FirstOrDefault(o => o.Id == orderId);
 
             if (order == null) return null;
 
-            var subTotal = order.OrderDetail.Sum(od => od.Quantity * od.PriceAtTime);
+            var subTotal = order.OrderDetails.Sum(od => od.Quantity * od.PriceAtTime);
             var vatPercent = GetVATPercent();
             var vatAmount = Math.Round(subTotal * vatPercent / 100, 0);
             var settings = GetRestaurantSettings();
@@ -711,12 +711,12 @@ namespace NhaHangLDP.Services
                 {
                     OrderId = order.Id,
                     OrderCode = $"DH{order.Id:D6}",
-                    TableNumber = order.RestaurantTable?.TableNumber ?? "N/A",
-                    TableArea = order.RestaurantTable?.TableArea?.Name ?? "",
+                    TableNumber = order.Table?.TableNumber ?? "N/A",
+                    TableArea = order.Table?.TableArea?.Name ?? "",
                     OrderTime = order.OrderTime,
-                    WaiterName = order.Employee?.FullName ?? "N/A",
+                    WaiterName = order.Waiter?.FullName ?? "N/A",
                     Status = order.Status,
-                    Items = order.OrderDetail.Select(od => new PaymentOrderItem
+                    Items = order.OrderDetails.Select(od => new PaymentOrderItem
                     {
                         Id = od.Id,
                         Name = od.MenuItem?.Name ?? "N/A",
@@ -726,7 +726,7 @@ namespace NhaHangLDP.Services
                         Total = od.Quantity * od.PriceAtTime,
                         Notes = od.Notes
                     }).ToList(),
-                    TotalItems = order.OrderDetail.Sum(od => od.Quantity),
+                    TotalItems = order.OrderDetails.Sum(od => od.Quantity),
                     SubTotal = subTotal
                 },
                 PaymentMethods = GetPaymentMethods(),
@@ -756,7 +756,7 @@ namespace NhaHangLDP.Services
             var startDate = date.Date;
             var endDate = startDate.AddDays(1);
 
-            var bills = db.Bill
+            var bills = db.Bills
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
                 .ToList();
 
@@ -808,7 +808,7 @@ namespace NhaHangLDP.Services
 
         private decimal GetVATPercent()
         {
-            var vatSetting = db.AppSetting.FirstOrDefault(s => s.SettingKey == "DefaultVAT");
+            var vatSetting = db.AppSettings.FirstOrDefault(s => s.SettingKey == "DefaultVAT");
             if (vatSetting != null && decimal.TryParse(vatSetting.SettingValue, out decimal vat))
             {
                 return vat;
@@ -891,7 +891,7 @@ namespace NhaHangLDP.Services
         {
             var now = DateTime.Now;
 
-            return db.Promotion
+            return db.Promotions
                 .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now)
                 .ToList()
                 .Select(p => new AvailablePromotion
@@ -916,7 +916,7 @@ namespace NhaHangLDP.Services
 
         private (string RestaurantName, string RestaurantAddress, string RestaurantPhone, string TaxCode) GetRestaurantSettings()
         {
-            var settings = db.AppSetting.ToList();
+            var settings = db.AppSettings.ToList();
             return (
                 settings.FirstOrDefault(s => s.SettingKey == "RestaurantName")?.SettingValue ?? "LDP Restaurant",
                 settings.FirstOrDefault(s => s.SettingKey == "Address")?.SettingValue ?? "123 Đường ABC, Quận 1, TP.HCM",

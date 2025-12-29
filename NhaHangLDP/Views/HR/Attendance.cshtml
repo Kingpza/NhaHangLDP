@@ -1,8 +1,8 @@
-﻿@model List<NhaHangLDP.Models.AttendanceSummaryItem>
+@model List<NhaHangLDP.Models.AttendanceSummaryItem>
 @{
     ViewBag.Title = "Chấm công";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
-    var employees = ViewBag.Employees as List<NhaHangLDP.Models.Employee> ?? new List<NhaHangLDP.Models.Employee>();
+    var employees = ViewBag.Employees as List<NhaHangLDP.Models.Cashier> ?? new List<NhaHangLDP.Models.Cashier>();
 }
 
 @section styles {

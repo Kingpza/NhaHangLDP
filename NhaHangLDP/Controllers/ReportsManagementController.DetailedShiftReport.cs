@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services.Reports;
 using Microsoft.AspNetCore.Mvc;

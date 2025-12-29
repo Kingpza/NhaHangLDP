@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,9 +8,9 @@ namespace NhaHangLDP.Services.Reports
 {
     public class RevenueAnalyticsService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public RevenueAnalyticsService(NhaHangLDPEntities context)
+        public RevenueAnalyticsService(MyDbContext context)
         {
             db = context;
         }
@@ -20,7 +20,7 @@ namespace NhaHangLDP.Services.Reports
             DateTime startDate, endDate;
             GetDateRange(period, out startDate, out endDate);
 
-            var totalRevenue = db.Bill
+            var totalRevenue = db.Bills
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
@@ -42,10 +42,10 @@ namespace NhaHangLDP.Services.Reports
             DateTime startDate, endDate;
             GetDateRange(period, out startDate, out endDate);
 
-            var paidBills = db.Bill
-                .Include(b => b.Order)
-                .Include(b => b.Order.OrderDetail)
-                .Include(b => b.Order.OrderDetail.Select(od => od.MenuItem))
+            var paidBills = db.Bills
+                .Include(b => b.Orders)
+                .Include(b => b.Order.OrderDetails)
+                .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
                 .ToList();
 
@@ -56,7 +56,7 @@ namespace NhaHangLDP.Services.Reports
 
             var previousStart = GetPreviousPeriodStart(startDate, period);
             var previousEnd = GetPreviousPeriodEnd(previousStart, period);
-            var previousBills = db.Bill
+            var previousBills = db.Bills
                 .Where(b => b.BillDate >= previousStart && b.BillDate < previousEnd && b.Status == "Paid")
                 .ToList();
             var previousRevenue = previousBills.Sum(b => b.FinalAmount);
@@ -94,20 +94,20 @@ namespace NhaHangLDP.Services.Reports
             DateTime startDate, endDate;
             GetDateRange(period, out startDate, out endDate);
 
-            var dishRevenue = db.OrderDetail
-                .Include(od => od.Order.Bill)
+            var dishRevenue = db.OrderDetails
+                .Include(od => od.Order.Bills)
                 .Where(od => od.Order.OrderTime >= startDate
                           && od.Order.OrderTime < endDate
-                          && od.Order.Bill.Any(b => b.Status == "Paid"))
+                          && od.Order.Bills.Any(b => b.Status == "Paid"))
                 .Sum(od => (decimal?)(od.Quantity * od.PriceAtTime)) ?? 0;
 
-            var totalBillRevenue = db.Bill
+            var totalBillRevenue = db.Bills
                 .Where(b => b.BillDate >= startDate
                           && b.BillDate < endDate
                           && b.Status == "Paid")
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0;
 
-            var preTaxRevenue = db.Bill
+            var preTaxRevenue = db.Bills
                 .Where(b => b.BillDate >= startDate
                           && b.BillDate < endDate
                           && b.Status == "Paid")
@@ -115,7 +115,7 @@ namespace NhaHangLDP.Services.Reports
 
             var serviceFeeAndTax = totalBillRevenue - preTaxRevenue;
 
-            var billCount = db.Bill
+            var billCount = db.Bills
                 .Where(b => b.BillDate >= startDate
                           && b.BillDate < endDate
                           && b.Status == "Paid")
@@ -238,8 +238,8 @@ namespace NhaHangLDP.Services.Reports
                 }
 
                 var categoryData = bills
-                    .Where(b => b.Order != null && b.Order.OrderDetail != null)
-                    .SelectMany(b => b.Order.OrderDetail)
+                    .Where(b => b.Order != null && b.Order.OrderDetails != null)
+                    .SelectMany(b => b.Order.OrderDetails)
                     .Where(od => od.MenuItem != null)
                     .GroupBy(od => od.MenuItem.Category ?? "Khác")
                     .Select(g => new

@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
@@ -12,7 +12,7 @@ namespace NhaHangLDP.Services.HR
     /// </summary>
     public class HRManagementService
     {
-        private readonly NhaHangLDPEntities _db;
+        private readonly MyDbContext _db;
 
         // Cấu hình mặc định
         private const int ANNUAL_LEAVE_DAYS = 12;
@@ -20,7 +20,7 @@ namespace NhaHangLDP.Services.HR
         private const decimal LATE_DEDUCTION_AMOUNT = 50000;
         private const decimal OVERTIME_RATE = 1.5m;
 
-        public HRManagementService(NhaHangLDPEntities context)
+        public HRManagementService(MyDbContext context)
         {
             _db = context;
         }
@@ -36,7 +36,7 @@ namespace NhaHangLDP.Services.HR
             var thisMonth = new DateTime(today.Year, today.Month, 1);
             var lastMonth = thisMonth.AddMonths(-1);
 
-            var employees = _db.Employee.Include(e => e.Role).ToList();
+            var employees = _db.Employees.Include(e => e.Role).ToList();
             var activeEmployees = employees.Where(e => e.IsActive).ToList();
 
             // Thống kê chấm công hôm nay
@@ -210,7 +210,7 @@ namespace NhaHangLDP.Services.HR
         public List<AttendanceSummaryItem> GetTodayAttendance()
         {
             var today = DateTime.Today;
-            var activeEmployees = _db.Employee
+            var activeEmployees = _db.Employees
                 .Include(e => e.Role)
                 .Where(e => e.IsActive)
                 .ToList();
@@ -295,7 +295,7 @@ namespace NhaHangLDP.Services.HR
                     AverageWorkHours = presentDays > 0 ? records.Sum(r => r.WorkHours ?? 0) / presentDays : 0,
                     AttendanceRate = totalDays > 0 ? (decimal)presentDays / totalDays * 100 : 0
                 },
-                Employees = _db.Employee.Where(e => e.IsActive).ToList()
+                Employees = _db.Employees.Where(e => e.IsActive).ToList()
             };
         }
 
@@ -593,7 +593,7 @@ namespace NhaHangLDP.Services.HR
                 var endDate = startDate.AddMonths(1).AddDays(-1);
 
                 // Lấy nhân viên có hợp đồng active
-                var employees = _db.Employee
+                var employees = _db.Employees
                     .Include(e => e.Role)
                     .Where(e => e.IsActive)
                     .ToList();
@@ -895,7 +895,7 @@ namespace NhaHangLDP.Services.HR
                 .Include(r => r.Employee)
                 .Include(r => r.Employee.Role)
                 .Where(r => r.ReviewDate.Year == thisYear)
-                .GroupBy(r => new { r.EmployeeId, r.Employee.FullName, RoleName = r.Employee.Role.RoleName })
+                .GroupBy(r => new { r.EmployeeId, r.ReportedByEmployee?.FullName, RoleName = r.Employee.Role.RoleName })
                 .Select(g => new
                 {
                     EmployeeId = g.Key.EmployeeId,
@@ -1056,13 +1056,13 @@ namespace NhaHangLDP.Services.HR
             var weekEnd = weekStart.AddDays(6);
 
             var schedules = _db.Set<EmployeeSchedule>()
-                .Include(s => s.Employee)
+                .Include(s => s.Cashier)
                 .Include(s => s.WorkShift)
                 .Where(s => s.WorkDate >= weekStart && s.WorkDate <= weekEnd)
                 .ToList();
 
             var shifts = GetAllWorkShifts();
-            var employees = _db.Employee.Where(e => e.IsActive).ToList();
+            var employees = _db.Employees.Where(e => e.IsActive).ToList();
 
             var days = new List<ScheduleDayItem>();
             for (int i = 0; i < 7; i++)
@@ -1079,7 +1079,7 @@ namespace NhaHangLDP.Services.HR
                     Slots = daySchedules.Select(s => new ScheduleSlot
                     {
                         EmployeeId = s.EmployeeId,
-                        EmployeeName = s.Employee?.FullName ?? "N/A",
+                        EmployeeName = s.Cashier?.FullName ?? "N/A",
                         ShiftId = s.WorkShiftId,
                         ShiftName = s.WorkShift?.ShiftName ?? "N/A",
                         StartTime = s.WorkShift?.StartTime ?? TimeSpan.Zero,
@@ -1111,7 +1111,7 @@ namespace NhaHangLDP.Services.HR
             var colors = new[] { "#3498db", "#e74c3c", "#2ecc71", "#f39c12", "#9b59b6", "#1abc9c" };
             var index = 0;
 
-            return _db.Employee
+            return _db.Employees
                 .Include(e => e.Role)
                 .Where(e => e.IsActive)
                 .GroupBy(e => e.Role.RoleName)
@@ -1132,7 +1132,7 @@ namespace NhaHangLDP.Services.HR
         public List<AttendanceTrendItem> GetAttendanceTrend(int days)
         {
             var result = new List<AttendanceTrendItem>();
-            var activeCount = _db.Employee.Count(e => e.IsActive);
+            var activeCount = _db.Employees.Count(e => e.IsActive);
 
             for (int i = days - 1; i >= 0; i--)
             {
@@ -1164,7 +1164,7 @@ namespace NhaHangLDP.Services.HR
 
         private string GetEmployeeName(int employeeId)
         {
-            var employee = _db.Employee.Find(employeeId);
+            var employee = _db.Employees.Find(employeeId);
             return employee?.FullName ?? "N/A";
         }
 
@@ -1184,7 +1184,7 @@ namespace NhaHangLDP.Services.HR
             var startDate = new DateTime(month.Year, month.Month, 1);
             var endDate = startDate.AddMonths(1).AddDays(-1);
             var workDays = GetWorkDays(month.Month, month.Year);
-            var activeEmployees = _db.Employee.Count(e => e.IsActive);
+            var activeEmployees = _db.Employees.Count(e => e.IsActive);
 
             if (activeEmployees == 0 || workDays == 0) return 0;
 

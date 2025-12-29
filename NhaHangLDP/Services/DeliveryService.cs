@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -11,14 +11,14 @@ namespace NhaHangLDP.Services
     /// </summary>
     public class DeliveryService
     {
-        private readonly NhaHangLDPEntities _db;
+        private readonly MyDbContext _db;
 
         public DeliveryService()
         {
-            _db = new NhaHangLDPEntities();
+            _db = new MyDbContext();
         }
 
-        public DeliveryService(NhaHangLDPEntities db)
+        public DeliveryService(MyDbContext db)
         {
             _db = db;
         }
@@ -35,7 +35,7 @@ namespace NhaHangLDP.Services
             try
             {
                 // Tìm zone phù hợp nhất (ưu tiên ward cụ thể)
-                var zone = _db.DeliveryZone
+                var zone = _db.DeliveryZones
                     .Where(z => z.IsActive && z.District == district)
                     .OrderByDescending(z => z.Ward == ward ? 1 : 0)
                     .FirstOrDefault();
@@ -107,7 +107,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public DateTime EstimateDeliveryTime(string district, DateTime orderTime)
         {
-            var zone = _db.DeliveryZone
+            var zone = _db.DeliveryZones
                 .FirstOrDefault(z => z.District == district && z.IsActive);
 
             int estimatedMinutes = zone?.EstimatedTime ?? 45;
@@ -140,7 +140,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public Shipper FindBestShipper(decimal? destLatitude = null, decimal? destLongitude = null)
         {
-            var query = _db.Shipper
+            var query = _db.Shippers
                 .Where(s => s.Status == "Available" && s.IsActive);
 
             if (destLatitude.HasValue && destLongitude.HasValue)
@@ -177,7 +177,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public List<Shipper> GetAvailableShippers()
         {
-            return _db.Shipper
+            return _db.Shippers
                 .Where(s => s.Status == "Available" && s.IsActive)
                 .OrderByDescending(s => s.Rating)
                 .ToList();
@@ -190,7 +190,7 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var shipper = _db.Shipper.Find(shipperId);
+                var shipper = _db.Shippers.Find(shipperId);
                 if (shipper == null) return false;
 
                 shipper.CurrentLatitude = latitude;
@@ -198,7 +198,7 @@ namespace NhaHangLDP.Services
                 shipper.LastLocationUpdate = DateTime.Now;
 
                 // Cập nhật vị trí trong assignment đang active
-                var activeAssignment = _db.DeliveryAssignment
+                var activeAssignment = _db.DeliveryAssignments
                     .FirstOrDefault(a => a.ShipperId == shipperId &&
                         (a.Status == "Accepted" || a.Status == "PickedUp" || a.Status == "Delivering"));
 
@@ -224,7 +224,7 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var shipper = _db.Shipper.Find(shipperId);
+                var shipper = _db.Shippers.Find(shipperId);
                 if (shipper == null) return false;
 
                 shipper.Status = status;
@@ -258,7 +258,7 @@ namespace NhaHangLDP.Services
                     return result;
                 }
 
-                var shipper = _db.Shipper.Find(shipperId);
+                var shipper = _db.Shippers.Find(shipperId);
                 if (shipper == null)
                 {
                     result.Success = false;
@@ -274,7 +274,7 @@ namespace NhaHangLDP.Services
                 }
 
                 // Kiểm tra đã có assignment chưa
-                var existingAssignment = _db.DeliveryAssignment
+                var existingAssignment = _db.DeliveryAssignments
                     .FirstOrDefault(a => a.OrderId == orderId &&
                         a.Status != "Cancelled" && a.Status != "Failed");
 
@@ -306,7 +306,7 @@ namespace NhaHangLDP.Services
                     EstimatedArrival = EstimateDeliveryTime(order.District, DateTime.Now)
                 };
 
-                _db.DeliveryAssignment.Add(assignment);
+                _db.DeliveryAssignments.Add(assignment);
 
                 // Cập nhật trạng thái
                 shipper.Status = "Busy";
@@ -367,7 +367,7 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var assignment = _db.DeliveryAssignment
+                var assignment = _db.DeliveryAssignments
                     .Include(a => a.CustomerOrder)
                     .Include(a => a.Shipper)
                     .FirstOrDefault(a => a.Id == assignmentId);
@@ -492,7 +492,7 @@ namespace NhaHangLDP.Services
         {
             try
             {
-                var assignment = _db.DeliveryAssignment
+                var assignment = _db.DeliveryAssignments
                     .Include(a => a.Shipper)
                     .FirstOrDefault(a => a.Id == assignmentId);
 
@@ -503,7 +503,7 @@ namespace NhaHangLDP.Services
                 assignment.CustomerFeedback = feedback;
 
                 // Cập nhật rating trung bình của shipper
-                var allRatings = _db.DeliveryAssignment
+                var allRatings = _db.DeliveryAssignments
                     .Where(a => a.ShipperId == assignment.ShipperId && a.CustomerRating.HasValue)
                     .Select(a => a.CustomerRating.Value)
                     .ToList();
@@ -546,17 +546,17 @@ namespace NhaHangLDP.Services
                                o.Status == "Completed" &&
                                o.CompletedDate >= today && o.CompletedDate < tomorrow),
 
-                FailedOrdersToday = _db.DeliveryAssignment
+                FailedOrdersToday = _db.DeliveryAssignments
                     .Count(a => a.Status == "Failed" &&
                                a.AssignedTime >= today && a.AssignedTime < tomorrow),
 
-                AvailableShippers = _db.Shipper
+                AvailableShippers = _db.Shippers
                     .Count(s => s.Status == "Available" && s.IsActive),
 
-                BusyShippers = _db.Shipper
+                BusyShippers = _db.Shippers
                     .Count(s => s.Status == "Busy" && s.IsActive),
 
-                TotalShippers = _db.Shipper.Count(s => s.IsActive),
+                TotalShippers = _db.Shippers.Count(s => s.IsActive),
 
                 TodayRevenue = _db.CustomerOrder
                     .Where(o => o.OrderType == "Delivery" &&
@@ -591,7 +591,7 @@ namespace NhaHangLDP.Services
                 .ToList();
 
             // Shipper statuses
-            viewModel.ShipperStatuses = _db.Shipper
+            viewModel.ShipperStatuses = _db.Shippers
                 .Where(s => s.IsActive)
                 .Select(s => new ShipperStatusViewModel
                 {
@@ -627,7 +627,7 @@ namespace NhaHangLDP.Services
                 ToDate = toDate,
                 TotalOrders = orders.Count,
                 CompletedOrders = orders.Count(o => o.Status == "Completed"),
-                FailedOrders = _db.DeliveryAssignment
+                FailedOrders = _db.DeliveryAssignments
                     .Count(a => a.Status == "Failed" &&
                                a.AssignedTime >= fromDate && a.AssignedTime < nextDay),
                 CancelledOrders = orders.Count(o => o.Status == "Cancelled"),

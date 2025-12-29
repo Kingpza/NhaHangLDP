@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -10,35 +10,35 @@ namespace NhaHangLDP.Services.Management
 {
     public class EmployeeAdminService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public EmployeeAdminService(NhaHangLDPEntities context)
+        public EmployeeAdminService(MyDbContext context)
         {
             db = context;
         }
 
         public List<Employee> GetAllEmployees()
         {
-            return db.Employee.Include("Role").ToList();
+            return db.Employees.Include("Role").ToList();
         }
 
         public Employee GetEmployeeById(int id)
         {
-            return db.Employee.Find(id);
+            return db.Employees.Find(id);
         }
 
         public List<Role> GetAllRoles()
         {
-            return db.Role.ToList();
+            return db.Roles.ToList();
         }
 
         public bool IsUsernameExists(string username, int? excludeId = null)
         {
             if (excludeId.HasValue)
             {
-                return db.Employee.Any(e => e.UserName == username && e.Id != excludeId.Value);
+                return db.Employees.Any(e => e.UserName == username && e.Id != excludeId.Value);
             }
-            return db.Employee.Any(e => e.UserName == username);
+            return db.Employees.Any(e => e.UserName == username);
         }
 
         public bool CreateEmployee(Employee employee, out string errorMessage)
@@ -46,7 +46,7 @@ namespace NhaHangLDP.Services.Management
             try
             {
                 employee.PasswordHash = HashPassword(employee.PasswordHash);
-                db.Employee.Add(employee);
+                db.Employees.Add(employee);
                 db.SaveChanges();
 
                 errorMessage = null;
@@ -63,7 +63,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var empInDb = db.Employee.Find(employee.Id);
+                var empInDb = db.Employees.Find(employee.Id);
                 if (empInDb == null)
                 {
                     errorMessage = "Không tìm thấy nhân viên.";
@@ -98,7 +98,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                var employee = db.Employee.Find(id);
+                var employee = db.Employees.Find(id);
                 if (employee == null)
                 {
                     errorMessage = "Không tìm thấy nhân viên.";
@@ -146,7 +146,7 @@ namespace NhaHangLDP.Services.Management
         {
             try
             {
-                if (db.Employee.Any())
+                if (db.Employees.Any())
                 {
                     errorMessage = "Đã có nhân viên trong hệ thống!";
                     employeeCount = 0;
@@ -155,23 +155,23 @@ namespace NhaHangLDP.Services.Management
                 }
 
                 var roles = new List<Role>();
-                if (!db.Role.Any(r => r.RoleName == "Admin")) roles.Add(new Role { RoleName = "Admin" });
-                if (!db.Role.Any(r => r.RoleName == "Manager")) roles.Add(new Role { RoleName = "Manager" });
-                if (!db.Role.Any(r => r.RoleName == "Cashier")) roles.Add(new Role { RoleName = "Cashier" });
-                if (!db.Role.Any(r => r.RoleName == "Staff")) roles.Add(new Role { RoleName = "Staff" });
-                if (!db.Role.Any(r => r.RoleName == "Kitchen")) roles.Add(new Role { RoleName = "Kitchen" });
+                if (!db.Roles.Any(r => r.RoleName == "Admin")) roles.Add(new Role { RoleName = "Admin" });
+                if (!db.Roles.Any(r => r.RoleName == "Manager")) roles.Add(new Role { RoleName = "Manager" });
+                if (!db.Roles.Any(r => r.RoleName == "Cashier")) roles.Add(new Role { RoleName = "Cashier" });
+                if (!db.Roles.Any(r => r.RoleName == "Staff")) roles.Add(new Role { RoleName = "Staff" });
+                if (!db.Roles.Any(r => r.RoleName == "Kitchen")) roles.Add(new Role { RoleName = "Kitchen" });
 
                 foreach (var role in roles)
                 {
-                    db.Role.Add(role);
+                    db.Roles.Add(role);
                 }
                 db.SaveChanges();
 
-                var adminRole = db.Role.FirstOrDefault(r => r.RoleName == "Admin");
-                var managerRole = db.Role.FirstOrDefault(r => r.RoleName == "Manager");
-                var cashierRole = db.Role.FirstOrDefault(r => r.RoleName == "Cashier");
-                var staffRole = db.Role.FirstOrDefault(r => r.RoleName == "Staff");
-                var kitchenRole = db.Role.FirstOrDefault(r => r.RoleName == "Kitchen");
+                var adminRole = db.Roles.FirstOrDefault(r => r.RoleName == "Admin");
+                var managerRole = db.Roles.FirstOrDefault(r => r.RoleName == "Manager");
+                var cashierRole = db.Roles.FirstOrDefault(r => r.RoleName == "Cashier");
+                var staffRole = db.Roles.FirstOrDefault(r => r.RoleName == "Staff");
+                var kitchenRole = db.Roles.FirstOrDefault(r => r.RoleName == "Kitchen");
 
                 var sampleEmployees = new List<Employee>
                 {
@@ -189,7 +189,7 @@ namespace NhaHangLDP.Services.Management
 
                 foreach (var employee in sampleEmployees)
                 {
-                    db.Employee.Add(employee);
+                    db.Employees.Add(employee);
                 }
 
                 db.SaveChanges();

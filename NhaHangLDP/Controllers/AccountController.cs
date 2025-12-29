@@ -1,9 +1,9 @@
-﻿using NhaHangLDP.Models;
+using NhaHangLDP.Models;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Http;
@@ -12,7 +12,7 @@ namespace NhaHangLDP.Controllers
 {
     public class AccountController : Controller
     {
-        private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private MyDbContext db = new MyDbContext();
         // GET: Account
         [HttpGet]
         public ActionResult Login()
@@ -32,7 +32,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 string hashedPassword = HashPassword(password);
-                var employee = db.Employee.Include(e => e.Role)
+                var employee = db.Employees.Include(e => e.Role)
                                  .FirstOrDefault(e => e.UserName == username && e.PasswordHash == hashedPassword);
 
                 if (employee != null)
@@ -77,7 +77,7 @@ namespace NhaHangLDP.Controllers
                     }
                 }
 
-                var account = db.Account.Include(a => a.Role)
+                var account = db.Accounts.Include(a => a.Role)
                                 .FirstOrDefault(a => a.Username == username && a.PasswordHash == hashedPassword);
 
                 if (account != null)
@@ -151,7 +151,7 @@ namespace NhaHangLDP.Controllers
         [HttpGet]
         public ActionResult Register()
         {
-            ViewBag.RoleId = new SelectList(db.Role.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
+            ViewBag.RoleId = new SelectList(db.Roles.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
             return View();
         }
 
@@ -167,19 +167,19 @@ namespace NhaHangLDP.Controllers
                     if (account.PasswordHash != ConfirmPassword)
                     {
                         ModelState.AddModelError("", "Mật khẩu và xác nhận mật khẩu không khớp.");
-                        ViewBag.RoleId = new SelectList(db.Role.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
+                        ViewBag.RoleId = new SelectList(db.Roles.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
                         return View(account);
                     }
-                    if (db.Account.Any(a => a.Username == account.Username))
+                    if (db.Accounts.Any(a => a.Username == account.Username))
                     {
                         ModelState.AddModelError("Username", "Tên đăng nhập đã tồn tại.");
-                        ViewBag.RoleId = new SelectList(db.Role.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
+                        ViewBag.RoleId = new SelectList(db.Roles.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
                         return View(account);
                     }
-                    if (!string.IsNullOrEmpty(account.Email) && db.Account.Any(a => a.Email == account.Email))
+                    if (!string.IsNullOrEmpty(account.Email) && db.Accounts.Any(a => a.Email == account.Email))
                     {
                         ModelState.AddModelError("Email", "Email đã được sử dụng.");
-                        ViewBag.RoleId = new SelectList(db.Role.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
+                        ViewBag.RoleId = new SelectList(db.Roles.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
                         return View(account);
                     }
 
@@ -190,14 +190,14 @@ namespace NhaHangLDP.Controllers
 
                     if (account.RoleId == 0)
                     {
-                        var staffRole = db.Role.FirstOrDefault(r => r.RoleName == "Staff");
+                        var staffRole = db.Roles.FirstOrDefault(r => r.RoleName == "Staff");
                         if (staffRole != null)
                         {
                             account.RoleId = staffRole.Id;
                         }
                     }
 
-                    db.Account.Add(account);
+                    db.Accounts.Add(account);
                     db.SaveChanges();
 
                     TempData["Success"] = "Đăng ký tài khoản thành công! Vui lòng đăng nhập.";
@@ -209,7 +209,7 @@ namespace NhaHangLDP.Controllers
                 ModelState.AddModelError("", "Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.");
             }
 
-            ViewBag.RoleId = new SelectList(db.Role.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
+            ViewBag.RoleId = new SelectList(db.Roles.Where(r => r.RoleName != "Admin"), "Id", "RoleName");
             return View(account);
         }
 

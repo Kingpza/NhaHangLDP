@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -138,8 +138,14 @@ public partial class MyDbContext : DbContext
     public virtual DbSet<WorkShift> WorkShifts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=LAPTOP-EHUTLUMK\\SQLEXPRESS;Database=NhaHangLDP;Trusted_Connection=True;TrustServerCertificate=True;");
+    {
+        // Connection string is configured via Program.cs using dependency injection
+        if (!optionsBuilder.IsConfigured)
+        {
+            // Fallback only for design-time tools
+            optionsBuilder.UseSqlServer("Name=ConnectionStrings:DefaultConnection");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -246,7 +252,7 @@ public partial class MyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Bill_Employee_Cashier");
 
-            entity.HasOne(d => d.Order).WithMany(p => p.Bills)
+            entity.HasOne(d => d.Orders).WithMany(p => p.Bills)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Bill_Order");
@@ -557,7 +563,7 @@ public partial class MyDbContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValue("Assigned");
 
-            entity.HasOne(d => d.Order).WithMany(p => p.DeliveryAssignments)
+            entity.HasOne(d => d.Orders).WithMany(p => p.DeliveryAssignments)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_DeliveryAssignment_CustomerOrder");
@@ -851,7 +857,7 @@ public partial class MyDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_KitchenTicket_Chef");
 
-            entity.HasOne(d => d.Order).WithMany(p => p.KitchenOrderTickets)
+            entity.HasOne(d => d.Orders).WithMany(p => p.KitchenOrderTickets)
                 .HasForeignKey(d => d.OrderId)
                 .HasConstraintName("FK_KitchenTicket_Order");
 
@@ -1057,7 +1063,7 @@ public partial class MyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_OrderDetail_MenuItem");
 
-            entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
+            entity.HasOne(d => d.Orders).WithMany(p => p.OrderDetails)
                 .HasForeignKey(d => d.OrderId)
                 .HasConstraintName("FK_OrderDetail_Order");
         });
@@ -1197,7 +1203,7 @@ public partial class MyDbContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
 
-            entity.HasOne(d => d.Bill).WithMany(p => p.PromotionUsages)
+            entity.HasOne(d => d.Bills).WithMany(p => p.PromotionUsages)
                 .HasForeignKey(d => d.BillId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_PromotionUsage_Bill");
@@ -1383,7 +1389,7 @@ public partial class MyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ReturnBillDetail_MenuItem");
 
-            entity.HasOne(d => d.ReturnBill).WithMany(p => p.ReturnBillDetails)
+            entity.HasOne(d => d.ReturnBills).WithMany(p => p.ReturnBillDetails)
                 .HasForeignKey(d => d.ReturnBillID)
                 .HasConstraintName("FK_ReturnBillDetail_ReturnBill");
         });
@@ -1414,7 +1420,7 @@ public partial class MyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Review_MenuItem");
 
-            entity.HasOne(d => d.Order).WithMany(p => p.Reviews)
+            entity.HasOne(d => d.Orders).WithMany(p => p.Reviews)
                 .HasForeignKey(d => d.OrderId)
                 .HasConstraintName("FK_Review_Order");
         });
@@ -1521,7 +1527,7 @@ public partial class MyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_StockInboundDetail_Ingredient");
 
-            entity.HasOne(d => d.StockInbound).WithMany(p => p.StockInboundDetails)
+            entity.HasOne(d => d.StockInbounds).WithMany(p => p.StockInboundDetails)
                 .HasForeignKey(d => d.StockInboundId)
                 .HasConstraintName("FK_StockInboundDetail_StockInbound");
         });
@@ -1668,7 +1674,7 @@ public partial class MyDbContext : DbContext
                 .HasForeignKey(d => d.CustomerId)
                 .HasConstraintName("FK_VoucherUsage_Customer");
 
-            entity.HasOne(d => d.Order).WithMany(p => p.VoucherUsages)
+            entity.HasOne(d => d.Orders).WithMany(p => p.VoucherUsages)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_VoucherUsage_Order");

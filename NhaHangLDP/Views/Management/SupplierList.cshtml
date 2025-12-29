@@ -1,4 +1,4 @@
-﻿@model List<NhaHangLDP.Models.Supplier>
+@model List<NhaHangLDP.Models.Supplier>
 @{
     ViewBag.Title = "Quản Lý Nhà Cung Cấp";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -161,7 +161,7 @@
                     <i class="fas fa-file-invoice"></i>
                 </div>
                 <div>
-                    <div class="value">@Model.Sum(s => s.StockInbound?.Count ?? 0)</div>
+                    <div class="value">@Model.Sum(s => s.StockInbounds?.Count ?? 0)</div>
                     <div class="label">Tổng phiếu nhập</div>
                 </div>
             </div>
@@ -265,7 +265,7 @@ else
                                 }
                             </td>
                             <td>
-                                <span class="badge-orders">@(supplier.StockInbound?.Count ?? 0) phiếu</span>
+                                <span class="badge-orders">@(supplier.StockInbounds?.Count ?? 0) phiếu</span>
                             </td>
                             <td>
                                 <div class="btn-group">

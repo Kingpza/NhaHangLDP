@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
@@ -15,7 +15,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class PromotionController : Controller
     {
-        private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private MyDbContext db = new MyDbContext();
 
         #region Management Pages
 
@@ -27,7 +27,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var query = db.Promotion.AsQueryable();
+                var query = db.Promotions.AsQueryable();
 
                 // Tìm kiếm
                 if (!string.IsNullOrEmpty(search))
@@ -134,7 +134,7 @@ namespace NhaHangLDP.Controllers
                     ModelState.AddModelError("EndDate", "Ngày kết thúc phải sau ngày bắt đầu");
                 }
 
-                if (db.Promotion.Any(p => p.Code == model.Code))
+                if (db.Promotions.Any(p => p.Code == model.Code))
                 {
                     ModelState.AddModelError("Code", "Mã khuyến mãi đã tồn tại");
                 }
@@ -171,7 +171,7 @@ namespace NhaHangLDP.Controllers
                         CreatedBy = HttpContext.Session.GetString("Username")?.ToString() ?? "Admin"
                     };
 
-                    db.Promotion.Add(promotion);
+                    db.Promotions.Add(promotion);
                     db.SaveChanges();
 
                     TempData["Success"] = $"Đã tạo khuyến mãi '{promotion.Name}' thành công!";
@@ -193,7 +193,7 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult Edit(int id)
         {
-            var promotion = db.Promotion.Find(id);
+            var promotion = db.Promotions.Find(id);
             if (promotion == null)
             {
                 TempData["Error"] = "Không tìm thấy khuyến mãi";
@@ -243,14 +243,14 @@ namespace NhaHangLDP.Controllers
                     ModelState.AddModelError("EndDate", "Ngày kết thúc phải sau ngày bắt đầu");
                 }
 
-                if (db.Promotion.Any(p => p.Code == model.Code && p.Id != model.Id))
+                if (db.Promotions.Any(p => p.Code == model.Code && p.Id != model.Id))
                 {
                     ModelState.AddModelError("Code", "Mã khuyến mãi đã tồn tại");
                 }
 
                 if (ModelState.IsValid)
                 {
-                    var promotion = db.Promotion.Find(model.Id);
+                    var promotion = db.Promotions.Find(model.Id);
                     if (promotion == null)
                     {
                         TempData["Error"] = "Không tìm thấy khuyến mãi";
@@ -302,7 +302,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var promotion = db.Promotion.Find(id);
+                var promotion = db.Promotions.Find(id);
                 if (promotion == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy khuyến mãi" });
@@ -334,18 +334,18 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var promotion = db.Promotion.Include(p => p.PromotionUsage).FirstOrDefault(p => p.Id == id);
+                var promotion = db.Promotions.Include(p => p.PromotionUsages).FirstOrDefault(p => p.Id == id);
                 if (promotion == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy khuyến mãi" });
                 }
 
-                if (promotion.PromotionUsage.Any())
+                if (promotion.PromotionUsages.Any())
                 {
                     return Json(new { success = false, message = "Không thể xóa khuyến mãi đã được sử dụng. Hãy tạm dừng thay vì xóa." });
                 }
 
-                db.Promotion.Remove(promotion);
+                db.Promotions.Remove(promotion);
                 db.SaveChanges();
 
                 return Json(new { success = true, message = "Đã xóa khuyến mãi thành công" });
@@ -362,15 +362,15 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult UsageReport(int id)
         {
-            var promotion = db.Promotion.Find(id);
+            var promotion = db.Promotions.Find(id);
             if (promotion == null)
             {
                 TempData["Error"] = "Không tìm thấy khuyến mãi";
                 return RedirectToAction("Index");
             }
 
-            var usages = db.PromotionUsage
-                .Include(u => u.Bill)
+            var usages = db.PromotionUsages
+                .Include(u => u.Bills)
                 .Where(u => u.PromotionId == id)
                 .OrderByDescending(u => u.UsedDate)
                 .ToList();
@@ -420,7 +420,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 code = code.ToUpper().Trim();
-                var promotion = db.Promotion.FirstOrDefault(p => p.Code == code);
+                var promotion = db.Promotions.FirstOrDefault(p => p.Code == code);
 
                 if (promotion == null)
                 {
@@ -484,7 +484,7 @@ namespace NhaHangLDP.Controllers
                 // Kiểm tra số lượt/khách hàng
                 if (!string.IsNullOrEmpty(customerPhone) && promotion.MaxUsagePerCustomer.HasValue)
                 {
-                    var customerUsageCount = db.PromotionUsage
+                    var customerUsageCount = db.PromotionUsages
                         .Count(u => u.PromotionId == promotion.Id && u.CustomerPhone == customerPhone);
 
                     if (customerUsageCount >= promotion.MaxUsagePerCustomer.Value)
@@ -576,14 +576,14 @@ namespace NhaHangLDP.Controllers
             {
                 try
                 {
-                    var bill = db.Bill.Find(billId);
+                    var bill = db.Bills.Find(billId);
                     if (bill == null)
                     {
                         return Json(new { success = false, message = "Không tìm thấy hóa đơn" });
                     }
 
                     code = code.ToUpper().Trim();
-                    var promotion = db.Promotion.FirstOrDefault(p => p.Code == code);
+                    var promotion = db.Promotions.FirstOrDefault(p => p.Code == code);
                     if (promotion == null)
                     {
                         return Json(new { success = false, message = "Mã khuyến mãi không tồn tại" });
@@ -621,7 +621,7 @@ namespace NhaHangLDP.Controllers
                         DiscountApplied = discount,
                         UsedDate = DateTime.Now
                     };
-                    db.PromotionUsage.Add(usage);
+                    db.PromotionUsages.Add(usage);
 
                     // Tăng số lượt đã sử dụng
                     promotion.UsedCount++;
@@ -654,7 +654,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var now = DateTime.Now;
-                var promotions = db.Promotion
+                var promotions = db.Promotions
                     .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now)
                     .OrderBy(p => p.EndDate)
                     .Select(p => new
@@ -691,11 +691,11 @@ namespace NhaHangLDP.Controllers
             var now = DateTime.Now;
             return new PromotionStatsViewModel
             {
-                TotalPromotions = db.Promotion.Count(),
-                ActivePromotions = db.Promotion.Count(p => p.IsActive && p.StartDate <= now && p.EndDate >= now),
-                ExpiredPromotions = db.Promotion.Count(p => p.EndDate < now),
-                TotalUsageCount = db.PromotionUsage.Count(),
-                TotalDiscountGiven = db.PromotionUsage.Sum(u => (decimal?)u.DiscountApplied) ?? 0
+                TotalPromotions = db.Promotions.Count(),
+                ActivePromotions = db.Promotions.Count(p => p.IsActive && p.StartDate <= now && p.EndDate >= now),
+                ExpiredPromotions = db.Promotions.Count(p => p.EndDate < now),
+                TotalUsageCount = db.PromotionUsages.Count(),
+                TotalDiscountGiven = db.PromotionUsages.Sum(u => (decimal?)u.DiscountApplied) ?? 0
             };
         }
 
@@ -725,7 +725,7 @@ namespace NhaHangLDP.Controllers
                 new SelectListItem { Value = "Sunday", Text = "Chủ Nhật" }
             };
 
-            ViewBag.Categories = db.MenuItem
+            ViewBag.Categories = db.MenuItems
                 .Select(m => m.Category)
                 .Distinct()
                 .OrderBy(c => c)

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
@@ -15,7 +15,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class ShipperAppController : Controller
     {
-        private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();
+        private readonly MyDbContext _db = new MyDbContext();
         private readonly DeliveryService _deliveryService;
 
         public ShipperAppController()
@@ -62,7 +62,7 @@ namespace NhaHangLDP.Controllers
                 return View();
             }
 
-            var shipper = _db.Shipper.FirstOrDefault(s => s.Phone == phone && s.IsActive);
+            var shipper = _db.Shippers.FirstOrDefault(s => s.Phone == phone && s.IsActive);
             
             if (shipper == null)
             {
@@ -107,7 +107,7 @@ namespace NhaHangLDP.Controllers
             var shipperId = (int.TryParse(HttpContext.Session.GetString("ShipperId"), out int _pShipperId) ? (int?)_pShipperId : null);
             if (shipperId.HasValue)
             {
-                var shipper = _db.Shipper.Find(shipperId.Value);
+                var shipper = _db.Shippers.Find(shipperId.Value);
                 if (shipper != null)
                 {
                     shipper.Status = "Offline";
@@ -131,21 +131,21 @@ namespace NhaHangLDP.Controllers
             var shipperId = GetCurrentShipperId();
             if (shipperId == 0) return RedirectToAction("Login");
 
-            var shipper = _db.Shipper.Find(shipperId);
+            var shipper = _db.Shippers.Find(shipperId);
             if (shipper == null) return RedirectToAction("Login");
 
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
             // Lấy đơn hàng hiện tại (đang xử lý)
-            var activeAssignment = _db.DeliveryAssignment
+            var activeAssignment = _db.DeliveryAssignments
                 .Include(a => a.CustomerOrder)
-                .Include(a => a.CustomerOrder.CustomerOrderDetail)
+                .Include(a => a.CustomerOrder.CustomerOrderDetails)
                 .FirstOrDefault(a => a.ShipperId == shipperId &&
                     (a.Status == "Assigned" || a.Status == "Accepted" || a.Status == "PickedUp" || a.Status == "Delivering"));
 
             // Thống kê hôm nay
-            var todayStats = _db.DeliveryAssignment
+            var todayStats = _db.DeliveryAssignments
                 .Where(a => a.ShipperId == shipperId &&
                            a.AssignedTime >= today && a.AssignedTime < tomorrow)
                 .GroupBy(a => 1)
@@ -177,7 +177,7 @@ namespace NhaHangLDP.Controllers
                     Status = activeAssignment.Status,
                     AssignedTime = activeAssignment.AssignedTime,
                     EstimatedArrival = activeAssignment.EstimatedArrival,
-                    Items = activeAssignment.CustomerOrder.CustomerOrderDetail?.Select(d => new OrderItemSummary
+                    Items = activeAssignment.CustomerOrder.CustomerOrderDetails?.Select(d => new OrderItemSummary
                     {
                         ItemName = d.ItemName,
                         Quantity = d.Quantity,
@@ -201,7 +201,7 @@ namespace NhaHangLDP.Controllers
             var shipperId = GetCurrentShipperId();
             if (shipperId == 0) return RedirectToAction("Login");
 
-            var shipper = _db.Shipper.Find(shipperId);
+            var shipper = _db.Shippers.Find(shipperId);
             if (shipper == null || shipper.Status == "Busy")
             {
                 // Nếu đang bận, không hiển thị đơn mới
@@ -209,7 +209,7 @@ namespace NhaHangLDP.Controllers
             }
 
             // Lấy đơn hàng chưa được gán hoặc đang chờ shipper chấp nhận
-            var pendingAssignments = _db.DeliveryAssignment
+            var pendingAssignments = _db.DeliveryAssignments
                 .Include(a => a.CustomerOrder)
                 .Where(a => a.ShipperId == shipperId && a.Status == "Assigned")
                 .OrderByDescending(a => a.AssignedTime)
@@ -244,9 +244,9 @@ namespace NhaHangLDP.Controllers
             var shipperId = GetCurrentShipperId();
             if (shipperId == 0) return RedirectToAction("Login");
 
-            var assignment = _db.DeliveryAssignment
+            var assignment = _db.DeliveryAssignments
                 .Include(a => a.CustomerOrder)
-                .Include(a => a.CustomerOrder.CustomerOrderDetail)
+                .Include(a => a.CustomerOrder.CustomerOrderDetails)
                 .FirstOrDefault(a => a.Id == id && a.ShipperId == shipperId);
 
             if (assignment == null)
@@ -259,7 +259,7 @@ namespace NhaHangLDP.Controllers
             {
                 Assignment = assignment,
                 Order = assignment.CustomerOrder,
-                OrderItems = assignment.CustomerOrder.CustomerOrderDetail?.ToList() ?? new List<CustomerOrderDetail>()
+                OrderItems = assignment.CustomerOrder.CustomerOrderDetails?.ToList() ?? new List<CustomerOrderDetail>()
             };
 
             return View(viewModel);
@@ -276,7 +276,7 @@ namespace NhaHangLDP.Controllers
             var from = fromDate ?? DateTime.Today.AddDays(-7);
             var to = (toDate ?? DateTime.Today).AddDays(1);
 
-            var orders = _db.DeliveryAssignment
+            var orders = _db.DeliveryAssignments
                 .Include(a => a.CustomerOrder)
                 .Where(a => a.ShipperId == shipperId &&
                            a.AssignedTime >= from && a.AssignedTime < to)
@@ -315,7 +315,7 @@ namespace NhaHangLDP.Controllers
             var from = fromDate ?? DateTime.Today.AddDays(-30);
             var to = (toDate ?? DateTime.Today).AddDays(1);
 
-            var assignments = _db.DeliveryAssignment
+            var assignments = _db.DeliveryAssignments
                 .Where(a => a.ShipperId == shipperId &&
                            a.Status == "Delivered" &&
                            a.DeliveryTime >= from && a.DeliveryTime < to)
@@ -351,7 +351,7 @@ namespace NhaHangLDP.Controllers
             var shipperId = GetCurrentShipperId();
             if (shipperId == 0) return RedirectToAction("Login");
 
-            var shipper = _db.Shipper.Find(shipperId);
+            var shipper = _db.Shippers.Find(shipperId);
             if (shipper == null) return RedirectToAction("Login");
 
             return View(shipper);
@@ -369,7 +369,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var shipper = _db.Shipper.Find(shipperId);
+                var shipper = _db.Shippers.Find(shipperId);
                 if (shipper != null)
                 {
                     shipper.FullName = fullName;
@@ -402,7 +402,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var shipper = _db.Shipper.Find(shipperId);
+                var shipper = _db.Shippers.Find(shipperId);
                 if (shipper == null)
                     return Json(new { success = false, message = "Không tìm thấy tài khoản" });
 
@@ -443,7 +443,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var assignment = _db.DeliveryAssignment
+                var assignment = _db.DeliveryAssignments
                     .Include(a => a.Shipper)
                     .FirstOrDefault(a => a.Id == assignmentId && a.ShipperId == shipperId);
 
@@ -477,7 +477,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var assignment = _db.DeliveryAssignment
+                var assignment = _db.DeliveryAssignments
                     .Include(a => a.Shipper)
                     .Include(a => a.CustomerOrder)
                     .FirstOrDefault(a => a.Id == assignmentId && a.ShipperId == shipperId);
@@ -603,7 +603,7 @@ namespace NhaHangLDP.Controllers
 
             try
             {
-                var shipper = _db.Shipper.Find(shipperId);
+                var shipper = _db.Shippers.Find(shipperId);
                 if (shipper == null)
                     return Json(new { success = false, message = "Không tìm thấy tài khoản" });
 
@@ -630,7 +630,7 @@ namespace NhaHangLDP.Controllers
             var shipperId = GetCurrentShipperId();
             if (shipperId == 0) return RedirectToAction("Login");
 
-            var assignment = _db.DeliveryAssignment
+            var assignment = _db.DeliveryAssignments
                 .Include(a => a.CustomerOrder)
                 .FirstOrDefault(a => a.Id == assignmentId && a.ShipperId == shipperId);
 
@@ -650,7 +650,7 @@ namespace NhaHangLDP.Controllers
             var shipperId = GetCurrentShipperId();
             if (shipperId == 0) return RedirectToAction("Login");
 
-            var assignment = _db.DeliveryAssignment
+            var assignment = _db.DeliveryAssignments
                 .Include(a => a.CustomerOrder)
                 .FirstOrDefault(a => a.Id == assignmentId && a.ShipperId == shipperId);
 
@@ -674,7 +674,7 @@ namespace NhaHangLDP.Controllers
         [AllowAnonymous]
         public JsonResult ApiLogin(string phone, string password)
         {
-            var shipper = _db.Shipper.FirstOrDefault(s => s.Phone == phone && s.IsActive);
+            var shipper = _db.Shippers.FirstOrDefault(s => s.Phone == phone && s.IsActive);
             
             if (shipper == null)
                 return Json(new { success = false, message = "Số điện thoại không tồn tại" });
@@ -721,16 +721,16 @@ namespace NhaHangLDP.Controllers
             if (shipperId == 0)
                 return Json(new { success = false, message = "Chưa đăng nhập" });
 
-            var shipper = _db.Shipper.Find(shipperId);
+            var shipper = _db.Shippers.Find(shipperId);
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
-            var activeAssignment = _db.DeliveryAssignment
+            var activeAssignment = _db.DeliveryAssignments
                 .Include(a => a.CustomerOrder)
                 .FirstOrDefault(a => a.ShipperId == shipperId &&
                     (a.Status == "Assigned" || a.Status == "Accepted" || a.Status == "PickedUp"));
 
-            var todayStats = _db.DeliveryAssignment
+            var todayStats = _db.DeliveryAssignments
                 .Where(a => a.ShipperId == shipperId && a.Status == "Delivered" &&
                            a.DeliveryTime >= today && a.DeliveryTime < tomorrow)
                 .GroupBy(a => 1)
@@ -784,7 +784,7 @@ namespace NhaHangLDP.Controllers
             if (shipperId == 0)
                 return Json(new { success = false, message = "Chưa đăng nhập" });
 
-            var orders = _db.DeliveryAssignment
+            var orders = _db.DeliveryAssignments
                 .Include(a => a.CustomerOrder)
                 .Where(a => a.ShipperId == shipperId && a.Status == "Assigned")
                 .Select(a => new

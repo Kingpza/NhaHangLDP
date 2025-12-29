@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
@@ -14,7 +14,7 @@ namespace NhaHangLDP.Controllers
     /// </summary>
     public class KitchenController : Controller
     {
-        private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private MyDbContext db = new MyDbContext();
 
         #region Display Pages
 
@@ -70,9 +70,9 @@ namespace NhaHangLDP.Controllers
             {
                 try
                 {
-                    var order = db.Order
-                        .Include(o => o.OrderDetail.Select(od => od.MenuItem))
-                        .Include(o => o.RestaurantTable)
+                    var order = db.Orders
+                        .Include(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                        .Include(o => o.Table)
                         .FirstOrDefault(o => o.Id == dto.OrderId);
 
                     if (order == null)
@@ -81,13 +81,13 @@ namespace NhaHangLDP.Controllers
                     }
 
                     // Kiểm tra đã có ticket chưa
-                    if (db.KitchenOrderTicket.Any(t => t.OrderId == dto.OrderId && t.Status != "Completed" && t.Status != "Cancelled"))
+                    if (db.KitchenOrderTickets.Any(t => t.OrderId == dto.OrderId && t.Status != "Completed" && t.Status != "Cancelled"))
                     {
                         return Json(new { success = false, message = "Đơn hàng đã có ticket trong bếp" });
                     }
 
                     // Tính thời gian ước tính
-                    var maxPrepTime = order.OrderDetail.Max(od => od.MenuItem.PreparationTime);
+                    var maxPrepTime = order.OrderDetails.Max(od => od.MenuItem.PreparationTime);
 
                     var ticket = new KitchenOrderTicket
                     {
@@ -105,11 +105,11 @@ namespace NhaHangLDP.Controllers
                         PrintCount = 0
                     };
 
-                    db.KitchenOrderTicket.Add(ticket);
+                    db.KitchenOrderTickets.Add(ticket);
                     db.SaveChanges();
 
                     // Tạo kitchen items
-                    foreach (var detail in order.OrderDetail)
+                    foreach (var detail in order.OrderDetails)
                     {
                         var item = new KitchenOrderItem
                         {
@@ -123,7 +123,7 @@ namespace NhaHangLDP.Controllers
                             CustomerNotes = detail.Notes,
                             Station = GetStationForCategory(detail.MenuItem.Category)
                         };
-                        db.KitchenOrderItem.Add(item);
+                        db.KitchenOrderItems.Add(item);
                     }
 
                     // Cập nhật Order status
@@ -157,7 +157,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var ticket = db.KitchenOrderTicket.Find(ticketId);
+                var ticket = db.KitchenOrderTickets.Find(ticketId);
                 if (ticket == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy ticket" });
@@ -173,7 +173,7 @@ namespace NhaHangLDP.Controllers
                 ticket.AssignedChefId = ticket.AssignedChefId ?? GetCurrentEmployeeId();
 
                 // Cập nhật items
-                foreach (var item in db.KitchenOrderItem.Where(i => i.KitchenOrderTicketId == ticketId))
+                foreach (var item in db.KitchenOrderItems.Where(i => i.KitchenOrderTicketId == ticketId))
                 {
                     if (item.Status == "Pending")
                     {
@@ -206,7 +206,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var item = db.KitchenOrderItem
+                var item = db.KitchenOrderItems
                     .Include(i => i.KitchenOrderTicket)
                     .FirstOrDefault(i => i.Id == dto.ItemId);
 
@@ -227,7 +227,7 @@ namespace NhaHangLDP.Controllers
 
                 // Kiểm tra nếu tất cả items đã xong
                 var ticket = item.KitchenOrderTicket;
-                var allItems = db.KitchenOrderItem.Where(i => i.KitchenOrderTicketId == ticket.Id).ToList();
+                var allItems = db.KitchenOrderItems.Where(i => i.KitchenOrderTicketId == ticket.Id).ToList();
                 
                 if (allItems.All(i => i.CompletedQuantity >= i.Quantity))
                 {
@@ -235,7 +235,7 @@ namespace NhaHangLDP.Controllers
                     ticket.CompletedTime = DateTime.Now;
 
                     // Cập nhật Order
-                    var order = db.Order.Find(ticket.OrderId);
+                    var order = db.Orders.Find(ticket.OrderId);
                     if (order != null)
                     {
                         order.Status = "Ready";
@@ -245,14 +245,14 @@ namespace NhaHangLDP.Controllers
                     var notification = new Notification
                     {
                         Type = "OrderReady",
-                        Title = $"Đơn hàng bàn {db.RestaurantTable.Find(ticket.TableId)?.TableNumber} đã sẵn sàng",
+                        Title = $"Đơn hàng bàn {db.RestaurantTables.Find(ticket.TableId)?.TableNumber} đã sẵn sàng",
                         Message = $"Ticket #{ticket.TicketCode} đã hoàn thành",
                         Data = ticket.TableId.ToString(),
                         CreatedDate = DateTime.Now,
                         IsRead = false,
                         Level = "High"
                     };
-                    db.Notification.Add(notification);
+                    db.Notifications.Add(notification);
                 }
 
                 db.SaveChanges();
@@ -280,7 +280,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var ticket = db.KitchenOrderTicket
+                var ticket = db.KitchenOrderTickets
                     .Include(t => t.KitchenOrderItem)
                     .FirstOrDefault(t => t.Id == ticketId);
 
@@ -300,15 +300,15 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Cập nhật Order
-                var order = db.Order.Find(ticket.OrderId);
+                var order = db.Orders.Find(ticket.OrderId);
                 if (order != null)
                 {
                     order.Status = "Ready";
                 }
 
                 // Notification
-                var table = db.RestaurantTable.Find(ticket.TableId);
-                db.Notification.Add(new Notification
+                var table = db.RestaurantTables.Find(ticket.TableId);
+                db.Notifications.Add(new Notification
                 {
                     Type = "OrderReady",
                     Title = $"Bàn {table?.TableNumber} - Đơn sẵn sàng",
@@ -338,7 +338,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var ticket = db.KitchenOrderTicket.Find(ticketId);
+                var ticket = db.KitchenOrderTickets.Find(ticketId);
                 if (ticket == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy ticket" });
@@ -365,7 +365,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var ticket = db.KitchenOrderTicket.Find(ticketId);
+                var ticket = db.KitchenOrderTickets.Find(ticketId);
                 if (ticket == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy ticket" });
@@ -391,7 +391,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var ticket = db.KitchenOrderTicket
+                var ticket = db.KitchenOrderTickets
                     .Include(t => t.KitchenOrderItem)
                     .FirstOrDefault(t => t.Id == ticketId);
 
@@ -464,9 +464,9 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var ticket = db.KitchenOrderTicket
-                    .Include(t => t.KitchenOrderItem.Select(i => i.MenuItem))
-                    .Include(t => t.RestaurantTable)
+                var ticket = db.KitchenOrderTickets
+                    .Include(t => t.KitchenOrderItem).ThenInclude(i => i.MenuItem)
+                    .Include(t => t.Table)
                     .Include(t => t.Employee)
                     .FirstOrDefault(t => t.Id == ticketId);
 
@@ -492,7 +492,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var ticket = db.KitchenOrderTicket.Find(ticketId);
+                var ticket = db.KitchenOrderTickets.Find(ticketId);
                 if (ticket == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy ticket" });
@@ -520,9 +520,9 @@ namespace NhaHangLDP.Controllers
         [CustomAuthorize("Admin", "Manager")]
         public ActionResult Stations()
         {
-            var stations = db.KitchenStation.OrderBy(s => s.DisplayOrder).ToList();
-            var categories = db.MenuItem.Select(m => m.Category).Distinct().ToList();
-            var chefs = db.Employee
+            var stations = db.KitchenStations.OrderBy(s => s.DisplayOrder).ToList();
+            var categories = db.MenuItems.Select(m => m.Category).Distinct().ToList();
+            var chefs = db.Employees
                 .Where(e => e.IsActive && (e.Role.RoleName == "Kitchen" || e.Role.RoleName == "Chef"))
                 .ToList();
 
@@ -538,15 +538,15 @@ namespace NhaHangLDP.Controllers
                     DisplayColor = s.DisplayColor,
                     DisplayOrder = s.DisplayOrder,
                     IsActive = s.IsActive,
-                    PendingTicketCount = db.KitchenOrderTicket.Count(t => t.KitchenStation == s.Code && t.Status == "Pending"),
-                    PreparingTicketCount = db.KitchenOrderTicket.Count(t => t.KitchenStation == s.Code && t.Status == "Preparing")
+                    PendingTicketCount = db.KitchenOrderTickets.Count(t => t.KitchenStation == s.Code && t.Status == "Pending"),
+                    PreparingTicketCount = db.KitchenOrderTickets.Count(t => t.KitchenStation == s.Code && t.Status == "Preparing")
                 }).ToList(),
                 AvailableCategories = categories,
                 AvailableChefs = chefs.Select(c => new ChefViewModel
                 {
                     Id = c.Id,
                     FullName = c.FullName,
-                    ActiveTicketCount = db.KitchenOrderTicket.Count(t => t.AssignedChefId == c.Id && 
+                    ActiveTicketCount = db.KitchenOrderTickets.Count(t => t.AssignedChefId == c.Id && 
                         (t.Status == "Pending" || t.Status == "Preparing"))
                 }).ToList()
             };
@@ -563,7 +563,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                if (db.KitchenStation.Any(s => s.Code == model.Code))
+                if (db.KitchenStations.Any(s => s.Code == model.Code))
                 {
                     return Json(new { success = false, message = "Mã station đã tồn tại" });
                 }
@@ -579,7 +579,7 @@ namespace NhaHangLDP.Controllers
                     IsActive = model.IsActive
                 };
 
-                db.KitchenStation.Add(station);
+                db.KitchenStations.Add(station);
                 db.SaveChanges();
 
                 return Json(new { success = true, message = "Đã tạo station thành công" });
@@ -599,7 +599,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var station = db.KitchenStation.Find(model.Id);
+                var station = db.KitchenStations.Find(model.Id);
                 if (station == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy station" });
@@ -632,13 +632,13 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var station = db.KitchenStation.Find(id);
+                var station = db.KitchenStations.Find(id);
                 if (station == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy station" });
                 }
 
-                db.KitchenStation.Remove(station);
+                db.KitchenStations.Remove(station);
                 db.SaveChanges();
 
                 return Json(new { success = true, message = "Đã xóa station" });
@@ -655,9 +655,9 @@ namespace NhaHangLDP.Controllers
 
         private KitchenDisplayViewModel GetKitchenDisplayData(string station)
         {
-            var query = db.KitchenOrderTicket
-                .Include(t => t.KitchenOrderItem.Select(i => i.MenuItem))
-                .Include(t => t.RestaurantTable)
+            var query = db.KitchenOrderTickets
+                .Include(t => t.KitchenOrderItem).ThenInclude(i => i.MenuItem)
+                .Include(t => t.Table)
                 .Include(t => t.Employee)
                 .Where(t => t.Status != "Completed" && t.Status != "Cancelled");
 
@@ -691,7 +691,7 @@ namespace NhaHangLDP.Controllers
                 OrderId = ticket.OrderId,
                 OrderCode = $"DH{ticket.OrderId:D6}",
                 TableId = ticket.TableId,
-                TableNumber = ticket.RestaurantTable?.TableNumber ?? "",
+                TableNumber = ticket.Table?.TableNumber ?? "",
                 Status = ticket.Status,
                 Priority = ticket.Priority,
                 SpecialNotes = ticket.SpecialNotes,
@@ -726,7 +726,7 @@ namespace NhaHangLDP.Controllers
 
         private List<KitchenStationViewModel> GetStationsWithStats()
         {
-            var stations = db.KitchenStation.Where(s => s.IsActive).OrderBy(s => s.DisplayOrder).ToList();
+            var stations = db.KitchenStations.Where(s => s.IsActive).OrderBy(s => s.DisplayOrder).ToList();
             return stations.Select(s => new KitchenStationViewModel
             {
                 Id = s.Id,
@@ -737,9 +737,9 @@ namespace NhaHangLDP.Controllers
                 DisplayColor = s.DisplayColor,
                 DisplayOrder = s.DisplayOrder,
                 IsActive = s.IsActive,
-                PendingTicketCount = db.KitchenOrderTicket.Count(t => t.KitchenStation == s.Code && t.Status == "Pending"),
-                PreparingTicketCount = db.KitchenOrderTicket.Count(t => t.KitchenStation == s.Code && t.Status == "Preparing"),
-                TotalItemCount = db.KitchenOrderItem
+                PendingTicketCount = db.KitchenOrderTickets.Count(t => t.KitchenStation == s.Code && t.Status == "Pending"),
+                PreparingTicketCount = db.KitchenOrderTickets.Count(t => t.KitchenStation == s.Code && t.Status == "Preparing"),
+                TotalItemCount = db.KitchenOrderItems
                     .Count(i => i.Station == s.Code && 
                                (i.KitchenOrderTicket.Status == "Pending" || i.KitchenOrderTicket.Status == "Preparing"))
             }).ToList();
@@ -750,7 +750,7 @@ namespace NhaHangLDP.Controllers
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
 
-            var allTicketsToday = db.KitchenOrderTicket
+            var allTicketsToday = db.KitchenOrderTickets
                 .Where(t => t.CreatedTime >= today && t.CreatedTime < tomorrow)
                 .ToList();
 
@@ -762,22 +762,22 @@ namespace NhaHangLDP.Controllers
 
             return new KitchenStatsViewModel
             {
-                TotalPendingTickets = db.KitchenOrderTicket.Count(t => t.Status == "Pending"),
-                TotalPreparingTickets = db.KitchenOrderTicket.Count(t => t.Status == "Preparing"),
-                TotalReadyTickets = db.KitchenOrderTicket.Count(t => t.Status == "Ready"),
+                TotalPendingTickets = db.KitchenOrderTickets.Count(t => t.Status == "Pending"),
+                TotalPreparingTickets = db.KitchenOrderTickets.Count(t => t.Status == "Preparing"),
+                TotalReadyTickets = db.KitchenOrderTickets.Count(t => t.Status == "Ready"),
                 TotalCompletedToday = completedToday.Count,
-                OverdueTickets = db.KitchenOrderTicket.Count(t => 
+                OverdueTickets = db.KitchenOrderTickets.Count(t => 
                     (t.Status == "Pending" || t.Status == "Preparing") &&
                     DbFunctions.DiffMinutes(t.StartedTime ?? t.CreatedTime, DateTime.Now) > t.EstimatedMinutes),
                 AveragePreparationTime = Math.Round(avgPrepTime, 1),
-                TotalItemsToday = db.KitchenOrderItem
+                TotalItemsToday = db.KitchenOrderItems
                     .Count(i => i.KitchenOrderTicket.CreatedTime >= today && i.KitchenOrderTicket.CreatedTime < tomorrow)
             };
         }
 
         private string GetStationForCategory(string category)
         {
-            var station = db.KitchenStation
+            var station = db.KitchenStations
                 .FirstOrDefault(s => s.IsActive && s.HandledCategories.Contains(category));
             return station?.Code ?? "MAIN";
         }

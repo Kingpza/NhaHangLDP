@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Web;
 using NhaHangLDP.Models;
@@ -24,9 +24,9 @@ namespace NhaHangLDP.Helpers
         {
             try
       {
-   using (var db = new NhaHangLDPEntities())
+   using (var db = new MyDbContext())
      {
-          var setting = db.AppSetting.FirstOrDefault(s => s.SettingKey == key);
+          var setting = db.AppSettings.FirstOrDefault(s => s.SettingKey == key);
      return setting?.SettingValue ?? defaultValue;
      }
     }
@@ -96,9 +96,9 @@ namespace NhaHangLDP.Helpers
         {
    try
         {
-          using (var db = new NhaHangLDPEntities())
+          using (var db = new MyDbContext())
                 {
-                    var existing = db.AppSetting.FirstOrDefault(s => s.SettingKey == key);
+                    var existing = db.AppSettings.FirstOrDefault(s => s.SettingKey == key);
  
     if (existing != null)
              {
@@ -118,7 +118,7 @@ namespace NhaHangLDP.Helpers
   CreatedDate = DateTime.Now,
       CreatedBy = updatedBy
      };
-           db.AppSetting.Add(newSetting);
+           db.AppSettings.Add(newSetting);
            }
  
       db.SaveChanges();

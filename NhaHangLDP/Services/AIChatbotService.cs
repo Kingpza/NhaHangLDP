@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -19,7 +19,7 @@ namespace NhaHangLDP.Services
     /// </summary>
     public class AIChatbotService
     {
-        private readonly NhaHangLDPEntities _db;
+        private readonly MyDbContext _db;
         private readonly string _geminiApiKey;
         private readonly bool _useGeminiAI;
         private static readonly HttpClient _httpClient = new HttpClient();
@@ -78,12 +78,12 @@ namespace NhaHangLDP.Services
 
         public AIChatbotService()
         {
-            _db = new NhaHangLDPEntities();
+            _db = new MyDbContext();
             _geminiApiKey = ConfigurationManager.AppSettings["GeminiApiKey"];
             _useGeminiAI = !string.IsNullOrEmpty(_geminiApiKey);
         }
 
-        public AIChatbotService(NhaHangLDPEntities db)
+        public AIChatbotService(MyDbContext db)
         {
             _db = db;
             _geminiApiKey = ConfigurationManager.AppSettings["GeminiApiKey"];
@@ -1063,7 +1063,7 @@ CÂU HỎI: {message}";
             if (bookingTime.HasValue && guestCount > 0)
             {
                 // Kiểm tra bàn trống
-                var availableTables = _db.RestaurantTable
+                var availableTables = _db.Table
                     .Where(t => t.Status == "Available" && t.Capacity >= guestCount)
                     .OrderBy(t => t.Capacity)
                     .Take(3)

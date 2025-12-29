@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using NhaHangLDP.Models;
 
@@ -8,9 +8,9 @@ namespace NhaHangLDP.Services.Reports
 {
     public class SalesAnalyticsService
     {
-        private readonly NhaHangLDPEntities db;
+        private readonly MyDbContext db;
 
-        public SalesAnalyticsService(NhaHangLDPEntities context)
+        public SalesAnalyticsService(MyDbContext context)
         {
             db = context;
         }
@@ -20,11 +20,11 @@ namespace NhaHangLDP.Services.Reports
             DateTime startDate, endDate;
             GetDateRange(period, out startDate, out endDate);
 
-            var totalOrders = db.Order
+            var totalOrders = db.Orders
                 .Where(o => o.OrderTime >= startDate && o.OrderTime < endDate)
                 .Count();
 
-            var totalRevenue = db.Bill
+            var totalRevenue = db.Bills
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0m;
 
@@ -55,18 +55,18 @@ namespace NhaHangLDP.Services.Reports
             DateTime startDate, endDate;
             GetDateRange(period, out startDate, out endDate);
 
-            var bills = db.Bill
+            var bills = db.Bills
                 .Where(b => b.BillDate >= startDate && b.BillDate < endDate && b.Status == "Paid")
                 .ToList();
 
             var totalRevenue = bills.Sum(b => (decimal?)b.FinalAmount) ?? 0m;
-            var totalOrders = db.Order.Count(o => o.OrderTime >= startDate && o.OrderTime < endDate);
+            var totalOrders = db.Orders.Count(o => o.OrderTime >= startDate && o.OrderTime < endDate);
             var avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0m;
-            var activeCashiers = db.CashierShift.Count(s => s.Status == "Active");
+            var activeCashiers = db.CashierShifts.Count(s => s.Status == "Active");
 
             var previousStart = GetPreviousPeriodStart(startDate, period);
             var previousEnd = GetPreviousPeriodEnd(previousStart, period);
-            var previousRevenue = db.Bill
+            var previousRevenue = db.Bills
                 .Where(b => b.BillDate >= previousStart && b.BillDate < previousEnd && b.Status == "Paid")
                 .Sum(b => (decimal?)b.FinalAmount) ?? 0m;
 
@@ -80,16 +80,16 @@ namespace NhaHangLDP.Services.Reports
 
             var chartData = GenerateChartData(bills, period, startDate, endDate);
 
-            var shifts = db.CashierShift
-                .Include(s => s.Employee)
+            var shifts = db.CashierShifts
+                .Include(s => s.Cashier)
                 .Where(s => s.StartTime >= startDate && s.StartTime < endDate)
                 .ToList();
 
             var cashierData = shifts
                 .Select(shift => new
                 {
-                    name = shift.Employee?.FullName ?? "Thu Ngân",
-                    orders = db.Order.Count(o => o.ShiftId == shift.Id),
+                    name = shift.Cashier?.FullName ?? "Thu Ngân",
+                    orders = db.Orders.Count(o => o.ShiftId == shift.Id),
                     hours = shift.EndTime.HasValue ? (int)(shift.EndTime.Value - shift.StartTime).TotalHours : (int)(DateTime.Now - shift.StartTime).TotalHours,
                     shifts = 1,
                     revenue = shift.TotalRevenue ?? 0,

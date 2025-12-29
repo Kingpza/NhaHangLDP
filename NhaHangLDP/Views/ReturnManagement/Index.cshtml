@@ -1,4 +1,4 @@
-﻿@model List<NhaHangLDP.Models.ReturnBill>
+@model List<NhaHangLDP.Models.ReturnBill>
 
 @{
     ViewBag.Title = "Quản Lý Trả Hàng";
@@ -55,7 +55,7 @@
             <div class="stat-icon" style="background: rgba(220, 53, 69, 0.2); color: #dc3545;">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <h3 class="mb-1">@Model.Sum(r => r.ReturnBillDetail.Count(d => d.IsDamaged))</h3>
+            <h3 class="mb-1">@Model.Sum(r => r.ReturnBillDetails.Count(d => d.IsDamaged))</h3>
             <p class="text-muted mb-0">Hàng Hỏng</p>
         </div>
     </div>
@@ -106,7 +106,7 @@
                             @item.Employee.FullName
                         </td>
                         <td>
-                            <span class="badge bg-secondary">@item.ReturnBillDetail.Count món</span>
+                            <span class="badge bg-secondary">@item.ReturnBillDetails.Count món</span>
                         </td>
                         <td>
                             <strong class="text-success">@item.TotalRefundAmount.ToString("N0") ₫</strong>
