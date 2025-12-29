@@ -1,20 +1,20 @@
-﻿@model NhaHangLDP.Models.ReservationFormModel
+@model NhaHangLDP.Models.ReservationFormModel
 @{
     ViewBag.Title = "Đặt bàn";
     Layout = null;
     var timeSlots = ViewBag.TimeSlots as List<string> ?? new List<string>();
     
     // Kiểm tra đăng nhập - hỗ trợ cả nhân viên và khách hàng
-    var isLoggedIn = Session["Username"] != null || Session["CustomerId"] != null;
-    var displayName = Session["FullName"]?.ToString() ?? Session["CustomerName"]?.ToString() ?? Session["Username"]?.ToString() ?? "User";
-    var userRole = Session["Role"]?.ToString() ?? Session["UserRole"]?.ToString();
-    var isEmployee = Session["Username"] != null && (userRole == "Admin" || userRole == "Manager" || userRole == "Cashier" || userRole == "Staff");
-    var isCustomer = Session["CustomerId"] != null;
+    var isLoggedIn = Context.Session.GetString("Username") != null || Context.Session.GetString("CustomerId") != null;
+    var displayName = Context.Session.GetString("FullName")?.ToString() ?? Context.Session.GetString("CustomerName")?.ToString() ?? Context.Session.GetString("Username")?.ToString() ?? "User";
+    var userRole = Context.Session.GetString("Role")?.ToString() ?? Context.Session.GetString("UserRole")?.ToString();
+    var isEmployee = Context.Session.GetString("Username") != null && (userRole == "Admin" || userRole == "Manager" || userRole == "Cashier" || userRole == "Staff");
+    var isCustomer = Context.Session.GetString("CustomerId") != null;
     
     // Lấy thông tin khách hàng để tự động điền
-    var customerName = Session["CustomerName"]?.ToString() ?? Session["FullName"]?.ToString() ?? "";
-    var customerEmail = Session["CustomerEmail"]?.ToString() ?? "";
-    var customerPhone = Session["CustomerPhone"]?.ToString() ?? "";
+    var customerName = Context.Session.GetString("CustomerName")?.ToString() ?? Context.Session.GetString("FullName")?.ToString() ?? "";
+    var customerEmail = Context.Session.GetString("CustomerEmail")?.ToString() ?? "";
+    var customerPhone = Context.Session.GetString("CustomerPhone")?.ToString() ?? "";
 }
 
 <!DOCTYPE html>

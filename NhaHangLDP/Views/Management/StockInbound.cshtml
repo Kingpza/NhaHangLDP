@@ -1,4 +1,4 @@
-﻿@model NhaHangLDP.Models.StockInboundViewModel
+@model NhaHangLDP.Models.StockInboundViewModel
 @{
     ViewBag.Title = "Nhập Kho Nguyên Liệu";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
@@ -197,7 +197,7 @@
                     <div class="col-md-6 mb-3">
                         @Html.LabelFor(m => m.StockInbound.EmployeeId, "Nhân viên", new { @class = "form-label" })
                         @Html.DropDownListFor(m => m.StockInbound.EmployeeId,
-                            new SelectList(ViewBag.Employees as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "FullName", Session["UserId"]),
+                            new SelectList(ViewBag.Employees as IEnumerable<dynamic> ?? new List<dynamic>(), "Id", "FullName", Context.Session.GetString("UserId")),
                             "-- Chọn --", new { @class = "form-select", required = "required" })
                     </div>
                     <div class="col-md-6 mb-3">

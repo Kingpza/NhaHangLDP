@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace NhaHangLDP.Controllers
 {
@@ -430,11 +431,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var data = GetKitchenDisplayData(station);
-                return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = data });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -447,11 +448,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var stats = GetKitchenStats();
-                return Json(new { success = true, stats = stats }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, stats = stats });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -471,15 +472,15 @@ namespace NhaHangLDP.Controllers
 
                 if (ticket == null)
                 {
-                    return Json(new { success = false, message = "Không tìm thấy ticket" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy ticket" });
                 }
 
                 var viewModel = MapToTicketViewModel(ticket);
-                return Json(new { success = true, ticket = viewModel }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, ticket = viewModel });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -783,7 +784,7 @@ namespace NhaHangLDP.Controllers
 
         private int? GetCurrentEmployeeId()
         {
-            return Session["EmployeeId"] as int?;
+            return (int.TryParse(HttpContext.Session.GetString("EmployeeId"), out int _pEmployeeId) ? (int?)_pEmployeeId : null);
         }
 
         protected override void Dispose(bool disposing)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NhaHangLDP.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace NhaHangLDP.Controllers
 {
@@ -11,9 +12,10 @@ namespace NhaHangLDP.Controllers
         private NhaHangLDPEntities db = new NhaHangLDPEntities();
         public ActionResult Index()
         {
-            if (Session["UserRole"] == null ||
-                (Session.GetString("UserRole").ToLower() != "admin" &&
-                 Session.GetString("UserRole").ToLower() != "manager"))
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole) ||
+                (userRole.ToLower() != "admin" &&
+                 userRole.ToLower() != "manager"))
             {
                 TempData["Error"] = "Bạn không có quyền truy cập trang này. Vui lòng đăng nhập với tài khoản Admin hoặc Manager.";
                 return RedirectToAction("Login", "Account");
@@ -56,9 +58,10 @@ namespace NhaHangLDP.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Index(SettingsViewModel model)
         {
-            if (Session["UserRole"] == null ||
-                (Session.GetString("UserRole").ToLower() != "admin" &&
-                 Session.GetString("UserRole").ToLower() != "manager"))
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole) ||
+                (userRole.ToLower() != "admin" &&
+                 userRole.ToLower() != "manager"))
             {
                 TempData["Error"] = "Bạn không có quyền truy cập trang này.";
                 return RedirectToAction("Login", "Account");
@@ -68,7 +71,7 @@ namespace NhaHangLDP.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    var currentUser = Session["Username"]?.ToString() ?? "Admin";
+                    var currentUser = HttpContext.Session.GetString("Username") ?? "Admin";
 
                     UpsertSetting("RestaurantName", model.RestaurantName, "Tên nhà hàng", currentUser);
                     UpsertSetting("Address", model.Address, "Địa chỉ nhà hàng", currentUser);
@@ -107,9 +110,10 @@ namespace NhaHangLDP.Controllers
 
         public ActionResult System()
         {
-            if (Session["UserRole"] == null ||
-                (Session.GetString("UserRole").ToLower() != "admin" &&
-                 Session.GetString("UserRole").ToLower() != "manager"))
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole) ||
+                (userRole.ToLower() != "admin" &&
+                 userRole.ToLower() != "manager"))
             {
                 TempData["Error"] = "Bạn không có quyền truy cập trang này.";
                 return RedirectToAction("Login", "Account");
@@ -142,7 +146,8 @@ namespace NhaHangLDP.Controllers
 
         public ActionResult Advanced()
         {
-            if (Session["UserRole"] == null || Session.GetString("UserRole").ToLower() != "admin")
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole) || userRole.ToLower() != "admin")
             {
                 TempData["Error"] = "Chỉ Admin mới có quyền truy cập cài đặt nâng cao.";
                 return RedirectToAction("Index");
@@ -193,14 +198,15 @@ namespace NhaHangLDP.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult ResetDefaults()
         {
-            if (Session["UserRole"] == null || Session.GetString("UserRole").ToLower() != "admin")
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole) || userRole.ToLower() != "admin")
             {
                 return Json(new { success = false, message = "Chỉ Admin mới có quyền reset cài đặt." });
             }
 
             try
             {
-                var currentUser = Session["Username"]?.ToString() ?? "Admin";
+                var currentUser = HttpContext.Session.GetString("Username") ?? "Admin";
 
                 UpsertSetting("RestaurantName", "LDP Restaurant", "Tên nhà hàng", currentUser);
                 UpsertSetting("Address", "123 Đường ABC, Quận 1, TP.HCM", "Địa chỉ nhà hàng", currentUser);
@@ -268,15 +274,15 @@ namespace NhaHangLDP.Controllers
         {
             var debugInfo = new
             {
-                UserRole = Session["UserRole"]?.ToString() ?? "NULL",
-                Username = Session["Username"]?.ToString() ?? "NULL",
-                UserId = Session["UserId"]?.ToString() ?? "NULL",
-                EmployeeId = Session["EmployeeId"]?.ToString() ?? "NULL",
-                FullName = Session["FullName"]?.ToString() ?? "NULL",
+                UserRole = HttpContext.Session.GetString("UserRole") ?? "NULL",
+                Username = HttpContext.Session.GetString("Username") ?? "NULL",
+                UserId = HttpContext.Session.GetString("UserId") ?? "NULL",
+                EmployeeId = HttpContext.Session.GetString("EmployeeId") ?? "NULL",
+                FullName = HttpContext.Session.GetString("FullName") ?? "NULL",
                 IsAuthenticated = User?.Identity?.IsAuthenticated ?? false,
                 AuthenticationType = User?.Identity?.AuthenticationType ?? "NULL",
-                SessionId = Session.SessionID,
-                AllSessionKeys = Session.Keys.Cast<string>().ToArray()
+                SessionId = HttpContext.Session.Id,
+                AllSessionKeys = HttpContext.Session.Keys.ToArray()
             };
 
             ViewBag.DebugInfo = debugInfo;

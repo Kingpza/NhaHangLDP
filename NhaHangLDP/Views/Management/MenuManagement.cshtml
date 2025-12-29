@@ -618,7 +618,7 @@
                                 <a href="@Url.Action("EditCombo", "Management", new { id = combo.Id })" class="btn btn-sm btn-outline-custom">
                                     <i class="fas fa-edit me-1"></i>Sửa
                                 </a>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCombo(@combo.Id, '@Html.Raw(HttpUtility.JavaScriptStringEncode(combo.Name))')">
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCombo(@combo.Id, '@Html.Raw(combo.Name.Replace("'", "\\'").Replace("\"", "\\\""))')">
                                     <i class="fas fa-trash me-1"></i>Xóa
                                 </button>
                             </div>

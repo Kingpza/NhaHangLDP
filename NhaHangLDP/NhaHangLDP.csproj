@@ -9,26 +9,14 @@
     <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="bootstrap" Version="5.2.3" />
     <PackageReference Include="EntityFramework" Version="6.5.1" />
-    <PackageReference Include="jQuery" Version="3.7.0" />
-    <PackageReference Include="jQuery.Validation" Version="1.19.5" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.jQuery.Unobtrusive.Validation" Version="3.2.11" />
-    <PackageReference Include="Modernizr" Version="2.8.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-    <PackageReference Include="WebGrease" Version="1.6.0" />
-    <PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters" Version="2.2.1" />
-    <PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters.CoreServices" Version="2.2.1" />
-    <PackageReference Include="Antlr4" Version="4.6.6" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="Global.asax.cs">
-      <DependentUpon>Global.asax</DependentUpon>
-    </Compile>
     <Compile Update="Models\Account.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>

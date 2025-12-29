@@ -1,9 +1,10 @@
-﻿using NhaHangLDP.Models;
+using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace NhaHangLDP.Controllers
 {
@@ -67,7 +68,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Get customer ID if logged in
-                var customerId = Session["CustomerId"] as int?;
+                var customerId = (int.TryParse(HttpContext.Session.GetString("CustomerId"), out int _pCustomerId) ? (int?)_pCustomerId : null);
 
                 // Create reservation
                 var sql = @"
@@ -180,7 +181,7 @@ namespace NhaHangLDP.Controllers
                 }
             }
 
-            return Json(result, JsonRequestBehavior.AllowGet);
+            return Json(result);
         }
 
         /// <summary>

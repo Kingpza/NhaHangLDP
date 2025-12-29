@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -882,13 +882,13 @@
             <div class="sidebar-user">
                 <div class="sidebar-user-avatar">
                     @{
-                        var userName = Session["Username"]?.ToString() ?? "U";
+                        var userName = Context.Session.GetString("Username")?.ToString() ?? "U";
                         var userInitial = !string.IsNullOrEmpty(userName) ? userName[0].ToString().ToUpper() : "U";
                     }
                     @userInitial
                 </div>
                 <div class="sidebar-user-info">
-                    <h4>@(Session["FullName"] ?? Session["Username"] ?? "Thu Ngân")</h4>
+                    <h4>@(Context.Session.GetString("FullName") ?? Context.Session.GetString("Username") ?? "Thu Ngân")</h4>
                     <span>Thu ngân</span>
                 </div>
                 <div class="sidebar-user-status"></div>

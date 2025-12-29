@@ -1,4 +1,4 @@
-﻿@{
+@{
         ViewBag.Title = "Mở Ca Làm Việc";
         Layout = "~/Views/Shared/_CashierLayout.cshtml";
 }
@@ -186,7 +186,7 @@
             <div class="row">
                 <div class="col-6">
                     <small class="text-muted">Nhân viên:</small>
-                    <div class="text-warning fw-bold">@(Session["Username"] ?? "Thu Ngân")</div>
+                    <div class="text-warning fw-bold">@(Context.Session.GetString("Username") ?? "Thu Ngân")</div>
                 </div>
                 <div class="col-6 text-end">
                     <small class="text-muted">Thời gian:</small>

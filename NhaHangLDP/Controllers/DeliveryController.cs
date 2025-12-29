@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -6,6 +6,7 @@ using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
 using NhaHangLDP.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NhaHangLDP.Controllers
 {
@@ -43,11 +44,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var data = _deliveryService.GetDashboardStats();
-                return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = data });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -399,7 +400,7 @@ namespace NhaHangLDP.Controllers
                 .OrderByDescending(s => s.Rating)
                 .ToList();
 
-            return Json(new { success = true, shippers = shippers }, JsonRequestBehavior.AllowGet);
+            return Json(new { success = true, shippers = shippers });
         }
 
         #endregion
@@ -686,11 +687,11 @@ namespace NhaHangLDP.Controllers
                     })
                     .ToList();
 
-                return Json(new { success = true, deliveries = deliveries }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, deliveries = deliveries });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 

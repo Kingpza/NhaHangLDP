@@ -4,6 +4,8 @@ using System.Data.Entity;
 using System.Linq;
 using NhaHangLDP.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Http;
 
 namespace NhaHangLDP.Controllers
 {
@@ -14,9 +16,10 @@ namespace NhaHangLDP.Controllers
         // GET: ReturnManagement
         public ActionResult Index()
         {
-            if (Session["UserRole"] == null ||
-                (Session.GetString("UserRole").ToLower() != "admin" &&
-                Session.GetString("UserRole").ToLower() != "manager"))
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole) ||
+                (userRole.ToLower() != "admin" &&
+                userRole.ToLower() != "manager"))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -43,9 +46,10 @@ namespace NhaHangLDP.Controllers
         // GET: ReturnManagement/Create
         public ActionResult Create()
         {
-            if (Session["UserRole"] == null ||
-               (Session.GetString("UserRole").ToLower() != "admin" &&
-                  Session.GetString("UserRole").ToLower() != "manager"))
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole) ||
+               (userRole.ToLower() != "admin" &&
+                  userRole.ToLower() != "manager"))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -133,7 +137,7 @@ namespace NhaHangLDP.Controllers
                             bill.PaymentMethod // Giả định PaymentMethod là thuộc tính đơn giản có thể serialize
                         },
                         OrderDetails = orderDetails
-                    }, JsonRequestBehavior.AllowGet);
+                    });
                 }
                 catch (Exception ex)
                 {
@@ -151,9 +155,10 @@ namespace NhaHangLDP.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(ReturnManagementViewModel model)
         {
-            if (Session["UserRole"] == null ||
-                   (Session.GetString("UserRole").ToLower() != "admin" &&
-               Session.GetString("UserRole").ToLower() != "manager"))
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole) ||
+                   (userRole.ToLower() != "admin" &&
+               userRole.ToLower() != "manager"))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -259,9 +264,10 @@ namespace NhaHangLDP.Controllers
         // GET: ReturnManagement/Details/5
         public ActionResult Details(int id)
         {
-            if (Session["UserRole"] == null ||
-            (Session.GetString("UserRole").ToLower() != "admin" &&
-                 Session.GetString("UserRole").ToLower() != "manager"))
+            var userRole = HttpContext.Session.GetString("UserRole");
+            if (string.IsNullOrEmpty(userRole) ||
+            (userRole.ToLower() != "admin" &&
+                 userRole.ToLower() != "manager"))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -333,7 +339,8 @@ namespace NhaHangLDP.Controllers
         // Helper method để lấy ID nhân viên hiện tại
         private int GetCurrentEmployeeId()
         {
-            if (Session["EmployeeId"] != null && int.TryParse(Session.GetString("EmployeeId"), out int employeeId))
+            var employeeIdStr = HttpContext.Session.GetString("EmployeeId");
+            if (!string.IsNullOrEmpty(employeeIdStr) && int.TryParse(employeeIdStr, out int employeeId))
             {
                 return employeeId;
             }
