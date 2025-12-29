@@ -579,7 +579,10 @@
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         })
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Network response was not ok');
+            return r.json();
+        })
         .then(data => {
             if (data.success && data.orders) {
                 ordersData = data.orders;
@@ -588,7 +591,10 @@
                 showError('Không thể tải đơn hàng');
             }
         })
-        .catch(() => showError('Lỗi kết nối'));
+        .catch((error) => {
+            console.error('Error loading orders:', error);
+            showError('Lỗi kết nối');
+        });
     }
 
     function showError(message) {
@@ -673,16 +679,39 @@
     }
 
     function showOrderDetail(orderId) {
+        showLoading('Đang tải...', 'Vui lòng chờ');
+        
         fetch('@Url.Action("GetOrderDetail", "Cashier")?orderId=' + orderId, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         })
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Network response was not ok');
+            return r.json();
+        })
         .then(data => {
+            closeLoading();
             if (data.success && data.order) {
                 currentOrderForAction = data.order;
                 displayOrderDetail(data.order);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: data.message || 'Không thể tải thông tin đơn hàng',
+                    confirmButtonText: 'Đóng'
+                });
             }
+        })
+        .catch((error) => {
+            closeLoading();
+            console.error('Error loading order detail:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi kết nối!',
+                text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại!',
+                confirmButtonText: 'Đóng'
+            });
         });
     }
 
@@ -742,13 +771,35 @@
         }
 
         if (!order) {
+            showLoading('Đang tải...', 'Vui lòng chờ');
             fetch('@Url.Action("GetOrderDetail", "Cashier")?orderId=' + orderId)
-            .then(r => r.json())
+            .then(r => {
+                if (!r.ok) throw new Error('Network response was not ok');
+                return r.json();
+            })
             .then(data => {
+                closeLoading();
                 if (data.success) {
                     currentOrderForAction = data.order;
                     openPaymentModal(data.order);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi!',
+                        text: data.message || 'Không thể tải thông tin đơn hàng',
+                        confirmButtonText: 'Đóng'
+                    });
                 }
+            })
+            .catch((error) => {
+                closeLoading();
+                console.error('Error loading order for payment:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi kết nối!',
+                    text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại!',
+                    confirmButtonText: 'Đóng'
+                });
             });
             return;
         }
@@ -797,13 +848,26 @@
     });
 
     function processPayment() {
-        if (!currentOrderForAction) return;
+        if (!currentOrderForAction) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi!',
+                text: 'Không tìm thấy thông tin đơn hàng',
+                confirmButtonText: 'Đóng'
+            });
+            return;
+        }
 
         const method = document.querySelector('.payment-method.active').dataset.method;
         const received = parseFloat(document.getElementById('receivedAmount').value) || 0;
 
         if (method === 'cash' && received < currentOrderForAction.total) {
-            alert('Số tiền nhận không đủ!');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Chú ý!',
+                text: 'Số tiền nhận không đủ!',
+                confirmButtonText: 'Đóng'
+            });
             return;
         }
 
@@ -816,17 +880,41 @@
             headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
             body: `orderId=${currentOrderForAction.id}&paymentMethod=${method}&receivedAmount=${received}`
         })
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Network response was not ok');
+            return r.json();
+        })
         .then(data => {
             if (data.success) {
                 closePaymentModal();
-                showToastSwal('Thanh toán thành công!', 'success');
-                loadOrdersFromDatabase();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công!',
+                    text: 'Thanh toán thành công!',
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                }).then(() => {
+                    loadOrdersFromDatabase();
+                });
             } else {
-                alert(data.message || 'Thanh toán thất bại!');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi!',
+                    text: data.message || 'Thanh toán thất bại!',
+                    confirmButtonText: 'Đóng'
+                });
             }
         })
-        .catch(() => alert('Lỗi kết nối'))
+        .catch((error) => {
+            console.error('Error processing payment:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Lỗi kết nối!',
+                text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại!',
+                confirmButtonText: 'Đóng'
+            });
+        })
         .finally(() => {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-check me-1"></i>Xác Nhận Thanh Toán';
@@ -834,41 +922,119 @@
     }
 
     function updateOrderStatus(orderId, status) {
-        fetch('@Url.Action("UpdateOrderStatus", "Cashier")', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-            body: `orderId=${orderId}&status=${status}`
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                showToastSwal('Cập nhật trạng thái thành công!', 'success');
-                loadOrdersFromDatabase();
-            } else {
-                alert(data.message || 'Cập nhật thất bại!');
+        const statusTexts = {
+            'preparing': 'bắt đầu chuẩn bị',
+            'ready': 'đánh dấu là hoàn thành'
+        };
+
+        Swal.fire({
+            title: 'Xác nhận',
+            text: `Bạn có chắc muốn ${statusTexts[status] || 'cập nhật'} đơn hàng này?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận',
+            cancelButtonText: 'Hủy',
+            confirmButtonColor: '#22c55e',
+            cancelButtonColor: '#64748b'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showLoading('Đang xử lý...', 'Vui lòng chờ');
+                
+                fetch('@Url.Action("UpdateOrderStatusAPI", "Cashier")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: `orderId=${orderId}&status=${status}`
+                })
+                .then(r => {
+                    if (!r.ok) throw new Error('Network response was not ok');
+                    return r.json();
+                })
+                .then(data => {
+                    closeLoading();
+                    if (data.success) {
+                        showToastSwal('Cập nhật trạng thái thành công!', 'success');
+                        loadOrdersFromDatabase();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi!',
+                            text: data.message || 'Cập nhật thất bại!',
+                            confirmButtonText: 'Đóng'
+                        });
+                    }
+                })
+                .catch((error) => {
+                    closeLoading();
+                    console.error('Error updating order status:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi kết nối!',
+                        text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại!',
+                        confirmButtonText: 'Đóng'
+                    });
+                });
             }
-        })
-        .catch(() => alert('Lỗi kết nối'));
+        });
     }
 
     function cancelOrder(orderId) {
-        if (!confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
-        
-        fetch('@Url.Action("CancelOrder", "Cashier")', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
-            body: `orderId=${orderId}`
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                showToastSwal('Đã hủy đơn hàng!', 'success');
-                loadOrdersFromDatabase();
-            } else {
-                alert(data.message || 'Hủy đơn thất bại!');
+        Swal.fire({
+            title: 'Hủy đơn hàng?',
+            text: 'Bạn có chắc muốn hủy đơn hàng này? Hành động này không thể hoàn tác!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận hủy',
+            cancelButtonText: 'Không',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                showLoading('Đang hủy...', 'Vui lòng chờ');
+                
+                fetch('@Url.Action("CancelOrderAPI", "Cashier")', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: `orderId=${orderId}`
+                })
+                .then(r => {
+                    if (!r.ok) throw new Error('Network response was not ok');
+                    return r.json();
+                })
+                .then(data => {
+                    closeLoading();
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Đã hủy!',
+                            text: 'Đơn hàng đã được hủy thành công',
+                            timer: 2000,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        }).then(() => {
+                            loadOrdersFromDatabase();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi!',
+                            text: data.message || 'Hủy đơn thất bại!',
+                            confirmButtonText: 'Đóng'
+                        });
+                    }
+                })
+                .catch((error) => {
+                    closeLoading();
+                    console.error('Error canceling order:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Lỗi kết nối!',
+                        text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại!',
+                        confirmButtonText: 'Đóng'
+                    });
+                });
             }
-        })
-        .catch(() => alert('Lỗi kết nối'));
+        });
     }
 
     // Initialize
