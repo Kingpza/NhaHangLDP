@@ -4,11 +4,11 @@ using System.Linq;
 using System.Data.Entity;
 using System.Net;
 using System.Web;
-using System.Web.Mvc;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -51,14 +51,14 @@ namespace NhaHangLDP.Controllers
         {
             if (id == null)
             {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Vui lòng cung cấp ID món ăn.");
+                return new StatusCodeResult((int) HttpStatusCode.BadRequest);
             }
 
             var menuItem = db.MenuItem.Find(id.Value);
 
             if (menuItem == null)
             {
-                return HttpNotFound();
+                return NotFound();
             }
 
             // Truy vấn nguyên liệu

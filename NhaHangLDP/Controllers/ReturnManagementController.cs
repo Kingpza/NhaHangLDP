@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -15,8 +15,8 @@ namespace NhaHangLDP.Controllers
         public ActionResult Index()
         {
             if (Session["UserRole"] == null ||
-                (Session["UserRole"].ToString().ToLower() != "admin" &&
-                Session["UserRole"].ToString().ToLower() != "manager"))
+                (Session.GetString("UserRole").ToLower() != "admin" &&
+                Session.GetString("UserRole").ToLower() != "manager"))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -44,8 +44,8 @@ namespace NhaHangLDP.Controllers
         public ActionResult Create()
         {
             if (Session["UserRole"] == null ||
-               (Session["UserRole"].ToString().ToLower() != "admin" &&
-                  Session["UserRole"].ToString().ToLower() != "manager"))
+               (Session.GetString("UserRole").ToLower() != "admin" &&
+                  Session.GetString("UserRole").ToLower() != "manager"))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -152,8 +152,8 @@ namespace NhaHangLDP.Controllers
         public ActionResult Create(ReturnManagementViewModel model)
         {
             if (Session["UserRole"] == null ||
-                   (Session["UserRole"].ToString().ToLower() != "admin" &&
-               Session["UserRole"].ToString().ToLower() != "manager"))
+                   (Session.GetString("UserRole").ToLower() != "admin" &&
+               Session.GetString("UserRole").ToLower() != "manager"))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -260,8 +260,8 @@ namespace NhaHangLDP.Controllers
         public ActionResult Details(int id)
         {
             if (Session["UserRole"] == null ||
-            (Session["UserRole"].ToString().ToLower() != "admin" &&
-                 Session["UserRole"].ToString().ToLower() != "manager"))
+            (Session.GetString("UserRole").ToLower() != "admin" &&
+                 Session.GetString("UserRole").ToLower() != "manager"))
             {
                 return RedirectToAction("Login", "Account");
             }
@@ -333,7 +333,7 @@ namespace NhaHangLDP.Controllers
         // Helper method để lấy ID nhân viên hiện tại
         private int GetCurrentEmployeeId()
         {
-            if (Session["EmployeeId"] != null && int.TryParse(Session["EmployeeId"].ToString(), out int employeeId))
+            if (Session["EmployeeId"] != null && int.TryParse(Session.GetString("EmployeeId"), out int employeeId))
             {
                 return employeeId;
             }

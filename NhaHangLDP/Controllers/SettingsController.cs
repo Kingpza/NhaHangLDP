@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -12,8 +12,8 @@ namespace NhaHangLDP.Controllers
         public ActionResult Index()
         {
             if (Session["UserRole"] == null ||
-                (Session["UserRole"].ToString().ToLower() != "admin" &&
-                 Session["UserRole"].ToString().ToLower() != "manager"))
+                (Session.GetString("UserRole").ToLower() != "admin" &&
+                 Session.GetString("UserRole").ToLower() != "manager"))
             {
                 TempData["Error"] = "Bạn không có quyền truy cập trang này. Vui lòng đăng nhập với tài khoản Admin hoặc Manager.";
                 return RedirectToAction("Login", "Account");
@@ -57,8 +57,8 @@ namespace NhaHangLDP.Controllers
         public ActionResult Index(SettingsViewModel model)
         {
             if (Session["UserRole"] == null ||
-                (Session["UserRole"].ToString().ToLower() != "admin" &&
-                 Session["UserRole"].ToString().ToLower() != "manager"))
+                (Session.GetString("UserRole").ToLower() != "admin" &&
+                 Session.GetString("UserRole").ToLower() != "manager"))
             {
                 TempData["Error"] = "Bạn không có quyền truy cập trang này.";
                 return RedirectToAction("Login", "Account");
@@ -108,8 +108,8 @@ namespace NhaHangLDP.Controllers
         public ActionResult System()
         {
             if (Session["UserRole"] == null ||
-                (Session["UserRole"].ToString().ToLower() != "admin" &&
-                 Session["UserRole"].ToString().ToLower() != "manager"))
+                (Session.GetString("UserRole").ToLower() != "admin" &&
+                 Session.GetString("UserRole").ToLower() != "manager"))
             {
                 TempData["Error"] = "Bạn không có quyền truy cập trang này.";
                 return RedirectToAction("Login", "Account");
@@ -142,7 +142,7 @@ namespace NhaHangLDP.Controllers
 
         public ActionResult Advanced()
         {
-            if (Session["UserRole"] == null || Session["UserRole"].ToString().ToLower() != "admin")
+            if (Session["UserRole"] == null || Session.GetString("UserRole").ToLower() != "admin")
             {
                 TempData["Error"] = "Chỉ Admin mới có quyền truy cập cài đặt nâng cao.";
                 return RedirectToAction("Index");
@@ -193,7 +193,7 @@ namespace NhaHangLDP.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult ResetDefaults()
         {
-            if (Session["UserRole"] == null || Session["UserRole"].ToString().ToLower() != "admin")
+            if (Session["UserRole"] == null || Session.GetString("UserRole").ToLower() != "admin")
             {
                 return Json(new { success = false, message = "Chỉ Admin mới có quyền reset cài đặt." });
             }

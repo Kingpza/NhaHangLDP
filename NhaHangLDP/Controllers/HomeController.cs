@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {

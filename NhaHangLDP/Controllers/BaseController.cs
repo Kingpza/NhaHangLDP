@@ -1,5 +1,5 @@
-﻿using System.Web.Mvc;
-using System.Web.Routing;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace NhaHangLDP.Controllers
 {
@@ -64,7 +64,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         protected int? GetCurrentUserId()
         {
-            if (Session["UserId"] != null && int.TryParse(Session["UserId"].ToString(), out int userId))
+            if (Session["UserId"] != null && int.TryParse(Session.GetString("UserId"), out int userId))
             {
                 return userId;
             }

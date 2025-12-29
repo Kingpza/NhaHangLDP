@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
 using NhaHangLDP.Helpers;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -199,20 +199,20 @@ namespace NhaHangLDP.Controllers
         public ActionResult PrintBill(string orderId)
         {
             if (string.IsNullOrEmpty(orderId))
-                return HttpNotFound("Không có mã đơn hàng.");
+                return NotFound("Không có mã đơn hàng.");
 
             int numericOrderId;
             if (!int.TryParse(orderId.Replace("DH", ""), out numericOrderId))
             {
                 if (!int.TryParse(orderId, out numericOrderId))
-                    return HttpNotFound("Mã đơn hàng không hợp lệ: " + orderId);
+                    return NotFound("Mã đơn hàng không hợp lệ: " + orderId);
             }
 
             try
             {
                 var invoiceViewModel = reportService.GenerateInvoice(numericOrderId);
                 if (invoiceViewModel == null)
-                    return HttpNotFound("Không tìm thấy đơn hàng.");
+                    return NotFound("Không tìm thấy đơn hàng.");
                 
                 return View("PrintBill", invoiceViewModel);
             }

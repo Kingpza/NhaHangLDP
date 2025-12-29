@@ -9,7 +9,9 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Web;
-using System.Web.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace NhaHangLDP.Controllers
 {
@@ -276,11 +278,11 @@ namespace NhaHangLDP.Controllers
                 return RedirectUnauthorized();
 
             if (id == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "Yêu cầu không hợp lệ");
+                return new StatusCodeResult((int)HttpStatusCode.BadRequest);
 
             Employee employee = employeeService.GetEmployeeById(id.Value);
             if (employee == null)
-                return HttpNotFound("Không tìm thấy nhân viên này.");
+                return NotFound("Không tìm thấy nhân viên này.");
 
             ViewBag.RoleId = new SelectList(employeeService.GetAllRoles(), "Id", "RoleName", employee.RoleId);
             return View(employee);
@@ -438,11 +440,11 @@ namespace NhaHangLDP.Controllers
                 return RedirectUnauthorized();
 
             if (id == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+                return new StatusCodeResult((int)HttpStatusCode.BadRequest);
 
             MenuItem menuItem = menuService.GetMenuItemById(id.Value);
             if (menuItem == null)
-                return HttpNotFound();
+                return NotFound();
 
             var viewModel = new MenuItemFormViewModel
             {
@@ -531,7 +533,7 @@ namespace NhaHangLDP.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateCombo([Bind(Include = "Name,Description,ComboPrice")] MenuCombo combo, List<int> selectedMenuItems)
+        public ActionResult CreateCombo([Bind("Name", "Description", "ComboPrice")] MenuCombo combo, List<int> selectedMenuItems)
         {
             if (!IsAuthorized())
                 return RedirectUnauthorized();
@@ -561,7 +563,7 @@ namespace NhaHangLDP.Controllers
 
             var combo = menuService.GetComboById(id);
             if (combo == null)
-                return HttpNotFound();
+                return NotFound();
 
             ViewBag.AvailableMenuItems = menuService.GetAvailableMenuItems();
             return View("EditCombo", combo);
@@ -569,7 +571,7 @@ namespace NhaHangLDP.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult EditCombo([Bind(Include = "Id,Name,Description,ComboPrice")] MenuCombo combo, List<int> selectedMenuItems)
+        public ActionResult EditCombo([Bind("Id", "Name", "Description", "ComboPrice")] MenuCombo combo, List<int> selectedMenuItems)
         {
             if (!IsAuthorized())
                 return RedirectUnauthorized();
@@ -676,14 +678,14 @@ namespace NhaHangLDP.Controllers
         {
             var ingredient = inventoryService.GetIngredientById(id);
             if (ingredient == null)
-                return HttpNotFound();
+                return NotFound();
 
             return View(ingredient);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult EditIngredient([Bind(Include = "Id, Name, Unit, EstimatedCost, LowStockThreshold, AvailableStock")] Ingredient formData)
+        public ActionResult EditIngredient([Bind("Id", " Name", " Unit", " EstimatedCost", " LowStockThreshold", " AvailableStock")] Ingredient formData)
         {
             if (ModelState.IsValid)
             {
@@ -1122,10 +1124,10 @@ namespace NhaHangLDP.Controllers
                 }
 
                 var reportData = inventoryService.GetInventoryReportData(from, to);
-                
+
                 ViewBag.FromDate = fromDate;
                 ViewBag.ToDate = toDate;
-                
+
                 return View(reportData);
             }
             catch (Exception ex)
@@ -1148,13 +1150,13 @@ namespace NhaHangLDP.Controllers
                 var csvContent = inventoryService.ExportInventoryToCsv();
                 var bytes = System.Text.Encoding.UTF8.GetBytes(csvContent);
                 var fileName = $"BaoCaoKho_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-                
+
                 // Thêm BOM để Excel hiển thị đúng tiếng Việt
                 var bom = new byte[] { 0xEF, 0xBB, 0xBF };
                 var result = new byte[bom.Length + bytes.Length];
                 bom.CopyTo(result, 0);
                 bytes.CopyTo(result, bom.Length);
-                
+
                 return File(result, "text/csv", fileName);
             }
             catch (Exception ex)
@@ -1373,8 +1375,8 @@ namespace NhaHangLDP.Controllers
                     completedOrders = orders.Count(o => o.Status == "Completed"),
                     cancelledOrders = orders.Count(o => o.Status == "Cancelled"),
                     totalRevenue = orders.Where(o => o.Status == "Completed").Sum(o => o.TotalAmount),
-                    averageOrderValue = orders.Where(o => o.Status == "Completed").Any() 
-                        ? orders.Where(o => o.Status == "Completed").Average(o => o.TotalAmount) 
+                    averageOrderValue = orders.Where(o => o.Status == "Completed").Any()
+                        ? orders.Where(o => o.Status == "Completed").Average(o => o.TotalAmount)
                         : 0,
                     byType = new
                     {
@@ -1513,9 +1515,11 @@ namespace NhaHangLDP.Controllers
                 if (detail == null)
                     return Json(new { success = false, message = "Không tìm thấy nhà cung cấp!" }, JsonRequestBehavior.AllowGet);
 
-                return Json(new { 
-                    success = true, 
-                    supplier = new {
+                return Json(new
+                {
+                    success = true,
+                    supplier = new
+                    {
                         id = detail.Supplier.Id,
                         name = detail.Supplier.Name,
                         contactPerson = detail.Supplier.ContactPerson,
@@ -1577,10 +1581,12 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var expiringItems = inventoryService.GetExpiringItems(7); // 7 ngày
-                return Json(new { 
-                    success = true, 
+                return Json(new
+                {
+                    success = true,
                     count = expiringItems.Count,
-                    items = expiringItems.Take(5).Select(e => new {
+                    items = expiringItems.Take(5).Select(e => new
+                    {
                         name = e.IngredientName,
                         quantity = e.Quantity,
                         unit = e.Unit,

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
-using System.Web.Mvc;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
 using NhaHangLDP.Filters;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -275,7 +275,7 @@ namespace NhaHangLDP.Controllers
             var viewModel = invoiceService.GenerateDetailedInvoice(billId);
             if (viewModel == null)
             {
-                return HttpNotFound("Không tìm thấy hóa đơn");
+                return NotFound("Không tìm thấy hóa đơn");
             }
 
             return View(viewModel);

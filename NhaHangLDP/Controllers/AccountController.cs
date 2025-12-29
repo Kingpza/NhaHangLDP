@@ -1,11 +1,12 @@
-﻿using System.Web.Mvc;
-using System.Web.Security;
+﻿using System.Web.Security;
 using NhaHangLDP.Models;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System;
 using System.Data.Entity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 namespace NhaHangLDP.Controllers
 {
     public class AccountController : Controller
@@ -38,7 +39,8 @@ namespace NhaHangLDP.Controllers
                     if (employee.IsActive)
                     {
                         // Set Forms Authentication Cookie
-                        FormsAuthentication.SetAuthCookie(username, false);
+                        // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
+                                                FormsAuthentication.SetAuthCookie(username, false);
                         
                         // Lưu thông tin vào Session với Role key chuẩn
                         Session["Role"] = employee.Role.RoleName; // KEY QUAN TRỌNG!
@@ -86,7 +88,8 @@ namespace NhaHangLDP.Controllers
                     if (account.IsActive)
                     {
                         // Set Forms Authentication Cookie
-                        FormsAuthentication.SetAuthCookie(username, false);
+                        // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
+                                                FormsAuthentication.SetAuthCookie(username, false);
                         
                         // Lưu thông tin vào Session với Role key chuẩn
                         Session["Role"] = account.Role.RoleName; // KEY QUAN TRỌNG!
@@ -220,6 +223,7 @@ namespace NhaHangLDP.Controllers
         // POST: /Account/LogOut
         public ActionResult LogOut()
         {
+            // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
             FormsAuthentication.SignOut();
             Session.Clear();
             return RedirectToAction("Login", "Account");

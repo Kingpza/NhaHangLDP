@@ -1,476 +1,228 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\EntityFramework.6.4.4\build\EntityFramework.props" Condition="Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" />
-  <Import Project="..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props" Condition="Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" />
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>
-    </ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{7654D8D5-A765-4276-B75A-7F6582A7DB80}</ProjectGuid>
-    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>NhaHangLDP</RootNamespace>
-    <AssemblyName>NhaHangLDP</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <MvcBuildViews>false</MvcBuildViews>
-    <UseIISExpress>true</UseIISExpress>
-    <Use64BitIISExpress />
-    <IISExpressSSLPort>44307</IISExpressSSLPort>
-    <IISExpressAnonymousAuthentication />
-    <IISExpressWindowsAuthentication />
-    <IISExpressUseClassicPipelineMode />
-    <UseGlobalApplicationHostFile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <TargetFramework>net8.0</TargetFramework>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AssemblyTitle>NhaHangLDP</AssemblyTitle>
+    <Product>NhaHangLDP</Product>
+    <Copyright>Copyright ©  2025</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>..\packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.Security" />
-    <Reference Include="System.Web.DynamicData" />
-    <Reference Include="System.Web.Entity" />
-    <Reference Include="System.Web.ApplicationServices" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Web.Abstractions" />
-    <Reference Include="System.Web.Routing" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Web.Services" />
-    <Reference Include="System.EnterpriseServices" />
-    <Reference Include="Microsoft.Web.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\Microsoft.Web.Infrastructure.2.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Http">
-    </Reference>
-    <Reference Include="System.Net.Http.WebRequest">
-    </Reference>
-    <Reference Include="System.Web.Helpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.9\lib\net45\System.Web.Helpers.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.Mvc, Version=5.2.9.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\Microsoft.AspNet.Mvc.5.2.9\lib\net45\System.Web.Mvc.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.Optimization">
-      <HintPath>..\packages\Microsoft.AspNet.Web.Optimization.1.1.3\lib\net40\System.Web.Optimization.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\Microsoft.AspNet.Razor.3.2.9\lib\net45\System.Web.Razor.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.WebPages, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.9\lib\net45\System.Web.WebPages.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.WebPages.Deployment, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.9\lib\net45\System.Web.WebPages.Deployment.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.WebPages.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <Private>True</Private>
-      <HintPath>..\packages\Microsoft.AspNet.WebPages.3.2.9\lib\net45\System.Web.WebPages.Razor.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="WebGrease">
-      <Private>True</Private>
-      <HintPath>..\packages\WebGrease.1.6.0\lib\WebGrease.dll</HintPath>
-    </Reference>
-    <Reference Include="Antlr3.Runtime">
-      <Private>True</Private>
-      <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
-    </Reference>
+    <PackageReference Include="bootstrap" Version="5.2.3" />
+    <PackageReference Include="EntityFramework" Version="6.5.1" />
+    <PackageReference Include="jQuery" Version="3.7.0" />
+    <PackageReference Include="jQuery.Validation" Version="1.19.5" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.jQuery.Unobtrusive.Validation" Version="3.2.11" />
+    <PackageReference Include="Modernizr" Version="2.8.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="WebGrease" Version="1.6.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters" Version="2.2.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SystemWebAdapters.CoreServices" Version="2.2.1" />
+    <PackageReference Include="Antlr4" Version="4.6.6" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.1" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
-      <HintPath>..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\lib\net45\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="App_Start\BundleConfig.cs" />
-    <Compile Include="App_Start\FilterConfig.cs" />
-    <Compile Include="App_Start\RouteConfig.cs" />
-    <Compile Include="Controllers\AccountController.cs" />
-    <Compile Include="Controllers\BaseController.cs" />
-    <Compile Include="Controllers\CartController.cs" />
-    <Compile Include="Controllers\CashierController.cs" />
-    <Compile Include="Controllers\CheckoutController.cs" />
-    <Compile Include="Controllers\CustomerAccountController.cs" />
-    <Compile Include="Controllers\DeliveryController.cs" />
-    <Compile Include="Controllers\EmailController.cs" />
-    <Compile Include="Controllers\HomeController.cs" />
-    <Compile Include="Controllers\HRController.cs" />
-    <Compile Include="Controllers\KitchenController.cs" />
-    <Compile Include="Controllers\ManagementController.cs" />
-    <Compile Include="Controllers\PaymentController.cs" />
-    <Compile Include="Controllers\PromotionController.cs" />
-    <Compile Include="Controllers\PublicController.cs" />
-    <Compile Include="Controllers\QROrderController.cs" />
-    <Compile Include="Controllers\ReportsManagementController.cs" />
-    <Compile Include="Controllers\ReportsManagementController.DetailedShiftReport.cs" />
-    <Compile Include="Controllers\ReservationController.cs" />
-    <Compile Include="Controllers\ReturnManagementController.cs" />
-    <Compile Include="Controllers\SettingsController.cs" />
-    <Compile Include="Controllers\ShipperAppController.cs" />
-    <Compile Include="Filters\CustomAuthorizeAttribute.cs" />
-    <Compile Include="Global.asax.cs">
+    <Compile Update="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Helpers\AuthorizationHelper.cs" />
-    <Compile Include="Helpers\SettingsHelper.cs" />
-    <Compile Include="Helpers\StatusTextHelper.cs" />
-    <Compile Include="Models\Account.cs">
+    <Compile Update="Models\Account.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\AdvancedReportsModels.cs" />
-    <Compile Include="Models\AppSetting.cs">
+    <Compile Update="Models\AppSetting.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\Attendance.cs">
+    <Compile Update="Models\Attendance.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\Bill.cs">
+    <Compile Update="Models\Bill.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\Booking.cs">
+    <Compile Update="Models\Booking.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\BookingViewModel.cs" />
-    <Compile Include="Models\Cart.cs">
+    <Compile Update="Models\Cart.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\CartItem.cs">
+    <Compile Update="Models\CartItem.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\CashierDashboardViewModel.cs" />
-    <Compile Include="Models\CashierShift.cs">
+    <Compile Update="Models\CashierShift.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\ChatbotModels.cs" />
-    <Compile Include="Models\Customer.cs">
+    <Compile Update="Models\Customer.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\CustomerAddress.cs">
+    <Compile Update="Models\CustomerAddress.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\CustomerNotification.cs">
+    <Compile Update="Models\CustomerNotification.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\CustomerOrder.cs">
+    <Compile Update="Models\CustomerOrder.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\CustomerOrderDetail.cs">
+    <Compile Update="Models\CustomerOrderDetail.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\CustomerViewModels.cs" />
-    <Compile Include="Models\DamagedStock.cs">
+    <Compile Update="Models\DamagedStock.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\DeliveryAssignment.cs">
+    <Compile Update="Models\DeliveryAssignment.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\DeliveryModels.cs" />
-    <Compile Include="Models\DeliverySettings.cs">
+    <Compile Update="Models\DeliverySettings.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\DeliveryZone.cs">
+    <Compile Update="Models\DeliveryZone.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\DishProfitViewModels.cs" />
-    <Compile Include="Models\EmailConfig.cs">
+    <Compile Update="Models\EmailConfig.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\EmailLog.cs">
+    <Compile Update="Models\EmailLog.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\EmailTemplate.cs">
+    <Compile Update="Models\EmailTemplate.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\EmailViewModels.cs" />
-    <Compile Include="Models\Employee.cs">
+    <Compile Update="Models\Employee.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\EmployeeContract.cs">
+    <Compile Update="Models\EmployeeContract.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\EmployeeSchedule.cs">
+    <Compile Update="Models\EmployeeSchedule.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\HRModels.cs" />
-    <Compile Include="Models\Ingredient.cs">
+    <Compile Update="Models\Ingredient.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\IngredientHistoryViewModel.cs" />
-    <Compile Include="Models\IngredientWithLatestSupplierViewModel.cs" />
-    <Compile Include="Models\KitchenOrderItem.cs">
+    <Compile Update="Models\KitchenOrderItem.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\KitchenOrderTicket.cs">
+    <Compile Update="Models\KitchenOrderTicket.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\KitchenStation.cs">
+    <Compile Update="Models\KitchenStation.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\KitchenViewModels.cs" />
-    <Compile Include="Models\LeaveRequest.cs">
+    <Compile Update="Models\LeaveRequest.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\ManagementDashboardViewModel.cs" />
-    <Compile Include="Models\MenuCombo.cs">
+    <Compile Update="Models\MenuCombo.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\MenuComboItem.cs">
+    <Compile Update="Models\MenuComboItem.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\MenuItem.cs">
+    <Compile Update="Models\MenuItem.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\MenuItemDetailViewModel.cs" />
-    <Compile Include="Models\MenuItemIngredient.cs">
+    <Compile Update="Models\MenuItemIngredient.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\MenuManagementModels.cs" />
-    <Compile Include="Models\MenuModels.cs" />
-    <Compile Include="Models\NhaHangLDP.Context.cs">
+    <Compile Update="Models\NhaHangLDP.Context.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>NhaHangLDP.Context.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\NhaHangLDP.cs">
+    <Compile Update="Models\NhaHangLDP.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\NhaHangLDP.Designer.cs">
+    <Compile Update="Models\NhaHangLDP.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>NhaHangLDP.edmx</DependentUpon>
     </Compile>
-    <Compile Include="Models\Notification.cs">
+    <Compile Update="Models\Notification.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\Order.cs">
+    <Compile Update="Models\Order.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\OrderDetail.cs">
+    <Compile Update="Models\OrderDetail.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\PaymentModels.cs" />
-    <Compile Include="Models\Payroll.cs">
+    <Compile Update="Models\Payroll.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\PerformanceReview.cs">
+    <Compile Update="Models\PerformanceReview.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\PriceHistory.cs">
+    <Compile Update="Models\PriceHistory.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\PriceUpdateViewModel.cs" />
-    <Compile Include="Models\Promotion.cs">
+    <Compile Update="Models\Promotion.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\PromotionUsage.cs">
+    <Compile Update="Models\PromotionUsage.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\PromotionViewModels.cs" />
-    <Compile Include="Models\QROrder.cs">
+    <Compile Update="Models\QROrder.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\QROrderDetail.cs">
+    <Compile Update="Models\QROrderDetail.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\QROrderViewModels.cs" />
-    <Compile Include="Models\ReportsModels.cs" />
-    <Compile Include="Models\Reservation.cs">
+    <Compile Update="Models\Reservation.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\RestaurantTable.cs">
+    <Compile Update="Models\RestaurantTable.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\ReturnBill.cs">
+    <Compile Update="Models\ReturnBill.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\ReturnBillDetail.cs">
+    <Compile Update="Models\ReturnBillDetail.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\ReturnManagementModels.cs" />
-    <Compile Include="Models\Review.cs">
+    <Compile Update="Models\Review.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\Role.cs">
+    <Compile Update="Models\Role.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\SettingsModels.cs" />
-    <Compile Include="Models\ShiftDetailsViewModel.cs" />
-    <Compile Include="Models\ShiftRevenueReportViewModel.cs" />
-    <Compile Include="Models\ShiftSupportStaff.cs">
+    <Compile Update="Models\ShiftSupportStaff.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\Shipper.cs">
+    <Compile Update="Models\Shipper.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\ShipperViewModels.cs" />
-    <Compile Include="Models\StockInbound.cs">
+    <Compile Update="Models\StockInbound.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\StockInboundDetail.cs">
+    <Compile Update="Models\StockInboundDetail.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\StockOutboundModels.cs" />
-    <Compile Include="Models\Supplier.cs">
+    <Compile Update="Models\Supplier.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\TableArea.cs">
+    <Compile Update="Models\TableArea.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\TableAreaViewModel.cs" />
-    <Compile Include="Models\TableSession.cs">
+    <Compile Update="Models\TableSession.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\Voucher.cs">
+    <Compile Update="Models\Voucher.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\VoucherUsage.cs">
+    <Compile Update="Models\VoucherUsage.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\Wishlist.cs">
+    <Compile Update="Models\Wishlist.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Models\WorkShift.cs">
+    <Compile Update="Models\WorkShift.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\AdvancedAnalyticsService.cs" />
-    <Compile Include="Services\AIChatbotService.cs" />
-    <Compile Include="Services\DashboardService.cs" />
-    <Compile Include="Services\DeliveryService.cs" />
-    <Compile Include="Services\EmailService.cs" />
-    <Compile Include="Services\EmployeeManagementService.cs" />
-    <Compile Include="Services\HR\HRManagementService.cs" />
-    <Compile Include="Services\InvoiceService.cs" />
-    <Compile Include="Services\Management\EmployeeAdminService.cs" />
-    <Compile Include="Services\Management\InventoryService.cs" />
-    <Compile Include="Services\Management\ManagementDashboardDataService.cs" />
-    <Compile Include="Services\Management\MenuAdminService.cs" />
-    <Compile Include="Services\Management\TableAdminService.cs" />
-    <Compile Include="Services\MenuService.cs" />
-    <Compile Include="Services\OrderManagementService.cs" />
-    <Compile Include="Services\OrderQueryService.cs" />
-    <Compile Include="Services\PaymentService.cs" />
-    <Compile Include="Services\ReportService.cs" />
-    <Compile Include="Services\Reports\BookingAnalyticsService.cs" />
-    <Compile Include="Services\Reports\DashboardReportService.cs" />
-    <Compile Include="Services\Reports\DateRangeHelper.cs" />
-    <Compile Include="Services\Reports\DetailedShiftReportService.cs" />
-    <Compile Include="Services\Reports\DishProfitAnalysisService.cs" />
-    <Compile Include="Services\Reports\RevenueAnalyticsService.cs" />
-    <Compile Include="Services\Reports\SalesAnalyticsService.cs" />
-    <Compile Include="Services\Reports\ShiftManagementService.cs" />
-    <Compile Include="Services\RequestHandlerService.cs" />
-    <Compile Include="Services\ShiftManagementService.cs" />
-    <Compile Include="Services\TableManagementService.cs" />
-    <Compile Include="Services\TableOperationService.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\bootstrap-grid.css" />
-    <Content Include="Content\bootstrap-grid.min.css" />
-    <Content Include="Content\bootstrap-grid.rtl.css" />
-    <Content Include="Content\bootstrap-grid.rtl.min.css" />
-    <Content Include="Content\bootstrap-reboot.css" />
-    <Content Include="Content\bootstrap-reboot.min.css" />
-    <Content Include="Content\bootstrap-reboot.rtl.css" />
-    <Content Include="Content\bootstrap-reboot.rtl.min.css" />
-    <Content Include="Content\bootstrap-utilities.css" />
-    <Content Include="Content\bootstrap-utilities.min.css" />
-    <Content Include="Content\bootstrap-utilities.rtl.css" />
-    <Content Include="Content\bootstrap-utilities.rtl.min.css" />
-    <Content Include="Content\bootstrap.css" />
-    <Content Include="Content\bootstrap.min.css" />
-    <Content Include="Content\bootstrap.rtl.css" />
-    <Content Include="Content\bootstrap.rtl.min.css" />
-    <Content Include="Content\chatbot.css" />
-    <Content Include="Content\detailed-shift-enhanced.css" />
-    <Content Include="Content\revenue-analytics.css" />
-    <Content Include="favicon.ico" />
-    <Content Include="Global.asax" />
-    <Content Include="Content\Site.css" />
-    <Content Include="images\menu\default-food.jpg" />
-    <Content Include="images\logo.jpg" />
-    <Content Include="images\menu\bachitheothailat.jpg" />
-    <Content Include="images\menu\banhpho.png" />
-    <Content Include="images\menu\biasaigon.jpg" />
-    <Content Include="images\menu\biatiger.jpg" />
-    <Content Include="images\menu\bomythailat.jpeg" />
-    <Content Include="images\menu\boucthailat.jpg" />
-    <Content Include="images\menu\buntuoi.jpg" />
-    <Content Include="images\menu\cabasathailat.jpg" />
-    <Content Include="images\menu\caithaotrang.jpg" />
-    <Content Include="images\menu\chacathanglong.jpg" />
-    <Content Include="images\menu\comtrang.jpg" />
-    <Content Include="images\menu\cuabientuoi.jpg" />
-    <Content Include="images\menu\dauhunon.jpg" />
-    <Content Include="images\menu\GaRan.jpg" />
-    <Content Include="images\menu\Khoaitaychien.jpg" />
-    <Content Include="images\menu\laithaichuacay.jpg" />
-    <Content Include="images\menu\laucakeo.jpg" />
-    <Content Include="images\menu\lauhaisan.jpg" />
-    <Content Include="images\menu\laukimchi.jpg" />
-    <Content Include="images\menu\launamchay.jpg" />
-    <Content Include="images\menu\lautuxuyen.jpg" />
-    <Content Include="images\menu\miendong.jpg" />
-    <Content Include="images\menu\mitrung.jpg" />
-    <Content Include="images\menu\mucongtuoi.jpg" />
-    <Content Include="images\menu\ngheusong.jpg" />
-    <Content Include="images\menu\nuocepcam.jpg" />
-    <Content Include="images\menu\ochuongluoc.jpg" />
-    <Content Include="images\menu\raucantay.jpg" />
-    <Content Include="images\menu\raumuongnhat.png" />
-    <Content Include="images\menu\thitcuuthailat.jpg" />
-    <Content Include="images\menu\thitgathailat.jpg" />
-    <Content Include="images\menu\tomsutuoi.jpg" />
-    <Content Include="images\menu\trada.png" />
-    <Content Include="images\menu\Trasua.jpg" />
-    <Content Include="images\menu\trasuathai.jpg" />
-    <Content Include="images\ảnh nhà hàng.jpg" />
     <Content Include="Models\NhaHangLDP.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <DependentUpon>NhaHangLDP.edmx</DependentUpon>
@@ -481,270 +233,12 @@
       <DependentUpon>NhaHangLDP.edmx</DependentUpon>
       <LastGenOutput>NhaHangLDP.cs</LastGenOutput>
     </Content>
-    <Content Include="Scripts\bootstrap.bundle.js" />
-    <Content Include="Scripts\bootstrap.bundle.min.js" />
-    <Content Include="Scripts\bootstrap.esm.js" />
-    <Content Include="Scripts\bootstrap.esm.min.js" />
-    <Content Include="Scripts\bootstrap.js" />
-    <Content Include="Scripts\bootstrap.min.js" />
     <EntityDeploy Include="Models\NhaHangLDP.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
       <LastGenOutput>NhaHangLDP.Designer.cs</LastGenOutput>
     </EntityDeploy>
-    <Content Include="Models\NhaHangLDP.edmx.diagram">
-      <DependentUpon>NhaHangLDP.edmx</DependentUpon>
-    </Content>
-    <None Include="Scripts\jquery-3.7.0.intellisense.js" />
-    <Content Include="Scripts\chatbot.js" />
-    <Content Include="Scripts\jquery-3.7.0.js" />
-    <Content Include="Scripts\jquery-3.7.0.min.js" />
-    <Content Include="Scripts\jquery-3.7.0.slim.js" />
-    <Content Include="Scripts\jquery-3.7.0.slim.min.js" />
-    <None Include="Scripts\jquery.validate-vsdoc.js" />
-    <Content Include="Scripts\jquery.validate.js" />
-    <Content Include="Scripts\jquery.validate.min.js" />
-    <Content Include="Scripts\jquery.validate.unobtrusive.js" />
-    <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
-    <Content Include="Scripts\modernizr-2.8.3.js" />
-    <Content Include="Scripts\sweetalert-helpers.js" />
-    <Content Include="Web.config" />
-    <Content Include="Web.Debug.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
-    <Content Include="Web.Release.config">
-      <DependentUpon>Web.config</DependentUpon>
-    </Content>
-    <Content Include="Views\Web.config" />
-    <Content Include="Views\_ViewStart.cshtml" />
-    <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\Home\Index.cshtml" />
-    <Content Include="Views\Account\Login.cshtml" />
-    <Content Include="Views\Account\Register.cshtml" />
-    <Content Include="Views\Shared\_CashierLayout.cshtml" />
-    <Content Include="Views\Cashier\Dashboard.cshtml" />
-    <Content Include="Views\Shared\_ManagementLayout.cshtml" />
-    <Content Include="Views\Management\Dashboard.cshtml" />
-    <Content Include="Views\Cashier\OpenShift.cshtml" />
-    <Content Include="Views\Cashier\Orders.cshtml" />
-    <Content Include="Views\Cashier\TableArea.cshtml" />
-    <Content Include="Views\Cashier\SalesPoint.cshtml" />
-    <Content Include="Views\Cashier\Menu.cshtml" />
-    <Content Include="Views\Reports\dashboard.cshtml" />
-    <Content Include="Views\Reports\Revenue.cshtml" />
-    <Content Include="Views\Reports\DishRanking.cshtml" />
-    <Content Include="Views\Reports\ProfitByDish.cshtml" />
-    <Content Include="Views\Reports\BookingStats.cshtml" />
-    <Content Include="Views\Reports\SalesPerformance.cshtml" />
-    <Content Include="Views\Reports\BillDetails.cshtml" />
-    <Content Include="Views\Management\Inventory.cshtml" />
-    <Content Include="Views\Management\IngredientList.cshtml" />
-    <Content Include="Views\Management\CreateIngredient.cshtml" />
-    <Content Include="Views\Management\MenuManagement.cshtml" />
-    <Content Include="Views\Management\CreateMenuItem.cshtml" />
-    <Content Include="Views\Management\UpdatePrice.cshtml" />
-    <Content Include="Views\Management\StockInbound.cshtml" />
-    <Content Include="Views\Management\StockOutbound.cshtml" />
-    <Content Include="Views\Management\DamagedStock.cshtml" />
-    <Content Include="Views\Management\InventoryReport.cshtml" />
-    <Content Include="Views\ReportsManagement\Dashboard.cshtml" />
-    <Content Include="Views\ReportsManagement\BookingAnalytics.cshtml" />
-    <Content Include="Views\ReportsManagement\RevenueAnalytics.cshtml" />
-    <Content Include="Views\ReportsManagement\DishProfitAnalysis.cshtml" />
-    <Content Include="Views\Cashier\PrintInvoice.cshtml" />
-    <Content Include="Views\Cashier\ShiftDetails.cshtml" />
-    <Content Include="Views\Cashier\PrintShiftRevenueReport.cshtml" />
-    <Content Include="Views\ReportsManagement\DetailedShiftReport.cshtml" />
-    <Content Include="Views\Management\TableManagement.cshtml" />
-    <Content Include="Views\Management\CreateTable.cshtml" />
-    <Content Include="Views\Management\EmployeeManagement.cshtml" />
-    <Content Include="Views\Management\DamagedStockList.cshtml" />
-    <Content Include="Views\ReturnManagement\Index.cshtml" />
-    <Content Include="Views\ReturnManagement\Create.cshtml" />
-    <Content Include="Views\ReturnManagement\Details.cshtml" />
-    <Content Include="Views\Settings\Index.cshtml" />
-    <Content Include="Views\Settings\System.cshtml" />
-    <Content Include="Views\Settings\Advanced.cshtml" />
-    <Content Include="Views\Settings\Debug.cshtml" />
-    <Content Include="Views\Shared\AccessDenied.cshtml" />
-    <Content Include="Views\Management\StockInboundList.cshtml" />
-    <Content Include="Views\Management\StockOutboundList.cshtml" />
-    <Content Include="Views\Management\EditIngredient.cshtml" />
-    <Content Include="Views\Management\IngredientHistory.cshtml" />
-    <Content Include="Views\ReportsManagement\LiveShiftMonitor.cshtml" />
-    <Content Include="Views\ReportsManagement\Debug.cshtml" />
-    <Content Include="Views\ReportsManagement\DebugDishProfit.cshtml" />
-    <Content Include="Views\Shared\_PublicLayout.cshtml" />
-    <Content Include="Views\Public\Detail.cshtml" />
-    <Content Include="Views\Public\Menu.cshtml" />
-    <Content Include="Views\Management\CreateCombo.cshtml" />
-    <Content Include="Views\Management\EditCombo.cshtml" />
-    <Content Include="Views\Management\EditTable.cshtml" />
-    <Content Include="Views\Management\CreateEmployee.cshtml" />
-    <Content Include="Views\Management\EditEmployee.cshtml" />
-    <Content Include="Views\Cashier\PrintBill.cshtml" />
-    <Content Include="Views\ReportsManagement\SalesPerformance.cshtml" />
-    <Content Include="Views\ReportsManagement\SalesAnalytics.cshtml" />
-    <Content Include="Views\Management\StockInboundDetail.cshtml" />
-    <Content Include="Views\Management\StockOutboundDetail.cshtml" />
-    <Content Include="Views\Promotion\Index.cshtml" />
-    <Content Include="Views\Promotion\Create.cshtml" />
-    <Content Include="Views\Kitchen\Display.cshtml" />
-    <Content Include="Views\Kitchen\_TicketCard.cshtml" />
-    <Content Include="Views\QROrder\Menu.cshtml" />
-    <Content Include="Views\Email\Settings.cshtml" />
-    <Content Include="Views\QROrder\Cart.cshtml" />
-    <Content Include="Views\QROrder\PendingOrders.cshtml" />
-    <Content Include="Views\Promotion\UsageReport.cshtml" />
-    <Content Include="Views\QROrder\TrackOrder.cshtml" />
-    <Content Include="Views\QROrder\GenerateQR.cshtml" />
-    <Content Include="Views\Kitchen\Dashboard.cshtml" />
-    <Content Include="Views\Kitchen\FullScreen.cshtml" />
-    <Content Include="Views\Kitchen\Stations.cshtml" />
-    <Content Include="Views\Email\Templates.cshtml" />
-    <Content Include="Views\Email\CreateTemplate.cshtml" />
-    <Content Include="Views\Email\Logs.cshtml" />
-    <Content Include="Views\Email\LogDetail.cshtml" />
-    <Content Include="Views\QROrder\Error.cshtml" />
-    <Content Include="Views\ReportsManagement\AdvancedDashboard.cshtml" />
-    <Content Include="Views\ReportsManagement\MenuEngineering.cshtml" />
-    <Content Include="Views\ReportsManagement\KPITracking.cshtml" />
-    <Content Include="Views\ReportsManagement\PredictiveAnalytics.cshtml" />
-    <Content Include="Views\HR\Dashboard.cshtml" />
-    <Content Include="Views\HR\Attendance.cshtml" />
-    <Content Include="Views\HR\Payroll.cshtml" />
-    <Content Include="Views\HR\AttendanceReport.cshtml" />
-    <Content Include="Views\HR\LeaveManagement.cshtml" />
-    <Content Include="Views\HR\PerformanceReview.cshtml" />
-    <Content Include="Views\HR\CreatePerformanceReview.cshtml" />
-    <Content Include="Views\HR\CreateLeaveRequest.cshtml" />
-    <Content Include="Views\HR\Contracts.cshtml" />
-    <Content Include="Views\HR\CreateContract.cshtml" />
-    <Content Include="Views\HR\Schedule.cshtml" />
-    <Content Include="Views\HR\WorkShifts.cshtml" />
-    <Content Include="Views\HR\CreateWorkShift.cshtml" />
-    <Content Include="Views\HR\EmployeeStats.cshtml" />
-    <Content Include="Views\HR\PayrollDetail.cshtml" />
-    <Content Include="Views\Cart\Index.cshtml" />
-    <Content Include="Views\Checkout\Index.cshtml" />
-    <Content Include="Views\Checkout\Confirmation.cshtml" />
-    <Content Include="Views\Reservation\Index.cshtml" />
-    <Content Include="Views\Reservation\Confirmation.cshtml" />
-    <Content Include="Views\CustomerAccount\Login.cshtml" />
-    <Content Include="Views\CustomerAccount\Register.cshtml" />
-    <Content Include="Views\CustomerAccount\Profile.cshtml" />
-    <Content Include="Views\CustomerAccount\Orders.cshtml" />
-    <Content Include="Views\Checkout\TrackOrder.cshtml" />
-    <Content Include="Views\Cart\_MiniCart.cshtml" />
-    <Content Include="Views\Checkout\TrackOrderSearch.cshtml" />
-    <Content Include="Views\CustomerAccount\Wishlist.cshtml" />
-    <Content Include="Views\CustomerAccount\ForgotPassword.cshtml" />
-    <Content Include="Views\Payment\Process.cshtml" />
-    <Content Include="Views\Payment\Bills.cshtml" />
-    <Content Include="Views\Payment\PrintInvoice.cshtml" />
-    <Content Include="Views\Payment\Refund.cshtml" />
-    <Content Include="Views\Payment\DailySummary.cshtml" />
-    <Content Include="Views\Payment\SplitBill.cshtml" />
-    <Content Include="Views\Payment\BillDetail.cshtml" />
-    <Content Include="Views\Delivery\Index.cshtml" />
-    <Content Include="Views\Delivery\Orders.cshtml" />
-    <Content Include="Views\Delivery\Shippers.cshtml" />
-    <Content Include="Views\Delivery\CreateShipper.cshtml" />
-    <Content Include="Views\Delivery\EditShipper.cshtml" />
-    <Content Include="Views\Delivery\OrderDetail.cshtml" />
-    <Content Include="Views\Delivery\Tracking.cshtml" />
-    <Content Include="Views\Delivery\Zones.cshtml" />
-    <Content Include="Views\Delivery\Statistics.cshtml" />
-    <Content Include="Views\ShipperApp\Login.cshtml" />
-    <Content Include="Views\ShipperApp\Dashboard.cshtml" />
-    <Content Include="Views\ShipperApp\NewOrders.cshtml" />
-    <Content Include="Views\ShipperApp\History.cshtml" />
-    <Content Include="Views\ShipperApp\Earnings.cshtml" />
-    <Content Include="Views\ShipperApp\Profile.cshtml" />
-    <Content Include="Views\ShipperApp\OrderDetail.cshtml" />
-    <Content Include="Views\ShipperApp\Index.cshtml" />
-    <Content Include="Views\Cashier\OnlineOrders.cshtml" />
-    <Content Include="Views\Management\OnlineOrders.cshtml" />
-    <Content Include="Views\CustomerAccount\MyReservations.cshtml" />
-    <Content Include="Views\Cashier\Reservations.cshtml" />
-    <Content Include="Views\Management\SupplierList.cshtml" />
-    <Content Include="Views\Management\CreateSupplier.cshtml" />
-    <Content Include="Views\Management\EditSupplier.cshtml" />
-    <Content Include="Views\Management\ExpiringItems.cshtml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="App_Data\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Content\bootstrap.rtl.min.css.map" />
-    <Content Include="Content\bootstrap.rtl.css.map" />
-    <Content Include="Content\bootstrap.min.css.map" />
-    <Content Include="Content\bootstrap.css.map" />
-    <Content Include="Content\bootstrap-utilities.rtl.min.css.map" />
-    <Content Include="Content\bootstrap-utilities.rtl.css.map" />
-    <Content Include="Content\bootstrap-utilities.min.css.map" />
-    <Content Include="Content\bootstrap-utilities.css.map" />
-    <Content Include="Content\bootstrap-reboot.rtl.min.css.map" />
-    <Content Include="Content\bootstrap-reboot.rtl.css.map" />
-    <Content Include="Content\bootstrap-reboot.min.css.map" />
-    <Content Include="Content\bootstrap-reboot.css.map" />
-    <Content Include="Content\bootstrap-grid.rtl.min.css.map" />
-    <Content Include="Content\bootstrap-grid.rtl.css.map" />
-    <Content Include="Content\bootstrap-grid.min.css.map" />
-    <Content Include="Content\bootstrap-grid.css.map" />
-    <None Include="packages.config" />
-    <Content Include="Scripts\bootstrap.min.js.map" />
-    <Content Include="Scripts\bootstrap.js.map" />
-    <Content Include="Scripts\bootstrap.esm.min.js.map" />
-    <Content Include="Scripts\bootstrap.esm.js.map" />
-    <Content Include="Scripts\bootstrap.bundle.min.js.map" />
-    <Content Include="Scripts\bootstrap.bundle.js.map" />
-    <Content Include="Scripts\jquery-3.7.0.slim.min.map" />
-    <Content Include="Scripts\jquery-3.7.0.min.map" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
-  <PropertyGroup>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-  </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
-  <Target Name="MvcBuildViews" AfterTargets="AfterBuild" Condition="'$(MvcBuildViews)'=='true'">
-    <AspNetCompiler VirtualPath="temp" PhysicalPath="$(WebProjectOutputDir)" />
-  </Target>
-  <ProjectExtensions>
-    <VisualStudio>
-      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
-        <WebProjectProperties>
-          <UseIIS>True</UseIIS>
-          <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>50357</DevelopmentServerPort>
-          <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>https://localhost:44307/</IISUrl>
-          <NTLMAuthentication>False</NTLMAuthentication>
-          <UseCustomServer>False</UseCustomServer>
-          <CustomServerUrl>
-          </CustomServerUrl>
-          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
-        </WebProjectProperties>
-      </FlavorProperties>
-    </VisualStudio>
-  </ProjectExtensions>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.1\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
-    <Error Condition="!Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.4\build\EntityFramework.props'))" />
-    <Error Condition="!Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.4\build\EntityFramework.targets'))" />
-  </Target>
-  <Import Project="..\packages\EntityFramework.6.4.4\build\EntityFramework.targets" Condition="Exists('..\packages\EntityFramework.6.4.4\build\EntityFramework.targets')" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target> -->
 </Project>

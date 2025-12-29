@@ -1,5 +1,5 @@
 using System.Web;
-using System.Web.Mvc;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Helpers
 {
@@ -14,7 +14,7 @@ namespace NhaHangLDP.Helpers
             return role == "admin" || role == "manager";
         }
 
-        public static ActionResult RedirectToLoginIfUnauthorized(HttpSessionStateBase session, UrlHelper url)
+        public static ActionResult RedirectToLoginIfUnauthorized(HttpSessionStateBase session, IUrlHelper url)
         {
             if (!IsAdminOrManager(session))
             {

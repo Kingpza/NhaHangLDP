@@ -5,8 +5,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-using System.Web.Mvc;
 using System.Web.Security;
+using Microsoft.AspNetCore.Mvc;
 
 namespace NhaHangLDP.Controllers
 {
@@ -81,6 +81,7 @@ namespace NhaHangLDP.Controllers
                 // Set auth cookie if remember me
                 if (model.RememberMe)
                 {
+                    // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
                     FormsAuthentication.SetAuthCookie(customer.Email, true);
                 }
 
@@ -199,6 +200,7 @@ namespace NhaHangLDP.Controllers
         public ActionResult Logout()
         {
             Session.Clear();
+            // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
             FormsAuthentication.SignOut();
             return RedirectToAction("Menu", "Public");
         }
@@ -732,6 +734,7 @@ public JsonResult DeleteAccount()
 
         // Clear session
         Session.Clear();
+        // TODO ASP.NET membership should be replaced with ASP.NET Core identity. For more details see https://docs.microsoft.com/aspnet/core/migration/proper-to-2x/membership-to-core-identity.
         FormsAuthentication.SignOut();
 
         return Json(new { success = true, message = "Tài khoản đã bị xóa!" });
