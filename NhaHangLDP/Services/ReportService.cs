@@ -18,8 +18,8 @@ namespace NhaHangLDP.Services
         public ShiftRevenueReportViewModel GenerateShiftReport(int shiftId)
         {
             var shift = db.CashierShifts
-                .Include(s => s.Cashier)
-                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Cashier)
+                .Include(s => s.Employee)
+                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Employee)
                 .FirstOrDefault(s => s.Id == shiftId);
 
             if (shift == null)

@@ -116,7 +116,7 @@ namespace NhaHangLDP.Services
             summary.RevPASH = totalSeats > 0 && hoursOpen > 0 ? summary.TotalRevenue / (totalSeats * (decimal)hoursOpen) : 0;
 
             // Customer counts
-            summary.TotalCustomers = _db.Booking
+            summary.TotalCustomers = _db.Bookings
                 .Where(b => b.BookingDateTime >= start && b.BookingDateTime < end)
                 .Select(b => b.CustomerPhone)
                 .Distinct()
@@ -354,7 +354,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public List<TopPerformer> GetTopCashiers(DateTime start, DateTime end, int limit = 5)
         {
-            var shifts = _db.CashierShift
+            var shifts = _db.CashierShifts
                 .Include(s => s.Cashier)
                 .Where(s => s.StartTime >= start && s.StartTime < end)
                 .ToList();
@@ -709,7 +709,7 @@ namespace NhaHangLDP.Services
             var today = DateTime.Today;
 
             // 1. Low stock alerts - use AvailableStock and LowStockThreshold
-            var lowStockItems = _db.Ingredient
+            var lowStockItems = _db.Ingredients
                 .Where(i => i.LowStockThreshold.HasValue && i.AvailableStock <= i.LowStockThreshold.Value)
                 .ToList();
 
@@ -748,7 +748,7 @@ namespace NhaHangLDP.Services
             }
 
             // 3. Pending bookings
-            var pendingBookings = _db.Booking
+            var pendingBookings = _db.Bookings
                 .Count(b => b.Status == "Pending" && b.BookingDateTime >= today);
 
             if (pendingBookings > 0)

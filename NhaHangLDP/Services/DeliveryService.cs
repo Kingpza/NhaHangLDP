@@ -386,8 +386,8 @@ namespace NhaHangLDP.Services
 
                     case "PickedUp":
                         assignment.PickupTime = DateTime.Now;
-                        assignment.Order.Status = "Delivering";
-                        assignment.Order.DeliveringDate = DateTime.Now;
+                        assignment.Orders.Status = "Delivering";
+                        assignment.Orders.DeliveringDate = DateTime.Now;
                         break;
 
                     case "Delivering":
@@ -397,8 +397,8 @@ namespace NhaHangLDP.Services
                     case "Delivered":
                         assignment.DeliveryTime = DateTime.Now;
                         assignment.ProofImageUrl = proofImage;
-                        assignment.Order.Status = "Completed";
-                        assignment.Order.CompletedDate = DateTime.Now;
+                        assignment.Orders.Status = "Completed";
+                        assignment.Orders.CompletedDate = DateTime.Now;
                         
                         // Cập nhật shipper
                         assignment.Shipper.Status = "Available";
@@ -406,17 +406,17 @@ namespace NhaHangLDP.Services
                         assignment.Shipper.TotalEarnings += assignment.ShipperEarning;
 
                         // Cập nhật payment nếu COD
-                        if (assignment.Order.PaymentMethod == "COD")
+                        if (assignment.Orders.PaymentMethod == "COD")
                         {
-                            assignment.Order.PaymentStatus = "Paid";
-                            assignment.Order.PaidDate = DateTime.Now;
+                            assignment.Orders.PaymentStatus = "Paid";
+                            assignment.Orders.PaidDate = DateTime.Now;
                         }
                         break;
 
                     case "Failed":
                         assignment.FailureReason = failureReason;
                         assignment.Shipper.Status = "Available";
-                        assignment.Order.Status = "Ready"; // Quay về trạng thái sẵn sàng để giao lại
+                        assignment.Orders.Status = "Ready"; // Quay về trạng thái sẵn sàng để giao lại
                         break;
 
                     case "Cancelled":

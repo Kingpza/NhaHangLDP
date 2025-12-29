@@ -30,7 +30,7 @@ namespace NhaHangLDP.Controllers
                 var returnBills = db.ReturnBills
                     .Include(r => r.OriginalBill)
                     .Include(r => r.Employee)
-                    .Include(r => r.ReturnBillDetail)
+                    .Include(r => r.ReturnBillDetails)
                     .OrderByDescending(r => r.ReturnDate)
                     .ToList();
 
@@ -184,7 +184,7 @@ namespace NhaHangLDP.Controllers
             try
             {
                 // Kiểm tra hóa đơn có tồn tại và đã được thanh toán
-                var originalBill = db.OriginalBill
+                var originalBill = db.Bills
                     .FirstOrDefault(b => b.Id == model.BillID && b.Status == "Paid");
 
                 if (originalBill == null)
@@ -277,7 +277,7 @@ namespace NhaHangLDP.Controllers
                 var returnBill = db.ReturnBills
                     .Include(r => r.OriginalBill)
                     .Include(r => r.Employee)
-                    .Include(r => r.ReturnBillDetail).ThenInclude(rd => rd.MenuItem)
+                    .Include(r => r.ReturnBillDetails).ThenInclude(rd => rd.MenuItem)
                     .FirstOrDefault(r => r.ReturnBillID == id);
 
                 if (returnBill == null)

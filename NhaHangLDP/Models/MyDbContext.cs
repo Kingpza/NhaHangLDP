@@ -1527,7 +1527,7 @@ public partial class MyDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_StockInboundDetail_Ingredient");
 
-            entity.HasOne(d => d.StockInbounds).WithMany(p => p.StockInboundDetails)
+            entity.HasOne(d => d.StockInbound).WithMany(p => p.StockInboundDetails)
                 .HasForeignKey(d => d.StockInboundId)
                 .HasConstraintName("FK_StockInboundDetail_StockInbound");
         });

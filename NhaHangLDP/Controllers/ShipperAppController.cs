@@ -164,20 +164,20 @@ namespace NhaHangLDP.Controllers
                 {
                     AssignmentId = activeAssignment.Id,
                     OrderId = activeAssignment.OrderId,
-                    OrderCode = activeAssignment.Order.OrderCode,
-                    CustomerName = activeAssignment.Order.CustomerName,
-                    CustomerPhone = activeAssignment.Order.CustomerPhone,
-                    DeliveryAddress = activeAssignment.Order.DeliveryAddress,
-                    District = activeAssignment.Order.District,
-                    Ward = activeAssignment.Order.Ward,
-                    TotalAmount = activeAssignment.Order.TotalAmount,
-                    PaymentMethod = activeAssignment.Order.PaymentMethod,
-                    PaymentStatus = activeAssignment.Order.PaymentStatus,
-                    Note = activeAssignment.Order.Note,
+                    OrderCode = activeAssignment.Orders.OrderCode,
+                    CustomerName = activeAssignment.Orders.CustomerName,
+                    CustomerPhone = activeAssignment.Orders.CustomerPhone,
+                    DeliveryAddress = activeAssignment.Orders.DeliveryAddress,
+                    District = activeAssignment.Orders.District,
+                    Ward = activeAssignment.Orders.Ward,
+                    TotalAmount = activeAssignment.Orders.TotalAmount,
+                    PaymentMethod = activeAssignment.Orders.PaymentMethod,
+                    PaymentStatus = activeAssignment.Orders.PaymentStatus,
+                    Note = activeAssignment.Orders.Note,
                     Status = activeAssignment.Status,
                     AssignedTime = activeAssignment.AssignedTime,
                     EstimatedArrival = activeAssignment.EstimatedArrival,
-                    Items = activeAssignment.Order.CustomerOrderDetails?.Select(d => new OrderItemSummary
+                    Items = activeAssignment.Orders.CustomerOrderDetails?.Select(d => new OrderItemSummary
                     {
                         ItemName = d.ItemName,
                         Quantity = d.Quantity,
@@ -258,8 +258,8 @@ namespace NhaHangLDP.Controllers
             var viewModel = new ShipperOrderDetailViewModel
             {
                 Assignment = assignment,
-                Order = assignment.Order,
-                OrderItems = assignment.Order.CustomerOrderDetails?.ToList() ?? new List<CustomerOrderDetail>()
+                Order = assignment.Orders,
+                OrderItems = assignment.Orders.CustomerOrderDetails?.ToList() ?? new List<CustomerOrderDetail>()
             };
 
             return View(viewModel);
@@ -493,7 +493,7 @@ namespace NhaHangLDP.Controllers
                 assignment.Shipper.Status = "Available";
                 
                 // Đưa đơn về trạng thái Ready để gán shipper khác
-                assignment.Order.Status = "Ready";
+                assignment.Orders.Status = "Ready";
                 
                 _db.SaveChanges();
 
@@ -636,7 +636,7 @@ namespace NhaHangLDP.Controllers
 
             if (assignment != null)
             {
-                return Redirect("tel:" + assignment.Order.CustomerPhone);
+                return Redirect("tel:" + assignment.Orders.CustomerPhone);
             }
 
             return RedirectToAction("Dashboard");
@@ -656,7 +656,7 @@ namespace NhaHangLDP.Controllers
 
             if (assignment != null)
             {
-                var address = Uri.EscapeDataString(assignment.Order.DeliveryAddress);
+                var address = Uri.EscapeDataString(assignment.Orders.DeliveryAddress);
                 return Redirect($"https://www.google.com/maps/search/?api=1&query={address}");
             }
 
@@ -759,12 +759,12 @@ namespace NhaHangLDP.Controllers
                     {
                         activeAssignment.Id,
                         activeAssignment.OrderId,
-                        OrderCode = activeAssignment.Order.OrderCode,
-                        CustomerName = activeAssignment.Order.CustomerName,
-                        CustomerPhone = activeAssignment.Order.CustomerPhone,
-                        DeliveryAddress = activeAssignment.Order.DeliveryAddress,
-                        TotalAmount = activeAssignment.Order.TotalAmount,
-                        PaymentMethod = activeAssignment.Order.PaymentMethod,
+                        OrderCode = activeAssignment.Orders.OrderCode,
+                        CustomerName = activeAssignment.Orders.CustomerName,
+                        CustomerPhone = activeAssignment.Orders.CustomerPhone,
+                        DeliveryAddress = activeAssignment.Orders.DeliveryAddress,
+                        TotalAmount = activeAssignment.Orders.TotalAmount,
+                        PaymentMethod = activeAssignment.Orders.PaymentMethod,
                         activeAssignment.Status,
                         activeAssignment.ShipperEarning
                     } : null,
