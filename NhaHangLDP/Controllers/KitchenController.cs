@@ -467,7 +467,7 @@ namespace NhaHangLDP.Controllers
                 var ticket = db.KitchenOrderTickets
                     .Include(t => t.KitchenOrderItems).ThenInclude(i => i.MenuItem)
                     .Include(t => t.Table)
-                    .Include(t => t.Employee)
+                    .Include(t => t.AssignedChef)
                     .FirstOrDefault(t => t.Id == ticketId);
 
                 if (ticket == null)
@@ -658,7 +658,7 @@ namespace NhaHangLDP.Controllers
             var query = db.KitchenOrderTickets
                 .Include(t => t.KitchenOrderItems).ThenInclude(i => i.MenuItem)
                 .Include(t => t.Table)
-                .Include(t => t.Employee)
+                .Include(t => t.AssignedChef)
                 .Where(t => t.Status != "Completed" && t.Status != "Cancelled");
 
             if (!string.IsNullOrEmpty(station))
@@ -700,7 +700,7 @@ namespace NhaHangLDP.Controllers
                 CompletedTime = ticket.CompletedTime,
                 EstimatedMinutes = ticket.EstimatedMinutes,
                 AssignedChefId = ticket.AssignedChefId,
-                AssignedChefName = ticket.Employee?.FullName,
+                AssignedChefName = ticket.AssignedChef?.FullName,
                 KitchenStation = ticket.KitchenStation,
                 IsPrinted = ticket.IsPrinted,
                 PrintCount = ticket.PrintCount,
@@ -768,7 +768,7 @@ namespace NhaHangLDP.Controllers
                 TotalCompletedToday = completedToday.Count,
                 OverdueTickets = db.KitchenOrderTickets.Count(t => 
                     (t.Status == "Pending" || t.Status == "Preparing") &&
-                    DbFunctions.DiffMinutes(t.StartedTime ?? t.CreatedTime, DateTime.Now) > t.EstimatedMinutes),
+                    EF.Functions.DateDiffMinute(t.StartedTime ?? t.CreatedTime, DateTime.Now) > t.EstimatedMinutes),
                 AveragePreparationTime = Math.Round(avgPrepTime, 1),
                 TotalItemsToday = db.KitchenOrderItems
                     .Count(i => i.KitchenOrderTicket.CreatedTime >= today && i.KitchenOrderTicket.CreatedTime < tomorrow)

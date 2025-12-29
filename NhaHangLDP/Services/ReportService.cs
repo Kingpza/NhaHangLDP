@@ -63,7 +63,7 @@ namespace NhaHangLDP.Services
                 .ToList();
 
             var supportNames = shift.ShiftSupportStaffs
-                                    .Select(ss => ss.ReportedByEmployee?.FullName)
+                                    .Select(ss => ss.Employee?.FullName)
                                     .ToList();
 
             var appSettings = db.AppSettings.ToList();
@@ -71,7 +71,7 @@ namespace NhaHangLDP.Services
             var viewModel = new ShiftRevenueReportViewModel
             {
                 ShiftId = shift.Id.ToString(),
-                CashierName = shift.ReportedByEmployee?.FullName,
+                CashierName = shift.Cashier?.FullName,
                 SupportStaffNames = supportNames,
                 ShiftStartTime = shift.StartTime,
                 ShiftEndTime = shift.EndTime ?? DateTime.Now,
@@ -118,7 +118,7 @@ namespace NhaHangLDP.Services
                 TableNumber = order.Table.TableNumber,
                 OrderTime = order.OrderTime,
                 BillDate = bill?.BillDate ?? DateTime.Now,
-                CashierName = order.Waiter?.FullName ?? (bill?.Employee?.FullName ?? "N/A"),
+                CashierName = order.Waiter?.FullName ?? (bill?.Cashier?.FullName ?? "N/A"),
                 PaymentMethod = GetPaymentMethodText(bill?.PaymentMethod ?? "Chưa thanh toán"),
                 Items = order.OrderDetails.Select(od => new InvoiceItemViewModel
                 {
