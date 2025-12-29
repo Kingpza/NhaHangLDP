@@ -175,7 +175,7 @@ namespace NhaHangLDP.Services.Management
                     .ToList();
 
                 var recentInbounds = db.StockInbounds
-                    .Include(s => s.Cashier)
+                    .Include(s => s.Employee)
                     .Include(s => s.Supplier)
                     .OrderByDescending(s => s.InboundDate)
                     .Take(10)
@@ -183,7 +183,7 @@ namespace NhaHangLDP.Services.Management
                     .Select(s => new InboundActivityModel
                     {
                         InboundDate = s.InboundDate,
-                        EmployeeName = s.Cashier?.FullName ?? "N/A",
+                        EmployeeName = s.Employee?.FullName ?? "N/A",
                         SupplierName = s.Supplier?.Name ?? "Không có",
                         TotalCost = s.TotalCost,
                         ItemCount = s.StockInboundDetails?.Count ?? 0

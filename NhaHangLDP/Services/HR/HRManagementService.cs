@@ -377,7 +377,7 @@ namespace NhaHangLDP.Services.HR
                     };
                 }
 
-                var requestedDays = (request.EndDate - request.StartDate).Days + 1;
+                var requestedDays = request.EndDate.DayNumber - request.StartDate.DayNumber + 1;
 
                 // Kiểm tra số ngày phép còn lại (nếu là nghỉ phép năm)
                 if (request.LeaveType == "Annual")
@@ -564,7 +564,7 @@ namespace NhaHangLDP.Services.HR
                 .ToList();
 
             var annualUsed = leaves.Where(l => l.LeaveType == "Annual")
-                .Sum(l => (l.EndDate - l.StartDate).Days + 1);
+                .Sum(l => l.EndDate.DayNumber - l.StartDate.DayNumber + 1);
 
             return new LeaveBalanceStats
             {
@@ -572,9 +572,9 @@ namespace NhaHangLDP.Services.HR
                 UsedAnnualLeave = annualUsed,
                 RemainingAnnualLeave = ANNUAL_LEAVE_DAYS - annualUsed,
                 SickLeaveUsed = leaves.Where(l => l.LeaveType == "Sick")
-                    .Sum(l => (l.EndDate - l.StartDate).Days + 1),
+                    .Sum(l => l.EndDate.DayNumber - l.StartDate.DayNumber + 1),
                 UnpaidLeaveUsed = leaves.Where(l => l.LeaveType == "Unpaid")
-                    .Sum(l => (l.EndDate - l.StartDate).Days + 1)
+                    .Sum(l => l.EndDate.DayNumber - l.StartDate.DayNumber + 1)
             };
         }
 
@@ -857,7 +857,7 @@ namespace NhaHangLDP.Services.HR
                 EmployeeName = r.Employee?.FullName ?? "N/A",
                 RoleName = r.Employee?.Role?.RoleName ?? "N/A",
                 ReviewerName = GetEmployeeName(r.ReviewerId),
-                ReviewDate = r.ReviewDate,
+                ReviewDate = r.ReviewDate.ToDateTime(TimeOnly.MinValue),
                 ReviewPeriod = r.ReviewPeriod,
                 ServiceQuality = r.ServiceQuality,
                 Punctuality = r.Punctuality,
@@ -1019,8 +1019,9 @@ namespace NhaHangLDP.Services.HR
         {
             try
             {
+                var workDateOnly = DateOnly.FromDateTime(workDate);
                 var existing = _db.Set<EmployeeSchedule>()
-                    .FirstOrDefault(s => s.EmployeeId == employeeId && s.WorkDate == workDate);
+                    .FirstOrDefault(s => s.EmployeeId == employeeId && s.WorkDate == workDateOnly);
 
                 if (existing != null)
                 {
@@ -1033,7 +1034,7 @@ namespace NhaHangLDP.Services.HR
                     {
                         EmployeeId = employeeId,
                         WorkShiftId = shiftId,
-                        WorkDate = workDate,
+                        WorkDate = workDateOnly,
                         Status = "Scheduled"
                     });
                 }
@@ -1176,7 +1177,7 @@ namespace NhaHangLDP.Services.HR
                            l.Status == "Approved" &&
                            l.StartDate.Year == year)
                 .ToList()
-                .Sum(l => (l.EndDate - l.StartDate).Days + 1);
+                .Sum(l => l.EndDate.DayNumber - l.StartDate.DayNumber + 1);
         }
 
         private decimal CalculateMonthlyAttendanceRate(DateTime month)
@@ -1284,9 +1285,9 @@ namespace NhaHangLDP.Services.HR
                 Id = l.Id,
                 EmployeeName = l.Employee?.FullName ?? "N/A",
                 LeaveType = l.LeaveType,
-                StartDate = l.StartDate,
-                EndDate = l.EndDate,
-                Days = (l.EndDate - l.StartDate).Days + 1,
+                StartDate = l.StartDate.ToDateTime(TimeOnly.MinValue),
+                EndDate = l.EndDate.ToDateTime(TimeOnly.MinValue),
+                Days = l.EndDate.DayNumber - l.StartDate.DayNumber + 1,
                 Status = l.Status,
                 StatusClass = GetLeaveStatusClass(l.Status),
                 Reason = l.Reason

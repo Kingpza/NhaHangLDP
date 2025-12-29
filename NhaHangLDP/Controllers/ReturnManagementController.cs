@@ -85,9 +85,10 @@ namespace NhaHangLDP.Controllers
                 try
                 {
                     // Tối ưu hóa Include: Chỉ tải những gì cần thiết
-                    var bill = localDb.OriginalBill
+                    var bill = localDb.Bills
                          .Include(b => b.Order)
-                         .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
+                         .ThenInclude(o => o.OrderDetails)
+                         .ThenInclude(od => od.MenuItem)
                          .FirstOrDefault(b => b.Id == billId && b.Status == "Paid");
 
                     if (bill == null)

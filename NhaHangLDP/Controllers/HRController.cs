@@ -388,7 +388,7 @@ namespace NhaHangLDP.Controllers
             return View(new PerformanceReview
             {
                 ReviewerId = GetCurrentEmployeeId(),
-                ReviewDate = DateTime.Today
+                ReviewDate = DateOnly.FromDateTime(DateTime.Today)
             });
         }
 
@@ -451,7 +451,7 @@ namespace NhaHangLDP.Controllers
 
             ViewBag.Employees = new SelectList(_db.Employees.Where(e => e.IsActive).ToList(), "Id", "FullName");
             ViewBag.ContractTypes = GetContractTypes();
-            return View(new EmployeeContract { StartDate = DateTime.Today });
+            return View(new EmployeeContract { StartDate = DateOnly.FromDateTime(DateTime.Today) });
         }
 
         [HttpPost]
@@ -917,8 +917,8 @@ namespace NhaHangLDP.Controllers
                     _db.Set<WorkShift>().Add(new WorkShift
                     {
                         ShiftName = "Ca sáng",
-                        StartTime = new TimeSpan(6, 0, 0),
-                        EndTime = new TimeSpan(14, 0, 0),
+                        StartTime = new TimeOnly(6, 0, 0),
+                        EndTime = new TimeOnly(14, 0, 0),
                         WorkHours = 8,
                         IsActive = true,
                         Description = "Ca làm việc buổi sáng"
@@ -926,8 +926,8 @@ namespace NhaHangLDP.Controllers
                     _db.Set<WorkShift>().Add(new WorkShift
                     {
                         ShiftName = "Ca chiều",
-                        StartTime = new TimeSpan(14, 0, 0),
-                        EndTime = new TimeSpan(22, 0, 0),
+                        StartTime = new TimeOnly(14, 0, 0),
+                        EndTime = new TimeOnly(22, 0, 0),
                         WorkHours = 8,
                         IsActive = true,
                         Description = "Ca làm việc buổi chiều"
@@ -935,8 +935,8 @@ namespace NhaHangLDP.Controllers
                     _db.Set<WorkShift>().Add(new WorkShift
                     {
                         ShiftName = "Ca tối",
-                        StartTime = new TimeSpan(17, 0, 0),
-                        EndTime = new TimeSpan(23, 0, 0),
+                        StartTime = new TimeOnly(17, 0, 0),
+                        EndTime = new TimeOnly(23, 0, 0),
                         WorkHours = 6,
                         IsActive = true,
                         Description = "Ca làm việc buổi tối"
@@ -952,7 +952,7 @@ namespace NhaHangLDP.Controllers
                         {
                             EmployeeId = emp.Id,
                             ContractType = "FullTime",
-                            StartDate = emp.HireDate,
+                            StartDate = DateOnly.FromDateTime(emp.HireDate),
                             BaseSalary = GetSalaryByRole(emp.RoleId),
                             Allowance = 500000,
                             Status = "Active",
@@ -970,14 +970,14 @@ namespace NhaHangLDP.Controllers
 
                     foreach (var emp in employees.Take(5))
                     {
-                        if (!_db.Set<Attendance>().Any(a => a.EmployeeId == emp.Id &&
-                            System.Data.Entity.a.CheckInTime.Date == date))
+                        if (!_db.Attendances.Any(a => a.EmployeeId == emp.Id &&
+                            a.CheckInTime.Date == date))
                         {
                             var checkIn = date.AddHours(7).AddMinutes(random.Next(0, 60));
                             var checkOut = date.AddHours(17).AddMinutes(random.Next(-30, 60));
                             var status = checkIn.TimeOfDay <= new TimeSpan(8, 15, 0) ? "OnTime" : "Late";
 
-                            _db.Set<Attendance>().Add(new Attendance
+                            _db.Attendances.Add(new Attendance
                             {
                                 EmployeeId = emp.Id,
                                 CheckInTime = checkIn,

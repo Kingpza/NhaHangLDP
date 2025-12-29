@@ -121,12 +121,12 @@
             <div class="shifts-grid">
                 @foreach (var shift in Model)
                 {
-                    var iconClass = shift.StartTime.Hours < 12 ? "morning" :
-                                   (shift.StartTime.Hours < 17 ? "afternoon" :
-                                   (shift.StartTime.Hours < 21 ? "evening" : "night"));
-                    var icon = shift.StartTime.Hours < 12 ? "fa-sun" :
-                              (shift.StartTime.Hours < 17 ? "fa-cloud-sun" :
-                              (shift.StartTime.Hours < 21 ? "fa-moon" : "fa-star"));
+                    var iconClass = shift.StartTime.Hour < 12 ? "morning" :
+                                   (shift.StartTime.Hour < 17 ? "afternoon" :
+                                   (shift.StartTime.Hour < 21 ? "evening" : "night"));
+                    var icon = shift.StartTime.Hour < 12 ? "fa-sun" :
+                              (shift.StartTime.Hour < 17 ? "fa-cloud-sun" :
+                              (shift.StartTime.Hour < 21 ? "fa-moon" : "fa-star"));
 
                     <div class="shift-card">
                         <div class="shift-icon @iconClass">

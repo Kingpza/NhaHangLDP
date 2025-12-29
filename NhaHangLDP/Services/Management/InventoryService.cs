@@ -691,7 +691,7 @@ namespace NhaHangLDP.Services.Management
                 Id = s.Id,
                 InboundCode = "IN" + s.Id.ToString().PadLeft(6, '0'),
                 InboundDate = s.InboundDate,
-                EmployeeName = s.Cashier != null ? s.ReportedByEmployee?.FullName : "N/A",
+                EmployeeName = s.Employee?.FullName ?? "N/A",
                 SupplierName = s.Supplier != null ? GetSupplierName(s.Supplier) : "Không có",
                 TotalCost = s.TotalCost,
                 Status = "Hoàn thành",
@@ -725,7 +725,7 @@ namespace NhaHangLDP.Services.Management
                 Id = inbound.Id,
                 InboundCode = "IN" + inbound.Id.ToString().PadLeft(6, '0'),
                 InboundDate = inbound.InboundDate,
-                EmployeeName = inbound.ReportedByEmployee?.FullName ?? "N/A",
+                EmployeeName = inbound.Employee?.FullName ?? "N/A",
                 SupplierName = inbound.Supplier != null ? GetSupplierName(inbound.Supplier) : "Không có",
                 Notes = inbound.Notes,
                 Status = inbound.Status ?? "Hoàn thành",
@@ -809,7 +809,7 @@ namespace NhaHangLDP.Services.Management
                 Id = d.Id,
                 OutboundCode = "OUT" + d.Id.ToString().PadLeft(6, '0'),
                 OutboundDate = d.DamageDate,
-                EmployeeName = d.Employee != null ? d.ReportedByEmployee?.FullName : "N/A",
+                EmployeeName = d.ReportedByEmployee?.FullName ?? "N/A",
                 Purpose = d.Reason ?? "Xuất kho",
                 TotalCost = d.Quantity * (d.Ingredient != null ? d.Ingredient.EstimatedCost : 0),
                 Status = "Hoàn thành",
@@ -826,7 +826,7 @@ namespace NhaHangLDP.Services.Management
         {
             var outbound = db.DamagedStocks
                 .Include("Ingredient")
-                .Include("Employee")
+                .Include("ReportedByEmployee")
                 .FirstOrDefault(d => d.Id == id);
 
             if (outbound == null)

@@ -2,7 +2,7 @@
     ViewBag.Title = "Quản lý nghỉ phép";
     Layout = "~/Views/Shared/_ManagementLayout.cshtml";
     var pendingRequests = ViewBag.PendingRequests as List<NhaHangLDP.Models.LeaveRequestItem> ?? new List<NhaHangLDP.Models.LeaveRequestItem>();
-    var employees = ViewBag.Employees as List<NhaHangLDP.Models.Cashier> ?? new List<NhaHangLDP.Models.Cashier>();
+    var employees = ViewBag.Employees as List<NhaHangLDP.Models.Employee> ?? new List<NhaHangLDP.Models.Employee>();
 }
 
 @section styles {

@@ -146,21 +146,19 @@ namespace NhaHangLDP.Controllers
                     return View(model);
                 }
 
-                // Check existing email
-                var existingEmail = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM Customer WHERE Email = @p0",
-                    model.Email).FirstOrDefault();
+                // Check existing email using LINQ
+                var existingEmail = _db.Customers.Any(c => c.Email == model.Email);
 
-                if (existingEmail > 0)
+                if (existingEmail)
                 {
                     ModelState.AddModelError("Email", "Email này đã được sử dụng!");
                     return View(model);
                 }
 
-                // Check existing phone
-                var existingPhone = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM Customer WHERE Phone = @p0",
-                    model.Phone).FirstOrDefault();
+                // Check existing phone using LINQ
+                var existingPhone = _db.Customers.Any(c => c.Phone == model.Phone);
 
-                if (existingPhone > 0)
+                if (existingPhone)
                 {
                     ModelState.AddModelError("Phone", "Số điện thoại này đã được sử dụng!");
                     return View(model);
@@ -352,8 +350,7 @@ namespace NhaHangLDP.Controllers
                   OFFSET @p1 ROWS FETCH NEXT @p2 ROWS ONLY",
                 customerId, (page - 1) * pageSize, pageSize).ToList();
 
-            var totalOrders = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM CustomerOrder WHERE CustomerId = @p0",
-                customerId).FirstOrDefault();
+            var totalOrders = _db.CustomerOrders.Count(o => o.CustomerId == customerId);
 
             var viewModel = new OrderListViewModel
             {
@@ -390,11 +387,10 @@ namespace NhaHangLDP.Controllers
                 return RedirectToAction("Login");
             }
 
-            // Verify ownership
-            var isOwner = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM CustomerOrder WHERE OrderCode = @p0 AND CustomerId = @p1",
-                code, customerId).FirstOrDefault();
+            // Verify ownership using LINQ
+            var isOwner = _db.CustomerOrders.Any(o => o.OrderCode == code && o.CustomerId == customerId);
 
-            if (isOwner == 0)
+            if (!isOwner)
             {
                 TempData["Error"] = "Không tìm thấy đơn hàng!";
                 return RedirectToAction("Orders");
@@ -496,21 +492,27 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Vui lòng đăng nhập!", needLogin = true });
                 }
 
-                var exists = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM Wishlist WHERE CustomerId = @p0 AND MenuItemId = @p1",
-                    customerId, menuItemId).FirstOrDefault();
+                var exists = _db.Wishlists.Any(w => w.CustomerId == customerId && w.MenuItemId == menuItemId);
 
-                if (exists > 0)
+                if (exists)
                 {
-                    _db.Database.ExecuteSqlRaw(
-                        "DELETE FROM Wishlist WHERE CustomerId = @p0 AND MenuItemId = @p1",
-                        customerId, menuItemId);
+                    var wishlistItem = _db.Wishlists.FirstOrDefault(w => w.CustomerId == customerId && w.MenuItemId == menuItemId);
+                    if (wishlistItem != null)
+                    {
+                        _db.Wishlists.Remove(wishlistItem);
+                        _db.SaveChanges();
+                    }
                     return Json(new { success = true, added = false, message = "Đã xóa khỏi yêu thích" });
                 }
                 else
                 {
-                    _db.Database.ExecuteSqlRaw(
-                        "INSERT INTO Wishlist (CustomerId, MenuItemId, AddedDate) VALUES (@p0, @p1, GETDATE())",
-                        customerId, menuItemId);
+                    _db.Wishlists.Add(new Wishlist
+                    {
+                        CustomerId = customerId.Value,
+                        MenuItemId = menuItemId,
+                        AddedDate = DateTime.Now
+                    });
+                    _db.SaveChanges();
                     return Json(new { success = true, added = true, message = "Đã thêm vào yêu thích" });
                 }
             }
@@ -687,19 +689,21 @@ public JsonResult DeleteAddress(int id)
             return Json(new { success = false, message = "Vui lòng đăng nhập!" });
         }
 
-        // Check if it's default address
-        var isDefault = _db.Set<bool>().FromSqlRaw(@"SELECT IsDefault FROM CustomerAddress WHERE Id = @p0 AND CustomerId = @p1",
-            id, customerId).FirstOrDefault();
+        // Check if it's default address using LINQ
+        var address = _db.CustomerAddresses.FirstOrDefault(a => a.Id == id && a.CustomerId == customerId);
+        if (address == null)
+        {
+            return Json(new { success = false, message = "Không tìm thấy địa chỉ!" });
+        }
 
-        if (isDefault)
+        if (address.IsDefault)
         {
             return Json(new { success = false, message = "Không thể xóa địa chỉ mặc định!" });
         }
 
-        // Soft delete
-        _db.Database.ExecuteSqlRaw(
-            "UPDATE CustomerAddress SET IsDeleted = 1 WHERE Id = @p0 AND CustomerId = @p1",
-            id, customerId);
+        // Delete address
+        _db.CustomerAddresses.Remove(address);
+        _db.SaveChanges();
 
         return Json(new { success = true, message = "Đã xóa địa chỉ!" });
     }
@@ -801,30 +805,25 @@ public JsonResult CancelReservation(string code, string reason)
             return Json(new { success = false, message = "Vui lòng đăng nhập!" });
         }
 
-        // Verify ownership
-        var isOwner = _db.Set<int>().FromSqlRaw(@"SELECT COUNT(*) FROM Reservation WHERE ReservationCode = @p0 AND CustomerId = @p1",
-            code, customerId).FirstOrDefault();
+        // Verify ownership using LINQ
+        var reservation = _db.Reservations.FirstOrDefault(r => r.ReservationCode == code && r.CustomerId == customerId);
 
-        if (isOwner == 0)
+        if (reservation == null)
         {
             return Json(new { success = false, message = "Không tìm thấy đặt bàn!" });
         }
 
-        var sql = @"
-            UPDATE Reservation 
-            SET Status = 'Cancelled', CancelReason = @p1, CancelledDate = GETDATE()
-            WHERE ReservationCode = @p0 AND Status IN ('Pending', 'Confirmed')";
-
-        var affected = _db.Database.ExecuteSqlRaw(sql, code, reason ?? "Khách hàng hủy");
-
-        if (affected > 0)
-        {
-            return Json(new { success = true, message = "Đã hủy đặt bàn thành công!" });
-        }
-        else
+        if (reservation.Status != "Pending" && reservation.Status != "Confirmed")
         {
             return Json(new { success = false, message = "Không thể hủy đặt bàn này!" });
         }
+
+        reservation.Status = "Cancelled";
+        reservation.CancelReason = reason ?? "Khách hàng hủy";
+        reservation.CancelledDate = DateTime.Now;
+        _db.SaveChanges();
+
+        return Json(new { success = true, message = "Đã hủy đặt bàn thành công!" });
     }
     catch (Exception ex)
     {

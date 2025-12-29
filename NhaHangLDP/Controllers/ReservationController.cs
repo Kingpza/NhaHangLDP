@@ -224,32 +224,35 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                if (!TimeSpan.TryParse(time, out TimeSpan reservationTime))
+                if (!TimeSpan.TryParse(time, out TimeSpan reservationTimeSpan))
                 {
                     return Json(new { success = false, message = "Giờ không hợp lệ" });
                 }
 
-                var timeMinutes = (int)reservationTime.TotalMinutes;
+                var reservationDate = DateOnly.FromDateTime(date);
+                var reservationTime = TimeOnly.FromTimeSpan(reservationTimeSpan);
+                var reservationTimeMinutes = reservationTime.Hour * 60 + reservationTime.Minute;
 
-                // Lấy danh sách bàn phù hợp
-                var sql = @"
-                    SELECT t.Id, t.TableNumber, t.Capacity, ta.Name as AreaName,
-                           CASE 
-                               WHEN EXISTS (
-                                   SELECT 1 FROM Reservation r 
-                                   WHERE r.TableId = t.Id 
-                                     AND r.ReservationDate = @p1
-                                     AND r.Status IN ('Pending', 'Confirmed')
-                                     AND ABS(DATEDIFF(MINUTE, '00:00:00', r.ReservationTime) - @p2) < 120
-                               ) THEN 0 
-                               ELSE 1 
-                           END as IsAvailable
-                    FROM RestaurantTable t
-                    LEFT JOIN TableArea ta ON t.TableAreaId = ta.Id
-                    WHERE t.Capacity >= @p0
-                    ORDER BY t.Capacity, t.TableNumber";
-
-                var tables = _db.Database.SqlQuery<AvailableTableInfo>(sql, guests, date, timeMinutes).ToList();
+                // Lấy danh sách bàn phù hợp bằng LINQ
+                var tables = _db.RestaurantTables
+                    .Include(t => t.TableArea)
+                    .Where(t => t.Capacity >= guests)
+                    .Select(t => new
+                    {
+                        t.Id,
+                        t.TableNumber,
+                        t.Capacity,
+                        AreaName = t.TableArea != null ? t.TableArea.Name : null,
+                        IsAvailable = !_db.Reservations.Any(r =>
+                            r.TableId == t.Id &&
+                            r.ReservationDate == reservationDate &&
+                            (r.Status == "Pending" || r.Status == "Confirmed") &&
+                            Math.Abs((r.ReservationTime.Hour * 60 + r.ReservationTime.Minute) - reservationTimeMinutes) < 120
+                        ) ? 1 : 0
+                    })
+                    .OrderBy(t => t.Capacity)
+                    .ThenBy(t => t.TableNumber)
+                    .ToList();
 
                 return Json(new
                 {
@@ -284,30 +287,28 @@ namespace NhaHangLDP.Controllers
             };
         }
 
-        private int? FindAvailableTable(DateTime date, TimeSpan time, int guests, string preference)
+        private int? FindAvailableTable(DateTime date, TimeSpan time, int guests, string? preference)
         {
             try
             {
-                // Convert TimeSpan to total minutes for SQL comparison
-                var timeMinutes = (int)time.TotalMinutes;
+                var reservationDate = DateOnly.FromDateTime(date);
+                var reservationTime = TimeOnly.FromTimeSpan(time);
+                var timeMinutes = reservationTime.Hour * 60 + reservationTime.Minute;
                 
                 // Find tables that can accommodate the guests and are not reserved
                 // Note: RestaurantTable uses 'Status' column (Available/Occupied/Reserved) instead of 'IsActive'
-                var sql = @"
-                    SELECT TOP 1 t.Id
-                    FROM RestaurantTable t
-                    WHERE t.Status = 'Available'
-                      AND t.Capacity >= @p0
-                      AND NOT EXISTS (
-                          SELECT 1 FROM Reservation r 
-                          WHERE r.TableId = t.Id 
-                            AND r.ReservationDate = @p1
-                            AND r.Status IN ('Pending', 'Confirmed')
-                            AND ABS(DATEDIFF(MINUTE, '00:00:00', r.ReservationTime) - @p2) < 120
-                      )
-                    ORDER BY t.Capacity";
-
-                var tableId = _db.Database.SqlQuery<int?>(sql, guests, date, timeMinutes).FirstOrDefault();
+                var tableId = _db.RestaurantTables
+                    .Where(t => t.Status == "Available" && t.Capacity >= guests)
+                    .Where(t => !_db.Reservations.Any(r =>
+                        r.TableId == t.Id &&
+                        r.ReservationDate == reservationDate &&
+                        (r.Status == "Pending" || r.Status == "Confirmed") &&
+                        Math.Abs((r.ReservationTime.Hour * 60 + r.ReservationTime.Minute) - timeMinutes) < 120
+                    ))
+                    .OrderBy(t => t.Capacity)
+                    .Select(t => (int?)t.Id)
+                    .FirstOrDefault();
+                    
                 return tableId;
             }
             catch
@@ -320,24 +321,20 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                // Convert TimeSpan to total minutes for SQL comparison
-                var timeMinutes = (int)time.TotalMinutes;
+                var reservationDate = DateOnly.FromDateTime(date);
+                var reservationTime = TimeOnly.FromTimeSpan(time);
+                var timeMinutes = reservationTime.Hour * 60 + reservationTime.Minute;
                 
                 // Note: RestaurantTable uses 'Status' column (Available/Occupied/Reserved) instead of 'IsActive'
-                var sql = @"
-                    SELECT COUNT(*)
-                    FROM RestaurantTable t
-                    WHERE t.Status IN ('Available', 'Occupied')
-                      AND t.Capacity >= @p0
-                      AND NOT EXISTS (
-                          SELECT 1 FROM Reservation r 
-                          WHERE r.TableId = t.Id 
-                            AND r.ReservationDate = @p1
-                            AND r.Status IN ('Pending', 'Confirmed')
-                            AND ABS(DATEDIFF(MINUTE, '00:00:00', r.ReservationTime) - @p2) < 120
-                      )";
-
-                return _db.Database.SqlQuery<int>(sql, guests, date, timeMinutes).FirstOrDefault();
+                return _db.RestaurantTables
+                    .Where(t => (t.Status == "Available" || t.Status == "Occupied") && t.Capacity >= guests)
+                    .Where(t => !_db.Reservations.Any(r =>
+                        r.TableId == t.Id &&
+                        r.ReservationDate == reservationDate &&
+                        (r.Status == "Pending" || r.Status == "Confirmed") &&
+                        Math.Abs((r.ReservationTime.Hour * 60 + r.ReservationTime.Minute) - timeMinutes) < 120
+                    ))
+                    .Count();
             }
             catch
             {
@@ -413,27 +410,18 @@ namespace NhaHangLDP.Controllers
         private class ReservationInfo
         {
             public int Id { get; set; }
-            public string ReservationCode { get; set; }
-            public string CustomerName { get; set; }
-            public string CustomerPhone { get; set; }
-            public string CustomerEmail { get; set; }
+            public string ReservationCode { get; set; } = string.Empty;
+            public string CustomerName { get; set; } = string.Empty;
+            public string CustomerPhone { get; set; } = string.Empty;
+            public string CustomerEmail { get; set; } = string.Empty;
             public DateTime ReservationDate { get; set; }
             public TimeSpan ReservationTime { get; set; }
             public int NumberOfGuests { get; set; }
-            public string TablePreference { get; set; }
-            public string SpecialRequests { get; set; }
-            public string Status { get; set; }
+            public string? TablePreference { get; set; }
+            public string? SpecialRequests { get; set; }
+            public string Status { get; set; } = string.Empty;
             public DateTime CreatedDate { get; set; }
-            public string TableName { get; set; }
-        }
-
-        private class AvailableTableInfo
-        {
-            public int Id { get; set; }
-            public string TableNumber { get; set; }
-            public int Capacity { get; set; }
-            public string AreaName { get; set; }
-            public int IsAvailable { get; set; } // 1: Có sẵn, 0: Không có sẵn
+            public string? TableName { get; set; }
         }
 
         #endregion
