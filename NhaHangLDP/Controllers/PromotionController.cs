@@ -85,8 +85,8 @@ namespace NhaHangLDP.Controllers
                         IsActive = p.IsActive,
                         ApplicableTo = p.ApplicableTo,
                         ApplicableDays = p.ApplicableDays,
-                        HappyHourStart = p.HappyHourStart,
-                        HappyHourEnd = p.HappyHourEnd
+                        HappyHourStart = p.HappyHourStart.HasValue ? p.HappyHourStart.Value.ToTimeSpan() : null,
+                        HappyHourEnd = p.HappyHourEnd.HasValue ? p.HappyHourEnd.Value.ToTimeSpan() : null
                     }).ToList(),
                     Stats = GetPromotionStats(),
                     SearchTerm = search,
@@ -163,8 +163,8 @@ namespace NhaHangLDP.Controllers
                         ApplicableTo = model.ApplicableTo,
                         ApplicableIds = model.ApplicableIds,
                         IsNewCustomerOnly = model.IsNewCustomerOnly,
-                        HappyHourStart = model.HappyHourStart,
-                        HappyHourEnd = model.HappyHourEnd,
+                        HappyHourStart = model.HappyHourStart.HasValue ? TimeOnly.FromTimeSpan(model.HappyHourStart.Value) : null,
+                        HappyHourEnd = model.HappyHourEnd.HasValue ? TimeOnly.FromTimeSpan(model.HappyHourEnd.Value) : null,
                         ApplicableDays = model.ApplicableDays,
                         IsActive = model.IsActive,
                         CreatedDate = DateTime.Now,
@@ -217,8 +217,8 @@ namespace NhaHangLDP.Controllers
                 ApplicableTo = promotion.ApplicableTo,
                 ApplicableIds = promotion.ApplicableIds,
                 IsNewCustomerOnly = promotion.IsNewCustomerOnly,
-                HappyHourStart = promotion.HappyHourStart,
-                HappyHourEnd = promotion.HappyHourEnd,
+                HappyHourStart = promotion.HappyHourStart.HasValue ? promotion.HappyHourStart.Value.ToTimeSpan() : null,
+                HappyHourEnd = promotion.HappyHourEnd.HasValue ? promotion.HappyHourEnd.Value.ToTimeSpan() : null,
                 ApplicableDays = promotion.ApplicableDays,
                 IsActive = promotion.IsActive,
                 IsEdit = true
@@ -271,8 +271,8 @@ namespace NhaHangLDP.Controllers
                     promotion.ApplicableTo = model.ApplicableTo;
                     promotion.ApplicableIds = model.ApplicableIds;
                     promotion.IsNewCustomerOnly = model.IsNewCustomerOnly;
-                    promotion.HappyHourStart = model.HappyHourStart;
-                    promotion.HappyHourEnd = model.HappyHourEnd;
+                    promotion.HappyHourStart = model.HappyHourStart.HasValue ? TimeOnly.FromTimeSpan(model.HappyHourStart.Value) : null;
+                    promotion.HappyHourEnd = model.HappyHourEnd.HasValue ? TimeOnly.FromTimeSpan(model.HappyHourEnd.Value) : null;
                     promotion.ApplicableDays = model.ApplicableDays;
                     promotion.IsActive = model.IsActive;
                     promotion.UpdatedDate = DateTime.Now;
@@ -500,7 +500,7 @@ namespace NhaHangLDP.Controllers
                 // Kiểm tra Happy Hour
                 if (promotion.HappyHourStart.HasValue && promotion.HappyHourEnd.HasValue)
                 {
-                    var currentTime = now.TimeOfDay;
+                    var currentTime = TimeOnly.FromDateTime(now);
                     if (currentTime < promotion.HappyHourStart.Value || currentTime > promotion.HappyHourEnd.Value)
                     {
                         return Json(new PromotionValidationResult
