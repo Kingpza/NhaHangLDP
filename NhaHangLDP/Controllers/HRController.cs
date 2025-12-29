@@ -344,7 +344,7 @@ namespace NhaHangLDP.Controllers
             if (!IsAuthorized())
                 return RedirectUnauthorized();
 
-            var payroll = _db.Payroll
+            var payroll = _db.Payrolls
                 .Include(p => p.Employee)
                 .Include(p => p.Employee.Role)
                 .FirstOrDefault(p => p.Id == id);

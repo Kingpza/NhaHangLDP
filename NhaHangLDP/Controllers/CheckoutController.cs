@@ -326,55 +326,72 @@ namespace NhaHangLDP.Controllers
                 customerId = parsedId;
             }
 
-            // Insert order
-            var sql = @"
-                INSERT INTO CustomerOrder 
-                (OrderCode, CustomerId, CustomerName, CustomerPhone, CustomerEmail, OrderType, 
-                 DeliveryAddress, Ward, District, City, SubTotal, DeliveryFee, Discount, 
-                 VoucherCode, TotalAmount, PaymentMethod, PaymentStatus, Status, Note, OrderDate, EstimatedDeliveryTime)
-                VALUES 
-                (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, 'Pending', 'Pending', @p16, GETDATE(), DATEADD(HOUR, 1, GETDATE()));
-                SELECT SCOPE_IDENTITY();";
+            // Create order using EF Core
+            var customerOrder = new CustomerOrder
+            {
+                OrderCode = orderCode,
+                CustomerId = customerId,
+                CustomerName = form.CustomerName,
+                CustomerPhone = form.CustomerPhone,
+                CustomerEmail = form.CustomerEmail,
+                OrderType = form.OrderType,
+                DeliveryAddress = form.DeliveryAddress,
+                Ward = form.Ward,
+                District = form.District,
+                City = form.City ?? "TP. Hồ Chí Minh",
+                SubTotal = cart.SubTotal,
+                DeliveryFee = cart.DeliveryFee,
+                Discount = cart.Discount,
+                VoucherCode = cart.VoucherCode,
+                TotalAmount = cart.TotalAmount,
+                PaymentMethod = form.PaymentMethod,
+                PaymentStatus = "Pending",
+                Status = "Pending",
+                Note = form.Note,
+                OrderDate = DateTime.Now,
+                EstimatedDeliveryTime = DateTime.Now.AddHours(1)
+            };
 
-            var orderId = _db.Database.SqlQuery<decimal>(sql,
-                orderCode,                              // @p0
-                customerId,                             // @p1
-                form.CustomerName,                      // @p2
-                form.CustomerPhone,                     // @p3
-                form.CustomerEmail,                     // @p4
-                form.OrderType,                         // @p5
-                form.DeliveryAddress,                   // @p6
-                form.Ward,                              // @p7
-                form.District,                          // @p8
-                form.City ?? "TP. Hồ Chí Minh",        // @p9
-                cart.SubTotal,                          // @p10
-                cart.DeliveryFee,                       // @p11
-                cart.Discount,                          // @p12
-                cart.VoucherCode,                       // @p13
-                cart.TotalAmount,                       // @p14
-                form.PaymentMethod,                     // @p15
-                form.Note                               // @p16
-            ).FirstOrDefault();
+            _db.CustomerOrders.Add(customerOrder);
+            _db.SaveChanges();
 
-            var orderIdInt = (int)orderId;
+            var orderIdInt = customerOrder.Id;
 
             // Insert order details
             foreach (var item in cart.Items)
             {
-                _db.Database.ExecuteSqlRaw(
-                    @"INSERT INTO CustomerOrderDetail (CustomerOrderId, MenuItemId, ItemName, Quantity, UnitPrice, Subtotal, SpecialInstructions)
-                      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6)",
-                    orderIdInt, item.MenuItemId, item.Name, item.Quantity, item.UnitPrice, item.Subtotal, item.SpecialInstructions);
+                var orderDetail = new CustomerOrderDetail
+                {
+                    CustomerOrderId = orderIdInt,
+                    MenuItemId = item.MenuItemId,
+                    ItemName = item.Name,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice,
+                    Subtotal = item.Subtotal,
+                    SpecialInstructions = item.SpecialInstructions
+                };
+                _db.CustomerOrderDetails.Add(orderDetail);
             }
+            _db.SaveChanges();
 
             // Update voucher usage if applied
             if (!string.IsNullOrEmpty(cart.VoucherCode))
             {
-                _db.Database.ExecuteSqlRaw(
-                    @"UPDATE Voucher SET UsedCount = UsedCount + 1 WHERE Code = @p0;
-                      INSERT INTO VoucherUsage (VoucherId, CustomerId, OrderId, DiscountAmount)
-                      SELECT Id, @p1, @p2, @p3 FROM Voucher WHERE Code = @p0",
-                    cart.VoucherCode, customerId, orderIdInt, cart.Discount);
+                var voucher = _db.Vouchers.FirstOrDefault(v => v.Code == cart.VoucherCode);
+                if (voucher != null)
+                {
+                    voucher.UsedCount = voucher.UsedCount + 1;
+                    
+                    var voucherUsage = new VoucherUsage
+                    {
+                        VoucherId = voucher.Id,
+                        CustomerId = customerId,
+                        OrderId = orderIdInt,
+                        DiscountAmount = cart.Discount
+                    };
+                    _db.VoucherUsages.Add(voucherUsage);
+                    _db.SaveChanges();
+                }
             }
 
             return orderIdInt;

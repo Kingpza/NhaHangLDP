@@ -106,7 +106,7 @@ namespace NhaHangLDP.Controllers
         {
             var activeShift = db.CashierShifts
                 .Include(cs => cs.Cashier)
-                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Cashier)
+                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Employee)
                 .FirstOrDefault(cs => cs.Status == "Active");
 
             if (activeShift == null)
@@ -1147,12 +1147,13 @@ namespace NhaHangLDP.Controllers
                 DateTime filterDate;
                 if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out filterDate))
                 {
-                    query = query.Where(r => r.ReservationDate.Date == filterDate.Date);
+                    var filterDateOnly = DateOnly.FromDateTime(filterDate);
+                    query = query.Where(r => r.ReservationDate == filterDateOnly);
                 }
                 else
                 {
                     // Default: show today and future reservations
-                    var today = DateTime.Today;
+                    var today = DateOnly.FromDateTime(DateTime.Today);
                     query = query.Where(r => r.ReservationDate >= today);
                 }
 
@@ -1426,7 +1427,7 @@ namespace NhaHangLDP.Controllers
                 if (reservation == null)
                     return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
 
-                var timeMinutes = (int)reservation.ReservationTime.TotalMinutes;
+                var timeMinutes = (int)reservation.ReservationTime.ToTimeSpan().TotalMinutes;
 
                 // Get tables that can accommodate guests and are not reserved at the same time
                 var tables = db.RestaurantTables
@@ -1443,7 +1444,7 @@ namespace NhaHangLDP.Controllers
                             r.TableId == t.Id &&
                             r.ReservationDate == reservation.ReservationDate &&
                             r.Status != "Cancelled" && r.Status != "NoShow" && r.Status != "Completed" &&
-                            Math.Abs((int)r.ReservationTime.TotalMinutes - timeMinutes) < 120)
+                            Math.Abs((int)r.ReservationTime.ToTimeSpan().TotalMinutes - timeMinutes) < 120)
                     })
                     .OrderBy(t => t.Capacity)
                     .ThenBy(t => t.TableNumber)
@@ -1462,7 +1463,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         private object GetReservationCounts()
         {
-            var today = DateTime.Today;
+            var today = DateOnly.FromDateTime(DateTime.Today);
             var reservations = db.Reservations.Where(r => r.ReservationDate >= today).ToList();
 
             return new

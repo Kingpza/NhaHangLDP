@@ -450,7 +450,7 @@ namespace NhaHangLDP.Services
             {
                 predictions.Add(new PredictionDataPoint
                 {
-                    Label = day.Date?.ToString("dd/MM") ?? "",
+                    Label = day.Date.ToString("dd/MM"),
                     Value = day.Revenue,
                     IsActual = true
                 });
@@ -682,7 +682,7 @@ namespace NhaHangLDP.Services
 
                     anomalies.Add(new AnomalyResult
                     {
-                        Date = day.Date ?? DateTime.MinValue,
+                        Date = day.Date,
                         Metric = "Doanh thu",
                         ActualValue = day.Revenue,
                         ExpectedValue = (decimal)mean,

@@ -19,7 +19,7 @@ namespace NhaHangLDP.Services
         {
             var activeShift = db.CashierShifts
                 .Include(cs => cs.Cashier)
-                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Cashier)
+                .Include(s => s.ShiftSupportStaffs).ThenInclude(ss => ss.Employee)
                 .FirstOrDefault(cs => cs.Id == shiftId && cs.Status == "Active");
 
             if (activeShift == null)
@@ -48,7 +48,7 @@ namespace NhaHangLDP.Services
                 ActiveShift = activeShift,
                 ShiftStartTime = activeShift.StartTime,
                 HasActiveShift = true,
-                CashierName = activeShift.Employee?.FullName ?? "Thu Ngân"
+                CashierName = activeShift.Cashier?.FullName ?? "Thu Ngân"
             };
 
             return viewModel;
@@ -77,7 +77,7 @@ namespace NhaHangLDP.Services
         public TableAreasViewModel GetTableAreasData()
         {
             var tableAreasWithTables = db.TableAreas
-                .Include(a => a.Table).ThenInclude(t => t.Orders).ThenInclude(o => o.OrderDetails)
+                .Include(a => a.RestaurantTables).ThenInclude(t => t.Orders).ThenInclude(o => o.OrderDetails)
                 .OrderBy(a => a.Name)
                 .ToList();
 
@@ -94,7 +94,7 @@ namespace NhaHangLDP.Services
                     Name = area.Name
                 };
 
-                foreach (var table in area.Table.OrderBy(t => t.TableNumber))
+                foreach (var table in area.RestaurantTables.OrderBy(t => t.TableNumber))
                 {
                     var activeOrder = table.Orders
                         .Where(o => o.Status == "Pending" || o.Status == "Preparing" || o.Status == "Ready")

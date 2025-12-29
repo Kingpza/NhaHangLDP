@@ -370,7 +370,7 @@ namespace NhaHangLDP.Controllers
             }
 
             var usages = db.PromotionUsages
-                .Include(u => u.Bills)
+                .Include(u => u.Bill)
                 .Where(u => u.PromotionId == id)
                 .OrderByDescending(u => u.UsedDate)
                 .ToList();

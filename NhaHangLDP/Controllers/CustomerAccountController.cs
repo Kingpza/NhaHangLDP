@@ -167,20 +167,26 @@ namespace NhaHangLDP.Controllers
                 // Hash password
                 var passwordHash = HashPassword(model.Password);
 
-                // Create customer
-                var sql = @"
-                    INSERT INTO Customer (FullName, Email, Phone, PasswordHash, MembershipLevel, LoyaltyPoints, IsActive, EmailVerified, CreatedDate)
-                    VALUES (@p0, @p1, @p2, @p3, 'Bronze', 0, 1, 0, GETDATE());
-                    SELECT SCOPE_IDENTITY();";
-
-                var customerId = _db.Database.SqlQuery<decimal>(sql,
-                    model.FullName,
-                    model.Email,
-                    model.Phone,
-                    passwordHash).FirstOrDefault();
+                // Create customer using EF Core approach
+                var customer = new Customer
+                {
+                    FullName = model.FullName,
+                    Email = model.Email,
+                    Phone = model.Phone,
+                    PasswordHash = passwordHash,
+                    MembershipLevel = "Bronze",
+                    LoyaltyPoints = 0,
+                    IsActive = true,
+                    CreatedDate = DateTime.Now
+                };
+                
+                _db.Customers.Add(customer);
+                _db.SaveChanges();
+                
+                var customerId = customer.Id;
 
                 // Auto login - lưu đầy đủ thông tin khách hàng
-                HttpContext.Session.SetString("CustomerId", ((int)customerId).ToString());
+                HttpContext.Session.SetString("CustomerId", customerId.ToString());
                 HttpContext.Session.SetString("CustomerName", model.FullName ?? "");
                 HttpContext.Session.SetString("CustomerEmail", model.Email ?? "");
                 HttpContext.Session.SetString("CustomerPhone", model.Phone ?? "");

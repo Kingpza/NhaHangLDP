@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Net.Http;
@@ -79,14 +79,23 @@ namespace NhaHangLDP.Services
         public AIChatbotService()
         {
             _db = new MyDbContext();
-            _geminiApiKey = ConfigurationManager.AppSettings["GeminiApiKey"];
-            _useGeminiAI = !string.IsNullOrEmpty(_geminiApiKey);
+            // For .NET Core, use IConfiguration - here we default to empty since no DI
+            _geminiApiKey = null;
+            _useGeminiAI = false;
         }
 
         public AIChatbotService(MyDbContext db)
         {
             _db = db;
-            _geminiApiKey = ConfigurationManager.AppSettings["GeminiApiKey"];
+            // For .NET Core, use IConfiguration - here we default to empty since no DI
+            _geminiApiKey = null;
+            _useGeminiAI = false;
+        }
+        
+        public AIChatbotService(MyDbContext db, IConfiguration configuration)
+        {
+            _db = db;
+            _geminiApiKey = configuration["GeminiApiKey"];
             _useGeminiAI = !string.IsNullOrEmpty(_geminiApiKey);
         }
 
@@ -653,7 +662,7 @@ CÂU HỎI: {message}";
             var response = new ChatBotResponseModel();
 
             // Lấy combo từ database nếu có
-            var combos = _db.MenuCombo
+            var combos = _db.MenuCombos
                 .Where(c => c.IsActive)
                 .ToList();
 
@@ -758,7 +767,7 @@ CÂU HỎI: {message}";
         {
             var response = new ChatBotResponseModel();
 
-            var activePromotions = _db.Promotion
+            var activePromotions = _db.Promotions
                 .Where(p => p.IsActive && p.StartDate <= DateTime.Now && p.EndDate >= DateTime.Now)
                 .ToList();
 

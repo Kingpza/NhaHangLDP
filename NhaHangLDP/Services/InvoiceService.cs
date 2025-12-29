@@ -51,7 +51,7 @@ namespace NhaHangLDP.Services
                 TableNumber = order.Table?.TableNumber ?? "N/A",
                 OrderTime = order.OrderTime,
                 BillDate = bill?.BillDate ?? DateTime.Now,
-                CashierName = bill?.Employee?.FullName ?? order.Waiter?.FullName ?? "N/A",
+                CashierName = bill?.Cashier?.FullName ?? order.Waiter?.FullName ?? "N/A",
                 PaymentMethod = GetPaymentMethodText(bill?.PaymentMethod ?? "Chưa thanh toán"),
                 Items = order.OrderDetails.Select(od => new InvoiceItemViewModel
                 {
@@ -75,9 +75,9 @@ namespace NhaHangLDP.Services
         public BillDetailViewModel GenerateDetailedInvoice(int billId)
         {
             var bill = db.Bills
-                .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
-                .Include(b => b.Order.Table.TableArea)
-                .Include(b => b.Order.Employee)
+                .Include(b => b.Order).ThenInclude(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                .Include(b => b.Order.Table).ThenInclude(t => t.TableArea)
+                .Include(b => b.Order.Waiter)
                 .Include(b => b.Cashier)
                 .Include(b => b.PromotionUsages).ThenInclude(pu => pu.Promotion)
                 .FirstOrDefault(b => b.Id == billId);
@@ -104,7 +104,7 @@ namespace NhaHangLDP.Services
                 TableArea = bill.Order.Table?.TableArea?.Name ?? "",
 
                 CashierName = bill.Cashier?.FullName ?? "N/A",
-                WaiterName = bill.Order.Employee?.FullName ?? "N/A",
+                WaiterName = bill.Order.Waiter?.FullName ?? "N/A",
 
                 Items = bill.Order.OrderDetails.Select(od => new BillItemViewModel
                 {
@@ -298,7 +298,7 @@ namespace NhaHangLDP.Services
                 .Include(b => b.Cashier)
                 .Where(b => 
                     b.Order.Table.TableNumber.ToLower().Contains(keyword) ||
-                    b.ReportedByEmployee?.FullName.ToLower().Contains(keyword))
+                    (b.Cashier != null && b.Cashier.FullName.ToLower().Contains(keyword)))
                 .OrderByDescending(b => b.BillDate)
                 .Take(20)
                 .ToList();

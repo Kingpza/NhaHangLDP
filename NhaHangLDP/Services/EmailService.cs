@@ -31,7 +31,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public EmailConfig GetActiveConfig()
         {
-            return _db.EmailConfig.FirstOrDefault(c => c.IsActive);
+            return _db.EmailConfigs.FirstOrDefault(c => c.IsActive);
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace NhaHangLDP.Services
         /// </summary>
         public EmailTemplate GetTemplate(string templateCode)
         {
-            return _db.EmailTemplate.FirstOrDefault(t => t.TemplateCode == templateCode && t.IsActive);
+            return _db.EmailTemplates.FirstOrDefault(t => t.TemplateCode == templateCode && t.IsActive);
         }
 
         /// <summary>
@@ -470,9 +470,9 @@ namespace NhaHangLDP.Services
 
             var stats = new EmailStatsViewModel
             {
-                TotalSentToday = _db.EmailLogs.Count(e => e.Status == "Sent" && e.SentDate.Date == today),
-                TotalSentThisWeek = _db.EmailLogs.Count(e => e.Status == "Sent" && e.SentDate >= weekStart),
-                TotalSentThisMonth = _db.EmailLogs.Count(e => e.Status == "Sent" && e.SentDate >= monthStart),
+                TotalSentToday = _db.EmailLogs.Count(e => e.Status == "Sent" && e.SentDate.HasValue && e.SentDate.Value.Date == today),
+                TotalSentThisWeek = _db.EmailLogs.Count(e => e.Status == "Sent" && e.SentDate.HasValue && e.SentDate >= weekStart),
+                TotalSentThisMonth = _db.EmailLogs.Count(e => e.Status == "Sent" && e.SentDate.HasValue && e.SentDate >= monthStart),
                 FailedToday = _db.EmailLogs.Count(e => e.Status == "Failed" && e.CreatedDate.Date == today)
             };
 
@@ -490,7 +490,7 @@ namespace NhaHangLDP.Services
 
         private string GetSetting(string key)
         {
-            return _db.AppSetting.FirstOrDefault(s => s.SettingKey == key)?.SettingValue;
+            return _db.AppSettings.FirstOrDefault(s => s.SettingKey == key)?.SettingValue;
         }
 
         private string GetPaymentMethodText(string method)

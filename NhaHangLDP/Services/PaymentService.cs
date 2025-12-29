@@ -399,9 +399,9 @@ namespace NhaHangLDP.Services
         public BillDetailViewModel GetBillDetail(int billId)
         {
             var bill = db.Bills
-                .Include(b => b.Order.OrderDetails.Select(od => od.MenuItem))
-                .Include(b => b.Order.Table.TableArea)
-                .Include(b => b.Order.Employee)
+                .Include(b => b.Order).ThenInclude(o => o.OrderDetails).ThenInclude(od => od.MenuItem)
+                .Include(b => b.Order.Table).ThenInclude(t => t.TableArea)
+                .Include(b => b.Order.Waiter)
                 .Include(b => b.Cashier)
                 .Include(b => b.PromotionUsages).ThenInclude(pu => pu.Promotion)
                 .FirstOrDefault(b => b.Id == billId);
@@ -426,7 +426,7 @@ namespace NhaHangLDP.Services
                 TableArea = bill.Order.Table?.TableArea?.Name ?? "",
 
                 CashierName = bill.Cashier?.FullName ?? "N/A",
-                WaiterName = bill.Order.Employee?.FullName ?? "N/A",
+                WaiterName = bill.Order.Waiter?.FullName ?? "N/A",
 
                 Items = bill.Order.OrderDetails.Select(od => new BillItemViewModel
                 {
@@ -516,7 +516,7 @@ namespace NhaHangLDP.Services
                 var search = filter.Search.ToLower();
                 query = query.Where(b => 
                     b.Order.Table.TableNumber.ToLower().Contains(search) ||
-                    b.ReportedByEmployee?.FullName.ToLower().Contains(search));
+                    (b.Cashier != null && b.Cashier.FullName.ToLower().Contains(search)));
             }
 
             // Statistics

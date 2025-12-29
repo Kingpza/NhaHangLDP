@@ -895,11 +895,11 @@ namespace NhaHangLDP.Services.HR
                 .Include(r => r.Employee)
                 .Include(r => r.Employee.Role)
                 .Where(r => r.ReviewDate.Year == thisYear)
-                .GroupBy(r => new { r.EmployeeId, r.ReportedByEmployee?.FullName, RoleName = r.Employee.Role.RoleName })
+                .GroupBy(r => new { r.EmployeeId, EmployeeName = r.Employee.FullName, RoleName = r.Employee.Role.RoleName })
                 .Select(g => new
                 {
                     EmployeeId = g.Key.EmployeeId,
-                    EmployeeName = g.Key.FullName,
+                    EmployeeName = g.Key.EmployeeName,
                     RoleName = g.Key.RoleName,
                     AvgScore = g.Average(r => r.OverallScore),
                     ReviewCount = g.Count()
@@ -974,7 +974,7 @@ namespace NhaHangLDP.Services.HR
         /// </summary>
         public List<EmployeeContract> GetAllContracts()
         {
-            return _db.EmployeeContract
+            return _db.EmployeeContracts
                 .Include(c => c.Employee)
                 .Include(c => c.Employee.Role)
                 .OrderByDescending(c => c.CreatedDate)
@@ -1055,11 +1055,13 @@ namespace NhaHangLDP.Services.HR
         public ScheduleViewModel GetWeeklySchedule(DateTime weekStart)
         {
             var weekEnd = weekStart.AddDays(6);
+            var weekStartOnly = DateOnly.FromDateTime(weekStart);
+            var weekEndOnly = DateOnly.FromDateTime(weekEnd);
 
             var schedules = _db.Set<EmployeeSchedule>()
-                .Include(s => s.Cashier)
+                .Include(s => s.Employee)
                 .Include(s => s.WorkShift)
-                .Where(s => s.WorkDate >= weekStart && s.WorkDate <= weekEnd)
+                .Where(s => s.WorkDate >= weekStartOnly && s.WorkDate <= weekEndOnly)
                 .ToList();
 
             var shifts = GetAllWorkShifts();
@@ -1069,22 +1071,23 @@ namespace NhaHangLDP.Services.HR
             for (int i = 0; i < 7; i++)
             {
                 var date = weekStart.AddDays(i);
-                var daySchedules = schedules.Where(s => s.WorkDate == date).ToList();
+                var dateOnly = DateOnly.FromDateTime(date);
+                var daySchedules = schedules.Where(s => s.WorkDate == dateOnly).ToList();
 
                 days.Add(new ScheduleDayItem
                 {
                     Date = date,
                     DayName = date.ToString("dddd", new System.Globalization.CultureInfo("vi-VN")),
-                    IsToday = date == DateTime.Today,
+                    IsToday = date.Date == DateTime.Today,
                     IsWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday,
                     Slots = daySchedules.Select(s => new ScheduleSlot
                     {
                         EmployeeId = s.EmployeeId,
-                        EmployeeName = s.Cashier?.FullName ?? "N/A",
+                        EmployeeName = s.Employee?.FullName ?? "N/A",
                         ShiftId = s.WorkShiftId,
                         ShiftName = s.WorkShift?.ShiftName ?? "N/A",
-                        StartTime = s.WorkShift?.StartTime ?? TimeSpan.Zero,
-                        EndTime = s.WorkShift?.EndTime ?? TimeSpan.Zero,
+                        StartTime = s.WorkShift?.StartTime.ToTimeSpan() ?? TimeSpan.Zero,
+                        EndTime = s.WorkShift?.EndTime.ToTimeSpan() ?? TimeSpan.Zero,
                         Status = s.Status
                     }).ToList()
                 });

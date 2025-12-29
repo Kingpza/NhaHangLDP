@@ -52,7 +52,7 @@ namespace NhaHangLDP.Services
                 try
                 {
                     var sourceTable = db.RestaurantTables.Include("Order").FirstOrDefault(t => t.Id == sourceTableId);
-                    var targetTable = db.RestaurantTables.Include("Order").FirstOrDefault(t => t.Id == targetTableId);
+                    var targetTable = db.RestaurantTables.Include("Orders").FirstOrDefault(t => t.Id == targetTableId);
 
                     if (sourceTable == null || targetTable == null)
                     {
@@ -60,7 +60,7 @@ namespace NhaHangLDP.Services
                         return false;
                     }
 
-                    var activeOrder = sourceTable.Order
+                    var activeOrder = sourceTable.Orders
                         .Where(o => o.Status != "Completed" && o.Status != "Cancelled")
                         .OrderByDescending(o => o.OrderTime)
                         .FirstOrDefault();
