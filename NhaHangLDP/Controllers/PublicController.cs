@@ -20,7 +20,7 @@ namespace NhaHangLDP.Controllers
 
         public PublicController()
         {
-            _chatbotService = new AIChatbotService();
+            _chatbotService = new AIChatbotService(db);
         }
         
         // GET: Public

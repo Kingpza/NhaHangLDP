@@ -51,7 +51,7 @@ namespace NhaHangLDP.Services
             {
                 try
                 {
-                    var sourceTable = db.RestaurantTables.Include("Order").FirstOrDefault(t => t.Id == sourceTableId);
+                    var sourceTable = db.RestaurantTables.Include("Orders").FirstOrDefault(t => t.Id == sourceTableId);
                     var targetTable = db.RestaurantTables.Include("Orders").FirstOrDefault(t => t.Id == targetTableId);
 
                     if (sourceTable == null || targetTable == null)

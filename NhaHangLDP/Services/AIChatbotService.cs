@@ -76,26 +76,10 @@ namespace NhaHangLDP.Services
             }
         };
 
-        public AIChatbotService()
-        {
-            _db = new MyDbContext();
-            // For .NET Core, use IConfiguration - here we default to empty since no DI
-            _geminiApiKey = null;
-            _useGeminiAI = false;
-        }
-
-        public AIChatbotService(MyDbContext db)
+        public AIChatbotService(MyDbContext db, IConfiguration configuration = null)
         {
             _db = db;
-            // For .NET Core, use IConfiguration - here we default to empty since no DI
-            _geminiApiKey = null;
-            _useGeminiAI = false;
-        }
-        
-        public AIChatbotService(MyDbContext db, IConfiguration configuration)
-        {
-            _db = db;
-            _geminiApiKey = configuration["GeminiApiKey"];
+            _geminiApiKey = configuration?["GeminiApiKey"];
             _useGeminiAI = !string.IsNullOrEmpty(_geminiApiKey);
         }
 
