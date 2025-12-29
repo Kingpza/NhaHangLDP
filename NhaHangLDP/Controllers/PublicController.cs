@@ -31,7 +31,7 @@ namespace NhaHangLDP.Controllers
              .ToList();
     
             // Load wishlist items for logged in customer
-            var customerId = HttpContext.Session.GetString("CustomerId") as int?;
+            var customerId = (int.TryParse(HttpContext.Session.GetString("CustomerId"), out int _pCustomerId) ? (int?)_pCustomerId : null);
             if (customerId.HasValue)
             {
                 var wishlistIds = db.Database.SqlQuery<int>(

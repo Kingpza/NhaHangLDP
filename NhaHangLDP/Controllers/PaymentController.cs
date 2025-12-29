@@ -874,12 +874,12 @@ namespace NhaHangLDP.Controllers
 
         private int GetCurrentCashierId()
         {
-            return HttpContext.Session.GetString("CashierId") as int? ?? HttpContext.Session.GetString("EmployeeId") as int? ?? 1;
+            return (int.TryParse(HttpContext.Session.GetString("CashierId"), out int _pCashierId) ? (int?)_pCashierId : null) ?? (int.TryParse(HttpContext.Session.GetString("EmployeeId"), out int _pEmployeeId) ? (int?)_pEmployeeId : null) ?? 1;
         }
 
         private int? GetCurrentShiftId()
         {
-            var shiftId = HttpContext.Session.GetString("ActiveShiftId") as int?;
+            var shiftId = (int.TryParse(HttpContext.Session.GetString("ActiveShiftId"), out int _pActiveShiftId) ? (int?)_pActiveShiftId : null);
             if (!shiftId.HasValue)
             {
                 var activeShift = db.CashierShift.FirstOrDefault(s => s.Status == "Active");

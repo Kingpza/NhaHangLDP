@@ -68,7 +68,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Set session - lưu đầy đủ thông tin khách hàng
-                HttpContext.Session.SetString("CustomerId", customer.Id?.ToString() ?? "");
+                HttpContext.Session.SetString("CustomerId", customer.Id.ToString() ?? "");
                 HttpContext.Session.SetString("CustomerName", customer.FullName?.ToString() ?? "");
                 HttpContext.Session.SetString("CustomerEmail", customer.Email?.ToString() ?? "");
                 HttpContext.Session.SetString("CustomerPhone", customer.Phone?.ToString() ?? "");
@@ -174,10 +174,10 @@ namespace NhaHangLDP.Controllers
                     passwordHash).FirstOrDefault();
 
                 // Auto login - lưu đầy đủ thông tin khách hàng
-                HttpContext.Session.SetString("CustomerId", (int)customerId?.ToString() ?? "");
-                HttpContext.Session.SetString("CustomerName", model.FullName?.ToString() ?? "");
-                HttpContext.Session.SetString("CustomerEmail", model.Email?.ToString() ?? "");
-                HttpContext.Session.SetString("CustomerPhone", model.Phone?.ToString() ?? "");
+                HttpContext.Session.SetString("CustomerId", ((int)customerId).ToString());
+                HttpContext.Session.SetString("CustomerName", model.FullName ?? "");
+                HttpContext.Session.SetString("CustomerEmail", model.Email ?? "");
+                HttpContext.Session.SetString("CustomerPhone", model.Phone ?? "");
 
                 TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà Hàng LDP.";
                 return RedirectToAction("Menu", "Public");
@@ -890,7 +890,7 @@ private bool IsCustomerLoggedIn()
 
 private int? GetCustomerId()
 {
-    return HttpContext.Session.GetString("CustomerId") as int?;
+    return (int.TryParse(HttpContext.Session.GetString("CustomerId"), out int _pCustomerId) ? (int?)_pCustomerId : null);
 }
 
 private CustomerProfileViewModel GetCustomerProfile(int customerId)

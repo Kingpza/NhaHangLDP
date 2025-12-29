@@ -68,7 +68,7 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Get customer ID if logged in
-                var customerId = HttpContext.Session.GetString("CustomerId") as int?;
+                var customerId = (int.TryParse(HttpContext.Session.GetString("CustomerId"), out int _pCustomerId) ? (int?)_pCustomerId : null);
 
                 // Create reservation
                 var sql = @"

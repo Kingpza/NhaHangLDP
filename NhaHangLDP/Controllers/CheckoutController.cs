@@ -2,9 +2,9 @@ using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace NhaHangLDP.Controllers
 {
@@ -87,7 +87,7 @@ namespace NhaHangLDP.Controllers
                 var orderId = CreateOrderInDatabase(orderCode, form, cart);
 
                 // Clear cart after successful order
-                Session[CART_SESSION_KEY] = null;
+                HttpContext.Session.Remove(CART_SESSION_KEY);
 
                 return Json(new { 
                     success = true, 
@@ -209,18 +209,27 @@ namespace NhaHangLDP.Controllers
 
         private CartViewModel GetCart()
         {
-            return Session[CART_SESSION_KEY] as CartViewModel;
+            var cartJson = HttpContext.Session.GetString(CART_SESSION_KEY);
+            if (string.IsNullOrEmpty(cartJson)) return null;
+            try
+            {
+                return JsonConvert.DeserializeObject<CartViewModel>(cartJson);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private CustomerInfoViewModel GetCustomerInfo()
         {
             // Check if customer is logged in
-            var customerId = HttpContext.Session.GetString("CustomerId");
-            if (customerId != null)
+            var customerIdStr = HttpContext.Session.GetString("CustomerId");
+            if (!string.IsNullOrEmpty(customerIdStr) && int.TryParse(customerIdStr, out int customerId))
             {
                 var customer = _db.Database.SqlQuery<CustomerBasicInfo>(
                     "SELECT Id, FullName, Email, Phone FROM Customer WHERE Id = @p0",
-                    (int)customerId).FirstOrDefault();
+                    customerId).FirstOrDefault();
 
                 if (customer != null)
                 {
@@ -240,15 +249,16 @@ namespace NhaHangLDP.Controllers
 
         private List<CustomerAddressViewModel> GetSavedAddresses()
         {
-            var customerId = HttpContext.Session.GetString("CustomerId");
-            if (customerId == null) return new List<CustomerAddressViewModel>();
+            var customerIdStr = HttpContext.Session.GetString("CustomerId");
+            if (string.IsNullOrEmpty(customerIdStr) || !int.TryParse(customerIdStr, out int customerId)) 
+                return new List<CustomerAddressViewModel>();
 
             try
             {
                 var addresses = _db.Database.SqlQuery<AddressInfo>(
                     @"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault 
                       FROM CustomerAddress WHERE CustomerId = @p0 ORDER BY IsDefault DESC",
-                    (int)customerId).ToList();
+                    customerId).ToList();
 
                 return addresses.Select(a => new CustomerAddressViewModel
                 {
@@ -313,7 +323,12 @@ namespace NhaHangLDP.Controllers
 
         private int CreateOrderInDatabase(string orderCode, CheckoutFormModel form, CartViewModel cart)
         {
-            var customerId = HttpContext.Session.GetString("CustomerId") as int?;
+            var customerIdStr = HttpContext.Session.GetString("CustomerId");
+            int? customerId = null;
+            if (!string.IsNullOrEmpty(customerIdStr) && int.TryParse(customerIdStr, out int parsedId))
+            {
+                customerId = parsedId;
+            }
 
             // Insert order
             var sql = @"

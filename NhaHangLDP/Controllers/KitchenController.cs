@@ -784,7 +784,7 @@ namespace NhaHangLDP.Controllers
 
         private int? GetCurrentEmployeeId()
         {
-            return HttpContext.Session.GetString("EmployeeId") as int?;
+            return (int.TryParse(HttpContext.Session.GetString("EmployeeId"), out int _pEmployeeId) ? (int?)_pEmployeeId : null);
         }
 
         protected override void Dispose(bool disposing)

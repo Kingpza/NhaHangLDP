@@ -87,7 +87,7 @@ namespace NhaHangLDP.Controllers
             }
 
             // Đăng nhập thành công
-            HttpContext.Session.SetString("ShipperId", shipper.Id?.ToString() ?? "");
+            HttpContext.Session.SetString("ShipperId", shipper.Id.ToString() ?? "");
             HttpContext.Session.SetString("ShipperName", shipper.FullName?.ToString() ?? "");
             HttpContext.Session.SetString("ShipperPhone", shipper.Phone?.ToString() ?? "");
 
@@ -104,7 +104,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         public ActionResult Logout()
         {
-            var shipperId = HttpContext.Session.GetString("ShipperId") as int?;
+            var shipperId = (int.TryParse(HttpContext.Session.GetString("ShipperId"), out int _pShipperId) ? (int?)_pShipperId : null);
             if (shipperId.HasValue)
             {
                 var shipper = _db.Shipper.Find(shipperId.Value);
@@ -656,7 +656,7 @@ namespace NhaHangLDP.Controllers
 
             if (assignment != null)
             {
-                var address = System.Web.Uri.EscapeDataString(assignment.CustomerOrder.DeliveryAddress);
+                var address = Uri.EscapeDataString(assignment.CustomerOrder.DeliveryAddress);
                 return Redirect($"https://www.google.com/maps/search/?api=1&query={address}");
             }
 
@@ -813,8 +813,8 @@ namespace NhaHangLDP.Controllers
 
         private int GetCurrentShipperId()
         {
-            var shipperId = HttpContext.Session.GetString("ShipperId");
-            return shipperId != null ? (int)shipperId : 0;
+            var shipperIdStr = HttpContext.Session.GetString("ShipperId");
+            return int.TryParse(shipperIdStr, out int shipperId) ? shipperId : 0;
         }
 
         #endregion

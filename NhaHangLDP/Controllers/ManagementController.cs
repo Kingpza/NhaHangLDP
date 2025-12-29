@@ -1614,7 +1614,7 @@ namespace NhaHangLDP.Controllers
         private int GetCurrentEmployeeId()
         {
             if (HttpContext.Session.GetString("EmployeeId") != null)
-                return (int)HttpContext.Session.GetString("EmployeeId");
+                return (int.TryParse(HttpContext.Session.GetString("EmployeeId"), out int _tempEmployeeId) ? _tempEmployeeId : 0);
 
             var adminEmployee = db.Employee.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive);
             return adminEmployee?.Id ?? 1;

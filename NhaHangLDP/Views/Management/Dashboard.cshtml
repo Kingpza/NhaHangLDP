@@ -377,7 +377,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             // 1. Dữ liệu Doanh Thu 7 Ngày Qua (từ Model)
-            var revenueData = @Html.Raw(Json.Encode(Model.RevenueLast7Days));
+            var revenueData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.RevenueLast7Days));
             var revenueLabels = revenueData.map(d => d.Date);
             var revenueValues = revenueData.map(d => d.Revenue);
 
@@ -459,7 +459,7 @@
             }
 
             // 2. Dữ liệu Món Ăn Phổ Biến (từ Model)
-            var popularData = @Html.Raw(Json.Encode(Model.PopularItems));
+            var popularData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.PopularItems));
             var popularLabels = popularData.map(p => p.ItemName);
             var popularValues = popularData.map(p => p.Quantity);
 

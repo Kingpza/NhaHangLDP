@@ -28,7 +28,7 @@ namespace NhaHangLDP.Controllers
 
         private bool IsAuthorized()
         {
-            return AuthorizationHelper.IsAdminOrManager(Session);
+            return AuthorizationHelper.IsAdminOrManager(HttpContext.Session);
         }
 
         private ActionResult RedirectUnauthorized()
@@ -38,8 +38,9 @@ namespace NhaHangLDP.Controllers
 
         private int GetCurrentEmployeeId()
         {
-            if (HttpContext.Session.GetString("EmployeeId") != null)
-                return (int)HttpContext.Session.GetString("EmployeeId");
+            var employeeIdStr = HttpContext.Session.GetString("EmployeeId");
+            if (!string.IsNullOrEmpty(employeeIdStr) && int.TryParse(employeeIdStr, out int employeeId))
+                return employeeId;
 
             var adminEmployee = _db.Employee.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive);
             return adminEmployee?.Id ?? 1;

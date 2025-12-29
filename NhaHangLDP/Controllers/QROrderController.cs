@@ -734,7 +734,7 @@ namespace NhaHangLDP.Controllers
                 return NotFound();
             }
 
-            var baseUrl = Request.GetLeftPart(UriPartial.Authority);
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var qrUrl = $"{baseUrl}{Url.Action("Scan", "QROrder", new { tableId = tableId })}";
 
             ViewBag.QRUrl = qrUrl;
@@ -865,7 +865,7 @@ namespace NhaHangLDP.Controllers
 
         private int? GetCurrentEmployeeId()
         {
-            return HttpContext.Session.GetString("EmployeeId") as int?;
+            return (int.TryParse(HttpContext.Session.GetString("EmployeeId"), out int _pEmployeeId) ? (int?)_pEmployeeId : null);
         }
 
         protected override void Dispose(bool disposing)

@@ -57,8 +57,8 @@ namespace NhaHangLDP.Controllers
             if (shiftService.StartShift(GetCurrentCashierIdFromSession(), openingAmount, notes, out errorMessage))
             {
                 var activeShift = shiftService.GetActiveShift();
-                HttpContext.Session.SetString("ActiveShiftId", activeShift.Id?.ToString() ?? "");
-                HttpContext.Session.SetString("ShiftStartTime", activeShift.StartTime?.ToString() ?? "");
+                HttpContext.Session.SetString("ActiveShiftId", activeShift.Id.ToString());
+                HttpContext.Session.SetString("ShiftStartTime", activeShift.StartTime.ToString());
                 return Json(new { success = true, message = "Mở ca thành công!", shiftId = activeShift.Id, openingAmount });
             }
             return Json(new { success = false, message = errorMessage });
@@ -112,9 +112,9 @@ namespace NhaHangLDP.Controllers
             if (activeShift == null)
                 return RedirectToAction("OpenShift");
 
-            HttpContext.Session.SetString("ActiveShiftId", activeShift.Id?.ToString() ?? "");
-            HttpContext.Session.SetString("ShiftStartTime", activeShift.StartTime?.ToString() ?? "");
-            HttpContext.Session.SetString("CashierName", activeShift.Employee?.FullName ?? "Thu Ngân"?.ToString() ?? "");
+            HttpContext.Session.SetString("ActiveShiftId", activeShift.Id.ToString());
+            HttpContext.Session.SetString("ShiftStartTime", activeShift.StartTime.ToString());
+            HttpContext.Session.SetString("CashierName", activeShift.Employee?.FullName ?? "Thu Ngân");
 
             return View(dashboardService.GetDashboardData(activeShift.Id));
         }
@@ -745,8 +745,7 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
-                var serializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-                var items = serializer.Deserialize<List<TableOperationService.SplitItemModel>>(itemsToSplit);
+                var items = Newtonsoft.Json.JsonConvert.DeserializeObject<List<TableOperationService.SplitItemModel>>(itemsToSplit);
 
                 string errorMessage;
                 if (tableOperationService.SplitTable(sourceTableId, targetTableId, items, out errorMessage))
@@ -766,7 +765,7 @@ namespace NhaHangLDP.Controllers
 
         private int GetCurrentCashierIdFromSession()
         {
-            return HttpContext.Session.GetString("CashierId") as int? ?? 1;
+            return (int.TryParse(HttpContext.Session.GetString("CashierId"), out int _pCashierId) ? (int?)_pCashierId : null) ?? 1;
         }
 
         protected override void Dispose(bool disposing)
