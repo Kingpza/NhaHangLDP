@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Data.Entity;
@@ -9,6 +9,7 @@ using NhaHangLDP.Models;
 using NhaHangLDP.Services;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace NhaHangLDP.Controllers
 {
@@ -30,7 +31,7 @@ namespace NhaHangLDP.Controllers
              .ToList();
     
             // Load wishlist items for logged in customer
-            var customerId = Session["CustomerId"] as int?;
+            var customerId = HttpContext.Session.GetString("CustomerId") as int?;
             if (customerId.HasValue)
             {
                 var wishlistIds = db.Database.SqlQuery<int>(
@@ -151,11 +152,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var history = _chatbotService.GetChatHistory(sessionId);
-                return Json(new { success = true, history = history }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, history = history });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -186,7 +187,7 @@ namespace NhaHangLDP.Controllers
             {
                 if (string.IsNullOrWhiteSpace(query))
                 {
-                    return Json(new { success = false, message = "Vui lòng nhập từ khóa" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Vui lòng nhập từ khóa" });
                 }
 
                 query = query.ToLower();
@@ -208,11 +209,11 @@ namespace NhaHangLDP.Controllers
                     })
                     .ToList();
 
-                return Json(new { success = true, results = results }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, results = results });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -245,11 +246,11 @@ namespace NhaHangLDP.Controllers
                     new { icon = "🍽️", text = $"Gợi ý {mealType}", action = "meal_suggestion" }
                 };
 
-                return Json(new { success = true, suggestions = suggestions, mealType = mealType }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, suggestions = suggestions, mealType = mealType });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 

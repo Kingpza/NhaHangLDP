@@ -1,4 +1,4 @@
-﻿using NhaHangLDP.Helpers;
+using NhaHangLDP.Helpers;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services.HR;
 using System;
@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace NhaHangLDP.Controllers
@@ -37,8 +38,8 @@ namespace NhaHangLDP.Controllers
 
         private int GetCurrentEmployeeId()
         {
-            if (Session["EmployeeId"] != null)
-                return (int)Session["EmployeeId"];
+            if (HttpContext.Session.GetString("EmployeeId") != null)
+                return (int)HttpContext.Session.GetString("EmployeeId");
 
             var adminEmployee = _db.Employee.FirstOrDefault(e => e.Role.RoleName == "Admin" && e.IsActive);
             return adminEmployee?.Id ?? 1;
@@ -93,11 +94,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var data = _hrService.GetDashboardData();
-                return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = data });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -177,7 +178,7 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetTodayAttendance()
         {
             var data = _hrService.GetTodayAttendance();
-            return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+            return Json(new { success = true, data = data });
         }
 
         #endregion
@@ -261,7 +262,7 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetLeaveBalance(int employeeId)
         {
             var balance = _hrService.GetLeaveBalance(employeeId, DateTime.Now.Year);
-            return Json(new { success = true, data = balance }, JsonRequestBehavior.AllowGet);
+            return Json(new { success = true, data = balance });
         }
 
         private List<SelectListItem> GetLeaveTypes()

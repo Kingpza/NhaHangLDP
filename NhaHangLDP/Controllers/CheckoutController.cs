@@ -1,9 +1,10 @@
-﻿using NhaHangLDP.Models;
+using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace NhaHangLDP.Controllers
 {
@@ -214,7 +215,7 @@ namespace NhaHangLDP.Controllers
         private CustomerInfoViewModel GetCustomerInfo()
         {
             // Check if customer is logged in
-            var customerId = Session["CustomerId"];
+            var customerId = HttpContext.Session.GetString("CustomerId");
             if (customerId != null)
             {
                 var customer = _db.Database.SqlQuery<CustomerBasicInfo>(
@@ -239,7 +240,7 @@ namespace NhaHangLDP.Controllers
 
         private List<CustomerAddressViewModel> GetSavedAddresses()
         {
-            var customerId = Session["CustomerId"];
+            var customerId = HttpContext.Session.GetString("CustomerId");
             if (customerId == null) return new List<CustomerAddressViewModel>();
 
             try
@@ -312,7 +313,7 @@ namespace NhaHangLDP.Controllers
 
         private int CreateOrderInDatabase(string orderCode, CheckoutFormModel form, CartViewModel cart)
         {
-            var customerId = Session["CustomerId"] as int?;
+            var customerId = HttpContext.Session.GetString("CustomerId") as int?;
 
             // Insert order
             var sql = @"

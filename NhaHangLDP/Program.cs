@@ -3,14 +3,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddSystemWebAdapters()
-    .AddWrappedAspNetCoreSession()
-    .AddJsonSessionSerializer(options =>
-    {
-        options.RegisterKey<string>("MachineName");
-        options.RegisterKey<string>("SessionStartTime");
-    })
-    .AddHttpApplication<MvcApplication>();
+
+// Add session support
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -27,9 +28,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 app.UseSession();
-app.UseSystemWebAdapters();
 
-app.MapControllers()
-    .RequireSystemWebAdapterSession();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

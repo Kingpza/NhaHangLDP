@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -6,6 +6,7 @@ using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
 using NhaHangLDP.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace NhaHangLDP.Controllers
 {
@@ -493,15 +494,15 @@ namespace NhaHangLDP.Controllers
 
                 if (order == null)
                 {
-                    return Json(new { success = true, hasOrder = false }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = true, hasOrder = false });
                 }
 
                 var viewModel = MapToOrderViewModel(order);
-                return Json(new { success = true, hasOrder = true, order = viewModel }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, hasOrder = true, order = viewModel });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -519,15 +520,15 @@ namespace NhaHangLDP.Controllers
 
                 if (order == null)
                 {
-                    return Json(new { success = false, message = "Không tìm thấy đơn hàng" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
                 }
 
                 var viewModel = MapToOrderViewModel(order);
-                return Json(new { success = true, order = viewModel }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, order = viewModel });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -864,7 +865,7 @@ namespace NhaHangLDP.Controllers
 
         private int? GetCurrentEmployeeId()
         {
-            return Session["EmployeeId"] as int?;
+            return HttpContext.Session.GetString("EmployeeId") as int?;
         }
 
         protected override void Dispose(bool disposing)

@@ -1,4 +1,4 @@
-﻿using NhaHangLDP.Models;
+using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -185,7 +185,7 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetCartData()
         {
             var cart = GetCart();
-            return Json(new { success = true, cart = cart }, JsonRequestBehavior.AllowGet);
+            return Json(new { success = true, cart = cart });
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace NhaHangLDP.Controllers
         public JsonResult GetCartCount()
         {
             var cart = GetCart();
-            return Json(new { count = cart.TotalItems }, JsonRequestBehavior.AllowGet);
+            return Json(new { count = cart.TotalItems });
         }
 
         /// <summary>
@@ -362,11 +362,11 @@ namespace NhaHangLDP.Controllers
                     category = m.Category
                 }).ToList();
 
-                return Json(new { success = true, items = result }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, items = result });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
             }
         }
 

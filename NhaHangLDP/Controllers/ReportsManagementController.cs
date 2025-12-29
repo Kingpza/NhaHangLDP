@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
@@ -306,11 +306,11 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var shiftsData = _shiftService.GetActiveShifts();
-                return Json(new { success = true, shifts = shiftsData }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, shifts = shiftsData });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -552,11 +552,11 @@ namespace NhaHangLDP.Controllers
             {
                 var analyticsService = new AdvancedAnalyticsService(db);
                 var data = analyticsService.GetAlerts();
-                return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = data });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 

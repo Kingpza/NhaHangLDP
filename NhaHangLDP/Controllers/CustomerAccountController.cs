@@ -1,4 +1,4 @@
-﻿using NhaHangLDP.Models;
+using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +7,7 @@ using System.Text;
 using System.Web;
 using System.Web.Security;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace NhaHangLDP.Controllers
 {
@@ -68,10 +69,10 @@ namespace NhaHangLDP.Controllers
                 }
 
                 // Set session - lưu đầy đủ thông tin khách hàng
-                Session["CustomerId"] = customer.Id;
-                Session["CustomerName"] = customer.FullName;
-                Session["CustomerEmail"] = customer.Email;
-                Session["CustomerPhone"] = customer.Phone;
+                HttpContext.Session.SetString("CustomerId", customer.Id?.ToString() ?? "");
+                HttpContext.Session.SetString("CustomerName", customer.FullName?.ToString() ?? "");
+                HttpContext.Session.SetString("CustomerEmail", customer.Email?.ToString() ?? "");
+                HttpContext.Session.SetString("CustomerPhone", customer.Phone?.ToString() ?? "");
 
                 // Update last login
                 _db.Database.ExecuteSqlCommand(
@@ -175,10 +176,10 @@ namespace NhaHangLDP.Controllers
                     passwordHash).FirstOrDefault();
 
                 // Auto login - lưu đầy đủ thông tin khách hàng
-                Session["CustomerId"] = (int)customerId;
-                Session["CustomerName"] = model.FullName;
-                Session["CustomerEmail"] = model.Email;
-                Session["CustomerPhone"] = model.Phone;
+                HttpContext.Session.SetString("CustomerId", (int)customerId?.ToString() ?? "");
+                HttpContext.Session.SetString("CustomerName", model.FullName?.ToString() ?? "");
+                HttpContext.Session.SetString("CustomerEmail", model.Email?.ToString() ?? "");
+                HttpContext.Session.SetString("CustomerPhone", model.Phone?.ToString() ?? "");
 
                 TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà Hàng LDP.";
                 return RedirectToAction("Menu", "Public");
@@ -315,7 +316,7 @@ namespace NhaHangLDP.Controllers
                     @"UPDATE Customer SET FullName = @p1, Phone = @p2, DateOfBirth = @p3, Gender = @p4 WHERE Id = @p0",
                     customerId, fullName, phone, dateOfBirth, gender);
 
-                Session["CustomerName"] = fullName;
+                HttpContext.Session.SetString("CustomerName", fullName?.ToString() ?? "");
 
                 return Json(new { success = true, message = "Cập nhật thành công!" });
             }
@@ -570,7 +571,7 @@ namespace NhaHangLDP.Controllers
                 var customerId = GetCustomerId();
                 if (customerId == null)
                 {
-                    return Json(new { success = false, message = "Vui lòng đăng nhập!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Vui lòng đăng nhập!" });
                 }
 
                 var address = _db.Database.SqlQuery<CustomerAddressInfo>(
@@ -581,14 +582,14 @@ namespace NhaHangLDP.Controllers
 
                 if (address == null)
                 {
-                    return Json(new { success = false, message = "Không tìm thấy địa chỉ!" }, JsonRequestBehavior.AllowGet);
+                    return Json(new { success = false, message = "Không tìm thấy địa chỉ!" });
                 }
 
-                return Json(new { success = true, data = address }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = true, data = address });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+                return Json(new { success = false, message = ex.Message });
             }
         }
 
@@ -889,12 +890,12 @@ private class MyReservationInfo
 
 private bool IsCustomerLoggedIn()
 {
-    return Session["CustomerId"] != null;
+    return HttpContext.Session.GetString("CustomerId") != null;
 }
 
 private int? GetCustomerId()
 {
-    return Session["CustomerId"] as int?;
+    return HttpContext.Session.GetString("CustomerId") as int?;
 }
 
 private CustomerProfileViewModel GetCustomerProfile(int customerId)

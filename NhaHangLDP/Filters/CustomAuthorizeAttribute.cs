@@ -1,13 +1,16 @@
 ﻿using System;
-using System.Web;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Routing;
 
 namespace NhaHangLDP.Filters
 {
     /// <summary>
-    /// Custom Authorization Attribute để kiểm tra quyền truy cập
+    /// Custom Authorization Attribute để kiểm tra quyền truy cập (ASP.NET Core)
     /// </summary>
-    public class CustomAuthorizeAttribute : AuthorizeAttribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true)]
+    public class CustomAuthorizeAttribute : Attribute, IAuthorizationFilter
     {
         private readonly string[] _allowedRoles;
 
@@ -16,62 +19,55 @@ namespace NhaHangLDP.Filters
             _allowedRoles = roles;
         }
 
-        protected override bool AuthorizeCore(HttpContextBase httpContext)
+        public void OnAuthorization(AuthorizationFilterContext context)
         {
             // Kiểm tra session có tồn tại không
-            var session = httpContext.Session;
-            if (session == null || session["Username"] == null || session["UserRole"] == null)
+            var session = context.HttpContext.Session;
+            var username = session.GetString("Username");
+            var userRole = session.GetString("UserRole");
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(userRole))
             {
-                return false;
+                // Nếu chưa đăng nhập, redirect về trang đăng nhập
+                var returnUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+                context.Result = new RedirectToRouteResult(
+                    new RouteValueDictionary
+                    {
+                        { "controller", "Account" },
+                        { "action", "Login" },
+                        { "returnUrl", returnUrl }
+                    });
+                return;
             }
 
             // Nếu không có role nào được chỉ định, chỉ cần đăng nhập
             if (_allowedRoles == null || _allowedRoles.Length == 0)
             {
-                return true;
+                return;
             }
 
             // Kiểm tra role
-            var userRole = session["UserRole"].ToString().ToLower();
+            var userRoleLower = userRole.ToLower();
             foreach (var role in _allowedRoles)
             {
-                if (userRole == role.ToLower())
+                if (userRoleLower == role.ToLower())
                 {
-                    return true;
+                    return;
                 }
             }
 
-            return false;
-        }
-
-        protected override void HandleUnauthorizedRequest(AuthorizationContext filterContext)
-        {
-            var session = filterContext.HttpContext.Session;
-            
-            // Nếu chưa đăng nhập
-            if (session == null || session["Username"] == null)
+            // Nếu đã đăng nhập nhưng không đủ quyền
+            context.Result = new ViewResult
             {
-                filterContext.Result = new RedirectToRouteResult(
-                    new RouteValueDictionary
-                    {
-                        { "controller", "Account" },
-                        { "action", "Login" },
-                        { "returnUrl", filterContext.HttpContext.Request.RawUrl }
-                    });
-            }
-            else
-            {
-                // Nếu đã đăng nhập nhưng không đủ quyền
-                filterContext.Result = new ViewResult
+                ViewName = "~/Views/Shared/AccessDenied.cshtml",
+                ViewData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(
+                    new Microsoft.AspNetCore.Mvc.ModelBinding.EmptyModelMetadataProvider(),
+                    new Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary())
                 {
-                    ViewName = "~/Views/Shared/AccessDenied.cshtml",
-                    ViewData = new ViewDataDictionary
-                    {
-                        ["RequiredRoles"] = string.Join(", ", _allowedRoles),
-                        ["UserRole"] = session["UserRole"]?.ToString()
-                    }
-                };
-            }
+                    ["RequiredRoles"] = string.Join(", ", _allowedRoles),
+                    ["UserRole"] = userRole
+                }
+            };
         }
     }
 
