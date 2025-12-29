@@ -19,9 +19,8 @@ namespace NhaHangLDP.Services.Management
         public ManagementDashboardViewModel GetDashboardData()
         {
             var viewModel = new ManagementDashboardViewModel();
-            var today = DateTime.Today;
-            var sevenDaysAgo = today.AddDays(-7);
-
+            
+            // Lấy 5 đơn hàng gần nhất
             viewModel.RecentOrders = db.Order
                 .Include(o => o.Table)
                 .Include(o => o.Bills)
@@ -29,9 +28,29 @@ namespace NhaHangLDP.Services.Management
                 .Take(5)
                 .ToList();
 
+            // Lấy dữ liệu bills trong 7 ngày (có thể không có data nếu OrderTime là tương lai)
+            var today = DateTime.Today;
+            var sevenDaysAgo = today.AddDays(-7);
+            
             var paidBills = db.Bill
                 .Where(b => b.BillDate >= sevenDaysAgo && b.Status == "Paid")
                 .ToList();
+
+            // Nếu không có data trong 7 ngày, lấy 7 bills gần nhất
+            if (!paidBills.Any())
+            {
+                paidBills = db.Bill
+                    .Where(b => b.Status == "Paid")
+                    .OrderByDescending(b => b.BillDate)
+                    .Take(50) // Lấy nhiều bills để group theo ngày
+                    .ToList();
+                    
+                if (paidBills.Any())
+                {
+                    sevenDaysAgo = paidBills.Min(b => b.BillDate).Date;
+                    today = paidBills.Max(b => b.BillDate).Date;
+                }
+            }
 
             var revenueData = new List<DailyRevenue>();
             for (int i = 6; i >= 0; i--)
@@ -49,8 +68,17 @@ namespace NhaHangLDP.Services.Management
             }
             viewModel.RevenueLast7Days = revenueData;
 
-            viewModel.PopularItems = db.OrderDetail
-                .Where(od => od.Order.OrderTime >= sevenDaysAgo)
+            // Lấy món ăn phổ biến (trong 7 ngày hoặc tất cả nếu không có data)
+            var orderDetailsQuery = db.OrderDetail
+                .Where(od => od.Order.OrderTime >= sevenDaysAgo);
+                
+            if (!orderDetailsQuery.Any())
+            {
+                // Nếu không có data trong 7 ngày, lấy tất cả
+                orderDetailsQuery = db.OrderDetail;
+            }
+
+            viewModel.PopularItems = orderDetailsQuery
                 .GroupBy(od => od.MenuItem.Name)
                 .Select(g => new PopularItem
                 {

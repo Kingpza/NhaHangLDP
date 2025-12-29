@@ -503,7 +503,7 @@
                                 borderRadius: 8
                             }
                         }
-                    });
+                    }
                 });
 
                 // Tạo legend tùy chỉnh
@@ -597,12 +597,12 @@
                         {
                             foreach (var order in Model.RecentOrders.Take(5))
                             {
-                                var bill = order.Bill.FirstOrDefault(b => b.Status == "Paid");
+                                var bill = order.Bills.FirstOrDefault(b => b.Status == "Paid");
                                 var totalAmount = bill?.FinalAmount ?? 0;
 
                                 <tr>
                                     <td><span class="order-id">DH@(order.Id.ToString("D6"))</span></td>
-                                    <td><span class="table-badge">@order.RestaurantTable.TableNumber</span></td>
+                                    <td><span class="table-badge">@order.Table.TableNumber</span></td>
                                     <td><strong>@totalAmount.ToString("N0") VNĐ</strong></td>
                                     <td>
                                         @if (order.Status == "Completed")
