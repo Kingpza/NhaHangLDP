@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Web;
+using Microsoft.AspNetCore.Http;
 using NhaHangLDP.Models;
 
 namespace NhaHangLDP.Services
 {
     public class RequestHandlerService
     {
-        public bool TryParseTableId(HttpRequestBase request, out int tableId, out string errorMessage)
+        public bool TryParseTableId(HttpRequest request, out int tableId, out string errorMessage)
         {
-            var tableIdStr = request.Form["tableId"];
+            var tableIdStr = request.Form["tableId"].ToString();
             if (!int.TryParse(tableIdStr, out tableId))
             {
                 errorMessage = "Mã bàn không hợp lệ!";
@@ -18,9 +18,9 @@ namespace NhaHangLDP.Services
             return true;
         }
 
-        public bool TryParseOrderId(HttpRequestBase request, out int orderId, out string errorMessage)
+        public bool TryParseOrderId(HttpRequest request, out int orderId, out string errorMessage)
         {
-            var orderIdStr = request.Form["orderId"];
+            var orderIdStr = request.Form["orderId"].ToString();
             if (string.IsNullOrEmpty(orderIdStr))
             {
                 errorMessage = "Thiếu thông tin đơn hàng!";
@@ -38,12 +38,12 @@ namespace NhaHangLDP.Services
             return true;
         }
 
-        public bool TryParsePaymentRequest(HttpRequestBase request, out int orderId, out string paymentMethod, 
+        public bool TryParsePaymentRequest(HttpRequest request, out int orderId, out string paymentMethod, 
             out decimal receivedAmount, out string errorMessage)
         {
-            var orderIdStr = request.Form["orderId"];
-            paymentMethod = request.Form["paymentMethod"];
-            var receivedAmountStr = request.Form["receivedAmount"];
+            var orderIdStr = request.Form["orderId"].ToString();
+            paymentMethod = request.Form["paymentMethod"].ToString();
+            var receivedAmountStr = request.Form["receivedAmount"].ToString();
 
             if (string.IsNullOrEmpty(orderIdStr) || string.IsNullOrEmpty(paymentMethod) || string.IsNullOrEmpty(receivedAmountStr))
             {
@@ -70,10 +70,10 @@ namespace NhaHangLDP.Services
             return true;
         }
 
-        public bool TryParseTableInfoRequest(HttpRequestBase request, out TableInfoRequest tableInfo, out string errorMessage)
+        public bool TryParseTableInfoRequest(HttpRequest request, out TableInfoRequest tableInfo, out string errorMessage)
         {
-            var tableIdStr = request.Form["tableId"];
-            var customersStr = request.Form["customers"];
+            var tableIdStr = request.Form["tableId"].ToString();
+            var customersStr = request.Form["customers"].ToString();
 
             int tableId;
             int customers;
@@ -96,11 +96,11 @@ namespace NhaHangLDP.Services
             {
                 TableId = tableId,
                 Customers = customers,
-                Action = request.Form["action"],
-                CustomerName = request.Form["customerName"] ?? "",
-                CustomerPhone = request.Form["customerPhone"] ?? "",
-                Notes = request.Form["notes"] ?? "",
-                Time = request.Form["time"] ?? ""
+                Action = request.Form["action"].ToString(),
+                CustomerName = request.Form["customerName"].ToString() ?? "",
+                CustomerPhone = request.Form["customerPhone"].ToString() ?? "",
+                Notes = request.Form["notes"].ToString() ?? "",
+                Time = request.Form["time"].ToString() ?? ""
             };
 
             errorMessage = null;
