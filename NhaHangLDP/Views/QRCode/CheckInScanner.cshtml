@@ -1,0 +1,459 @@
+﻿@{
+    ViewBag.Title = "Quét QR Check-in";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .scanner-container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .scanner-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .scanner-header {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .scanner-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .scanner-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .scanner-body {
+            padding: 30px;
+        }
+        
+        /* Video Container */
+        .video-container {
+            position: relative;
+            background: #1e293b;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+        #qr-video {
+            width: 100%;
+            height: 380px;
+            object-fit: cover;
+        }
+        .scan-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            border: 4px solid #16a34a;
+            border-radius: 15px;
+            box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+        }
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #16a34a, transparent);
+            animation: scan 2s linear infinite;
+        }
+        @@keyframes scan {
+            0% { top: 0; }
+            50% { top: calc(100% - 4px); }
+            100% { top: 0; }
+        }
+        
+        /* Start Button */
+        .btn-start-scan {
+            width: 100%;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            margin-bottom: 25px;
+        }
+        .btn-start-scan.btn-primary {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+        .btn-start-scan.btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        /* Manual Input */
+        .manual-input-card {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+        }
+        .manual-input-card h5 {
+            margin: 0 0 15px 0;
+            color: #1e3a5f;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* Result Card */
+        .result-card {
+            display: none;
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .result-card.success {
+            background: #dcfce7;
+            border: 2px solid #16a34a;
+        }
+        .result-card.error {
+            background: #fee2e2;
+            border: 2px solid #dc2626;
+        }
+        .result-card .icon {
+            font-size: 56px;
+            margin-bottom: 15px;
+        }
+        .result-card.success .icon { color: #16a34a; }
+        .result-card.error .icon { color: #dc2626; }
+        .result-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .result-card.success h4 { color: #16a34a; }
+        .result-card.error h4 { color: #dc2626; }
+        .result-card p {
+            margin: 0;
+            color: #64748b;
+            font-size: 15px;
+        }
+        
+        /* History Section */
+        .history-section {
+            margin-top: 30px;
+        }
+        .history-section h5 {
+            margin: 0 0 20px 0;
+            color: #1e3a5f;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .history-item .icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+        .history-item .icon.checkin {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        .history-item .icon.checkout {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .history-item .info {
+            flex: 1;
+        }
+        .history-item .info h6 {
+            margin: 0 0 3px 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e3a5f;
+        }
+        .history-item .info span {
+            font-size: 13px;
+            color: #64748b;
+        }
+        .history-item .time {
+            font-weight: 700;
+            color: #1e3a5f;
+            font-size: 16px;
+        }
+        .empty-history {
+            text-align: center;
+            padding: 30px;
+            color: #94a3b8;
+        }
+        .empty-history i {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-camera me-2"></i>Quét QR Check-in</h2>
+            <p class="mb-0">Quét mã QR của nhân viên để check-in/check-out</p>
+        </div>
+        <a href="@Url.Action("AllEmployeesQR", "QRCode")" class="btn btn-light">
+            <i class="fas fa-id-card me-2"></i>Xem thẻ NV
+        </a>
+    </div>
+</div>
+
+<div class="scanner-container">
+    <div class="scanner-card">
+        <div class="scanner-header">
+            <h2><i class="fas fa-qrcode me-2"></i>Hệ Thống Check-in</h2>
+            <p>Đưa mã QR của nhân viên vào khung hình để check-in hoặc check-out</p>
+        </div>
+        
+        <div class="scanner-body">
+            <!-- Video Scanner -->
+            <div class="video-container" id="videoContainer" style="display: none;">
+                <video id="qr-video" playsinline></video>
+                <div class="scan-overlay">
+                    <div class="scan-line"></div>
+                </div>
+            </div>
+            
+            <!-- Start Button -->
+            <button class="btn btn-primary btn-start-scan" id="btnStartScan" onclick="startScanner()">
+                <i class="fas fa-camera me-2"></i>Bắt đầu quét
+            </button>
+            
+            <!-- Manual Input -->
+            <div class="manual-input-card">
+                <h5><i class="fas fa-keyboard me-2"></i>Hoặc nhập thủ công</h5>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="manualCode" placeholder="Nhập mã QR hoặc mã nhân viên (VD: EMP|1|NV0001|20240101)">
+                    <button class="btn btn-success" onclick="processManualInput()">
+                        <i class="fas fa-check me-1"></i> Xác nhận
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Result -->
+            <div class="result-card" id="resultCard">
+                <div class="icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h4 id="resultTitle">Check-in thành công!</h4>
+                <p id="resultMessage">Nguyễn Văn A - 08:30:00</p>
+            </div>
+            
+            <!-- History -->
+            <div class="history-section">
+                <h5><i class="fas fa-history me-2"></i>Lịch sử hôm nay</h5>
+                <div id="historyItems">
+                    <div class="empty-history">
+                        <i class="fas fa-inbox"></i>
+                        <p>Chưa có lượt check-in nào</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <!-- QR Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <script>
+        let html5QrCode = null;
+        let isScanning = false;
+        const historyItems = [];
+
+        function startScanner() {
+            const videoContainer = document.getElementById('videoContainer');
+            const btnStartScan = document.getElementById('btnStartScan');
+            
+            if (isScanning) {
+                stopScanner();
+                return;
+            }
+
+            videoContainer.style.display = 'block';
+            btnStartScan.innerHTML = '<i class="fas fa-stop me-2"></i>Dừng quét';
+            btnStartScan.classList.remove('btn-primary');
+            btnStartScan.classList.add('btn-danger');
+
+            html5QrCode = new Html5Qrcode("qr-video");
+            
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    const cameraId = devices[0].id;
+                    html5QrCode.start(
+                        cameraId,
+                        { fps: 10, qrbox: { width: 220, height: 220 } },
+                        onScanSuccess,
+                        onScanError
+                    ).then(() => {
+                        isScanning = true;
+                    }).catch(err => {
+                        showError('Lỗi Camera', 'Không thể khởi động camera: ' + err);
+                    });
+                }
+            }).catch(err => {
+                showError('Lỗi', 'Không tìm thấy camera');
+            });
+        }
+
+        function stopScanner() {
+            if (html5QrCode && isScanning) {
+                html5QrCode.stop().then(() => {
+                    isScanning = false;
+                    document.getElementById('videoContainer').style.display = 'none';
+                    const btnStartScan = document.getElementById('btnStartScan');
+                    btnStartScan.innerHTML = '<i class="fas fa-camera me-2"></i>Bắt đầu quét';
+                    btnStartScan.classList.remove('btn-danger');
+                    btnStartScan.classList.add('btn-primary');
+                }).catch(err => console.error("Unable to stop scanning", err));
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            if (html5QrCode) html5QrCode.pause();
+            processQRCode(decodedText);
+        }
+
+        function onScanError(error) { }
+
+        function processManualInput() {
+            const code = document.getElementById('manualCode').value.trim();
+            if (!code) {
+                showError('Lỗi', 'Vui lòng nhập mã QR hoặc mã nhân viên');
+                return;
+            }
+            processQRCode(code);
+        }
+
+        function processQRCode(qrContent) {
+            showLoading('Đang xử lý...', 'Vui lòng chờ');
+            
+            $.ajax({
+                url: '@Url.Action("ProcessEmployeeCheckIn", "QRCode")',
+                type: 'POST',
+                data: { qrContent: qrContent },
+                success: function(response) {
+                    closeLoading();
+                    if (response.success) {
+                        showResultCard(true, response.message, `${response.employeeName} - ${response.time}`);
+                        addToHistory(response.action, response.employeeName, response.time);
+                        playBeep(true);
+                    } else {
+                        showResultCard(false, 'Lỗi', response.message);
+                        playBeep(false);
+                    }
+                    
+                    setTimeout(() => {
+                        if (html5QrCode && isScanning) html5QrCode.resume();
+                        hideResultCard();
+                    }, 3000);
+                },
+                error: function() {
+                    closeLoading();
+                    showResultCard(false, 'Lỗi', 'Không thể kết nối đến server');
+                    setTimeout(() => {
+                        if (html5QrCode && isScanning) html5QrCode.resume();
+                        hideResultCard();
+                    }, 3000);
+                }
+            });
+        }
+
+        function showResultCard(success, title, message) {
+            const card = document.getElementById('resultCard');
+            const icon = card.querySelector('.icon i');
+            const titleEl = document.getElementById('resultTitle');
+            const messageEl = document.getElementById('resultMessage');
+
+            card.className = 'result-card ' + (success ? 'success' : 'error');
+            icon.className = 'fas ' + (success ? 'fa-check-circle' : 'fa-times-circle');
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            card.style.display = 'block';
+        }
+
+        function hideResultCard() {
+            document.getElementById('resultCard').style.display = 'none';
+        }
+
+        function addToHistory(action, name, time) {
+            historyItems.unshift({ action, name, time });
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyItems');
+            if (historyItems.length === 0) {
+                container.innerHTML = '<div class="empty-history"><i class="fas fa-inbox"></i><p>Chưa có lượt check-in nào</p></div>';
+                return;
+            }
+
+            let html = '';
+            historyItems.forEach(item => {
+                const iconClass = item.action === 'checkin' ? 'checkin' : 'checkout';
+                const iconName = item.action === 'checkin' ? 'fa-sign-in-alt' : 'fa-sign-out-alt';
+                const actionText = item.action === 'checkin' ? 'Check-in' : 'Check-out';
+                
+                html += `
+                    <div class="history-item">
+                        <div class="icon ${iconClass}">
+                            <i class="fas ${iconName}"></i>
+                        </div>
+                        <div class="info">
+                            <h6>${item.name}</h6>
+                            <span>${actionText}</span>
+                        </div>
+                        <div class="time">${item.time}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function playBeep(success) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = success ? 800 : 300;
+                oscillator.type = 'sine';
+                gainNode.gain.value = 0.3;
+                
+                oscillator.start();
+                setTimeout(() => oscillator.stop(), success ? 200 : 400);
+            } catch (e) { }
+        }
+
+        document.getElementById('manualCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') processManualInput();
+        });
+
+        window.addEventListener('beforeunload', function() { stopScanner(); });
+    </script>
+}

@@ -1,0 +1,254 @@
+﻿@model NhaHangLDP.Services.QRCodeResult
+@{
+    ViewBag.Title = "QR Code Nhân Viên";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    var employee = ViewBag.Employee as NhaHangLDP.Models.Employee;
+    var employeeCode = ViewBag.EmployeeCode as string;
+    var initials = string.Join("", employee.FullName.Split(' ').Where(s => !string.IsNullOrEmpty(s)).Select(s => s[0]));
+}
+
+@section styles {
+    <style>
+        .qr-detail-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .qr-main-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .qr-main-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            padding: 35px;
+            text-align: center;
+        }
+        .qr-main-header h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        .employee-avatar-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 auto 15px;
+        }
+        .employee-name-large {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+        .employee-code-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .employee-role-badge {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .qr-main-body {
+            padding: 40px;
+        }
+        .qr-section {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        .qr-image-wrapper {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #1e3a5f;
+        }
+        .qr-image-wrapper img {
+            width: 200px;
+            height: 200px;
+        }
+        .employee-info-box {
+            flex: 1;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        .info-item .label {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .info-item .value {
+            font-weight: 600;
+            color: #1e3a5f;
+            font-size: 14px;
+        }
+        .qr-main-footer {
+            padding: 25px 40px 40px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-qr-action {
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .btn-qr-download {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+        }
+        .btn-qr-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(30, 58, 95, 0.4);
+            color: white;
+        }
+        .btn-qr-print {
+            background: #16a34a;
+            color: white;
+        }
+        .btn-qr-print:hover {
+            background: #15803d;
+            color: white;
+        }
+        .btn-qr-back {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .btn-qr-back:hover {
+            background: #e2e8f0;
+            color: #1e3a5f;
+        }
+
+        /* Print Template - ID Card */
+        .print-template { display: none; }
+        @@media print {
+            body * { visibility: hidden; }
+            .print-template, .print-template * { visibility: visible; }
+            .print-template {
+                display: block !important;
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: white;
+            }
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-id-card me-2"></i>Chi Tiết Thẻ Nhân Viên</h2>
+            <p class="mb-0">Thẻ QR Check-in cho @employee.FullName</p>
+        </div>
+        <a href="@Url.Action("AllEmployeesQR", "QRCode")" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="qr-detail-container">
+    <div class="qr-main-card">
+        <div class="qr-main-header">
+            <h2><i class="fas fa-id-card me-2"></i>Thẻ Check-in Nhân Viên</h2>
+            <div class="employee-avatar-large">@initials</div>
+            <div class="employee-name-large">@employee.FullName</div>
+            <span class="employee-code-badge">@employeeCode</span>
+            <div class="employee-role-badge">@employee.Role?.RoleName</div>
+        </div>
+        
+        <div class="qr-main-body">
+            <div class="qr-section">
+                <div class="qr-image-wrapper">
+                    <img src="@Model.DataUrl" alt="QR Code">
+                </div>
+                
+                <div class="employee-info-box">
+                    <div class="info-item">
+                        <span class="label">Mã nhân viên</span>
+                        <span class="value">@employeeCode</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Họ và tên</span>
+                        <span class="value">@employee.FullName</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Chức vụ</span>
+                        <span class="value">@employee.Role?.RoleName</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Email</span>
+                        <span class="value">@(employee.Email ?? "N/A")</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Điện thoại</span>
+                        <span class="value">@(employee.PhoneNumber ?? "N/A")</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Ngày vào làm</span>
+                        <span class="value">@employee.HireDate.ToString("dd/MM/yyyy")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="qr-main-footer">
+            <a href="@Url.Action("EmployeeQRImage", "QRCode", new { employeeId = employee.Id })" 
+               class="btn-qr-action btn-qr-download" download="QR_NhanVien_@(employeeCode).png">
+                <i class="fas fa-download"></i>Tải xuống
+            </a>
+            <button class="btn-qr-action btn-qr-print" onclick="window.print()">
+                <i class="fas fa-print"></i>In thẻ
+            </button>
+            <a href="@Url.Action("AllEmployeesQR", "QRCode")" class="btn-qr-action btn-qr-back">
+                <i class="fas fa-arrow-left"></i>Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Print Template - ID Card -->
+<div class="print-template">
+    <div style="width: 85.6mm; height: 53.98mm; border: 2px solid #1e3a5f; border-radius: 10px; padding: 15px; margin: 30px auto; font-family: Arial, sans-serif;">
+        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: 16px; color: #1e3a5f; font-weight: 700;">NHÀ HÀNG LDP</h3>
+                <p style="margin: 5px 0 0 0; font-size: 11px; color: #666;">Employee ID Card</p>
+            </div>
+            <img src="@Model.DataUrl" alt="QR" style="width: 65px; height: 65px;">
+        </div>
+        <div style="border-top: 1px solid #e0e0e0; padding-top: 10px;">
+            <h2 style="margin: 0 0 5px 0; font-size: 18px; color: #333;">@employee.FullName</h2>
+            <p style="margin: 0; font-size: 12px; color: #1e3a5f; font-weight: bold;">@employeeCode</p>
+            <p style="margin: 5px 0 0 0; font-size: 11px; color: #666;">@employee.Role?.RoleName</p>
+        </div>
+    </div>
+</div>

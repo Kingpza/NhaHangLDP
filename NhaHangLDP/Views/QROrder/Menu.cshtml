@@ -357,8 +357,8 @@
                 @foreach (var item in Model.FeaturedItems)
                 {
                     <div class="featured-item" onclick="showItemModal(@item.Id)">
-                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/Content/images/default-food.jpg" : item.ImageUrl)" 
-                             alt="@item.Name" onerror="this.src='/Content/images/default-food.jpg'">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/menu/default-food.jpg" : item.ImageUrl)" 
+                             alt="@item.Name" onerror="this.src='/images/menu/default-food.jpg'">
                         <div class="featured-item-body">
                             <div class="menu-item-name">@item.Name</div>
                             <div class="menu-item-price">@item.Price.ToString("N0")đ</div>
@@ -386,8 +386,8 @@
                         {
                             <span class="discount-badge">-@item.DiscountPercent%</span>
                         }
-                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/Content/images/default-food.jpg" : item.ImageUrl)" 
-                             alt="@item.Name" class="menu-item-img" onerror="this.src='/Content/images/default-food.jpg'">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/menu/default-food.jpg" : item.ImageUrl)" 
+                             alt="@item.Name" class="menu-item-img" onerror="this.src='/images/menu/default-food.jpg'">
                         <div class="menu-item-body">
                             <div class="menu-item-name">@item.Name</div>
                             <div>
@@ -500,7 +500,7 @@
             if (!currentItem) return;
             
             currentQty = 1;
-            $('#modalImg').attr('src', currentItem.image || '/Content/images/default-food.jpg');
+            $('#modalImg').attr('src', currentItem.image || '/images/menu/default-food.jpg');
             $('#modalName').text(currentItem.name);
             $('#modalDesc').text(currentItem.desc);
             $('#modalPrice').text(currentItem.price.toLocaleString() + 'đ');

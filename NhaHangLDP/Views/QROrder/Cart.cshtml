@@ -160,8 +160,8 @@
             @foreach (var item in Model.Items)
             {
                 <div class="cart-item" data-item-id="@item.Id">
-                    <img src="@(string.IsNullOrEmpty(item.MenuItemImage) ? "/Content/images/default-food.jpg" : item.MenuItemImage)" 
-                         alt="@item.MenuItemName" class="cart-item-img" onerror="this.src='/Content/images/default-food.jpg'">
+                    <img src="@(string.IsNullOrEmpty(item.MenuItemImage) ? "/images/menu/default-food.jpg" : item.MenuItemImage)" 
+                         alt="@item.MenuItemName" class="cart-item-img" onerror="this.src='/images/menu/default-food.jpg'">
                     <div class="cart-item-info">
                         <div class="cart-item-name">@item.MenuItemName</div>
                         <div class="cart-item-price">@item.UnitPrice.ToString("N0")đ</div>

@@ -943,6 +943,35 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#qrcodeSubmenu" aria-expanded="false">
+                    <i class="fas fa-qrcode"></i>
+                    <span>QR Code</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </a>
+                <div class="collapse sidebar-submenu" id="qrcodeSubmenu">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("AllTablesQR", "QRCode")">
+                                <i class="fas fa-chair"></i>
+                                <span>QR Code Bàn</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("AllEmployeesQR", "QRCode")">
+                                <i class="fas fa-id-card"></i>
+                                <span>QR Check-in NV</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("CheckInScanner", "QRCode")">
+                                <i class="fas fa-camera"></i>
+                                <span>Quét Check-in</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#deliverySubmenu" aria-expanded="false">
                     <i class="fas fa-shipping-fast"></i>
                     <span>Giao Hàng</span>
@@ -999,12 +1028,6 @@
                 <a class="nav-link" href="@Url.Action("Stations", "Kitchen")">
                     <i class="fas fa-broadcast-tower"></i>
                     <span>Quản Lý Bếp</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="@Url.Action("PendingOrders", "QROrder")">
-                    <i class="fas fa-qrcode"></i>
-                    <span>Đơn QR Code</span>
                 </a>
             </li>
         </ul>

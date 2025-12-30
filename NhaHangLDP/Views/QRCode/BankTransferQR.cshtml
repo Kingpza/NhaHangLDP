@@ -1,0 +1,287 @@
+﻿@model NhaHangLDP.Services.QRCodeResult
+@{
+    ViewBag.Title = "QR Thanh Toán";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    var bill = ViewBag.Bill as NhaHangLDP.Models.Bill;
+    var bankSettings = ViewBag.BankSettings as NhaHangLDP.Controllers.BankSettings;
+}
+
+@section styles {
+    <style>
+        .payment-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .payment-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .payment-header {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            padding: 35px;
+            text-align: center;
+        }
+        .payment-header h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        .payment-amount {
+            font-size: 42px;
+            font-weight: 800;
+        }
+        .payment-body {
+            padding: 40px;
+            text-align: center;
+        }
+        .qr-payment-wrapper {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 20px;
+            display: inline-block;
+            border: 3px solid #16a34a;
+            margin-bottom: 25px;
+        }
+        .qr-payment-wrapper img {
+            width: 260px;
+            height: 260px;
+        }
+        
+        /* Bank Info */
+        .bank-info-card {
+            text-align: left;
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+        }
+        .bank-info-card h5 {
+            margin: 0 0 20px 0;
+            color: #1e3a5f;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .bank-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .bank-info-row:last-child {
+            border-bottom: none;
+        }
+        .bank-info-row .label {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .bank-info-row .value {
+            font-weight: 600;
+            color: #1e3a5f;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .bank-info-row .value.highlight {
+            color: #16a34a;
+            font-size: 16px;
+        }
+        .copy-btn {
+            background: #dbeafe;
+            border: none;
+            color: #2563eb;
+            cursor: pointer;
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .copy-btn:hover {
+            background: #2563eb;
+            color: #fff;
+        }
+        
+        /* Note */
+        .payment-note {
+            margin-top: 20px;
+            padding: 15px 20px;
+            background: #fef3c7;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+        
+        /* Countdown */
+        .countdown-box {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .countdown-box span {
+            font-weight: 700;
+            color: #dc2626;
+            font-size: 16px;
+        }
+        
+        /* Footer */
+        .payment-footer {
+            padding: 25px 40px 40px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn-payment-action {
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .btn-confirm {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+        }
+        .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(22, 163, 74, 0.4);
+            color: white;
+        }
+        .btn-back {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .btn-back:hover {
+            background: #e2e8f0;
+            color: #1e3a5f;
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-university me-2"></i>QR Thanh Toán Chuyển Khoản</h2>
+            <p class="mb-0">Hóa đơn #@bill.Id - Bàn @(bill.Order?.RestaurantTable?.TableNumber ?? "N/A")</p>
+        </div>
+        <a href="javascript:history.back()" class="btn btn-light">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="payment-container">
+    <div class="payment-card">
+        <div class="payment-header">
+            <h2><i class="fas fa-qrcode me-2"></i>Quét mã để thanh toán</h2>
+            <div class="payment-amount">@bill.FinalAmount.ToString("N0") VNĐ</div>
+        </div>
+        
+        <div class="payment-body">
+            <div class="qr-payment-wrapper">
+                <img src="@Model.DataUrl" alt="QR Payment">
+            </div>
+            
+            <div class="bank-info-card">
+                <h5><i class="fas fa-info-circle me-2"></i>Thông tin chuyển khoản</h5>
+                <div class="bank-info-row">
+                    <span class="label">Ngân hàng</span>
+                    <span class="value">@bankSettings.BankId</span>
+                </div>
+                <div class="bank-info-row">
+                    <span class="label">Số tài khoản</span>
+                    <span class="value">
+                        @bankSettings.AccountNumber
+                        <button class="copy-btn" onclick="copyToClipboard('@bankSettings.AccountNumber')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </span>
+                </div>
+                <div class="bank-info-row">
+                    <span class="label">Chủ tài khoản</span>
+                    <span class="value">@bankSettings.AccountName</span>
+                </div>
+                <div class="bank-info-row">
+                    <span class="label">Số tiền</span>
+                    <span class="value highlight">@bill.FinalAmount.ToString("N0") VNĐ</span>
+                </div>
+                <div class="bank-info-row">
+                    <span class="label">Nội dung CK</span>
+                    <span class="value">
+                        TT HD@(bill.Id.ToString("D6"))
+                        <button class="copy-btn" onclick="copyToClipboard('TT HD@(bill.Id.ToString("D6"))')">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
+                    </span>
+                </div>
+            </div>
+            
+            <div class="payment-note">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Vui lòng nhập đúng nội dung chuyển khoản để được xác nhận tự động.
+            </div>
+            
+            <div class="countdown-box">
+                <i class="fas fa-clock me-1"></i>Mã QR hết hạn sau: <span id="countdown">10:00</span>
+            </div>
+        </div>
+        
+        <div class="payment-footer">
+            <button class="btn-payment-action btn-confirm" onclick="confirmPayment()">
+                <i class="fas fa-check"></i>Đã thanh toán
+            </button>
+            <a href="javascript:history.back()" class="btn-payment-action btn-back">
+                <i class="fas fa-arrow-left"></i>Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Countdown timer
+        let timeLeft = 600;
+        const countdownEl = document.getElementById('countdown');
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            countdownEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                countdownEl.textContent = 'Hết hạn';
+                showWarning('Hết hạn', 'Mã QR đã hết hạn. Vui lòng tạo mới.');
+            }
+        }, 1000);
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('success', 'Đã sao chép: ' + text);
+            });
+        }
+
+        function confirmPayment() {
+            showConfirm('Xác nhận', 'Bạn đã hoàn tất chuyển khoản?', function() {
+                showLoading('Đang xác nhận...', 'Vui lòng chờ trong giây lát');
+                // TODO: Call API to confirm payment
+                setTimeout(() => {
+                    closeLoading();
+                    showSuccess('Thành công', 'Đã xác nhận thanh toán thành công!');
+                }, 2000);
+            });
+        }
+    </script>
+}

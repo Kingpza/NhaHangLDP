@@ -76,6 +76,11 @@
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="QRCoder, Version=1.7.0.0, Culture=neutral, PublicKeyToken=c4ed5b9ae8358a28, processorArchitecture=MSIL">
+      <HintPath>..\packages\QRCoder.1.7.0\lib\net40\QRCoder.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -133,6 +138,7 @@
       <Private>True</Private>
       <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\BundleConfig.cs" />
@@ -154,6 +160,7 @@
     <Compile Include="Controllers\PaymentController.cs" />
     <Compile Include="Controllers\PromotionController.cs" />
     <Compile Include="Controllers\PublicController.cs" />
+    <Compile Include="Controllers\QRCodeController.cs" />
     <Compile Include="Controllers\QROrderController.cs" />
     <Compile Include="Controllers\ReportsManagementController.cs" />
     <Compile Include="Controllers\ReportsManagementController.DetailedShiftReport.cs" />
@@ -413,6 +420,7 @@
     <Compile Include="Services\OrderManagementService.cs" />
     <Compile Include="Services\OrderQueryService.cs" />
     <Compile Include="Services\PaymentService.cs" />
+    <Compile Include="Services\QRCodeService.cs" />
     <Compile Include="Services\RealTimeNotificationService.cs" />
     <Compile Include="Services\ReportService.cs" />
     <Compile Include="Services\Reports\BookingAnalyticsService.cs" />
@@ -507,7 +515,6 @@
     <Content Include="Models\NhaHangLDP.edmx.diagram">
       <DependentUpon>NhaHangLDP.edmx</DependentUpon>
     </Content>
-    <Content Include="Docs\SignalR-RealTime-Guide.md" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -694,6 +701,12 @@
     <Content Include="Views\Management\EditSupplier.cshtml" />
     <Content Include="Views\Management\ExpiringItems.cshtml" />
     <Content Include="Views\ChatSupport\Index.cshtml" />
+    <Content Include="Views\QRCode\TableQR.cshtml" />
+    <Content Include="Views\QRCode\AllTablesQR.cshtml" />
+    <Content Include="Views\QRCode\EmployeeQR.cshtml" />
+    <Content Include="Views\QRCode\AllEmployeesQR.cshtml" />
+    <Content Include="Views\QRCode\CheckInScanner.cshtml" />
+    <Content Include="Views\QRCode\BankTransferQR.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
