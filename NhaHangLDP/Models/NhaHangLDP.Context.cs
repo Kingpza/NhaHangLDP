@@ -84,5 +84,7 @@ namespace NhaHangLDP.Models
         public virtual DbSet<Voucher> Voucher { get; set; }
         public virtual DbSet<VoucherUsage> VoucherUsage { get; set; }
         public virtual DbSet<Wishlist> Wishlist { get; set; }
+        public virtual DbSet<SupportConversation> SupportConversation { get; set; }
+        public virtual DbSet<SupportMessage> SupportMessage { get; set; }
     }
 }

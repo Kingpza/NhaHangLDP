@@ -274,7 +274,7 @@ namespace NhaHangLDP.Controllers
         /// <summary>
         /// Trang cá nhân
         /// </summary>
-        public ActionResult Profile()
+        public new ActionResult Profile()
         {
             var customerId = GetCustomerId();
             if (customerId == null)

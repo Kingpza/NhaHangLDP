@@ -1,6 +1,6 @@
 ﻿/**
- * LDP Restaurant Chatbot - Enhanced Version
- * Features: AI Integration, Session Management, Voice Input, Rich UI
+ * LDP Restaurant Chatbot - Enhanced Version with Live Support
+ * Features: AI Integration, Live Chat Support, SignalR Real-time, Session Management, Voice Input
  */
 
 (function ($) {
@@ -11,6 +11,10 @@
         apiEndpoint: '/Public/ChatBotAI',
         searchEndpoint: '/Public/SearchMenu',
         suggestionsEndpoint: '/Public/GetQuickSuggestions',
+        sendCustomerMessageEndpoint: '/ChatSupport/SendCustomerMessage',
+        getChatHistoryEndpoint: '/ChatSupport/GetChatHistory',
+        getUnreadCountEndpoint: '/ChatSupport/GetUnreadCount',
+        markAsReadEndpoint: '/ChatSupport/MarkAsRead',
         typingDelay: 500,
         messageDelay: 300,
         maxHistoryLength: 50,
@@ -23,7 +27,12 @@
         sessionId: null,
         isOpen: false,
         messageHistory: [],
-        voiceRecognition: null
+        voiceRecognition: null,
+        mode: 'bot', // 'bot' or 'live'
+        signalRConnected: false,
+        customerId: null,
+        customerName: 'Khách',
+        unreadCount: 0
     };
 
     // ===== INITIALIZATION =====
@@ -31,11 +40,14 @@
         initChatbot();
         loadQuickSuggestions();
         initVoiceRecognition();
+        initSignalR();
+        checkUnreadMessages();
     });
 
     function initChatbot() {
         // Load session from localStorage
         state.sessionId = localStorage.getItem('chatbot_session_id');
+        state.mode = localStorage.getItem('chatbot_mode') || 'bot';
 
         // Toggle chatbot
         $('.chatbot-toggle').click(function () {
@@ -65,6 +77,9 @@
             addVoiceButton();
         }
 
+        // Add mode toggle button
+        addModeToggle();
+
         // Show welcome message if first time
         if (!state.sessionId) {
             setTimeout(function () {
@@ -72,8 +87,142 @@
             }, 1000);
         }
 
+        // Update UI based on mode
+        updateModeUI();
+
         // Update badge
         updateBadge();
+    }
+
+    // ===== SIGNALR INTEGRATION =====
+    function initSignalR() {
+        // Check if SignalR is available
+        if (typeof $.connection === 'undefined' || !$.connection.restaurantHub) {
+            console.log('SignalR not available, live chat will use polling');
+            return;
+        }
+
+        var hub = $.connection.restaurantHub;
+
+        // Receive support reply
+        hub.client.receiveSupportReply = function (data) {
+            if (state.mode === 'live') {
+                addStaffMessage(data.staffName, data.message, data.timestamp);
+                
+                if (!state.isOpen) {
+                    state.unreadCount++;
+                    updateBadge(state.unreadCount);
+                    showNotification('Tin nhắn mới từ hỗ trợ', data.message);
+                }
+            }
+        };
+
+        // User typing indicator
+        hub.client.onUserTyping = function (data) {
+            if (data.isTyping && state.mode === 'live') {
+                showTypingIndicator();
+            } else {
+                hideTypingIndicator();
+            }
+        };
+
+        // Start connection
+        $.connection.hub.qs = { 
+            role: 'Customer',
+            userId: getCustomerId()
+        };
+
+        $.connection.hub.start().done(function () {
+            state.signalRConnected = true;
+            console.log('Chat SignalR connected');
+            
+            // Join customer group
+            hub.server.joinGroup('user_' + getCustomerId());
+        }).fail(function (error) {
+            console.error('SignalR connection failed:', error);
+        });
+    }
+
+    function getCustomerId() {
+        if (state.customerId) return state.customerId;
+        
+        // Try to get from page data
+        var customerId = $('#chatbot-customer-id').val() || 
+                        $('body').data('customer-id') ||
+                        localStorage.getItem('chatbot_guest_id');
+        
+        if (!customerId) {
+            customerId = 'guest_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('chatbot_guest_id', customerId);
+        }
+        
+        state.customerId = customerId;
+        return customerId;
+    }
+
+    // ===== MODE TOGGLE =====
+    function addModeToggle() {
+        const toggleHtml = `
+            <div class="chat-mode-toggle">
+                <button class="mode-btn ${state.mode === 'bot' ? 'active' : ''}" data-mode="bot" title="Chat với Bot AI">
+                    <i class="fas fa-robot"></i>
+                    <span>Bot AI</span>
+                </button>
+                <button class="mode-btn ${state.mode === 'live' ? 'active' : ''}" data-mode="live" title="Chat với nhân viên">
+                    <i class="fas fa-headset"></i>
+                    <span>Nhân viên</span>
+                </button>
+            </div>
+        `;
+        
+        $('.chatbot-header').after(toggleHtml);
+        
+        $('.mode-btn').on('click', function() {
+            const newMode = $(this).data('mode');
+            switchMode(newMode);
+        });
+    }
+
+    function switchMode(newMode) {
+        if (newMode === state.mode) return;
+        
+        state.mode = newMode;
+        localStorage.setItem('chatbot_mode', newMode);
+        
+        // Update UI
+        $('.mode-btn').removeClass('active');
+        $(`.mode-btn[data-mode="${newMode}"]`).addClass('active');
+        
+        updateModeUI();
+        
+        // Clear messages and show appropriate welcome
+        $('.chatbot-messages').empty();
+        
+        if (newMode === 'live') {
+            showLiveChatWelcome();
+            loadChatHistory();
+        } else {
+            showWelcomeMessage();
+        }
+    }
+
+    function updateModeUI() {
+        const $container = $('.chatbot-container');
+        const $header = $('.chatbot-header');
+        const $title = $('.chatbot-title h4');
+        const $status = $('.chatbot-status span:last');
+        
+        if (state.mode === 'live') {
+            $container.addClass('live-mode').removeClass('bot-mode');
+            $title.text('Hỗ trợ trực tuyến');
+            $status.text(state.signalRConnected ? 'Đang kết nối' : 'Chờ nhân viên');
+            $('#chatbot-input').attr('placeholder', 'Nhập tin nhắn cho nhân viên...');
+        } else {
+            $container.addClass('bot-mode').removeClass('live-mode');
+            $title.text('Trợ lý ảo LDP');
+            $status.text('Đang online');
+            $('#chatbot-input').attr('placeholder', 'Nhập tin nhắn của bạn...');
+        }
     }
 
     // ===== CHATBOT TOGGLE =====
@@ -90,6 +239,13 @@
         $('.chatbot-toggle').addClass('hidden');
         state.isOpen = true;
         $('#chatbot-input').focus();
+        
+        // Mark messages as read
+        if (state.mode === 'live') {
+            markAsRead();
+        }
+        
+        state.unreadCount = 0;
         updateBadge(0);
         scrollToBottom();
     }
@@ -111,12 +267,20 @@
         addUserMessage(message);
         input.val('');
 
+        if (state.mode === 'live') {
+            sendToLiveSupport(message);
+        } else {
+            sendToBot(message);
+        }
+    }
+
+    function sendToBot(message) {
         // Show typing indicator
         showTypingIndicator();
         state.isTyping = true;
 
         // Disable input
-        input.prop('disabled', true);
+        $('#chatbot-input').prop('disabled', true);
         $('.chatbot-send').prop('disabled', true);
 
         // Call API
@@ -161,18 +325,98 @@
             },
             complete: function () {
                 state.isTyping = false;
-                input.prop('disabled', false);
+                $('#chatbot-input').prop('disabled', false);
                 $('.chatbot-send').prop('disabled', false);
-                input.focus();
+                $('#chatbot-input').focus();
             }
         });
     }
 
-    // ===== MESSAGE DISPLAY =====
-    function addUserMessage(text) {
-        const time = getCurrentTime();
+    function sendToLiveSupport(message) {
+        // Disable input temporarily
+        $('#chatbot-input').prop('disabled', true);
+        $('.chatbot-send').prop('disabled', true);
+
+        $.ajax({
+            url: CONFIG.sendCustomerMessageEndpoint,
+            method: 'POST',
+            data: { message: message },
+            success: function (response) {
+                if (response.success) {
+                    // Message sent successfully - already displayed
+                    console.log('Message sent to support');
+                } else {
+                    addSystemMessage('❌ Không thể gửi tin nhắn. ' + (response.message || ''));
+                }
+            },
+            error: function () {
+                addSystemMessage('❌ Lỗi kết nối. Vui lòng thử lại!');
+            },
+            complete: function () {
+                $('#chatbot-input').prop('disabled', false);
+                $('.chatbot-send').prop('disabled', false);
+                $('#chatbot-input').focus();
+            }
+        });
+    }
+
+    // ===== LIVE CHAT FUNCTIONS =====
+    function loadChatHistory() {
+        $.get(CONFIG.getChatHistoryEndpoint, function (response) {
+            if (response.success && response.messages && response.messages.length > 0) {
+                response.messages.forEach(function (msg) {
+                    if (msg.IsFromCustomer) {
+                        addUserMessage(msg.Message, msg.SentTime, true);
+                    } else {
+                        addStaffMessage(msg.SenderName, msg.Message, msg.SentTime, true);
+                    }
+                });
+                scrollToBottom();
+            }
+        });
+    }
+
+    function checkUnreadMessages() {
+        $.get(CONFIG.getUnreadCountEndpoint, function (response) {
+            if (response.success && response.count > 0) {
+                state.unreadCount = response.count;
+                updateBadge(response.count);
+            }
+        });
+    }
+
+    function markAsRead() {
+        $.post(CONFIG.markAsReadEndpoint);
+    }
+
+    function showLiveChatWelcome() {
         const html = `
-            <div class="message user" style="opacity: 0; transform: translateX(20px);">
+            <div class="message system">
+                <div class="message-content">
+                    <div class="message-bubble system-bubble">
+                        <i class="fas fa-headset"></i>
+                        <strong>Chế độ chat với nhân viên</strong><br>
+                        Tin nhắn của bạn sẽ được gửi đến đội ngũ hỗ trợ.<br>
+                        Thời gian phản hồi: 1-5 phút.
+                    </div>
+                </div>
+            </div>
+        `;
+        $('.chatbot-messages').append(html);
+        
+        addQuickReplies([
+            '👋 Xin chào',
+            '❓ Tôi cần hỗ trợ',
+            '📋 Hỏi về đơn hàng',
+            '📅 Hỏi về đặt bàn'
+        ]);
+    }
+
+    // ===== MESSAGE DISPLAY =====
+    function addUserMessage(text, time, isHistory) {
+        time = time || getCurrentTime();
+        const html = `
+            <div class="message user" style="opacity: ${isHistory ? 1 : 0}; transform: translateX(${isHistory ? 0 : 20}px);">
                 <div class="message-content">
                     <div class="message-bubble">${escapeHtml(text)}</div>
                     <div class="message-time">${time}</div>
@@ -181,22 +425,29 @@
         `;
         $('.chatbot-messages').append(html);
         
-        // Animate in
-        $('.message.user').last().animate({
-            opacity: 1
-        }, 300).css('transform', 'translateX(0)');
+        if (!isHistory) {
+            // Animate in
+            $('.message.user').last().animate({
+                opacity: 1
+            }, 300).css('transform', 'translateX(0)');
+        }
         
         scrollToBottom();
 
         // Save to history
-        state.messageHistory.push({ role: 'user', content: text, time: time });
+        if (!isHistory) {
+            state.messageHistory.push({ role: 'user', content: text, time: time });
+        }
     }
 
-    function addBotMessage(text) {
-        const time = getCurrentTime();
+    function addBotMessage(text, time) {
+        time = time || getCurrentTime();
         const formattedText = formatBotResponse(text);
         const html = `
             <div class="message bot" style="opacity: 0; transform: translateX(-20px);">
+                <div class="bot-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
                 <div class="message-content">
                     <div class="message-bubble">${formattedText}</div>
                     <div class="message-time">${time}</div>
@@ -214,6 +465,44 @@
 
         // Save to history
         state.messageHistory.push({ role: 'bot', content: text, time: time });
+    }
+
+    function addStaffMessage(staffName, text, time, isHistory) {
+        time = time || getCurrentTime();
+        const html = `
+            <div class="message staff" style="opacity: ${isHistory ? 1 : 0}; transform: translateX(${isHistory ? 0 : -20}px);">
+                <div class="staff-avatar">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div class="message-content">
+                    <div class="message-sender">${escapeHtml(staffName)}</div>
+                    <div class="message-bubble staff-bubble">${escapeHtml(text)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            </div>
+        `;
+        $('.chatbot-messages').append(html);
+        
+        if (!isHistory) {
+            // Animate in
+            $('.message.staff').last().animate({
+                opacity: 1
+            }, 300).css('transform', 'translateX(0)');
+        }
+        
+        scrollToBottom();
+    }
+
+    function addSystemMessage(text) {
+        const html = `
+            <div class="message system">
+                <div class="message-content">
+                    <div class="message-bubble system-bubble">${text}</div>
+                </div>
+            </div>
+        `;
+        $('.chatbot-messages').append(html);
+        scrollToBottom();
     }
 
     function addSuggestions(suggestions) {
@@ -315,8 +604,14 @@
 
     // ===== TYPING INDICATOR =====
     function showTypingIndicator() {
+        if ($('.typing-message').length > 0) return;
+        
+        const icon = state.mode === 'live' ? 'fa-headset' : 'fa-robot';
         const html = `
             <div class="message bot typing-message" style="opacity: 0;">
+                <div class="bot-avatar">
+                    <i class="fas ${icon}"></i>
+                </div>
                 <div class="message-content">
                     <div class="typing-indicator">
                         <div class="typing-dot"></div>
@@ -347,7 +642,7 @@
         else if (hour < 18) greeting = 'Chào buổi chiều';
         else greeting = 'Chào buổi tối';
 
-        const welcomeText = `👋 ${greeting}! Mình là **LDP Bot**.\n\nMình có thể giúp bạn tìm món ăn, gợi ý theo ngân sách, hoặc hỗ trợ đặt bàn.\n\nBạn muốn tìm gì hôm nay?`;
+        const welcomeText = `👋 ${greeting}! Mình là **LDP Bot**.\n\nMình có thể giúp bạn tìm món ăn, gợi ý theo ngân sách, hoặc hỗ trợ đặt bàn.\n\nNếu cần nói chuyện với nhân viên, hãy chuyển sang chế độ **"Nhân viên"** ở trên.`;
         
         addBotMessage(welcomeText);
         
@@ -355,7 +650,8 @@
             '🔥 Top món bán chạy',
             '💰 Món dưới 100k',
             '⭐ Món đặc biệt',
-            '📅 Đặt bàn'
+            '📅 Đặt bàn',
+            '👨‍💼 Chat với nhân viên'
         ]);
     }
 
@@ -363,7 +659,6 @@
     function loadQuickSuggestions() {
         $.get(CONFIG.suggestionsEndpoint, function (response) {
             if (response.success) {
-                // Could update UI with time-based suggestions
                 console.log('Quick suggestions loaded:', response.mealType);
             }
         });
@@ -433,6 +728,16 @@
         btn.find('i').removeClass('fa-stop').addClass('fa-microphone');
     }
 
+    // ===== NOTIFICATIONS =====
+    function showNotification(title, message) {
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(title, {
+                body: message,
+                icon: '/images/logo.png'
+            });
+        }
+    }
+
     // ===== UTILITIES =====
     function formatBotResponse(text) {
         if (!text) return '';
@@ -480,5 +785,15 @@
             badge.text(count).show();
         }
     }
+
+    // ===== EXPOSE PUBLIC API =====
+    window.LDPChatbot = {
+        open: openChatbot,
+        close: closeChatbot,
+        toggle: toggleChatbot,
+        switchToLive: function() { switchMode('live'); },
+        switchToBot: function() { switchMode('bot'); },
+        getState: function() { return state; }
+    };
 
 })(jQuery);

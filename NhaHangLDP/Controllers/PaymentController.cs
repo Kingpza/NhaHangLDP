@@ -17,11 +17,13 @@ namespace NhaHangLDP.Controllers
         private readonly NhaHangLDPEntities db = new NhaHangLDPEntities();
         private readonly PaymentService paymentService;
         private readonly InvoiceService invoiceService;
+        private readonly RealTimeNotificationService _notificationService;
 
         public PaymentController()
         {
             paymentService = new PaymentService(db);
             invoiceService = new InvoiceService(db);
+            _notificationService = new RealTimeNotificationService();
         }
 
         #region Payment Processing
@@ -92,6 +94,42 @@ namespace NhaHangLDP.Controllers
                 if (paymentService.ProcessPayment(orderId, paymentMethod, receivedAmount, 
                     cashierId, shiftId.Value, out billId, out changeAmount, out errorMessage))
                 {
+                    // Lấy thông tin để gửi thông báo real-time
+                    var order = db.Order
+                        .Include(o => o.RestaurantTable)
+                        .FirstOrDefault(o => o.Id == orderId);
+
+                    var bill = db.Bill.Find(billId);
+                    
+                    if (bill != null && order != null)
+                    {
+                        // Tính tổng doanh thu hôm nay
+                        var today = DateTime.Today;
+                        var tomorrow = today.AddDays(1);
+                        var todayRevenue = db.Bill
+                            .Where(b => b.Status == "Paid" && b.BillDate >= today && b.BillDate < tomorrow)
+                            .Sum(b => (decimal?)b.FinalAmount) ?? 0;
+
+                        // Gửi thông báo cập nhật doanh thu real-time
+                        _notificationService.UpdateRevenue(
+                            bill.FinalAmount,
+                            todayRevenue,
+                            paymentMethod,
+                            order.RestaurantTable?.TableNumber
+                        );
+
+                        // Cập nhật trạng thái bàn real-time
+                        if (order.RestaurantTable != null)
+                        {
+                            _notificationService.UpdateTableStatus(
+                                order.TableId,
+                                order.RestaurantTable.TableNumber,
+                                "Available",
+                                orderId
+                            );
+                        }
+                    }
+
                     return Json(new
                     {
                         success = true,

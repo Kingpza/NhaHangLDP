@@ -1,0 +1,664 @@
+﻿@model List<NhaHangLDP.Controllers.ChatConversationSummary>
+@{
+    ViewBag.Title = "Chat Support - Hỗ trợ khách hàng";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0">
+                <i class="fas fa-comments text-primary"></i> Chat Support
+            </h2>
+            <p class="text-muted mb-0">Hỗ trợ khách hàng trực tuyến theo thời gian thực</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Danh sách conversations -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-inbox"></i> Hội thoại
+                        </h5>
+                        <span class="badge bg-primary" id="total-conversations">
+                            @(Model?.Count ?? 0)
+                        </span>
+                    </div>
+                    <div class="mt-2">
+                        <input type="text" class="form-control form-control-sm" 
+                               id="search-conversation" placeholder="Tìm kiếm...">
+                    </div>
+                </div>
+                <div class="card-body p-0" style="max-height: 600px; overflow-y: auto;">
+                    <div id="conversation-list" class="list-group list-group-flush">
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var conv in Model)
+                            {
+                                <a href="#" class="list-group-item list-group-item-action conversation-item py-3" 
+                                   data-customer-id="@conv.CustomerId">
+                                    <div class="d-flex w-100 justify-content-between align-items-start">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle me-3">
+                                                @(conv.CustomerName?.FirstOrDefault().ToString().ToUpper() ?? "K")
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1 fw-bold">@conv.CustomerName</h6>
+                                                <p class="mb-0 text-muted small text-truncate" style="max-width: 200px;">
+                                                    @conv.LastMessage
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted">@conv.LastMessageTime</small>
+                                            @if (conv.UnreadCount > 0)
+                                            {
+                                                <span class="badge bg-danger rounded-pill d-block mt-1">@conv.UnreadCount</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </a>
+                            }
+                        }
+                        else
+                        {
+                            <div class="p-4 text-center text-muted" id="no-conversations">
+                                <i class="fas fa-inbox fa-3x mb-3 text-secondary"></i>
+                                <p class="mb-0">Chưa có tin nhắn nào</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Khung chat -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3" id="chat-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center" id="chat-customer-info">
+                            <div class="avatar-circle me-3" id="chat-avatar">?</div>
+                            <div>
+                                <h5 class="mb-0" id="chat-customer-name">Chọn một hội thoại</h5>
+                                <small class="text-muted" id="chat-customer-status">
+                                    <span class="status-dot offline"></span> Chưa chọn
+                                </small>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" id="btn-refresh" title="Làm mới">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body bg-light" style="height: 450px; overflow-y: auto;" id="chat-messages">
+                    <div class="text-center text-muted py-5" id="empty-chat-state">
+                        <i class="fas fa-comments fa-4x mb-3 text-secondary"></i>
+                        <h5>Chọn một hội thoại để bắt đầu</h5>
+                        <p class="text-muted">Tin nhắn từ khách hàng sẽ hiển thị ở đây</p>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="message-input" 
+                               placeholder="Nhập tin nhắn..." disabled>
+                        <button class="btn btn-secondary" id="quick-responses-btn" disabled title="Câu trả lời nhanh">
+                            <i class="fas fa-bolt"></i>
+                        </button>
+                        <button class="btn btn-primary" id="send-btn" disabled>
+                            <i class="fas fa-paper-plane"></i> Gửi
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Responses Dropdown -->
+                    <div id="quick-responses" class="mt-2" style="display: none;">
+                        <div class="card">
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">Câu trả lời nhanh</h6>
+                                    <button class="btn btn-sm btn-link" id="close-quick-responses">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div id="quick-responses-list" class="d-flex flex-wrap gap-1">
+                                    <!-- Will be populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .avatar-circle {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    
+    .conversation-item {
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+    }
+    
+    .conversation-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .conversation-item.active {
+        background-color: #e3f2fd;
+        border-left-color: #2196f3;
+    }
+    
+    .conversation-item.has-unread {
+        background-color: #fff3e0;
+    }
+    
+    .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    
+    .status-dot.online {
+        background-color: #4caf50;
+    }
+    
+    .status-dot.offline {
+        background-color: #9e9e9e;
+    }
+    
+    /* Chat Messages */
+    .chat-message {
+        margin-bottom: 15px;
+        display: flex;
+    }
+    
+    .chat-message.from-customer {
+        justify-content: flex-start;
+    }
+    
+    .chat-message.from-staff {
+        justify-content: flex-end;
+    }
+    
+    .message-wrapper {
+        max-width: 70%;
+    }
+    
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 18px;
+        line-height: 1.4;
+    }
+    
+    .from-customer .message-bubble {
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-bottom-left-radius: 4px;
+    }
+    
+    .from-staff .message-bubble {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+    
+    .message-time {
+        font-size: 11px;
+        color: #9e9e9e;
+        margin-top: 4px;
+    }
+    
+    .from-staff .message-time {
+        text-align: right;
+    }
+    
+    .message-sender {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: #666;
+    }
+    
+    /* Quick Response Buttons */
+    .quick-response-item {
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .quick-response-item:hover {
+        transform: scale(1.02);
+    }
+    
+    /* Typing Indicator */
+    .typing-indicator {
+        display: flex;
+        gap: 4px;
+        padding: 10px 16px;
+        background: white;
+        border-radius: 18px;
+        border: 1px solid #e0e0e0;
+        width: fit-content;
+    }
+    
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: #9e9e9e;
+        border-radius: 50%;
+        animation: typing-bounce 1.4s infinite ease-in-out both;
+    }
+    
+    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+    .typing-dot:nth-child(3) { animation-delay: 0s; }
+    
+    @@keyframes typing-bounce {
+        0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* New message notification */
+    @@keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+    }
+    
+    .new-message-alert {
+        animation: pulse 2s infinite;
+    }
+</style>
+
+@section Scripts {
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+    
+    <script>
+        var currentCustomerId = null;
+        var hub = null;
+        
+        $(function () {
+            // Initialize SignalR
+            initSignalR();
+            
+            // Load quick responses
+            loadQuickResponses();
+            
+            // Event handlers
+            bindEventHandlers();
+            
+            // Auto-refresh conversations every 30 seconds
+            setInterval(refreshConversationList, 30000);
+        });
+        
+        function initSignalR() {
+            if (typeof $.connection === 'undefined' || !$.connection.restaurantHub) {
+                console.log('SignalR not available');
+                return;
+            }
+            
+            hub = $.connection.restaurantHub;
+            
+            // Receive customer message
+            hub.client.receiveCustomerMessage = function (data) {
+                console.log('New customer message:', data);
+                
+                // Show notification
+                showNotification('Tin nhắn mới', data.customerName + ': ' + data.message);
+                
+                // If this is the current conversation, add message
+                if (data.customerId === currentCustomerId) {
+                    appendMessage(data.customerName, data.message, true, data.timestamp);
+                }
+                
+                // Refresh conversation list
+                refreshConversationList();
+                
+                // Play sound
+                playNotificationSound();
+            };
+            
+            // User typing
+            hub.client.onUserTyping = function (data) {
+                if (data.userId === currentCustomerId && data.isTyping) {
+                    showTypingIndicator();
+                } else {
+                    hideTypingIndicator();
+                }
+            };
+            
+            // Start connection
+            $.connection.hub.qs = { 
+                role: 'Support',
+                userId: '@Session["EmployeeId"]'
+            };
+            
+            $.connection.hub.start().done(function () {
+                console.log('Support SignalR connected');
+                // Join Support group
+                hub.server.joinGroup('Support');
+            }).fail(function (error) {
+                console.error('SignalR connection failed:', error);
+            });
+        }
+        
+        function bindEventHandlers() {
+            // Click on conversation
+            $(document).on('click', '.conversation-item', function(e) {
+                e.preventDefault();
+                var customerId = $(this).data('customer-id');
+                openConversation(customerId, $(this));
+            });
+            
+            // Send message
+            $('#send-btn').on('click', function() {
+                sendMessage();
+            });
+            
+            $('#message-input').on('keypress', function(e) {
+                if (e.which === 13) {
+                    sendMessage();
+                }
+            });
+            
+            // Quick responses toggle
+            $('#quick-responses-btn').on('click', function() {
+                $('#quick-responses').toggle();
+            });
+            
+            $('#close-quick-responses').on('click', function() {
+                $('#quick-responses').hide();
+            });
+            
+            // Refresh
+            $('#btn-refresh').on('click', function() {
+                if (currentCustomerId) {
+                    loadChatHistory(currentCustomerId);
+                }
+                refreshConversationList();
+            });
+            
+            // Search conversations
+            $('#search-conversation').on('input', function() {
+                var query = $(this).val().toLowerCase();
+                $('.conversation-item').each(function() {
+                    var name = $(this).find('h6').text().toLowerCase();
+                    var message = $(this).find('p').text().toLowerCase();
+                    if (name.indexOf(query) > -1 || message.indexOf(query) > -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+        }
+        
+        function openConversation(customerId, $element) {
+            currentCustomerId = customerId;
+            
+            // Highlight conversation
+            $('.conversation-item').removeClass('active');
+            $element.addClass('active');
+            
+            // Remove unread badge
+            $element.find('.badge').remove();
+            $element.removeClass('has-unread');
+            
+            // Update header
+            var customerName = $element.find('h6').text();
+            var initial = customerName.charAt(0).toUpperCase();
+            $('#chat-customer-name').text(customerName);
+            $('#chat-avatar').text(initial);
+            $('#chat-customer-status').html('<span class="status-dot online"></span> Đang chat');
+            
+            // Enable input
+            $('#message-input').prop('disabled', false).focus();
+            $('#send-btn').prop('disabled', false);
+            $('#quick-responses-btn').prop('disabled', false);
+            
+            // Hide empty state
+            $('#empty-chat-state').hide();
+            
+            // Load chat history
+            loadChatHistory(customerId);
+            
+            // Mark as read
+            markAsRead(customerId);
+        }
+        
+        function loadChatHistory(customerId) {
+            $.get('@Url.Action("GetChatHistory", "ChatSupport")', { customerId: customerId }, function(response) {
+                if (response.success) {
+                    $('#chat-messages').empty();
+                    
+                    if (response.messages && response.messages.length > 0) {
+                        response.messages.forEach(function(msg) {
+                            appendMessage(
+                                msg.SenderName, 
+                                msg.Message, 
+                                msg.IsFromCustomer, 
+                                msg.SentTime,
+                                true
+                            );
+                        });
+                    } else {
+                        $('#chat-messages').html('<div class="text-center text-muted py-4">Chưa có tin nhắn trong cuộc hội thoại này</div>');
+                    }
+                    
+                    scrollToBottom();
+                }
+            });
+        }
+        
+        function sendMessage() {
+            var message = $('#message-input').val().trim();
+            if (!message || !currentCustomerId) return;
+            
+            // Disable send button
+            $('#send-btn').prop('disabled', true);
+            
+            $.post('@Url.Action("SendStaffMessage", "ChatSupport")', {
+                customerId: currentCustomerId,
+                message: message
+            }, function(response) {
+                if (response.success) {
+                    appendMessage('Bạn', message, false, response.timestamp);
+                    $('#message-input').val('').focus();
+                    scrollToBottom();
+                } else {
+                    alert('Lỗi: ' + response.message);
+                }
+            }).always(function() {
+                $('#send-btn').prop('disabled', false);
+            });
+        }
+        
+        function appendMessage(senderName, message, isFromCustomer, timestamp, isHistory) {
+            var messageClass = isFromCustomer ? 'from-customer' : 'from-staff';
+            
+            var html = `
+                <div class="chat-message ${messageClass}" style="opacity: ${isHistory ? 1 : 0};">
+                    <div class="message-wrapper">
+                        ${isFromCustomer ? '<div class="message-sender">' + escapeHtml(senderName) + '</div>' : ''}
+                        <div class="message-bubble">${escapeHtml(message)}</div>
+                        <div class="message-time">${timestamp}</div>
+                    </div>
+                </div>
+            `;
+            
+            $('#chat-messages').append(html);
+            
+            if (!isHistory) {
+                $('.chat-message').last().animate({ opacity: 1 }, 300);
+            }
+            
+            scrollToBottom();
+        }
+        
+        function showTypingIndicator() {
+            if ($('.typing-indicator').length > 0) return;
+            
+            var html = `
+                <div class="chat-message from-customer typing-message">
+                    <div class="message-wrapper">
+                        <div class="typing-indicator">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#chat-messages').append(html);
+            scrollToBottom();
+        }
+        
+        function hideTypingIndicator() {
+            $('.typing-message').fadeOut(200, function() {
+                $(this).remove();
+            });
+        }
+        
+        function loadQuickResponses() {
+            $.get('@Url.Action("GetQuickResponses", "ChatSupport")', function(response) {
+                if (response.success && response.responses) {
+                    var html = '';
+                    response.responses.forEach(function(item) {
+                        html += `
+                            <button class="btn btn-sm btn-outline-primary quick-response-item" 
+                                    data-text="${escapeHtml(item.Text)}">
+                                ${item.Text.substring(0, 40)}${item.Text.length > 40 ? '...' : ''}
+                            </button>
+                        `;
+                    });
+                    $('#quick-responses-list').html(html);
+                    
+                    // Bind click events
+                    $('.quick-response-item').on('click', function() {
+                        $('#message-input').val($(this).data('text'));
+                        $('#quick-responses').hide();
+                        $('#message-input').focus();
+                    });
+                }
+            });
+        }
+        
+        function refreshConversationList() {
+            $.get('@Url.Action("GetActiveConversations", "ChatSupport")', function(response) {
+                if (response.success && response.conversations) {
+                    updateConversationList(response.conversations);
+                }
+            });
+        }
+        
+        function updateConversationList(conversations) {
+            if (conversations.length === 0) {
+                $('#conversation-list').html($('#no-conversations').prop('outerHTML'));
+                return;
+            }
+            
+            var html = '';
+            conversations.forEach(function(conv) {
+                var isActive = conv.CustomerId === currentCustomerId;
+                var hasUnread = conv.UnreadCount > 0;
+                
+                html += `
+                    <a href="#" class="list-group-item list-group-item-action conversation-item py-3 ${isActive ? 'active' : ''} ${hasUnread ? 'has-unread' : ''}" 
+                       data-customer-id="${conv.CustomerId}">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-circle me-3">
+                                    ${(conv.CustomerName || 'K').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <h6 class="mb-1 fw-bold">${escapeHtml(conv.CustomerName)}</h6>
+                                    <p class="mb-0 text-muted small text-truncate" style="max-width: 200px;">
+                                        ${escapeHtml(conv.LastMessage)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">${conv.LastMessageTime}</small>
+                                ${hasUnread ? '<span class="badge bg-danger rounded-pill d-block mt-1">' + conv.UnreadCount + '</span>' : ''}
+                            </div>
+                        </div>
+                    </a>
+                `;
+            });
+            
+            $('#conversation-list').html(html);
+            $('#total-conversations').text(conversations.length);
+        }
+        
+        function markAsRead(customerId) {
+            $.post('@Url.Action("MarkAsRead", "ChatSupport")', { customerId: customerId });
+        }
+        
+        function scrollToBottom() {
+            var chatBox = document.getElementById('chat-messages');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function showNotification(title, message) {
+            // Browser notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: '/images/logo.png'
+                });
+            }
+            
+            // Toastr if available
+            if (typeof toastr !== 'undefined') {
+                toastr.info(message, title);
+            }
+        }
+        
+        function playNotificationSound() {
+            try {
+                var audio = new Audio('/Content/sounds/notification.mp3');
+                audio.volume = 0.5;
+                audio.play();
+            } catch (e) {
+                console.log('Could not play notification sound');
+            }
+        }
+        
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    </script>
+}

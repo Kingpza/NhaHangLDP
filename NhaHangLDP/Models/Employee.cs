@@ -36,6 +36,7 @@ namespace NhaHangLDP.Models
             this.Payroll = new HashSet<Payroll>();
             this.PerformanceReview = new HashSet<PerformanceReview>();
             this.PerformanceReview1 = new HashSet<PerformanceReview>();
+            this.SupportConversation = new HashSet<SupportConversation>();
         }
     
         public int Id { get; set; }
@@ -87,5 +88,7 @@ namespace NhaHangLDP.Models
         public virtual ICollection<PerformanceReview> PerformanceReview { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<PerformanceReview> PerformanceReview1 { get; set; }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<SupportConversation> SupportConversation { get; set; }
     }
 }

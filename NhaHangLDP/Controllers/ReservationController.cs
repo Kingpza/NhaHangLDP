@@ -1,4 +1,5 @@
 ﻿using NhaHangLDP.Models;
+using NhaHangLDP.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +14,12 @@ namespace NhaHangLDP.Controllers
     public class ReservationController : Controller
     {
         private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();
+        private readonly RealTimeNotificationService _notificationService;
+
+        public ReservationController()
+        {
+            _notificationService = new RealTimeNotificationService();
+        }
 
         #region Public Views
 
@@ -91,6 +98,23 @@ namespace NhaHangLDP.Controllers
                     model.TablePreference,     // @p9
                     model.SpecialRequests      // @p10
                 );
+
+                // Lấy ID của reservation vừa tạo
+                var newReservationId = _db.Database.SqlQuery<int>("SELECT SCOPE_IDENTITY()").FirstOrDefault();
+
+                // Gửi thông báo real-time cho quản lý về đặt bàn mới
+                _notificationService.NotifyNewReservation(new ReservationNotification
+                {
+                    ReservationId = newReservationId,
+                    ReservationCode = reservationCode,
+                    CustomerName = model.CustomerName,
+                    CustomerPhone = model.CustomerPhone,
+                    GuestCount = model.NumberOfGuests,
+                    ReservationDate = reservationDate.ToString("dd/MM/yyyy"),
+                    ReservationTime = reservationTime.ToString(@"hh\:mm"),
+                    TablePreference = model.TablePreference,
+                    SpecialRequests = model.SpecialRequests
+                });
 
                 return Json(new
                 {

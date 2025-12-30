@@ -136,6 +136,9 @@
         <AssociationConnector Association="NhaHangLDPModel.FK_Review_MenuItem" />
         <AssociationConnector Association="NhaHangLDPModel.FK_Wishlist_MenuItem" />
         <AssociationConnector Association="NhaHangLDPModel.FK_VoucherUsage_Voucher" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.SupportConversation" Width="1.5" PointX="5.25" PointY="56.125" />
+        <EntityTypeShape EntityType="NhaHangLDPModel.SupportMessage" Width="1.5" PointX="15.375" PointY="4.75" />
+        <AssociationConnector Association="NhaHangLDPModel.FK_SupportConversation_Employee" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

@@ -344,7 +344,7 @@ namespace NhaHangLDP.Controllers
         /// <summary>
         /// Trang cá nhân
         /// </summary>
-        public ActionResult Profile()
+        public new ActionResult Profile()
         {
             var shipperId = GetCurrentShipperId();
             if (shipperId == 0) return RedirectToAction("Login");

@@ -12,15 +12,18 @@ namespace NhaHangLDP.Services
     public class DeliveryService
     {
         private readonly NhaHangLDPEntities _db;
+        private readonly RealTimeNotificationService _notificationService;
 
         public DeliveryService()
         {
             _db = new NhaHangLDPEntities();
+            _notificationService = new RealTimeNotificationService();
         }
 
         public DeliveryService(NhaHangLDPEntities db)
         {
             _db = db;
+            _notificationService = new RealTimeNotificationService();
         }
 
         #region Delivery Fee Calculation
@@ -209,6 +212,16 @@ namespace NhaHangLDP.Services
                 }
 
                 _db.SaveChanges();
+
+                // Gửi thông báo real-time về vị trí shipper
+                _notificationService.UpdateShipperLocation(
+                    shipperId,
+                    shipper.FullName,
+                    latitude,
+                    longitude,
+                    activeAssignment?.OrderId
+                );
+
                 return true;
             }
             catch
@@ -320,6 +333,22 @@ namespace NhaHangLDP.Services
 
                 _db.SaveChanges();
 
+                // Gửi thông báo real-time cho shipper về đơn hàng mới
+                _notificationService.NotifyNewDeliveryToShipper(shipperId, new DeliveryOrderNotification
+                {
+                    OrderId = orderId,
+                    OrderCode = order.OrderCode,
+                    CustomerName = order.CustomerName,
+                    CustomerPhone = order.CustomerPhone,
+                    DeliveryAddress = order.DeliveryAddress,
+                    District = order.District,
+                    TotalAmount = order.TotalAmount,
+                    PaymentMethod = order.PaymentMethod,
+                    DeliveryFee = order.DeliveryFee,
+                    ShipperEarning = assignment.ShipperEarning,
+                    EstimatedTime = assignment.EstimatedArrival?.ToString("HH:mm")
+                });
+
                 result.Success = true;
                 result.Message = $"Đã gán shipper {shipper.FullName} cho đơn hàng";
                 result.AssignmentId = assignment.Id;
@@ -425,6 +454,16 @@ namespace NhaHangLDP.Services
                 }
 
                 _db.SaveChanges();
+
+                // Gửi thông báo real-time về trạng thái giao hàng
+                _notificationService.UpdateDeliveryStatus(
+                    assignment.OrderId,
+                    assignment.CustomerOrder.OrderCode,
+                    newStatus,
+                    assignment.ShipperId,
+                    assignment.CustomerOrder.CustomerPhone
+                );
+
                 return true;
             }
             catch

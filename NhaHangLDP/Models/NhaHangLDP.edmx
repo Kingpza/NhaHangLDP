@@ -814,6 +814,47 @@
           <Property Name="PhoneNumber" Type="nvarchar" MaxLength="20" />
           <Property Name="Address" Type="nvarchar(max)" />
         </EntityType>
+        <EntityType Name="SupportConversation">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ConversationCode" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="CustomerId" Type="nvarchar" MaxLength="100" />
+          <Property Name="CustomerName" Type="nvarchar" MaxLength="100" />
+          <Property Name="CustomerEmail" Type="nvarchar" MaxLength="200" />
+          <Property Name="CustomerPhone" Type="nvarchar" MaxLength="20" />
+          <Property Name="AssignedStaffId" Type="int" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" />
+          <Property Name="Subject" Type="nvarchar" MaxLength="200" />
+          <Property Name="Priority" Type="nvarchar" MaxLength="20" />
+          <Property Name="StartTime" Type="datetime" Nullable="false" />
+          <Property Name="EndTime" Type="datetime" />
+          <Property Name="LastMessageTime" Type="datetime" />
+          <Property Name="CustomerRating" Type="int" />
+          <Property Name="CustomerFeedback" Type="nvarchar(max)" />
+          <Property Name="InternalNotes" Type="nvarchar(max)" />
+          <Property Name="Tags" Type="nvarchar" MaxLength="500" />
+        </EntityType>
+        <EntityType Name="SupportMessage">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="SenderId" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="SenderType" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="SenderName" Type="nvarchar" MaxLength="100" />
+          <Property Name="RecipientId" Type="nvarchar" MaxLength="100" />
+          <Property Name="RecipientType" Type="nvarchar" MaxLength="20" />
+          <Property Name="Message" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="MessageType" Type="nvarchar" MaxLength="20" />
+          <Property Name="AttachmentUrl" Type="nvarchar" MaxLength="500" />
+          <Property Name="SentTime" Type="datetime" Nullable="false" />
+          <Property Name="IsRead" Type="bit" Nullable="false" />
+          <Property Name="ReadTime" Type="datetime" />
+          <Property Name="ConversationId" Type="nvarchar" MaxLength="100" />
+          <Property Name="Metadata" Type="nvarchar(max)" />
+        </EntityType>
         <EntityType Name="TableArea">
           <Key>
             <PropertyRef Name="Id" />
@@ -1717,6 +1758,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_SupportConversation_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="0..1" />
+          <End Role="SupportConversation" Type="Self.SupportConversation" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="SupportConversation">
+              <PropertyRef Name="AssignedStaffId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_TableSession_Table">
           <End Role="RestaurantTable" Type="Self.RestaurantTable" Multiplicity="1">
             <OnDelete Action="Cascade" />
@@ -1847,6 +1900,8 @@
           <EntitySet Name="StockInbound" EntityType="Self.StockInbound" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="StockInboundDetail" EntityType="Self.StockInboundDetail" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Supplier" EntityType="Self.Supplier" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SupportConversation" EntityType="Self.SupportConversation" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SupportMessage" EntityType="Self.SupportMessage" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TableArea" EntityType="Self.TableArea" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TableSession" EntityType="Self.TableSession" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Voucher" EntityType="Self.Voucher" Schema="dbo" store:Type="Tables" />
@@ -2117,6 +2172,10 @@
             <End Role="StockInbound" EntitySet="StockInbound" />
             <End Role="StockInboundDetail" EntitySet="StockInboundDetail" />
           </AssociationSet>
+          <AssociationSet Name="FK_SupportConversation_Employee" Association="Self.FK_SupportConversation_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="SupportConversation" EntitySet="SupportConversation" />
+          </AssociationSet>
           <AssociationSet Name="FK_TableSession_Table" Association="Self.FK_TableSession_Table">
             <End Role="RestaurantTable" EntitySet="RestaurantTable" />
             <End Role="TableSession" EntitySet="TableSession" />
@@ -2272,6 +2331,7 @@
           <NavigationProperty Name="Payroll" Relationship="NhaHangLDPModel.FK_Payroll_Employee" FromRole="Employee" ToRole="Payroll" />
           <NavigationProperty Name="PerformanceReview" Relationship="NhaHangLDPModel.FK_PerformanceReview_Employee" FromRole="Employee" ToRole="PerformanceReview" />
           <NavigationProperty Name="PerformanceReview1" Relationship="NhaHangLDPModel.FK_PerformanceReview_Reviewer" FromRole="Employee" ToRole="PerformanceReview" />
+          <NavigationProperty Name="SupportConversation" Relationship="NhaHangLDPModel.FK_SupportConversation_Employee" FromRole="Employee" ToRole="SupportConversation" />
         </EntityType>
         <EntityType Name="Ingredient">
           <Key>
@@ -3242,6 +3302,12 @@
           <AssociationSet Name="FK_VoucherUsage_Voucher" Association="NhaHangLDPModel.FK_VoucherUsage_Voucher">
             <End Role="Voucher" EntitySet="Voucher" />
             <End Role="VoucherUsage" EntitySet="VoucherUsage" />
+          </AssociationSet>
+          <EntitySet Name="SupportConversation" EntityType="NhaHangLDPModel.SupportConversation" />
+          <EntitySet Name="SupportMessage" EntityType="NhaHangLDPModel.SupportMessage" />
+          <AssociationSet Name="FK_SupportConversation_Employee" Association="NhaHangLDPModel.FK_SupportConversation_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="SupportConversation" EntitySet="SupportConversation" />
           </AssociationSet>
         </EntityContainer>
         <EntityType Name="EmailConfig">
@@ -4427,6 +4493,60 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="SupportConversation">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ConversationCode" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerId" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerEmail" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerPhone" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="AssignedStaffId" Type="Int32" />
+          <Property Name="Status" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Subject" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="Priority" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="StartTime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="EndTime" Type="DateTime" Precision="3" />
+          <Property Name="LastMessageTime" Type="DateTime" Precision="3" />
+          <Property Name="CustomerRating" Type="Int32" />
+          <Property Name="CustomerFeedback" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="InternalNotes" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Tags" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Employee" Relationship="NhaHangLDPModel.FK_SupportConversation_Employee" FromRole="SupportConversation" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="SupportMessage">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="SenderId" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="SenderType" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="SenderName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="RecipientId" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="RecipientType" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Message" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="MessageType" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="AttachmentUrl" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="SentTime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="IsRead" Type="Boolean" Nullable="false" />
+          <Property Name="ReadTime" Type="DateTime" Precision="3" />
+          <Property Name="ConversationId" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Metadata" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <Association Name="FK_SupportConversation_Employee">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="0..1" />
+          <End Type="NhaHangLDPModel.SupportConversation" Role="SupportConversation" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="SupportConversation">
+              <PropertyRef Name="AssignedStaffId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -5370,6 +5490,49 @@
                 <ScalarProperty Name="AddedDate" ColumnName="AddedDate" />
                 <ScalarProperty Name="MenuItemId" ColumnName="MenuItemId" />
                 <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SupportConversation">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.SupportConversation">
+              <MappingFragment StoreEntitySet="SupportConversation">
+                <ScalarProperty Name="Tags" ColumnName="Tags" />
+                <ScalarProperty Name="InternalNotes" ColumnName="InternalNotes" />
+                <ScalarProperty Name="CustomerFeedback" ColumnName="CustomerFeedback" />
+                <ScalarProperty Name="CustomerRating" ColumnName="CustomerRating" />
+                <ScalarProperty Name="LastMessageTime" ColumnName="LastMessageTime" />
+                <ScalarProperty Name="EndTime" ColumnName="EndTime" />
+                <ScalarProperty Name="StartTime" ColumnName="StartTime" />
+                <ScalarProperty Name="Priority" ColumnName="Priority" />
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="AssignedStaffId" ColumnName="AssignedStaffId" />
+                <ScalarProperty Name="CustomerPhone" ColumnName="CustomerPhone" />
+                <ScalarProperty Name="CustomerEmail" ColumnName="CustomerEmail" />
+                <ScalarProperty Name="CustomerName" ColumnName="CustomerName" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="ConversationCode" ColumnName="ConversationCode" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SupportMessage">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.SupportMessage">
+              <MappingFragment StoreEntitySet="SupportMessage">
+                <ScalarProperty Name="Metadata" ColumnName="Metadata" />
+                <ScalarProperty Name="ConversationId" ColumnName="ConversationId" />
+                <ScalarProperty Name="ReadTime" ColumnName="ReadTime" />
+                <ScalarProperty Name="IsRead" ColumnName="IsRead" />
+                <ScalarProperty Name="SentTime" ColumnName="SentTime" />
+                <ScalarProperty Name="AttachmentUrl" ColumnName="AttachmentUrl" />
+                <ScalarProperty Name="MessageType" ColumnName="MessageType" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+                <ScalarProperty Name="RecipientType" ColumnName="RecipientType" />
+                <ScalarProperty Name="RecipientId" ColumnName="RecipientId" />
+                <ScalarProperty Name="SenderName" ColumnName="SenderName" />
+                <ScalarProperty Name="SenderType" ColumnName="SenderType" />
+                <ScalarProperty Name="SenderId" ColumnName="SenderId" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
