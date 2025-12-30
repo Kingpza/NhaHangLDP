@@ -196,4 +196,69 @@ namespace NhaHangLDP.Models
         public int Count { get; set; }
         public string Intent { get; set; }
     }
+
+    /// <summary>
+    /// Context for order flow in chatbot
+    /// </summary>
+    public class ChatbotOrderContext
+    {
+        public string State { get; set; } = "IDLE"; // IDLE, COLLECTING_ITEMS, CONFIRM_ITEMS, COLLECTING_INFO, CONFIRM_ORDER
+        public List<ChatbotOrderItem> Items { get; set; } = new List<ChatbotOrderItem>();
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public string CustomerAddress { get; set; }
+        public string OrderType { get; set; } = "Delivery"; // Delivery or TakeAway
+        public string Note { get; set; }
+        public DateTime LastUpdated { get; set; } = DateTime.Now;
+    }
+
+    /// <summary>
+    /// Item in chatbot order
+    /// </summary>
+    public class ChatbotOrderItem
+    {
+        public int MenuItemId { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+        public int Quantity { get; set; }
+        public string ImageUrl { get; set; }
+    }
+
+    /// <summary>
+    /// Context for reservation flow in chatbot
+    /// </summary>
+    public class ChatbotReservationContext
+    {
+        public string State { get; set; } = "IDLE"; // IDLE, COLLECTING_INFO, CONFIRM_BOOKING
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public string CustomerEmail { get; set; }
+        public DateTime? ReservationDate { get; set; }
+        public TimeSpan? ReservationTime { get; set; }
+        public int NumberOfGuests { get; set; }
+        public string SpecialRequests { get; set; }
+        public DateTime LastUpdated { get; set; } = DateTime.Now;
+    }
+
+    /// <summary>
+    /// Action button for chatbot
+    /// </summary>
+    public class ChatbotActionButton
+    {
+        public string Text { get; set; }
+        public string Action { get; set; }
+        public string Data { get; set; }
+        public string Style { get; set; } = "primary"; // primary, secondary, success, danger
+    }
+
+    /// <summary>
+    /// Enhanced response model with actions
+    /// </summary>
+    public class ChatbotEnhancedResponse : ChatBotResponseModel
+    {
+        public List<ChatbotActionButton> ActionButtons { get; set; } = new List<ChatbotActionButton>();
+        public ChatbotOrderContext OrderContext { get; set; }
+        public ChatbotReservationContext ReservationContext { get; set; }
+        public string HtmlContent { get; set; } // For rendering rich content like order summary
+    }
 }

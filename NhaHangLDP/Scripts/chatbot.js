@@ -241,7 +241,7 @@
             const id = item.Id || item.id || 0;
 
             return `
-                <div class="suggestion-card" data-id="${id}">
+                <div class="suggestion-card" data-id="${id}" data-name="${escapeHtml(name)}">
                     <img src="${imageUrl}" 
                          alt="${escapeHtml(name)}" 
                          onerror="this.src='/images/menu/default-food.jpg'">
@@ -249,9 +249,14 @@
                         <h4>${escapeHtml(name)}</h4>
                         <p class="suggestion-price">${price}</p>
                     </div>
-                    <button class="btn-view-dish" data-id="${id}">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                    <div class="suggestion-actions">
+                        <button class="btn-add-to-order" data-id="${id}" data-name="${escapeHtml(name)}" title="Thêm vào đơn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                        <button class="btn-view-dish" data-id="${id}" title="Xem chi tiết">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -275,10 +280,22 @@
             window.open('/Public/Detail/' + id, '_blank');
         });
 
+        // Add to order button click
+        $('.btn-add-to-order').off('click').on('click', function (e) {
+            e.stopPropagation();
+            const name = $(this).data('name');
+            $('#chatbot-input').val('Cho mình 1 phần ' + name);
+            sendMessage();
+        });
+
+        // Card click - now adds to order directly
         $('.suggestion-card').off('click').on('click', function (e) {
-            if (!$(e.target).hasClass('btn-view-dish') && !$(e.target).closest('.btn-view-dish').length) {
-                const name = $(this).find('h4').text();
-                $('#chatbot-input').val('Cho tôi biết thêm về ' + name);
+            if (!$(e.target).hasClass('btn-view-dish') && 
+                !$(e.target).closest('.btn-view-dish').length &&
+                !$(e.target).hasClass('btn-add-to-order') && 
+                !$(e.target).closest('.btn-add-to-order').length) {
+                const name = $(this).data('name');
+                $('#chatbot-input').val('Cho mình 1 phần ' + name);
                 sendMessage();
             }
         });
@@ -347,15 +364,15 @@
         else if (hour < 18) greeting = 'Chào buổi chiều';
         else greeting = 'Chào buổi tối';
 
-        const welcomeText = `👋 ${greeting}! Mình là **LDP Bot**.\n\nMình có thể giúp bạn tìm món ăn, gợi ý theo ngân sách, hoặc hỗ trợ đặt bàn.\n\nBạn muốn tìm gì hôm nay?`;
+        const welcomeText = `👋 ${greeting}! Mình là **LDP Bot**.\n\nMình có thể giúp bạn:\n🍽️ Tìm và gợi ý món ăn\n🛒 Đặt món giao hàng\n📅 Đặt bàn nhà hàng\n❓ Trả lời câu hỏi\n\nBạn muốn làm gì hôm nay?`;
         
         addBotMessage(welcomeText);
         
         addQuickReplies([
             '🔥 Top món bán chạy',
-            '💰 Món dưới 100k',
-            '⭐ Món đặc biệt',
-            '📅 Đặt bàn'
+            '🛒 Đặt món',
+            '📅 Đặt bàn',
+            '💰 Món dưới 100k'
         ]);
     }
 

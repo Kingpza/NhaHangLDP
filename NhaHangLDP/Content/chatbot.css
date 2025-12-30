@@ -348,12 +348,24 @@
     margin: 0;
 }
 
-.btn-view-dish {
+.suggestion-actions {
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 30px;
-    height: 30px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.suggestion-card:hover .suggestion-actions {
+    opacity: 1;
+}
+
+.btn-add-to-order,
+.btn-view-dish {
+    width: 28px;
+    height: 28px;
     background: rgba(255, 255, 255, 0.95);
     border: none;
     border-radius: 50%;
@@ -365,6 +377,21 @@
     transition: all 0.2s ease;
 }
 
+.btn-add-to-order:hover {
+    background: #22c55e;
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-add-to-order i {
+    font-size: 11px;
+    color: #22c55e;
+}
+
+.btn-add-to-order:hover i {
+    color: white;
+}
+
 .btn-view-dish:hover {
     background: #3b82f6;
     color: white;
@@ -372,7 +399,7 @@
 }
 
 .btn-view-dish i {
-    font-size: 12px;
+    font-size: 11px;
     color: #3b82f6;
 }
 
