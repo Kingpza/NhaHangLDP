@@ -16,6 +16,7 @@ namespace NhaHangLDP.Controllers
     public class CustomerAccountController : Controller
     {
         private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();
+        private const string CART_SESSION_KEY = "CustomerCart";
 
         #region Login
 
@@ -67,11 +68,21 @@ namespace NhaHangLDP.Controllers
                     return View(model);
                 }
 
+                // Lưu giỏ hàng session trước khi set CustomerId
+                var sessionCart = Session[CART_SESSION_KEY] as CartViewModel;
+
                 // Set session - lưu đầy đủ thông tin khách hàng
                 Session["CustomerId"] = customer.Id;
                 Session["CustomerName"] = customer.FullName;
                 Session["CustomerEmail"] = customer.Email;
                 Session["CustomerPhone"] = customer.Phone;
+
+                // Merge giỏ hàng session vào database
+                if (sessionCart != null && sessionCart.Items.Any())
+                {
+                    MergeSessionCartToDatabase(customer.Id, sessionCart);
+                    Session[CART_SESSION_KEY] = null;
+                }
 
                 // Update last login
                 _db.Database.ExecuteSqlCommand(
@@ -161,6 +172,9 @@ namespace NhaHangLDP.Controllers
                 // Hash password
                 var passwordHash = HashPassword(model.Password);
 
+                // Lưu giỏ hàng session trước khi tạo customer
+                var sessionCart = Session[CART_SESSION_KEY] as CartViewModel;
+
                 // Create customer
                 var sql = @"
                     INSERT INTO Customer (FullName, Email, Phone, PasswordHash, MembershipLevel, LoyaltyPoints, IsActive, EmailVerified, CreatedDate)
@@ -173,11 +187,20 @@ namespace NhaHangLDP.Controllers
                     model.Phone,
                     passwordHash).FirstOrDefault();
 
+                var customerIdInt = (int)customerId;
+
                 // Auto login - lưu đầy đủ thông tin khách hàng
-                Session["CustomerId"] = (int)customerId;
+                Session["CustomerId"] = customerIdInt;
                 Session["CustomerName"] = model.FullName;
                 Session["CustomerEmail"] = model.Email;
                 Session["CustomerPhone"] = model.Phone;
+
+                // Merge giỏ hàng session vào database cho người dùng mới
+                if (sessionCart != null && sessionCart.Items.Any())
+                {
+                    MergeSessionCartToDatabase(customerIdInt, sessionCart);
+                    Session[CART_SESSION_KEY] = null;
+                }
 
                 TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà Hàng LDP.";
                 return RedirectToAction("Menu", "Public");
@@ -892,6 +915,68 @@ private bool IsCustomerLoggedIn()
 private int? GetCustomerId()
 {
     return Session["CustomerId"] as int?;
+}
+
+/// <summary>
+/// Merge giỏ hàng từ Session vào Database khi đăng nhập
+/// </summary>
+private void MergeSessionCartToDatabase(int customerId, CartViewModel sessionCart)
+{
+    try
+    {
+        // Tìm hoặc tạo Cart cho customer
+        var cart = _db.Cart.FirstOrDefault(c => c.CustomerId == customerId);
+
+        if (cart == null)
+        {
+            cart = new Cart
+            {
+                CustomerId = customerId,
+                CreatedDate = DateTime.Now,
+                UpdatedDate = DateTime.Now
+            };
+            _db.Cart.Add(cart);
+            _db.SaveChanges();
+        }
+        else
+        {
+            cart.UpdatedDate = DateTime.Now;
+        }
+
+        // Lấy các CartItem hiện có trong database
+        var existingItems = _db.CartItem.Where(ci => ci.CartId == cart.Id).ToList();
+
+        // Merge các món từ session vào database
+        foreach (var sessionItem in sessionCart.Items)
+        {
+            var existingItem = existingItems.FirstOrDefault(i => i.MenuItemId == sessionItem.MenuItemId);
+            if (existingItem != null)
+            {
+                // Cộng dồn số lượng
+                existingItem.Quantity += sessionItem.Quantity;
+            }
+            else
+            {
+                // Thêm món mới
+                var cartItem = new CartItem
+                {
+                    CartId = cart.Id,
+                    MenuItemId = sessionItem.MenuItemId,
+                    Quantity = sessionItem.Quantity,
+                    UnitPrice = sessionItem.UnitPrice,
+                    SpecialInstructions = sessionItem.SpecialInstructions,
+                    AddedDate = DateTime.Now
+                };
+                _db.CartItem.Add(cartItem);
+            }
+        }
+
+        _db.SaveChanges();
+    }
+    catch
+    {
+        // Silent fail - không ảnh hưởng đến quá trình đăng nhập
+    }
 }
 
 private CustomerProfileViewModel GetCustomerProfile(int customerId)
