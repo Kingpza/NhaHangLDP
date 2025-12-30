@@ -24,8 +24,21 @@ namespace NhaHangLDP.Services
         private readonly bool _useGeminiAI;
         private static readonly HttpClient _httpClient = new HttpClient();
         
+        // Thread-safe random generator
+        private static readonly Random _random = new Random();
+        private static readonly object _randomLock = new object();
+        
         // Cache sessions trong memory (production nên dùng Redis)
         private static Dictionary<string, ChatSession> _sessions = new Dictionary<string, ChatSession>();
+        
+        // Regex patterns as constants
+        private static readonly Regex DishNameCleanupPattern = new Regex(
+            @"(cho (mình|tôi|tui)|đặt|order|mua|gọi|lấy|thêm|\d+\s*(phần|suất|đĩa|tô|ly|chai|lon))",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex QuantityLeadingPattern = new Regex(@"^\d+\s*", RegexOptions.Compiled);
+        private static readonly Regex PhonePattern = new Regex(@"0[3-9]\d{8}", RegexOptions.Compiled); // Vietnamese phone format
+        private static readonly Regex TimePattern = new Regex(@"(\d{1,2})[:\.]?(\d{2})?\s*(giờ|h|am|pm)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex DatePattern = new Regex(@"(\d{1,2})[/\-](\d{1,2})", RegexOptions.Compiled);
         
         // Intent patterns - Enhanced version
         private static readonly Dictionary<string, List<string>> IntentPatterns = new Dictionary<string, List<string>>
@@ -2000,13 +2013,11 @@ CÂU HỎI: {message}";
         /// </summary>
         private string ExtractDishName(string message)
         {
-            // Remove common phrases
-            var cleaned = Regex.Replace(message.ToLower(), 
-                @"(cho (mình|tôi|tui)|đặt|order|mua|gọi|lấy|thêm|\d+\s*(phần|suất|đĩa|tô|ly|chai|lon))",
-                "").Trim();
+            // Remove common phrases using compiled regex
+            var cleaned = DishNameCleanupPattern.Replace(message.ToLower(), "").Trim();
             
-            // Remove quantity patterns
-            cleaned = Regex.Replace(cleaned, @"^\d+\s*", "").Trim();
+            // Remove leading quantity patterns
+            cleaned = QuantityLeadingPattern.Replace(cleaned, "").Trim();
             
             if (string.IsNullOrWhiteSpace(cleaned) || cleaned.Length < 2) return null;
             
@@ -2168,8 +2179,8 @@ CÂU HỎI: {message}";
             string phone = null;
             string address = null;
 
-            // Extract phone
-            var phoneMatch = Regex.Match(message, @"0\d{9,10}");
+            // Extract Vietnamese phone number using compiled regex
+            var phoneMatch = PhonePattern.Match(message);
             if (phoneMatch.Success)
             {
                 phone = phoneMatch.Value;
@@ -2250,8 +2261,8 @@ CÂU HỎI: {message}";
             }
             else
             {
-                // Try to parse date like "25/12" or "25-12"
-                var dateMatch = Regex.Match(message, @"(\d{1,2})[/\-](\d{1,2})");
+                // Try to parse date like "25/12" or "25-12" using compiled regex
+                var dateMatch = DatePattern.Match(message);
                 if (dateMatch.Success)
                 {
                     var day = int.Parse(dateMatch.Groups[1].Value);
@@ -2267,17 +2278,28 @@ CÂU HỎI: {message}";
                 }
             }
 
-            // Extract time
-            var timeMatch = Regex.Match(message, @"(\d{1,2})[:\.]?(\d{2})?\s*(giờ|h|am|pm)?");
+            // Extract time using compiled regex
+            var timeMatch = TimePattern.Match(message);
             if (timeMatch.Success)
             {
                 var hour = int.Parse(timeMatch.Groups[1].Value);
                 var minute = timeMatch.Groups[2].Success ? int.Parse(timeMatch.Groups[2].Value) : 0;
 
-                // Adjust for common restaurant hours
-                if (hour < 6) hour += 12; // Assume PM for small numbers
+                // Adjust for common restaurant hours (restaurant open 10:00-22:00)
+                // Hours 1-5 are assumed to be PM for restaurant context
+                if (hour >= 1 && hour <= 5)
+                {
+                    hour += 12;
+                }
+                // If hour is explicitly marked as PM
+                if (timeMatch.Groups[3].Success)
+                {
+                    var ampm = timeMatch.Groups[3].Value.ToLower();
+                    if (ampm == "pm" && hour < 12) hour += 12;
+                    if (ampm == "am" && hour == 12) hour = 0;
+                }
 
-                if (hour >= 0 && hour < 24 && minute >= 0 && minute < 60)
+                if (hour >= 10 && hour < 24 && minute >= 0 && minute < 60)
                 {
                     time = new TimeSpan(hour, minute, 0);
                 }
@@ -2308,7 +2330,8 @@ CÂU HỎI: {message}";
         }
 
         /// <summary>
-        /// Get available table count
+        /// Get available table count for future reservation
+        /// Note: We check both 'Available' status and tables without conflicting reservations
         /// </summary>
         private int GetAvailableTableCount(DateTime date, TimeSpan time, int guests)
         {
@@ -2316,10 +2339,11 @@ CÂU HỎI: {message}";
             {
                 var timeMinutes = (int)time.TotalMinutes;
 
+                // Only count tables with 'Available' status that don't have conflicting reservations
                 var sql = @"
                     SELECT COUNT(*)
                     FROM RestaurantTable t
-                    WHERE t.Status IN ('Available', 'Occupied')
+                    WHERE t.Status = 'Available'
                       AND t.Capacity >= @p0
                       AND NOT EXISTS (
                           SELECT 1 FROM Reservation r 
@@ -2338,13 +2362,24 @@ CÂU HỎI: {message}";
         }
 
         /// <summary>
+        /// Get random number thread-safely
+        /// </summary>
+        private static int GetRandomNumber(int min, int max)
+        {
+            lock (_randomLock)
+            {
+                return _random.Next(min, max);
+            }
+        }
+
+        /// <summary>
         /// Create order from chatbot context
         /// </summary>
         private OrderCreationResult CreateOrderFromChatbot(ChatbotOrderContext orderContext)
         {
             try
             {
-                var orderCode = "DH" + DateTime.Now.ToString("yyMMddHHmmss") + new Random().Next(100, 999);
+                var orderCode = "DH" + DateTime.Now.ToString("yyMMddHHmmss") + GetRandomNumber(100, 999);
                 var subTotal = orderContext.Items.Sum(i => i.Price * i.Quantity);
                 var deliveryFee = subTotal >= 300000 ? 0 : 25000;
                 var totalAmount = subTotal + deliveryFee;
@@ -2406,14 +2441,14 @@ CÂU HỎI: {message}";
         {
             try
             {
-                var reservationCode = "RES" + DateTime.Now.ToString("yyMMddHHmm") + new Random().Next(100, 999);
+                var reservationCode = "RES" + DateTime.Now.ToString("yyMMddHHmm") + GetRandomNumber(100, 999);
 
                 // Find available table
                 var timeMinutes = (int)context.ReservationTime.Value.TotalMinutes;
                 var tableIdSql = @"
                     SELECT TOP 1 t.Id
                     FROM RestaurantTable t
-                    WHERE t.Status IN ('Available')
+                    WHERE t.Status = 'Available'
                       AND t.Capacity >= @p0
                       AND NOT EXISTS (
                           SELECT 1 FROM Reservation r 
