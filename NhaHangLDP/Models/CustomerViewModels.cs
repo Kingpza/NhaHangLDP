@@ -184,6 +184,7 @@ namespace NhaHangLDP.Models
         public string Description { get; set; }
         public string Icon { get; set; }
         public DateTime? CompletedAt { get; set; }
+        public DateTime? Time { get { return CompletedAt; } set { CompletedAt = value; } }
         public bool IsCompleted { get; set; }
         public bool IsCurrent { get; set; }
     }
@@ -233,6 +234,30 @@ namespace NhaHangLDP.Models
         public bool CanCancel { get; set; }
         public bool CanModify { get; set; }
         public DateTime CreatedDate { get; set; }
+    }
+
+    public class MyReservationViewModel
+    {
+        public int Id { get; set; }
+        public string ReservationCode { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public DateTime ReservationDate { get; set; }
+        public TimeSpan ReservationTime { get; set; }
+        public int NumberOfGuests { get; set; }
+        public string TablePreference { get; set; }
+        public string TableName { get; set; }
+        public string SpecialRequests { get; set; }
+        public string Status { get; set; }
+        public string StatusClass { get; set; }
+        public string StatusText { get; set; }
+        public bool CanCancel { get; set; }
+        public bool CanModify { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public bool IsUpcoming { get; set; }
+
+        public string ReservationTimeFormatted => ReservationTime.ToString(@"hh\:mm");
+        public string ReservationDateFormatted => ReservationDate.ToString("dd/MM/yyyy");
     }
 
     public class TimeSlotViewModel

@@ -1,0 +1,312 @@
+﻿@model List<NhaHangLDP.Controllers.TableQRViewModel>
+@{
+    ViewBag.Title = "QR Code Bàn";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        /* Stats Cards */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .stat-icon.blue { background: #dbeafe; color: #2563eb; }
+        .stat-icon.green { background: #dcfce7; color: #16a34a; }
+        .stat-icon.purple { background: #f3e8ff; color: #9333ea; }
+        .stat-info h3 { margin: 0; font-size: 28px; font-weight: 700; color: #1e3a5f; }
+        .stat-info p { margin: 0; color: #64748b; font-size: 14px; }
+
+        /* Filter Card */
+        .filter-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+        }
+
+        /* QR Grid */
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .qr-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+        .qr-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .qr-card-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .qr-card-header .table-number {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .qr-card-header .area-name {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        .qr-card-body {
+            padding: 25px;
+            text-align: center;
+        }
+        .qr-card-body img {
+            width: 180px;
+            height: 180px;
+            border-radius: 10px;
+            border: 3px solid #e2e8f0;
+        }
+        .qr-card-footer {
+            padding: 15px 20px;
+            background: #f8fafc;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .btn-sm-action {
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s;
+        }
+        .btn-view { 
+            background: #dbeafe; 
+            color: #2563eb; 
+        }
+        .btn-view:hover {
+            background: #2563eb;
+            color: #fff;
+        }
+        .btn-download { 
+            background: #dcfce7; 
+            color: #16a34a; 
+        }
+        .btn-download:hover {
+            background: #16a34a;
+            color: #fff;
+        }
+
+        /* Print Styles */
+        .print-all-container {
+            display: none;
+        }
+        @@media print {
+            body * { visibility: hidden; }
+            .print-all-container, .print-all-container * { visibility: visible; }
+            .print-all-container {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .print-page {
+                page-break-after: always;
+                text-align: center;
+                padding: 50px;
+            }
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="fas fa-qrcode me-2"></i>QR Code Bàn</h2>
+            <p class="mb-0">Quản lý và in QR Code cho từng bàn</p>
+        </div>
+        <div>
+            <button class="btn btn-light me-2" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>In tất cả
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-chair"></i>
+        </div>
+        <div class="stat-info">
+            <h3>@Model.Count</h3>
+            <p>Tổng số bàn</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-qrcode"></i>
+        </div>
+        <div class="stat-info">
+            <h3>@Model.Count</h3>
+            <p>QR Code đã tạo</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="fas fa-layer-group"></i>
+        </div>
+        <div class="stat-info">
+            <h3>@Model.Select(m => m.Table.TableArea?.Name).Where(a => a != null).Distinct().Count()</h3>
+            <p>Khu vực</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Card -->
+<div class="filter-card">
+    <div class="row align-items-center">
+        <div class="col-md-4">
+            <label class="form-label">Lọc theo khu vực</label>
+            <select class="form-select" id="areaFilter" onchange="filterByArea(this.value)">
+                <option value="">Tất cả khu vực</option>
+                @foreach (var area in Model.Select(m => m.Table.TableArea?.Name).Where(a => a != null).Distinct())
+                {
+                    <option value="@area">@area</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Tìm kiếm</label>
+            <input type="text" class="form-control" id="searchInput" placeholder="Nhập số bàn..." onkeyup="searchTable(this.value)">
+        </div>
+        <div class="col-md-4 text-end">
+            <label class="form-label d-block">&nbsp;</label>
+            <button class="btn btn-primary-custom" onclick="downloadAllQR()">
+                <i class="fas fa-download me-2"></i>Tải tất cả
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- QR Grid -->
+<div class="qr-grid" id="qrGrid">
+    @foreach (var item in Model)
+    {
+        <div class="qr-card" data-area="@item.Table.TableArea?.Name" data-table="@item.Table.TableNumber">
+            <div class="qr-card-header">
+                <div class="table-number">Bàn @item.Table.TableNumber</div>
+                @if (item.Table.TableArea != null)
+                {
+                    <div class="area-name"><i class="fas fa-map-marker-alt me-1"></i>@item.Table.TableArea.Name</div>
+                }
+            </div>
+            <div class="qr-card-body">
+                <img src="@item.QRCode.DataUrl" alt="QR Code">
+            </div>
+            <div class="qr-card-footer">
+                <a href="@Url.Action("TableQR", "QRCode", new { tableId = item.Table.Id })" class="btn-sm-action btn-view">
+                    <i class="fas fa-eye"></i> Xem
+                </a>
+                <a href="@Url.Action("TableQRImage", "QRCode", new { tableId = item.Table.Id })" 
+                   class="btn-sm-action btn-download" download="QR_Ban_@(item.Table.TableNumber).png">
+                    <i class="fas fa-download"></i> Tải
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Print All Template -->
+<div class="print-all-container">
+    @foreach (var item in Model)
+    {
+        <div class="print-page">
+            <h1 style="font-size: 28px; margin-bottom: 10px;">Nhà Hàng LDP</h1>
+            <h2 style="font-size: 64px; font-weight: 800; color: #1e3a5f; margin: 30px 0;">
+                Bàn @item.Table.TableNumber
+            </h2>
+            @if (item.Table.TableArea != null)
+            {
+                <p style="font-size: 18px; color: #666;">@item.Table.TableArea.Name</p>
+            }
+            <div style="margin: 40px 0;">
+                <img src="@item.QRCode.DataUrl" alt="QR Code" style="width: 350px; height: 350px;">
+            </div>
+            <p style="font-size: 20px; font-weight: 600;">Quét mã QR để xem thực đơn & đặt món</p>
+            <p style="font-size: 14px; color: #999;">Scan QR code to view menu & order</p>
+        </div>
+    }
+</div>
+
+@section scripts {
+    <script>
+        function filterByArea(area) {
+            const cards = document.querySelectorAll('.qr-card');
+            cards.forEach(card => {
+                if (!area || card.dataset.area === area) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function searchTable(keyword) {
+            const cards = document.querySelectorAll('.qr-card');
+            keyword = keyword.toLowerCase();
+            cards.forEach(card => {
+                const tableNumber = card.dataset.table.toLowerCase();
+                if (tableNumber.includes(keyword)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function downloadAllQR() {
+            showConfirm('Tải xuống', 'Bạn có muốn tải tất cả QR Code?', function() {
+                const links = document.querySelectorAll('.btn-download[download]');
+                links.forEach((link, index) => {
+                    setTimeout(() => {
+                        link.click();
+                    }, index * 500);
+                });
+                showToast('success', 'Đang tải QR Code...');
+            });
+        }
+    </script>
+}

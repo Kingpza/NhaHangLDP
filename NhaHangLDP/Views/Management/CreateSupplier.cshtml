@@ -1,0 +1,185 @@
+﻿@model NhaHangLDP.Models.Supplier
+@{
+    ViewBag.Title = "Thêm Nhà Cung Cấp";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-card h5 {
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .info-card ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .info-card li {
+            margin-bottom: 8px;
+            color: #6b7280;
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .btn-custom:hover {
+            opacity: 0.9;
+            color: white;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+    </style>
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="fas fa-plus-circle me-2"></i>Thêm Nhà Cung Cấp</h1>
+                <p class="mb-0">Thêm nhà cung cấp mới vào hệ thống</p>
+            </div>
+            <a href="@Url.Action("SupplierList", "Management")" class="btn btn-light">
+                <i class="fas fa-arrow-left me-2"></i>Quay Lại
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="form-container">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Có lỗi xảy ra:</strong>
+                        @Html.ValidationSummary(true, "", new { @class = "mb-0 mt-2" })
+                    </div>
+                }
+
+                @using (Html.BeginForm("CreateSupplier", "Management", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <h5 class="mb-4"><i class="fas fa-info-circle me-2"></i>Thông Tin Nhà Cung Cấp</h5>
+
+                    <div class="mb-3">
+                        <label class="form-label">Tên nhà cung cấp <span class="text-danger">*</span></label>
+                        @Html.TextBoxFor(m => m.Name, new { @class = "form-control", placeholder = "Nhập tên công ty hoặc nhà cung cấp", required = "required" })
+                        @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Người liên hệ</label>
+                                @Html.TextBoxFor(m => m.ContactPerson, new { @class = "form-control", placeholder = "Họ tên người liên hệ" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                @Html.TextBoxFor(m => m.PhoneNumber, new { @class = "form-control", placeholder = "0901234567", type = "tel" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Địa chỉ</label>
+                        @Html.TextAreaFor(m => m.Address, new { @class = "form-control", placeholder = "Địa chỉ đầy đủ của nhà cung cấp", rows = 3 })
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="@Url.Action("SupplierList", "Management")" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Hủy
+                        </a>
+                        <button type="submit" class="btn btn-custom">
+                            <i class="fas fa-save me-2"></i>Lưu Nhà Cung Cấp
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="info-card">
+                <h5><i class="fas fa-lightbulb me-2"></i>Hướng Dẫn</h5>
+                <ul>
+                    <li>Tên nhà cung cấp là bắt buộc và phải duy nhất</li>
+                    <li>Thông tin liên hệ giúp dễ dàng liên lạc khi cần</li>
+                    <li>Địa chỉ đầy đủ giúp xác định nguồn gốc nguyên liệu</li>
+                </ul>
+            </div>
+
+            <div class="info-card">
+                <h5><i class="fas fa-info-circle me-2"></i>Lưu Ý</h5>
+                <ul>
+                    <li>Sau khi thêm, nhà cung cấp sẽ xuất hiện trong danh sách khi tạo phiếu nhập kho</li>
+                    <li>Bạn có thể chỉnh sửa thông tin nhà cung cấp bất cứ lúc nào</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function() {
+            'use strict';
+            var forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
+}

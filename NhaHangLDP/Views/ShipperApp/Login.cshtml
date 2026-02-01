@@ -1,0 +1,175 @@
+﻿@{
+    ViewBag.Title = "Đăng nhập Shipper";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#667eea" />
+    <title>@ViewBag.Title - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                }
+            }
+        }
+    </script>
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        @@keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @@keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @@keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .animate-slideUp { animation: slideUp 0.8s ease-out forwards; }
+        .animate-pulse-logo { animation: pulse 2s ease-in-out infinite; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        
+        .form-input {
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+    </style>
+</head>
+
+<body class="font-display min-h-screen hero-gradient flex items-center justify-center p-4 relative overflow-hidden">
+    
+    <!-- Floating elements -->
+    <div class="absolute top-20 left-10 w-24 h-24 bg-white/10 rounded-full animate-float" style="animation-delay: 0s;"></div>
+    <div class="absolute top-40 right-20 w-32 h-32 bg-white/10 rounded-full animate-float" style="animation-delay: 1s;"></div>
+    <div class="absolute bottom-20 left-1/4 w-20 h-20 bg-white/10 rounded-full animate-float" style="animation-delay: 2s;"></div>
+    <div class="absolute bottom-40 right-1/4 w-16 h-16 bg-white/10 rounded-full animate-float" style="animation-delay: 0.5s;"></div>
+    
+    <div class="w-full max-w-md animate-slideUp relative z-10">
+        <!-- Logo Section -->
+        <div class="text-center mb-8">
+            <div class="animate-pulse-logo w-28 h-28 bg-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                <span class="material-symbols-outlined text-primary text-6xl">two_wheeler</span>
+            </div>
+            <h1 class="text-4xl font-black text-white mb-2">SHIPPER APP</h1>
+            <p class="text-white/80">Nhà Hàng LDP - Ứng dụng giao hàng</p>
+        </div>
+
+        <!-- Login Form Card -->
+        <div class="bg-white rounded-[2rem] shadow-2xl p-8 border border-border-light">
+            <h2 class="text-2xl font-bold text-text-primary text-center mb-2">Đăng nhập</h2>
+            <p class="text-text-secondary text-center mb-6">Nhập thông tin để bắt đầu nhận đơn</p>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="bg-red-50 border-2 border-red-200 text-red-700 px-5 py-4 rounded-[1rem] mb-6 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-red-500">error</span>
+                    <span>@ViewBag.Error</span>
+                </div>
+            }
+
+            @using (Html.BeginForm("Login", "ShipperApp", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="flex items-center gap-2 text-sm font-bold text-text-primary mb-2">
+                            <span class="material-symbols-outlined text-primary text-lg">phone</span>
+                            Số điện thoại
+                        </label>
+                        <input type="tel" name="phone" required
+                               class="form-input w-full px-5 py-4 rounded-full border-2 border-border-light focus:outline-none text-lg"
+                               placeholder="Nhập số điện thoại" />
+                    </div>
+
+                    <div>
+                        <label class="flex items-center gap-2 text-sm font-bold text-text-primary mb-2">
+                            <span class="material-symbols-outlined text-primary text-lg">lock</span>
+                            Mật khẩu
+                        </label>
+                        <input type="password" name="password" required
+                               class="form-input w-full px-5 py-4 rounded-full border-2 border-border-light focus:outline-none text-lg"
+                               placeholder="Nhập mật khẩu" />
+                        <p class="text-xs text-text-secondary mt-2 flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">info</span>
+                            Mật khẩu mặc định: 4 số cuối SĐT
+                        </p>
+                    </div>
+
+                    <button type="submit" class="w-full py-4 hero-gradient text-white rounded-full font-bold text-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">login</span>
+                        Đăng nhập
+                    </button>
+                </div>
+            }
+
+            <div class="mt-6 pt-6 border-t border-border-light text-center">
+                <p class="text-text-secondary text-sm mb-4">Bạn chưa có tài khoản?</p>
+                <p class="text-text-secondary text-sm">
+                    Liên hệ <span class="text-primary font-semibold">1900 1234</span> để đăng ký làm shipper
+                </p>
+            </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-6">
+            <a href="@Url.Action("Index", "ShipperApp")" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+                <span class="material-symbols-outlined">arrow_back</span>
+                Quay lại trang giới thiệu
+            </a>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-white/60 text-sm mt-8">
+            © 2024 Nhà Hàng LDP. Ứng dụng dành cho Shipper.
+        </p>
+    </div>
+
+    <script>
+        // Auto focus
+        document.querySelector('input[name="phone"]').focus();
+        
+        // Form submit animation
+        document.querySelector('form').addEventListener('submit', function() {
+            var btn = this.querySelector('button[type="submit"]');
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang đăng nhập...';
+            btn.disabled = true;
+        });
+    </script>
+</body>
+
+</html>

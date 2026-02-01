@@ -110,16 +110,16 @@
                                             </p>
                                         }
                                         <div class="flex items-center justify-between mt-4">
-                                            <div class="flex items-center border border-border rounded-full">
-                                                <button onclick="updateQuantity(@item.Id, @(item.Quantity - 1))" 
-                                                        class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-l-full">
+                                            <div class="flex items-center border border-border rounded-full quantity-control">
+                                                <button class="btn-decrease w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-l-full"
+                                                        data-item-id="@item.Id" data-quantity="@(item.Quantity - 1)">
                                                     <span class="material-symbols-outlined">remove</span>
                                                 </button>
                                                 <input type="number" value="@item.Quantity" min="1" 
-                                                       onchange="updateQuantity(@item.Id, this.value)"
+                                                       data-item-id="@item.Id"
                                                        class="w-12 text-center border-0 focus:ring-0 quantity-input" />
-                                                <button onclick="updateQuantity(@item.Id, @(item.Quantity + 1))" 
-                                                        class="w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-r-full">
+                                                <button class="btn-increase w-10 h-10 flex items-center justify-center hover:bg-gray-100 rounded-r-full"
+                                                        data-item-id="@item.Id" data-quantity="@(item.Quantity + 1)">
                                                     <span class="material-symbols-outlined">add</span>
                                                 </button>
                                             </div>
@@ -127,7 +127,7 @@
                                                 <p class="font-bold text-primary text-lg item-subtotal">
                                                     @item.Subtotal.ToString("N0")đ
                                                 </p>
-                                                <p class="text-sm text-text-secondary">
+                                                <p class="text-sm text-text-secondary unit-price" data-unit-price="@item.UnitPrice">
                                                     @item.UnitPrice.ToString("N0")đ/món
                                                 </p>
                                             </div>
@@ -298,10 +298,8 @@
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Redirect to login with return URL
                     window.location.href = '@Url.Action("Login", "CustomerAccount", new { returnUrl = Url.Action("Index", "Checkout") })';
                 } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    // Redirect to register
                     window.location.href = '@Url.Action("Register", "CustomerAccount")';
                 }
             });
@@ -312,20 +310,51 @@
             quantity = parseInt(quantity);
             if (isNaN(quantity) || quantity < 0) return;
 
+            var $cartItem = $(`.cart-item[data-item-id="${itemId}"]`);
+            var $quantityInput = $cartItem.find('.quantity-input');
+            var unitPrice = parseFloat($cartItem.find('.unit-price').data('unit-price'));
+            
+            // Cập nhật UI ngay lập tức
+            if (quantity > 0) {
+                $quantityInput.val(quantity);
+                var newSubtotal = unitPrice * quantity;
+                $cartItem.find('.item-subtotal').text(formatPrice(newSubtotal));
+            }
+
             $.post('@Url.Action("UpdateQuantity", "Cart")', { itemId: itemId, quantity: quantity })
                 .done(function(response) {
                     if (response.success) {
                         if (quantity === 0) {
-                            $(`.cart-item[data-item-id="${itemId}"]`).fadeOut(300, function() {
+                            $cartItem.fadeOut(300, function() {
                                 $(this).remove();
                                 updateCartSummary(response.cart);
                                 checkEmptyCart();
                             });
                         } else {
                             updateCartSummary(response.cart);
+                            updateCartItemUI(itemId, response.cart);
                         }
                     }
                 });
+        }
+
+        // Cập nhật UI của một item trong giỏ hàng
+        function updateCartItemUI(itemId, cart) {
+            if (!cart.Items) return;
+            
+            var item = cart.Items.find(i => i.Id === itemId);
+            if (item) {
+                var $cartItem = $(`.cart-item[data-item-id="${itemId}"]`);
+                $cartItem.find('.quantity-input').val(item.Quantity);
+                $cartItem.find('.item-subtotal').text(formatPrice(item.Subtotal));
+                
+                // Cập nhật data-quantity cho các nút +/-
+                $cartItem.find('.btn-decrease').data('quantity', item.Quantity - 1);
+                $cartItem.find('.btn-increase').data('quantity', item.Quantity + 1);
+            }
+            
+            // Cập nhật số lượng trong header
+            $('h2 .text-primary').first().text(cart.TotalItems);
         }
 
         // Remove item
@@ -412,6 +441,7 @@
                 $('#deliveryFee').text(formatPrice(cart.DeliveryFee));
             }
             $('#totalAmount').text(formatPrice(cart.TotalAmount));
+            $('h2 .text-primary').first().text(cart.TotalItems);
         }
 
         // Format price
@@ -426,11 +456,90 @@
             }
         }
 
-        // Enter key for voucher
-        $('#voucherInput').keypress(function(e) {
-            if (e.which === 13) {
-                applyVoucher();
-            }
+        // Thêm món vào giỏ từ gợi ý
+        function addToCart(menuItemId) {
+            $.post('@Url.Action("AddToCart", "Cart")', { menuItemId: menuItemId, quantity: 1 })
+                .done(function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            title: 'Đã thêm!',
+                            text: response.message,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Lỗi', response.message, 'error');
+                    }
+                });
+        }
+
+        // Load suggested items
+        function loadSuggestedItems() {
+            $.get('@Url.Action("GetSuggestedItems", "Cart")')
+                .done(function(response) {
+                    if (response.success && response.items && response.items.length > 0) {
+                        var html = '';
+                        response.items.forEach(function(item) {
+                            var imageUrl = '@Url.Content("~/images/menu/")' + (item.imageUrl || 'default-food.jpg');
+                            html += `
+                                <div class="bg-surface rounded-xl shadow-sm overflow-hidden">
+                                    <div class="h-32 bg-cover bg-center" style="background-image: url('${imageUrl}')"></div>
+                                    <div class="p-3">
+                                        <h4 class="font-semibold text-sm truncate">${item.name}</h4>
+                                        <p class="text-xs text-text-secondary">${item.category || ''}</p>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <span class="text-primary font-bold">${formatPrice(item.price)}</span>
+                                            <button onclick="addToCart(${item.id})" 
+                                                    class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-dark">
+                                                <span class="material-symbols-outlined text-lg">add</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        $('#suggestedItems').html(html);
+                    }
+                });
+        }
+
+        // Document ready
+        $(document).ready(function() {
+            // Load suggested items
+            loadSuggestedItems();
+
+            // Event delegation cho nút giảm số lượng
+            $(document).on('click', '.btn-decrease', function() {
+                var itemId = $(this).data('item-id');
+                var currentQty = parseInt($(this).closest('.quantity-control').find('.quantity-input').val());
+                updateQuantity(itemId, currentQty - 1);
+            });
+
+            // Event delegation cho nút tăng số lượng
+            $(document).on('click', '.btn-increase', function() {
+                var itemId = $(this).data('item-id');
+                var currentQty = parseInt($(this).closest('.quantity-control').find('.quantity-input').val());
+                updateQuantity(itemId, currentQty + 1);
+            });
+
+            // Event cho input số lượng
+            $(document).on('change', '.quantity-input', function() {
+                var itemId = $(this).data('item-id');
+                var quantity = parseInt($(this).val());
+                if (quantity >= 0) {
+                    updateQuantity(itemId, quantity);
+                }
+            });
+
+            // Enter key for voucher
+            $('#voucherInput').keypress(function(e) {
+                if (e.which === 13) {
+                    applyVoucher();
+                }
+            });
         });
     </script>
 </body>

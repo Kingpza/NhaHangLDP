@@ -1,0 +1,199 @@
+﻿@model List<NhaHangLDP.Models.ShipperOrderViewModel>
+@{
+    ViewBag.Title = "Đơn hàng mới";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#667eea" />
+    <title>@ViewBag.Title - Shipper App</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                }
+            }
+        }
+    </script>
+    <style>
+        .hero-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .order-card { transition: all 0.3s ease; }
+        .order-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+</head>
+<body class="bg-sidebar-surface font-display text-text-primary min-h-screen pb-24">
+
+    <!-- Header -->
+    <header class="bg-white sticky top-0 z-50 border-b border-border-light shadow-sm">
+        <div class="px-4 py-4 flex items-center gap-4">
+            <a href="@Url.Action("Dashboard")" class="w-12 h-12 rounded-full bg-sidebar-surface flex items-center justify-center hover:bg-border-light transition-colors">
+                <span class="material-symbols-outlined text-text-secondary">arrow_back</span>
+            </a>
+            <div class="flex-1">
+                <h1 class="text-xl font-bold text-text-primary">Đơn hàng mới</h1>
+                <p class="text-sm text-text-secondary">Các đơn đang chờ bạn nhận</p>
+            </div>
+            <span class="px-4 py-2 hero-gradient text-white text-sm rounded-full font-bold shadow-lg">@Model.Count đơn</span>
+        </div>
+    </header>
+
+    <!-- Orders List -->
+    <section class="px-4 py-6 space-y-4">
+        @if (Model.Any())
+        {
+            foreach (var order in Model)
+            {
+                <div class="order-card bg-white rounded-[2rem] shadow-lg overflow-hidden border border-border-light">
+                    <!-- Header -->
+                    <div class="hero-gradient p-5 flex justify-between items-center text-white">
+                        <div>
+                            <span class="font-black text-lg">#@order.OrderCode</span>
+                            <p class="text-sm text-white/80">@order.AssignedTime.ToString("HH:mm dd/MM")</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xl font-black">+@order.ShipperEarning.ToString("N0")đ</div>
+                            <div class="text-xs text-white/80">Thu nhập</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-5 space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary">person</span>
+                            </div>
+                            <div class="flex-1">
+                                <span class="font-bold">@order.CustomerName</span>
+                                <p class="text-sm text-text-secondary">@order.CustomerPhone</p>
+                            </div>
+                            <a href="tel:@order.CustomerPhone" class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white shadow-md">
+                                <span class="material-symbols-outlined text-lg">call</span>
+                            </a>
+                        </div>
+                        <div class="flex items-start gap-4 p-4 bg-red-50 rounded-[1rem]">
+                            <span class="material-symbols-outlined text-red-500">location_on</span>
+                            <span class="text-sm text-text-primary">@order.DeliveryAddress</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="bg-sidebar-surface p-5 border-t border-border-light flex justify-between items-center">
+                        <div>
+                            <span class="text-text-secondary text-sm">Tổng:</span>
+                            <span class="font-black text-xl text-primary ml-1">@order.TotalAmount.ToString("N0")đ</span>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold @(order.PaymentMethod == "COD" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700")">
+                            @(order.PaymentMethod == "COD" ? "COD" : "Đã thanh toán")
+                        </span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="p-5 flex gap-3 border-t border-border-light">
+                        <button onclick="rejectOrder(@order.AssignmentId)" class="py-4 px-6 bg-red-100 text-red-600 rounded-full font-bold flex items-center gap-2 hover:bg-red-200 transition-all">
+                            <span class="material-symbols-outlined">close</span>
+                            Từ chối
+                        </button>
+                        <button onclick="acceptOrder(@order.AssignmentId)" class="flex-1 py-4 hero-gradient text-white rounded-full font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            Nhận đơn
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="bg-white rounded-[2rem] shadow-lg p-10 text-center border border-border-light">
+                <div class="w-24 h-24 bg-sidebar-surface rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="material-symbols-outlined text-text-secondary text-5xl">inbox</span>
+                </div>
+                <h3 class="text-2xl font-bold text-text-primary mb-3">Không có đơn mới</h3>
+                <p class="text-text-secondary">Đơn hàng mới sẽ hiển thị ở đây khi được gán cho bạn</p>
+            </div>
+        }
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light safe-bottom z-50 shadow-lg">
+        <div class="flex justify-around py-3">
+            <a href="@Url.Action("Dashboard")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">home</span>
+                <span class="text-xs">Trang chủ</span>
+            </a>
+            <a href="@Url.Action("NewOrders")" class="flex flex-col items-center py-2 px-4 text-primary">
+                <span class="material-symbols-outlined text-2xl">list_alt</span>
+                <span class="text-xs font-bold">Đơn mới</span>
+            </a>
+            <a href="@Url.Action("History")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">history</span>
+                <span class="text-xs">Lịch sử</span>
+            </a>
+            <a href="@Url.Action("Earnings")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">payments</span>
+                <span class="text-xs">Thu nhập</span>
+            </a>
+            <a href="@Url.Action("Profile")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">person</span>
+                <span class="text-xs">Cá nhân</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        function acceptOrder(assignmentId) {
+            if (!confirm('Nhận đơn hàng này?')) return;
+            fetch('@Url.Action("AcceptOrder")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'assignmentId=' + assignmentId
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.href = '@Url.Action("Dashboard")';
+            });
+        }
+
+        function rejectOrder(assignmentId) {
+            var reason = prompt('Lý do từ chối đơn:');
+            if (!reason) return;
+            fetch('@Url.Action("RejectOrder")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'assignmentId=' + assignmentId + '&reason=' + encodeURIComponent(reason)
+            })
+            .then(r => r.json())
+            .then data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            });
+        }
+
+        // Refresh every 15 seconds
+        setTimeout(function() { location.reload(); }, 15000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+﻿@model NhaHangLDP.Models.ShipperOrderDetailViewModel
+@{
+    ViewBag.Title = "Chi tiết đơn hàng";
+    Layout = null;
+    
+    var statusClass = Model.Assignment.Status == "Assigned" ? "bg-blue-500" : 
+                     (Model.Assignment.Status == "Accepted" ? "bg-yellow-500" : 
+                     (Model.Assignment.Status == "PickedUp" || Model.Assignment.Status == "Delivering" ? "bg-purple-500" : 
+                     (Model.Assignment.Status == "Delivered" ? "bg-green-500" : "bg-gray-500")));
+    var statusText = Model.Assignment.Status == "Assigned" ? "Chờ nhận" : 
+                    (Model.Assignment.Status == "Accepted" ? "Đã nhận" : 
+                    (Model.Assignment.Status == "PickedUp" ? "Đã lấy hàng" : 
+                    (Model.Assignment.Status == "Delivering" ? "Đang giao" : 
+                    (Model.Assignment.Status == "Delivered" ? "Hoàn thành" : Model.Assignment.Status))));
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#10b981" />
+    <title>@ViewBag.Title - Shipper App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10b981",
+                        "primary-dark": "#059669",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529"
+                    },
+                    fontFamily: { "display": ["Manrope", "sans-serif"] }
+                }
+            }
+        }
+    </script>
+    <style>
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+</head>
+<body class="bg-sidebar-surface font-display text-text-primary min-h-screen pb-32">
+
+    <!-- Header -->
+    <header class="bg-white sticky top-0 z-50 border-b border-gray-100">
+        <div class="px-4 py-4 flex items-center gap-3">
+            <a href="@Url.Action("Dashboard")" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-text-secondary">arrow_back</span>
+            </a>
+            <div class="flex-1">
+                <h1 class="text-lg font-bold">#@Model.Order.OrderCode</h1>
+                <p class="text-xs text-text-secondary">@Model.Order.OrderDate.ToString("HH:mm dd/MM/yyyy")</p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-white text-sm font-semibold @statusClass">@statusText</span>
+        </div>
+    </header>
+
+    <!-- Customer Info -->
+    <section class="px-4 py-4">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-4 border-b border-gray-100">
+                <h3 class="font-bold text-text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">person</span>
+                    Thông tin khách hàng
+                </h3>
+            </div>
+            <div class="p-4 space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary">person</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-lg">@Model.Order.CustomerName</div>
+                        <div class="text-text-secondary">@Model.Order.CustomerPhone</div>
+                    </div>
+                    <a href="tel:@Model.Order.CustomerPhone" class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white">
+                        <span class="material-symbols-outlined">call</span>
+                    </a>
+                </div>
+                
+                <div class="flex items-start gap-3 p-3 bg-red-50 rounded-xl">
+                    <span class="material-symbols-outlined text-red-500">location_on</span>
+                    <div>
+                        <div class="font-semibold text-text-primary">@Model.Order.DeliveryAddress</div>
+                        <div class="text-sm text-text-secondary">@Model.Order.Ward, @Model.Order.District</div>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.Order.Note))
+                {
+                    <div class="flex items-start gap-3 p-3 bg-yellow-50 rounded-xl">
+                        <span class="material-symbols-outlined text-yellow-600">sticky_note_2</span>
+                        <span class="text-yellow-800">@Model.Order.Note</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Order Items -->
+    <section class="px-4 py-2">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="p-4 border-b border-gray-100">
+                <h3 class="font-bold text-text-primary flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">restaurant</span>
+                    Chi tiết đơn hàng
+                </h3>
+            </div>
+            <div class="p-4 space-y-3">
+                @foreach (var item in Model.OrderItems)
+                {
+                    <div class="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-bold text-sm">@item.Quantity</span>
+                            <div>
+                                <div class="font-semibold">@item.ItemName</div>
+                                @if (!string.IsNullOrEmpty(item.SpecialInstructions))
+                                {
+                                    <div class="text-xs text-blue-500">@item.SpecialInstructions</div>
+                                }
+                            </div>
+                        </div>
+                        <div class="font-semibold">@item.Subtotal.ToString("N0")đ</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Payment Info -->
+    <section class="px-4 py-4">
+        <div class="bg-white rounded-2xl shadow-lg p-4">
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-text-secondary">Tạm tính:</span>
+                    <span>@Model.Order.SubTotal.ToString("N0")đ</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-text-secondary">Phí giao hàng:</span>
+                    <span>@Model.Order.DeliveryFee.ToString("N0")đ</span>
+                </div>
+                @if (Model.Order.Discount > 0)
+                {
+                    <div class="flex justify-between text-green-600">
+                        <span>Giảm giá:</span>
+                        <span>-@Model.Order.Discount.ToString("N0")đ</span>
+                    </div>
+                }
+                <div class="flex justify-between pt-3 border-t border-gray-200">
+                    <span class="font-bold text-lg">Tổng cộng:</span>
+                    <span class="font-bold text-lg text-green-600">@Model.Order.TotalAmount.ToString("N0")đ</span>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-3 rounded-xl @(Model.Order.PaymentMethod == "COD" ? "bg-yellow-50 border border-yellow-200" : "bg-green-50 border border-green-200")">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined @(Model.Order.PaymentMethod == "COD" ? "text-yellow-600" : "text-green-600")">payments</span>
+                    <span class="font-semibold @(Model.Order.PaymentMethod == "COD" ? "text-yellow-800" : "text-green-800")">
+                        @if (Model.Order.PaymentMethod == "COD")
+                        {
+                            <text>Thu tiền mặt: @Model.Order.TotalAmount.ToString("N0")đ</text>
+                        }
+                        else
+                        {
+                            <text>Đã thanh toán online</text>
+                        }
+                    </span>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-3 bg-primary/10 rounded-xl">
+                <div class="flex justify-between items-center">
+                    <span class="text-primary font-semibold">Thu nhập của bạn:</span>
+                    <span class="text-xl font-bold text-primary">+@Model.Assignment.ShipperEarning.ToString("N0")đ</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fixed Bottom Actions -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-bottom z-50">
+        <div class="flex gap-3">
+            @if (Model.Assignment.Status == "Assigned")
+            {
+                <button onclick="rejectOrder()" class="py-3 px-5 bg-red-100 text-red-600 rounded-xl font-semibold">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+                <button onclick="acceptOrder()" class="flex-1 py-3 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    Nhận đơn
+                </button>
+            }
+            else if (Model.Assignment.Status == "Accepted")
+            {
+                <a href="@Url.Action("Navigate", new { assignmentId = Model.Assignment.Id })" class="py-3 px-5 bg-blue-500 text-white rounded-xl font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined">navigation</span>
+                    Chỉ đường
+                </a>
+                <button onclick="pickupOrder()" class="flex-1 py-3 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">inventory</span>
+                    Đã lấy hàng
+                </button>
+            }
+            else if (Model.Assignment.Status == "PickedUp" || Model.Assignment.Status == "Delivering")
+            {
+                <a href="@Url.Action("Navigate", new { assignmentId = Model.Assignment.Id })" class="py-3 px-4 bg-blue-500 text-white rounded-xl">
+                    <span class="material-symbols-outlined">navigation</span>
+                </a>
+                <a href="tel:@Model.Order.CustomerPhone" class="py-3 px-4 bg-green-500 text-white rounded-xl">
+                    <span class="material-symbols-outlined">call</span>
+                </a>
+                <button onclick="reportFailure()" class="py-3 px-4 bg-red-100 text-red-600 rounded-xl">
+                    <span class="material-symbols-outlined">error</span>
+                </button>
+                <button onclick="completeDelivery()" class="flex-1 py-3 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    Hoàn thành
+                </button>
+            }
+            else
+            {
+                <a href="@Url.Action("Dashboard")" class="flex-1 py-3 bg-gray-100 text-text-secondary rounded-xl font-semibold text-center">
+                    Quay lại
+                </a>
+            }
+        </div>
+    </div>
+
+    <script>
+        var assignmentId = @Model.Assignment.Id;
+
+        function acceptOrder() {
+            if (!confirm('Nhận đơn hàng này?')) return;
+            postAction('@Url.Action("AcceptOrder")');
+        }
+
+        function rejectOrder() {
+            var reason = prompt('Lý do từ chối đơn:');
+            if (!reason) return;
+            fetch('@Url.Action("RejectOrder")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'assignmentId=' + assignmentId + '&reason=' + encodeURIComponent(reason)
+            })
+            .then(r => r.json())
+            .then(handleResponse);
+        }
+
+        function pickupOrder() {
+            if (!confirm('Xác nhận đã lấy hàng?')) return;
+            postAction('@Url.Action("PickupOrder")');
+        }
+
+        function completeDelivery() {
+            if (!confirm('Xác nhận đã giao hàng thành công?')) return;
+            postAction('@Url.Action("CompleteDelivery")');
+        }
+
+        function reportFailure() {
+            var reason = prompt('Lý do giao hàng thất bại:');
+            if (!reason) return;
+            fetch('@Url.Action("ReportFailure")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'assignmentId=' + assignmentId + '&reason=' + encodeURIComponent(reason)
+            })
+            .then(r => r.json())
+            .then(handleResponse);
+        }
+
+        function postAction(url) {
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'assignmentId=' + assignmentId
+            })
+            .then(r => r.json())
+            .then(handleResponse);
+        }
+
+        function handleResponse(data) {
+            alert(data.message);
+            if (data.success) {
+                location.href = '@Url.Action("Dashboard")';
+            }
+        }
+    </script>
+</body>
+</html>

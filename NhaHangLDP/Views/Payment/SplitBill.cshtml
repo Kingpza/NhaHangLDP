@@ -9,7 +9,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title:Tách bill - @Model.OrderCode</title>
+    <title>Tách bill - @Model.OrderCode</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <!-- SweetAlert2 CSS -->
@@ -1209,7 +1209,7 @@
             });
         }
 
-        // Pay part
+        // Pay part - Lưu thông tin thanh toán
         function payPart(partNumber) {
             const part = document.querySelector(`.bill-part[data-part="${partNumber}"]`);
             const total = parseNumber(part.querySelector('.part-total').textContent);
@@ -1254,6 +1254,10 @@
                     // Mark as paid
                     paidParts.push(partNumber);
                     
+                    // Lưu payment method vào part
+                    part.dataset.paymentMethod = paymentMethod;
+                    part.dataset.amount = total;
+                    
                     const payBtn = part.querySelector('.part-pay-btn');
                     payBtn.classList.add('paid');
                     payBtn.innerHTML = '<i class="fas fa-check me-1"></i>Đã thanh toán';
@@ -1297,34 +1301,38 @@
             });
         }
 
-        // Complete split
+        // Complete split - Gửi dữ liệu lên server
         function completeSplit() {
-            const allPaid = paidParts.length === document.querySelectorAll('.bill-part').length;
+            const allParts = document.querySelectorAll('.bill-part');
+            const allPaid = paidParts.length === allParts.length;
             
             if (!allPaid) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Chưa thanh toán hết!',
-                    text: 'Vui lòng thanh toán tất cả các phần trước khi hoàn tất!',
+                    text: `Đã thanh toán ${paidParts.length}/${allParts.length} phần. Vui lòng thanh toán tất cả các phần trước khi hoàn tất!`,
                     confirmButtonColor: '#667eea'
                 });
                 return;
             }
 
-            // Collect data and submit
+            // Collect data
             const parts = [];
-            document.querySelectorAll('.bill-part').forEach(part => {
+            allParts.forEach((part, index) => {
                 const partData = {
                     PartNumber: parseInt(part.dataset.part),
                     CustomerName: part.querySelector('.part-title input').value,
+                    FixedAmount: parseNumber(part.querySelector('.part-total').textContent),
                     Items: []
                 };
 
                 part.querySelectorAll('.part-item').forEach(item => {
-                    if (item.dataset.id && !item.dataset.id.startsWith('equal-')) {
+                    const itemId = item.dataset.id;
+                    if (itemId && !itemId.startsWith('equal-')) {
+                        const qtyEl = item.querySelector('.part-item-qty');
                         partData.Items.push({
-                            OrderDetailId: parseInt(item.dataset.id),
-                            Quantity: parseInt(item.querySelector('.part-item-qty').dataset.qty)
+                            OrderDetailId: parseInt(itemId),
+                            Quantity: parseInt(qtyEl ? qtyEl.dataset.qty : 1) || 1
                         });
                     }
                 });
@@ -1332,9 +1340,15 @@
                 parts.push(partData);
             });
 
+            console.log('Sending split bill request:', { OrderId: orderId, SplitType: splitType, Parts: parts });
+
             Swal.fire({
                 title: 'Hoàn tất tách bill?',
-                text: 'Xác nhận hoàn tất và lưu thông tin tách bill!',
+                html: `
+                    <p>Xác nhận hoàn tất và lưu thông tin tách bill!</p>
+                    <p><strong>Số phần:</strong> ${parts.length}</p>
+                    <p><strong>Tổng tiền:</strong> ${formatNumber(totalOrderAmount)}đ</p>
+                `,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#10b981',
@@ -1343,24 +1357,41 @@
                 cancelButtonText: 'Hủy',
                 showLoaderOnConfirm: true,
                 preConfirm: () => {
-                    return $.post('@Url.Action("ProcessSplitBill", "Payment")', {
-                        OrderId: orderId,
-                        SplitType: splitType,
-                        Parts: parts
-                    }).then(response => {
-                        return response;
-                    }).catch(error => {
-                        Swal.showValidationMessage(`Lỗi: ${error.statusText}`);
+                    return fetch('@Url.Action("ProcessSplitBill", "Payment")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            OrderId: orderId,
+                            SplitType: splitType,
+                            NumberOfParts: parts.length,
+                            Parts: parts
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(`Lỗi kết nối: ${error.message}`);
                     });
                 },
                 allowOutsideClick: () => !Swal.isLoading()
             }).then((result) => {
-                if (result.isConfirmed) {
+                if (result.isConfirmed && result.value) {
+                    console.log('Server response:', result.value);
                     if (result.value.success) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Tách bill thành công!',
-                            text: 'Đơn hàng đã được tách và thanh toán hoàn tất.',
+                            html: `
+                                <p>${result.value.message}</p>
+                                <p><strong>Số hóa đơn đã tạo:</strong> ${result.value.billIds ? result.value.billIds.length : parts.length}</p>
+                            `,
                             confirmButtonColor: '#10b981'
                         }).then(() => {
                             window.location.href = '@Url.Action("Orders", "Cashier")';
@@ -1369,7 +1400,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Lỗi!',
-                            text: result.value.message || 'Có lỗi xảy ra!',
+                            text: result.value.message || 'Có lỗi xảy ra khi xử lý tách bill!',
                             confirmButtonColor: '#667eea'
                         });
                     }

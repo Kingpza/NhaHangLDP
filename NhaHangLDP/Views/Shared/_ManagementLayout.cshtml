@@ -736,6 +736,12 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("SupplierList", "Management")">
+                                <i class="fas fa-truck"></i>
+                                <span>Nhà Cung Cấp</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="@Url.Action("StockInbound", "Management")">
                                 <i class="fas fa-plus-circle"></i>
                                 <span>Nhập Kho</span>
@@ -751,6 +757,12 @@
                             <a class="nav-link" href="@Url.Action("DamagedStock", "Management")">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <span>Hàng Hỏng</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("ExpiringItems", "Management")">
+                                <i class="fas fa-clock"></i>
+                                <span>Sắp Hết Hạn</span>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -830,12 +842,6 @@
                         </li>
                     </ul>
                 </div>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="@Url.Action("Reports", "Management")">
-                    <i class="fas fa-file-alt"></i>
-                    <span>Báo Cáo Cơ Bản</span>
-                </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#analyticsSubmenu" aria-expanded="false">
@@ -923,6 +929,96 @@
         <p class="sidebar-section-title">VẬN HÀNH</p>
         <ul class="nav flex-column sidebar-menu">
             <li class="nav-item">
+                <a class="nav-link" href="@Url.Action("Index", "ChatSupport")">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Support</span>
+                    <span class="badge bg-danger ms-auto" id="chatSupportBadge" style="display:none;">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="@Url.Action("OnlineOrders", "Management")">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Đơn Hàng Online</span>
+                    <span class="badge bg-danger ms-auto" id="onlineOrderBadge" style="display:none;">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#qrcodeSubmenu" aria-expanded="false">
+                    <i class="fas fa-qrcode"></i>
+                    <span>QR Code</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </a>
+                <div class="collapse sidebar-submenu" id="qrcodeSubmenu">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("AllTablesQR", "QRCode")">
+                                <i class="fas fa-chair"></i>
+                                <span>QR Code Bàn</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("AllEmployeesQR", "QRCode")">
+                                <i class="fas fa-id-card"></i>
+                                <span>QR Check-in NV</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("CheckInScanner", "QRCode")">
+                                <i class="fas fa-camera"></i>
+                                <span>Quét Check-in</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-bs-toggle="collapse" data-bs-target="#deliverySubmenu" aria-expanded="false">
+                    <i class="fas fa-shipping-fast"></i>
+                    <span>Giao Hàng</span>
+                    <i class="fas fa-chevron-down dropdown-icon ms-auto"></i>
+                </a>
+                <div class="collapse sidebar-submenu" id="deliverySubmenu">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Index", "Delivery")">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard Giao Hàng</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Orders", "Delivery")">
+                                <i class="fas fa-list"></i>
+                                <span>Đơn Giao Hàng</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Shippers", "Delivery")">
+                                <i class="fas fa-motorcycle"></i>
+                                <span>Quản Lý Shipper</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Tracking", "Delivery")">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <span>Theo Dõi Realtime</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Zones", "Delivery")">
+                                <i class="fas fa-map"></i>
+                                <span>Khu Vực Giao Hàng</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="@Url.Action("Statistics", "Delivery")">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Thống Kê</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link" href="@Url.Action("Display", "Kitchen")" target="_blank">
                     <i class="fas fa-fire-burner"></i>
                     <span>Kitchen Display</span>
@@ -932,12 +1028,6 @@
                 <a class="nav-link" href="@Url.Action("Stations", "Kitchen")">
                     <i class="fas fa-broadcast-tower"></i>
                     <span>Quản Lý Bếp</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="@Url.Action("PendingOrders", "QROrder")">
-                    <i class="fas fa-qrcode"></i>
-                    <span>Đơn QR Code</span>
                 </a>
             </li>
         </ul>
@@ -1065,7 +1155,7 @@
             });
         }
 
-        // Helper function for confirmation dialog
+        // Helper function for confirmation dialog - USE THIS INSTEAD OF confirm()
         function showConfirm(title, text, confirmCallback, cancelCallback) {
             Swal.fire({
                 title: title || 'Xác nhận',
@@ -1140,28 +1230,8 @@
             });
         }
 
-        // Override default alert
-        window.alert = function(message) {
-            Swal.fire({
-                title: 'Thông báo',
-                text: message,
-                icon: 'info',
-                confirmButtonText: 'Đóng'
-            });
-        };
-
-        // Override default confirm - returns Promise
-        window.confirm = function(message) {
-            return Swal.fire({
-                title: 'Xác nhận',
-                text: message,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Xác nhận',
-                cancelButtonText: 'Hủy',
-                reverseButtons: true
-            }).then((result) => result.isConfirmed);
-        };
+        // KHÔNG override window.confirm vì gây bug - giữ native confirm
+        // Nếu cần confirm đẹp, dùng showConfirm() hoặc Swal.fire() trực tiếp
     </script>
 
     <script>

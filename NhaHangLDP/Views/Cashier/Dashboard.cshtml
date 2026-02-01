@@ -1,480 +1,286 @@
 ﻿@model NhaHangLDP.Models.CashierDashboardViewModel
 @{
-    ViewBag.Title = "POS - Thu Ngân";
+    ViewBag.Title = "POS - Dashboard";
     Layout = "~/Views/Shared/_CashierLayout.cshtml";
 }
 
-<style>
-    .main-dashboard {
-        padding: 0;
-        margin: 0;
-    }
+<!-- Shift Info Bar -->
+<div class="shift-info-bar">
+    <div class="shift-info-left">
+        <div class="shift-info-item">
+            <i class="fas fa-play-circle"></i>
+            <span>Ca làm việc đang hoạt động</span>
+        </div>
+        <div class="shift-info-item">
+            <i class="fas fa-clock"></i>
+            <span>Bắt đầu: <strong id="shiftStartTime">@(Model.ShiftStartTime?.ToString("HH:mm") ?? "--:--")</strong></span>
+        </div>
+        <div class="shift-info-item">
+            <i class="fas fa-hourglass-half"></i>
+            <span>Thời gian: <strong id="workingTime">00:00:00</strong></span>
+        </div>
+        <div class="shift-info-item">
+            <i class="fas fa-user"></i>
+            <span>@(Model.ActiveShift?.Employee?.FullName ?? "Thu Ngân")</span>
+        </div>
+    </div>
+    <div class="shift-actions">
+        <button class="btn-shift" onclick="openAddEmployeeModal()">
+            <i class="fas fa-user-plus"></i> Thêm NV
+        </button>
+        <button class="btn-shift" onclick="showPrintInvoiceOptions()">
+            <i class="fas fa-print"></i> In Hóa Đơn
+        </button>
+        <button class="btn-shift danger" onclick="closeShift()">
+            <i class="fas fa-stop"></i> Đóng Ca
+        </button>
+    </div>
+</div>
 
-    .quick-stats {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .stat-item {
-        text-align: center;
-        padding: 15px;
-    }
-
-    .stat-value {
-        font-size: 1.8rem;
-        font-weight: bold;
-        color: #dc7633;
-    }
-
-    .stat-label {
-        font-size: 0.9rem;
-        color: #6c757d;
-        margin-top: 5px;
-    }
-
-    .function-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-
-    .function-card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
-        padding: 25px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        border: 2px solid rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
-        min-height: 180px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    }
-
-        .function-card:hover {
-            transform: translateY(-5px);
-            border-color: #dc7633;
-            box-shadow: 0 10px 30px rgba(220, 118, 51, 0.3);
-        }
-
-    .function-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 15px;
-        font-size: 1.5rem;
-        color: #fff;
-    }
-
-    .function-card.orders .function-icon {
-        background: linear-gradient(135deg, #28a745, #20c997);
-    }
-
-    .function-card.tables .function-icon {
-        background: linear-gradient(135deg, #17a2b8, #6f42c1);
-    }
-
-    .function-card.sales .function-icon {
-        background: linear-gradient(135deg, #ffc107, #fd7e14);
-    }
-
-    .function-card.shift-details .function-icon {
-        background: linear-gradient(135deg, #6610f2, #e83e8c);
-    }
-
-    .function-title {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #495057;
-        margin-bottom: 8px;
-    }
-
-    .function-desc {
-        font-size: 0.9rem;
-        color: #6c757d;
-        line-height: 1.4;
-    }
-
-    .shift-status {
-        background: rgba(40, 167, 69, 0.1);
-        border: 1px solid #28a745;
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-
-    .recent-activity {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .activity-item {
-        display: flex;
-        align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-    .activity-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(220, 118, 51, 0.2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 15px;
-        color: #dc7633;
-    }
-
-    .activity-item .text-light {
-        color: #495057 !important;
-    }
-
-    .activity-item .text-muted {
-        color: #6c757d !important;
-    }
-
-    .shift-status .text-light {
-        color: #495057 !important;
-    }
-
-    .shift-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-
-    .btn-shift-action {
-        background: #f8f9fa;
-        border: 1px solid #ced4da;
-        color: #212529;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-
-        .btn-shift-action:hover {
-            background: #e2e6ea;
-            border-color: #b1b1b1;
-            color: #000;
-        }
-
-    .btn-print-invoice {
-        background: linear-gradient(135deg, #17a2b8, #20c997);
-        border: none;
-        color: white;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-
-        .btn-print-invoice:hover {
-            background: linear-gradient(135deg, #138496, #1e9ba4);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(23,162,184,0.3);
-            color: white;
-        }
-
-    .btn-close-shift {
-        background: linear-gradient(135deg, #ffc107, #fd7e14);
-        border: none;
-        color: #333;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-
-        .btn-close-shift:hover {
-            background: linear-gradient(135deg, #e0a800, #dc6308);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255,193,7,0.3);
-            color: #333;
-        }
-
-    .employee-list-item {
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-        .employee-list-item:hover {
-            background-color: #f0f0f0;
-        }
-
-        .employee-list-item.active {
-            background-color: #0d6efd;
-            color: white;
-            font-weight: bold;
-        }
-
-    #shiftEmployeeList .badge {
-        font-size: 0.85rem;
-        padding: 0.4em 0.7em;
-    }
-
-        #shiftEmployeeList .badge.bg-secondary {
-            cursor: pointer;
-        }
-</style>
-
-<div class="main-dashboard">
-    <div class="shift-status">
-        <div class="row align-items-center">
-            <div class="col-md-7">
-                <h6 class="text-success mb-2">
-                    <i class="fas fa-circle text-success me-2" style="font-size: 0.5rem;"></i>
-                    Ca làm việc đang hoạt động
-                </h6>
-                <div class="row">
-                    <div class="col-lg-5 col-md-6 mb-2 mb-md-0">
-                        <small class="text-dark">Bắt đầu: <span id="shiftStartTime">@(Model.ShiftStartTime?.ToString("HH:mm") ?? "--:--")</span></small>
-                    </div>
-                    <div class="col-lg-7 col-md-6">
-                        <small class="text-dark">Thời gian: <span id="workingTime">00:00:00</span></small>
-                    </div>
+<!-- Main Content -->
+<div class="pos-content">
+    <!-- Stats Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card primary">
+                <div class="stat-card-icon">
+                    <i class="fas fa-receipt"></i>
                 </div>
-                <div class="text-dark mt-2 d-flex align-items-center flex-wrap" style="gap: 5px;">
-                    <i class="fas fa-user me-1"></i>
-                    <span>Nhân viên:</span>
-
-                    <div id="shiftEmployeeList" class="d-flex flex-wrap" style="gap: 5px;">
-
-                        <span class="badge bg-primary" data-employee-id="@(Model.ActiveShift?.Employee?.Id ?? 0)">
-                            <i class="fas fa-star me-1"></i>
-                            @(Model.ActiveShift?.Employee?.FullName ?? "N/A")
-                        </span>
-
-                        @if (Model.ActiveShift?.ShiftSupportStaff != null)
-                        {
-                            foreach (var supportStaff in Model.ActiveShift.ShiftSupportStaff)
-                            {
-                                <span class="badge bg-secondary" data-employee-id="@supportStaff.Employee.Id" onclick="confirmRemoveEmployee(this, @supportStaff.Employee.Id, '@supportStaff.Employee.FullName')">
-                                    <i class="fas fa-user-plus me-1"></i>
-                                    @supportStaff.Employee.FullName
-                                </span>
-                            }
-                        }
-
-                    </div>
-                </div>
+                <div class="stat-card-value" id="todayOrders">@Model.TotalOrdersToday</div>
+                <div class="stat-card-label">Đơn hàng hôm nay</div>
             </div>
-            <div class="col-md-5 text-end">
-                <div class="shift-actions justify-content-end">
-                    <button class="btn btn-shift-action btn-sm" onclick="openAddEmployeeModal()">
-                        <i class="fas fa-user-plus me-1"></i>Thêm NV
-                    </button>
-                    <button class="btn btn-shift-action btn-sm" onclick="openHandoverModal()">
-                        <i class="fas fa-exchange-alt me-1"></i>Giao ca
-                    </button>
-                    <button class="btn btn-print-invoice btn-sm" onclick="showPrintInvoiceOptions()">
-                        <i class="fas fa-print me-1"></i>In Hóa Đơn
-                    </button>
-                    <button class="btn btn-close-shift btn-sm" onclick="closeShift()">
-                        <i class="fas fa-stop me-1"></i>Đóng Ca
-                    </button>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card success">
+                <div class="stat-card-icon">
+                    <i class="fas fa-money-bill-wave"></i>
                 </div>
+                <div class="stat-card-value" id="todayRevenue">@Model.TodayRevenueDisplay</div>
+                <div class="stat-card-label">Doanh thu</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card warning">
+                <div class="stat-card-icon">
+                    <i class="fas fa-chair"></i>
+                </div>
+                <div class="stat-card-value" id="activeTables">@Model.TableUsageDisplay</div>
+                <div class="stat-card-label">Bàn đang sử dụng</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card info">
+                <div class="stat-card-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-card-value" id="pendingOrders">@Model.PendingOrderCount</div>
+                <div class="stat-card-label">Đơn chờ xử lý</div>
             </div>
         </div>
     </div>
 
-    <div class="quick-stats">
-        <div class="row">
-            <div class="col-md-3 stat-item">
-                <div class="stat-value" id="todayOrders">@Model.TotalOrdersToday</div>
-                <div class="stat-label">Đơn hàng hôm nay</div>
-            </div>
-            <div class="col-md-3 stat-item">
-                <div class="stat-value" id="todayRevenue">@Model.TodayRevenueDisplay</div>
-                <div class="stat-label">Doanh thu</div>
-            </div>
-            <div class="col-md-3 stat-item">
-                <div class="stat-value" id="activeTables">@Model.TableUsageDisplay</div>
-                <div class="stat-label">Bàn đang sử dụng</div>
-            </div>
-            <div class="col-md-3 stat-item">
-                <div class="stat-value" id="pendingOrders">@Model.PendingOrderCount</div>
-                <div class="stat-label">Đơn chờ xử lý</div>
+    <!-- Quick Actions -->
+    <div class="pos-card mb-4">
+        <div class="pos-card-header">
+            <div class="pos-card-title">
+                <i class="fas fa-bolt"></i>
+                Thao tác nhanh
             </div>
         </div>
-    </div>
-
-    <div class="function-grid">
-        <div class="function-card orders" onclick="navigateTo('@Url.Action("Orders", "Cashier")')">
-            <div class="function-icon">
-                <i class="fas fa-clipboard-list"></i>
-            </div>
-            <div class="function-title">Đơn Hàng</div>
-            <div class="function-desc">
-                Quản lý đơn hàng, theo dõi trạng thái và xử lý thanh toán
-                @if (Model.ActiveOrderCount > 0)
-                {
-                    <span class="badge bg-danger ms-1">@Model.ActiveOrderCount</span>
-                }
-            </div>
-        </div>
-
-        <div class="function-card tables" onclick="navigateTo('@Url.Action("TableArea", "Cashier")')">
-            <div class="function-icon">
-                <i class="fas fa-table"></i>
-            </div>
-            <div class="function-title">Khu Vực Bàn</div>
-            <div class="function-desc">
-                Xem tình trạng bàn, đặt bàn và quản lý khách hàng
-                @if (Model.OccupiedTables > 0)
-                {
-                    <span class="badge bg-info ms-1">@Model.OccupiedTables</span>
-                }
-            </div>
-        </div>
-
-        <div class="function-card sales" onclick="navigateTo('@Url.Action("Menu", "Cashier")')">
-            <div class="function-icon">
-                <i class="fas fa-cash-register"></i>
-            </div>
-            <div class="function-title">Bán Hàng</div>
-            <div class="function-desc">Điểm bán hàng chính, tạo đơn và thanh toán</div>
-        </div>
-
-        <div class="function-card shift-details" onclick="navigateTo('@Url.Action("ShiftDetails", "Cashier")')">
-            <div class="function-icon">
-                <i class="fas fa-list-alt"></i>
-            </div>
-            <div class="function-title">Chi Tiết Ca</div>
-            <div class="function-desc">Xem lịch sử hóa đơn theo ngày/tháng và in lại hóa đơn</div>
-        </div>
-    </div>
-
-    <div class="recent-activity">
-        <h5 class="text-primary mb-3">
-            <i class="fas fa-history me-2"></i>Hoạt động gần đây
-        </h5>
-        <div id="recentActivities">
-            <div class="activity-item">
-                <div class="activity-icon">
-                    <i class="fas fa-plus"></i>
-                </div>
-                <div>
-                    <div class="text-dark">Ca làm việc được mở</div>
-                    <small class="text-muted">@(Model.ShiftStartTime?.ToString("HH:mm dd/MM/yyyy") ?? "Vừa xong")</small>
-                </div>
-            </div>
-            @if (Model.TotalOrdersToday > 0)
-            {
-                <div class="activity-item">
-                    <div class="activity-icon">
+        <div class="pos-card-body">
+            <div class="quick-action-grid">
+                <a href="@Url.Action("Orders", "Cashier")" class="quick-action-card orders">
+                    <div class="quick-action-icon">
                         <i class="fas fa-clipboard-list"></i>
                     </div>
-                    <div>
-                        <div class="text-dark">Đã xử lý @Model.TotalOrdersToday đơn hàng</div>
-                        <small class="text-muted">Trong ca làm việc này</small>
+                    <div class="quick-action-title">Đơn Hàng</div>
+                    <div class="quick-action-desc">
+                        Quản lý và xử lý đơn hàng
+                        @if (Model.ActiveOrderCount > 0)
+                        {
+                            <span class="badge bg-danger ms-1">@Model.ActiveOrderCount</span>
+                        }
+                    </div>
+                </a>
+
+                <a href="@Url.Action("TableArea", "Cashier")" class="quick-action-card tables">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-border-all"></i>
+                    </div>
+                    <div class="quick-action-title">Khu Vực Bàn</div>
+                    <div class="quick-action-desc">
+                        Xem tình trạng bàn
+                        @if (Model.OccupiedTables > 0)
+                        {
+                            <span class="badge bg-info ms-1">@Model.OccupiedTables</span>
+                        }
+                    </div>
+                </a>
+
+                <a href="@Url.Action("Menu", "Cashier")" class="quick-action-card sales">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-cash-register"></i>
+                    </div>
+                    <div class="quick-action-title">Bán Hàng</div>
+                    <div class="quick-action-desc">Tạo đơn và thanh toán</div>
+                </a>
+
+                <a href="@Url.Action("OnlineOrders", "Cashier")" class="quick-action-card online">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="quick-action-title">Đơn Online</div>
+                    <div class="quick-action-desc">Xử lý đơn hàng online</div>
+                </a>
+
+                <a href="@Url.Action("Reservations", "Cashier")" class="quick-action-card reservations">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="quick-action-title">Đặt Bàn</div>
+                    <div class="quick-action-desc">
+                        Duyệt đơn đặt bàn
+                        <span class="badge bg-warning text-dark ms-1" id="pendingReservationsBadge" style="display:none;">0</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Section -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="pos-card">
+                <div class="pos-card-header">
+                    <div class="pos-card-title">
+                        <i class="fas fa-history"></i>
+                        Hoạt động gần đây
                     </div>
                 </div>
-            }
-            @if (Model.TodayRevenue > 0)
-            {
-                <div class="activity-item">
-                    <div class="activity-icon">
-                        <i class="fas fa-money-bill-wave"></i>
-                    </div>
-                    <div>
-                        <div class="text-dark">Doanh thu: @Model.TodayRevenueDisplay</div>
-                        <small class="text-muted">Tính đến thời điểm hiện tại</small>
+                <div class="pos-card-body">
+                    <div id="recentActivities">
+                        <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+                            <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                <i class="fas fa-play text-success"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">Ca làm việc được mở</div>
+                                <small class="text-muted">@(Model.ShiftStartTime?.ToString("HH:mm dd/MM/yyyy") ?? "Vừa xong")</small>
+                            </div>
+                        </div>
+                        @if (Model.TotalOrdersToday > 0)
+                        {
+                            <div class="d-flex align-items-center gap-3 p-3 border-bottom">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="fas fa-receipt text-primary"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">Đã xử lý @Model.TotalOrdersToday đơn hàng</div>
+                                    <small class="text-muted">Trong ca làm việc này</small>
+                                </div>
+                            </div>
+                        }
+                        @if (Model.TodayRevenue > 0)
+                        {
+                            <div class="d-flex align-items-center gap-3 p-3">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="fas fa-coins text-warning"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">Doanh thu: @Model.TodayRevenueDisplay</div>
+                                    <small class="text-muted">Tính đến thời điểm hiện tại</small>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
-            }
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="pos-card">
+                <div class="pos-card-header">
+                    <div class="pos-card-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Tổng quan
+                    </div>
+                </div>
+                <div class="pos-card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                        <span class="text-muted">Bàn trống</span>
+                        <span class="fw-bold text-success">@Model.AvailableTables</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                        <span class="text-muted">Bàn có khách</span>
+                        <span class="fw-bold text-warning">@Model.OccupiedTables</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                        <span class="text-muted">Bàn đã đặt</span>
+                        <span class="fw-bold text-info">@Model.ReservedTables</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Tổng số bàn</span>
+                        <span class="fw-bold">@Model.TotalTables</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="printInvoiceModal" tabindex="-1" aria-labelledby="printInvoiceModalLabel" aria-hidden="true">
+<!-- Print Invoice Modal -->
+<div class="modal fade" id="printInvoiceModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="printInvoiceModalLabel">
-                    <i class="fas fa-print me-2"></i>Chọn Loại In Hóa Đơn
+        <div class="modal-content" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-print me-2 text-primary"></i>Chọn loại in
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <button type="button" class="btn btn-outline-primary w-100 mb-3 p-3" onclick="printRecentInvoice()">
-                    <i class="fas fa-receipt fa-2x d-block mb-2"></i>
-                    <strong>In Hóa Đơn Gần Nhất</strong>
-                    <small class="d-block text-muted">In lại hóa đơn của đơn hàng vừa thanh toán</small>
-                </button>
-                <button type="button" class="btn btn-outline-info w-100 mb-3 p-3" onclick="selectOrderForPrint()">
-                    <i class="fas fa-search fa-2x d-block mb-2"></i>
-                    <strong>Chọn Đơn Hàng</strong>
-                    <small class="d-block text-muted">Tìm và chọn đơn hàng cụ thể để in hóa đơn</small>
-                </button>
-                <button type="button" class="btn btn-outline-success w-100 p-3" onclick="printShiftReport()">
-                    <i class="fas fa-file-alt fa-2x d-block mb-2"></i>
-                    <strong>In Báo Cáo Ca</strong>
-                    <small class="d-block text-muted">In báo cáo doanh thu của ca làm việc hiện tại</small>
-                </button>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>Đóng
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="handoverShiftModal" tabindex="-1" aria-labelledby="handoverShiftModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="handoverShiftModalLabel">
-                    <i class="fas fa-exchange-alt me-2"></i>Giao Ca Làm Việc
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="list-group" id="handoverEmployeeList">
-                    <div class="text-center">
-                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
-                    </div>
+                <div class="d-grid gap-3">
+                    <button type="button" class="btn btn-outline-primary p-3 text-start" onclick="printRecentInvoice()">
+                        <i class="fas fa-receipt fa-lg me-3"></i>
+                        <span>
+                            <strong class="d-block">In Hóa Đơn Gần Nhất</strong>
+                            <small class="text-muted">In lại hóa đơn vừa thanh toán</small>
+                        </span>
+                    </button>
+                    <button type="button" class="btn btn-outline-info p-3 text-start" onclick="selectOrderForPrint()">
+                        <i class="fas fa-search fa-lg me-3"></i>
+                        <span>
+                            <strong class="d-block">Chọn Đơn Hàng</strong>
+                            <small class="text-muted">Tìm và chọn đơn hàng cụ thể</small>
+                        </span>
+                    </button>
+                    <button type="button" class="btn btn-outline-success p-3 text-start" onclick="printShiftReport()">
+                        <i class="fas fa-file-alt fa-lg me-3"></i>
+                        <span>
+                            <strong class="d-block">In Báo Cáo Ca</strong>
+                            <small class="text-muted">In báo cáo doanh thu ca hiện tại</small>
+                        </span>
+                    </button>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="confirmHandoverBtn" onclick="executeHandover()" disabled>
-                    Xác nhận Giao ca
-                </button>
-            </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header">
-                <h5 class="modal-title" id="addEmployeeModalLabel">
-                    <i class="fas fa-user-plus me-2"></i>Thêm Nhân Viên Vào Ca
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-user-plus me-2 text-success"></i>Thêm Nhân Viên Vào Ca
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="list-group" id="addEmployeeList">
-                    <div class="text-center">
-                        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                        <p class="mt-2 text-muted">Đang tải...</p>
                     </div>
                 </div>
             </div>
@@ -488,17 +294,21 @@
     </div>
 </div>
 
-
 @section scripts {
+    <style>
+        .quick-action-card.reservations .quick-action-icon { 
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); 
+        }
+    </style>
     <script>
-        let selectedHandoverEmployee = { id: null, name: null };
-let selectedAddEmployee = { id: null, name: null };
-        let handoverModalInstance = null;
+        let selectedAddEmployee = { id: null, name: null };
         let addEmployeeModalInstance = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            handoverModalInstance = new bootstrap.Modal(document.getElementById('handoverShiftModal'));
             addEmployeeModalInstance = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
+            updateWorkingTime();
+            setInterval(updateWorkingTime, 1000);
+            loadPendingReservations();
         });
 
         @{
@@ -514,451 +324,182 @@ let selectedAddEmployee = { id: null, name: null };
             const hours = Math.floor(diff / 3600000);
             const minutes = Math.floor((diff % 3600000) / 60000);
             const seconds = Math.floor((diff % 60000) / 1000);
-
             document.getElementById('workingTime').textContent =
                 `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-            document.getElementById('shiftStartTime').textContent =
-                shiftStartTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
         }
 
-        function navigateTo(url) {
-            window.location.href = url;
+        function loadPendingReservations() {
+            fetch('@Url.Action("GetReservationsData", "Cashier")?status=Pending')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.counts) {
+                        var pending = data.counts.pending || 0;
+                        var badge = document.getElementById('pendingReservationsBadge');
+                        if (pending > 0) {
+                            badge.textContent = pending;
+                            badge.style.display = 'inline';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(() => {});
         }
 
         function showPrintInvoiceOptions() {
-            const modal = new bootstrap.Modal(document.getElementById('printInvoiceModal'));
-            modal.show();
+            new bootstrap.Modal(document.getElementById('printInvoiceModal')).show();
         }
 
         function printRecentInvoice() {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('printInvoiceModal'));
-            modal.hide();
-            showNotification('Đang tìm hóa đơn gần nhất...', 'info');
-            fetch('@Url.Action("GetLastPaidOrder", "Cashier")', {
-                method: 'GET',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.orderId) {
-                    var printUrl = '@Url.Action("PrintBill", "Cashier")' + '?orderId=' + data.orderId;
-                    var printWindow = window.open(printUrl, '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
-                    if (!printWindow || printWindow.closed || typeof printWindow.closed == 'undefined') {
-                        showNotification('Popup bị chặn! Vui lòng cho phép popup và thử lại.', 'error');
+            bootstrap.Modal.getInstance(document.getElementById('printInvoiceModal')).hide();
+            showLoading('Đang tìm hóa đơn...');
+            
+            fetch('@Url.Action("GetLastPaidOrder", "Cashier")')
+                .then(r => r.json())
+                .then(data => {
+                    closeLoading();
+                    if (data.success && data.orderId) {
+                        window.open('@Url.Action("PrintBill", "Cashier")?orderId=' + data.orderId, '_blank');
                     } else {
-                        showNotification('Đã mở trang in hóa đơn!', 'success');
+                        showError('Không tìm thấy', data.message || 'Không có hóa đơn nào.');
                     }
-                } else {
-                    showNotification(data.message || 'Không tìm thấy hóa đơn nào đã thanh toán.', 'error');
-                }
-            })
-            .catch(error => {
-console.error('Error:', error);
-                showNotification('Lỗi kết nối khi tìm hóa đơn!', 'error');
-            });
+                })
+                .catch(() => {
+                    closeLoading();
+                    showError('Lỗi', 'Không thể kết nối đến máy chủ.');
+                });
         }
 
         function selectOrderForPrint() {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('printInvoiceModal'));
-            modal.hide();
+            bootstrap.Modal.getInstance(document.getElementById('printInvoiceModal')).hide();
             window.location.href = '@Url.Action("ShiftDetails", "Cashier")';
         }
 
         function printShiftReport() {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('printInvoiceModal'));
-            modal.hide();
-            showNotification('Đang tạo báo cáo ca...', 'info');
-
-            var printUrl = '@Url.Action("PrintShiftRevenueReport", "Cashier")?shiftId=' + @(Model.ActiveShift?.Id ?? 0);
-            var printWindow = window.open(printUrl, '_blank', 'width=900,height=700,scrollbars=yes,resizable=yes');
-
-            if (!printWindow || printWindow.closed || typeof printWindow.closed == 'undefined') {
-                showNotification('Popup bị chặn! Vui lòng cho phép popup và thử lai.', 'error');
-            } else {
-                showNotification('Đã mở trang in báo cáo ca!', 'success');
-            }
+            bootstrap.Modal.getInstance(document.getElementById('printInvoiceModal')).hide();
+            window.open('@Url.Action("PrintShiftRevenueReport", "Cashier")?shiftId=@(Model.ActiveShift?.Id ?? 0)', '_blank');
         }
 
         function closeShift() {
-            if (confirm('Bạn có chắc muốn đóng ca làm việc?\n\Sau khi đóng ca, hệ thống sẽ tự động tạo và in báo cáo doanh thu ca.')) {
-                const closeBtn = event.target.closest('button');
-                const originalText = closeBtn.innerHTML;
-                closeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang đóng ca...';
-                closeBtn.disabled = true;
-
-                fetch('@Url.Action("CloseShift", "Cashier")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Đóng ca thành công!\n\nHệ thống sẽ tự động mở cửa sổ in báo cáo doanh thu ca.');
-                        const printWindow = window.open(
-                            data.printUrl,
-                            'PrintShiftReport',
-                            'width=900,height=700,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no'
-                        );
-                        if (!printWindow || printWindow.closed || typeof printWindow.closed == 'undefined') {
-                            alert('Popup bị chặn!\n\nVui lòng cho phép popup và thử lại, hoặc nhấn OK để chuyển đến trang in báo cáo.');
-                            window.location.href = data.printUrl;
-                        } else {
-                            setTimeout(function() {
+            Swal.fire({
+                title: 'Đóng ca làm việc?',
+                text: 'Hệ thống sẽ tạo báo cáo doanh thu sau khi đóng ca.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Đóng ca',
+                cancelButtonText: 'Hủy',
+                confirmButtonColor: '#ef4444'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showLoading('Đang đóng ca...');
+                    
+                    fetch('@Url.Action("CloseShift", "Cashier")', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        closeLoading();
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đóng ca thành công!',
+                                text: 'Đang mở báo cáo...',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.open(data.printUrl, '_blank');
                                 window.location.href = '@Url.Action("OpenShift", "Cashier")';
-                            }, 3000);
-}
-                    } else {
-                        alert('Có lỗi xảy ra khi đóng ca: ' + data.message);
-                        closeBtn.innerHTML = originalText;
-                        closeBtn.disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Có lỗi xảy ra khi kết nối với máy chủ!');
-                    closeBtn.innerHTML = originalText;
-                    closeBtn.disabled = false;
-                });
-            }
-        }
-
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8';
-            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: linear-gradient(135deg, ${bgColor}, ${bgColor}dd);
-                color: white;
-                padding: 15px 20px;
-                border-radius: 10px;
-                z-index: 9999;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-                font-weight: bold;
-                animation: slideInRight 0.3s ease;
-                max-width: 350px;
-            `;
-            notification.innerHTML = `<i class="fas fa-${icon} me-2"></i>${message}`;
-            document.body.appendChild(notification);
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.style.animation = 'slideOutRight 0.3s ease';
-                    setTimeout(() => {
-                        if (notification.parentNode) {
-                            document.body.removeChild(notification);
+                            });
+                        } else {
+                            showError('Lỗi', data.message);
                         }
-                    }, 300);
+                    })
+                    .catch(() => {
+                        closeLoading();
+                        showError('Lỗi', 'Không thể kết nối đến máy chủ.');
+                    });
                 }
-            }, 3000);
-        }
-
-        setInterval(updateWorkingTime, 1000);
-        updateWorkingTime();
-
-        function updateDashboardStats() {
-            fetch('@Url.Action("GetDashboardStats", "Cashier")', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const stats = data.data;
-                    document.getElementById('todayOrders').textContent = stats.TotalOrdersToday;
-                    document.getElementById('todayRevenue').textContent = stats.TodayRevenue.toLocaleString() + ' VNĐ';
-                    document.getElementById('activeTables').textContent = stats.OccupiedTables + '/' + stats.TotalTables;
-document.getElementById('pendingOrders').textContent = stats.PendingOrderCount;
-                    updateFunctionCardBadges(stats);
-                }
-            })
-            .catch(error => {
-                console.log('Error updating dashboard stats:', error);
-            });
-        }
-
-        function updateFunctionCardBadges(stats) {
-            const orderCard = document.querySelector('.function-card.orders .function-desc');
-            if (orderCard) {
-                const oldBadge = orderCard.querySelector('.badge');
-                if (oldBadge) oldBadge.remove();
-                if (stats.ActiveOrderCount > 0) {
-                    const badge = document.createElement('span');
-                    badge.className = 'badge bg-danger ms-1';
-                    badge.textContent = stats.ActiveOrderCount;
-                    orderCard.appendChild(badge);
-                }
-            }
-            const tableCard = document.querySelector('.function-card.tables .function-desc');
-            if (tableCard) {
-                const oldBadge = tableCard.querySelector('.badge');
-                if (oldBadge) oldBadge.remove();
-                if (stats.OccupiedTables > 0) {
-                    const badge = document.createElement('span');
-                    badge.className = 'badge bg-info ms-1';
-                    badge.textContent = stats.OccupiedTables;
-                    tableCard.appendChild(badge);
-                }
-            }
-        }
-
-        if (!document.getElementById('toast-animation-styles')) {
-            var style = document.createElement('style');
-            style.id = 'toast-animation-styles';
-            style.textContent = `
-                @@keyframes slideInRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @@keyframes slideOutRight {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        async function fetchAvailableEmployees() {
-            try {
-                const response = await fetch('@Url.Action("GetAvailableEmployees", "Cashier")');
-
-                if (!response.ok) {
-                    let errorMessage = 'Lỗi khi tải danh sách nhân viên.';
-                    try {
-                        const errorData = await response.json();
-                        errorMessage = errorData.message || errorMessage;
-                    } catch (e) { }
-                    throw new Error(errorMessage);
-                }
-
-                const employees = await response.json();
-                return employees;
-            } catch (error) {
-                console.error(error);
-                showNotification(error.message, 'error');
-                return [];
-            }
-        }
-function populateEmployeeList(modalListElementId, employees, selectFunction, filterCurrentEmployees = true) {
-            const listElement = document.getElementById(modalListElementId);
-            listElement.innerHTML = '';
-
-            if (employees.length === 0) {
-                listElement.innerHTML = '<div class="p-3 text-muted">Không tìm thấy nhân viên nào.</div>';
-                return;
-            }
-
-            let currentEmployeeIds = [];
-            if (filterCurrentEmployees) {
-                currentEmployeeIds = Array.from(document.querySelectorAll('#shiftEmployeeList .badge'))
-                                            .map(badge => badge.dataset.employeeId);
-            } else {
-                currentEmployeeIds.push("@(Model.ActiveShift?.Employee?.Id ?? 0)");
-            }
-
-
-            let addedEmployeeCount = 0;
-            employees.forEach(emp => {
-                if (filterCurrentEmployees && currentEmployeeIds.includes(emp.id.toString())) {
-                    return;
-                }
-
-                if (!filterCurrentEmployees && currentEmployeeIds.includes(emp.id.toString())) {
-                    return;
-                }
-
-                const item = document.createElement('a');
-                item.href = '#';
-                item.className = 'list-group-item list-group-item-action employee-list-item';
-                item.dataset.id = emp.id;
-                item.dataset.name = emp.fullName;
-                item.innerHTML = `<i class="fas fa-user me-2"></i> ${emp.fullName}`;
-                item.onclick = (e) => {
-                    e.preventDefault();
-                    selectFunction(emp.id, emp.fullName, item, modalListElementId);
-                };
-                listElement.appendChild(item);
-                addedEmployeeCount++;
-            });
-
-            if (addedEmployeeCount === 0) {
-                 listElement.innerHTML = '<div class="p-3 text-muted">Tất cả nhân viên khả dụng đã có trong ca.</div>';
-            }
-        }
-
-        async function openHandoverModal() {
-            handoverModalInstance.show();
-            document.getElementById('handoverEmployeeList').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
-            document.getElementById('confirmHandoverBtn').disabled = true;
-            selectedHandoverEmployee = { id: null, name: null };
-
-            const employees = await fetchAvailableEmployees();
-            populateEmployeeList('handoverEmployeeList', employees, selectEmployeeForHandover, false);
-        }
-
-        function selectEmployeeForHandover(id, name, element, listId) {
-            selectedHandoverEmployee = { id: id, name: name };
-            document.getElementById('confirmHandoverBtn').disabled = false;
-
-            const items = document.querySelectorAll(`#${listId} .employee-list-item`);
-            items.forEach(item => item.classList.remove('active'));
-element.classList.add('active');
-        }
-
-        function executeHandover() {
-            if (!selectedHandoverEmployee.id) {
-                showNotification('Vui lòng chọn một nhân viên.', 'error');
-                return;
-            }
-
-            const btn = document.getElementById('confirmHandoverBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang giao ca...';
-            btn.disabled = true;
-
-            const shiftId = @(Model.ActiveShift?.Id ?? 0);
-            const newEmployeeId = selectedHandoverEmployee.id;
-
-            fetch(`@Url.Action("HandoverShift", "Cashier")?shiftId=${shiftId}&newEmployeeId=${newEmployeeId}`, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const mainEmployeeBadge = document.querySelector('#shiftEmployeeList .badge[data-employee-id]');
-                    mainEmployeeBadge.dataset.employeeId = selectedHandoverEmployee.id;
-                    mainEmployeeBadge.innerHTML = `<i class="fas fa-star me-1"></i> ${selectedHandoverEmployee.name}`;
-
-                    document.querySelectorAll('#shiftEmployeeList .badge.bg-secondary').forEach(badge => badge.remove());
-
-                    showNotification(`Đã giao ca cho ${selectedHandoverEmployee.name}`, 'success');
-                    handoverModalInstance.hide();
-                } else {
-                    showNotification(data.message || 'Giao ca thất bại.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Lỗi kết nối khi giao ca.', 'error');
-            })
-            .finally(() => {
-                btn.innerHTML = 'Xác nhận Giao ca';
-                btn.disabled = false;
             });
         }
 
         async function openAddEmployeeModal() {
             addEmployeeModalInstance.show();
-            document.getElementById('addEmployeeList').innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Đang tải...</div>';
+            document.getElementById('addEmployeeList').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i></div>';
             document.getElementById('confirmAddEmployeeBtn').disabled = true;
             selectedAddEmployee = { id: null, name: null };
 
-            const employees = await fetchAvailableEmployees();
-            populateEmployeeList('addEmployeeList', employees, selectEmployeeForAdding, true);
-        }
+            try {
+                const response = await fetch('@Url.Action("GetAvailableEmployees", "Cashier")');
+                const employees = await response.json();
+                
+                const listElement = document.getElementById('addEmployeeList');
+                listElement.innerHTML = '';
 
-        function selectEmployeeForAdding(id, name, element, listId) {
-            selectedAddEmployee = { id: id, name: name };
-            document.getElementById('confirmAddEmployeeBtn').disabled = false;
+                if (employees.length === 0) {
+                    listElement.innerHTML = '<div class="p-3 text-muted text-center">Không có nhân viên khả dụng</div>';
+                    return;
+                }
 
-            const items = document.querySelectorAll(`#${listId} .employee-list-item`);
-            items.forEach(item => item.classList.remove('active'));
-            element.classList.add('active');
+                employees.forEach(emp => {
+                    const item = document.createElement('a');
+                    item.href = '#';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.innerHTML = `<i class="fas fa-user me-2"></i> ${emp.fullName}`;
+                    item.onclick = (e) => {
+                        e.preventDefault();
+                        document.querySelectorAll('#addEmployeeList .list-group-item').forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                        selectedAddEmployee = { id: emp.id, name: emp.fullName };
+                        document.getElementById('confirmAddEmployeeBtn').disabled = false;
+                    };
+                    listElement.appendChild(item);
+                });
+            } catch (error) {
+                document.getElementById('addEmployeeList').innerHTML = '<div class="p-3 text-danger text-center">Lỗi tải danh sách</div>';
+            }
         }
 
         function executeAddEmployee() {
-                if (!selectedAddEmployee.id) {
-                showNotification('Vui lòng chọn một nhân viên.', 'error');
-                return;
-            }
-
-            const employeeListDiv = document.getElementById('shiftEmployeeList');
-            const existingBadge = employeeListDiv.querySelector(`[data-employee-id="${selectedAddEmployee.id}"]`);
-
-            if (existingBadge) {
-                showNotification(`${selectedAddEmployee.name} đã có trong ca.`, 'error');
-                addEmployeeModalInstance.hide();
-                return;
-            }
-
-            const btn = document.getElementById('confirmAddEmployeeBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
-            btn.disabled = true;
+            if (!selectedAddEmployee.id) return;
 
             const shiftId = @(Model.ActiveShift?.Id ?? 0);
-            const employeeId = selectedAddEmployee.id;
+            showLoading('Đang thêm nhân viên...');
 
-            fetch(`@Url.Action("AddSupportEmployee", "Cashier")?shiftId=${shiftId}&employeeId=${employeeId}`, {
+            fetch(`@Url.Action("AddSupportEmployee", "Cashier")?shiftId=${shiftId}&employeeId=${selectedAddEmployee.id}`, {
                 method: 'POST',
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
-            .then(response => response.json())
+            .then(r => r.json())
             .then(data => {
+                closeLoading();
                 if (data.success) {
-                    const newBadge = document.createElement('span');
-                    newBadge.className = 'badge bg-secondary';
-                    newBadge.dataset.employeeId = selectedAddEmployee.id;
-                    newBadge.innerHTML = `<i class="fas fa-user-plus me-1"></i> ${selectedAddEmployee.name}`;
-                    newBadge.onclick = () => confirmRemoveEmployee(newBadge, selectedAddEmployee.id, selectedAddEmployee.name);
-                    employeeListDiv.appendChild(newBadge);
-
-                    showNotification(`Đã thêm ${selectedAddEmployee.name} vào ca.`, 'success');
+                    showSuccess('Thành công', `Đã thêm ${selectedAddEmployee.name} vào ca.`);
                     addEmployeeModalInstance.hide();
                 } else {
-                    showNotification(data.message || 'Thêm nhân viên thất bại.', 'error');
+                    showError('Lỗi', data.message);
                 }
             })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Lỗi kết nối khi thêm nhân viên.', 'error');
-            })
-            .finally(() => {
-                btn.innerHTML = 'Xác nhận Thêm';
-                btn.disabled = false;
+            .catch(() => {
+                closeLoading();
+                showError('Lỗi', 'Không thể kết nối đến máy chủ.');
             });
         }
 
-        function confirmRemoveEmployee(element, employeeId, employeeName) {
-            if (confirm(`Bạn có chắc muốn thu hồi nhân viên "${employeeName}" khỏi ca này không?`)) {
-                executeRemoveEmployee(element, employeeId, employeeName);
-            }
-        }
-
-        function executeRemoveEmployee(element, employeeId, employeeName) {
-            const shiftId = @(Model.ActiveShift?.Id ?? 0);
-
-            const originalHtml = element.innerHTML;
-            element.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            element.style.pointerEvents = 'none';
-            fetch(`@Url.Action("RemoveSupportEmployee", "Cashier")?shiftId=${shiftId}&employeeId=${employeeId}`, {
-                method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    element.remove();
-                    showNotification(`Đã thu hồi ${employeeName} khỏi ca.`, 'success');
-                } else {
-                    showNotification(data.message || 'Thu hồi thất bại.', 'error');
-                    element.innerHTML = originalHtml;
-                    element.style.pointerEvents = 'auto';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Lỗi kết nối khi thu hồi nhân viên.', 'error');
-                element.innerHTML = originalHtml;
-                element.style.pointerEvents = 'auto';
-            });
-        }
+        // Auto refresh stats
+        setInterval(function() {
+            fetch('@Url.Action("GetDashboardStats", "Cashier")')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const stats = data.data;
+                        document.getElementById('todayOrders').textContent = stats.TotalOrdersToday;
+                        document.getElementById('todayRevenue').textContent = stats.TodayRevenue.toLocaleString() + ' VNĐ';
+                        document.getElementById('activeTables').textContent = stats.OccupiedTables + '/' + stats.TotalTables;
+                        document.getElementById('pendingOrders').textContent = stats.PendingOrderCount;
+                    }
+                });
+            loadPendingReservations();
+        }, 30000);
     </script>
 }

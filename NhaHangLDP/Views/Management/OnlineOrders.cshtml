@@ -1,0 +1,584 @@
+﻿@model List<NhaHangLDP.Services.OnlineOrderViewModel>
+@{
+    ViewBag.Title = "Quản lý Đơn hàng Online";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+    var statusCounts = ViewBag.StatusCounts as Dictionary<string, int>;
+    var selectedStatus = ViewBag.SelectedStatus as string ?? "all";
+    var selectedOrderType = ViewBag.SelectedOrderType as string ?? "all";
+    var dateFrom = ViewBag.DateFrom as string ?? "";
+    var dateTo = ViewBag.DateTo as string ?? "";
+    
+    var totalRevenue = ViewBag.TotalRevenue as decimal? ?? 0;
+    var totalOrders = ViewBag.TotalOrders as int? ?? 0;
+    var completedOrders = ViewBag.CompletedOrders as int? ?? 0;
+    var cancelledOrders = ViewBag.CancelledOrders as int? ?? 0;
+    var deliveryOrders = ViewBag.DeliveryOrders as int? ?? 0;
+    var pickupOrders = ViewBag.PickupOrders as int? ?? 0;
+    var dineInOrders = ViewBag.DineInOrders as int? ?? 0;
+}
+
+<style>
+    .stats-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+    .stats-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.12);
+    }
+    .stats-card .icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .stats-card .value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #333;
+    }
+    .stats-card .label {
+        font-size: 13px;
+        color: #666;
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    
+    .order-type-filter {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .order-type-btn {
+        flex: 1;
+        min-width: 120px;
+        padding: 15px 20px;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        background: white;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+    .order-type-btn:hover {
+        border-color: #007bff;
+        box-shadow: 0 2px 10px rgba(0,123,255,0.15);
+        text-decoration: none;
+        color: inherit;
+    }
+    .order-type-btn.active {
+        border-color: #007bff;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .order-type-btn i {
+        font-size: 24px;
+        margin-bottom: 8px;
+        display: block;
+    }
+    .order-type-btn .count {
+        font-size: 20px;
+        font-weight: 700;
+    }
+    .order-type-btn .label {
+        font-size: 12px;
+        opacity: 0.8;
+    }
+    
+    .status-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    .status-tab {
+        padding: 10px 20px;
+        border-radius: 25px;
+        border: 1px solid #e0e0e0;
+        background: white;
+        color: #666;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .status-tab:hover {
+        border-color: #007bff;
+        color: #007bff;
+        text-decoration: none;
+    }
+    .status-tab.active {
+        background: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+    .status-tab .badge {
+        margin-left: 8px;
+    }
+    
+    .order-table {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    .order-table thead th {
+        background: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+        padding: 15px;
+        font-weight: 600;
+        color: #333;
+    }
+    .order-table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .order-table tbody tr:hover {
+        background: #f8fafc;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-confirmed { background: #cce5ff; color: #004085; }
+    .status-preparing { background: #d4edda; color: #155724; }
+    .status-ready { background: #d1ecf1; color: #0c5460; }
+    .status-delivering { background: #e2d5f1; color: #6f42c1; }
+    .status-completed { background: #c3e6cb; color: #155724; }
+    .status-cancelled { background: #f5c6cb; color: #721c24; }
+    
+    .order-type-badge {
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .type-delivery { background: #e3f2fd; color: #1565c0; }
+    .type-pickup { background: #fff8e1; color: #f57c00; }
+    .type-dinein { background: #e8f5e9; color: #2e7d32; }
+    
+    .action-btn {
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: none;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .action-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    /* Chart container */
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    .chart-card h5 {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    /* Modal */
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+    }
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px 20px 0 0;
+        padding: 20px;
+    }
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-shopping-cart me-2 text-primary"></i>Quản lý Đơn hàng Online</h2>
+            <p class="text-muted mb-0">Theo dõi và phân tích đơn hàng từ khách hàng online</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("ExportOnlineOrdersReport", new { dateFrom = dateFrom, dateTo = dateTo })" class="btn btn-success">
+                <i class="fas fa-file-excel me-2"></i>Xuất báo cáo
+            </a>
+            <button onclick="location.reload()" class="btn btn-outline-primary">
+                <i class="fas fa-sync-alt me-2"></i>Làm mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-primary bg-opacity-10 text-primary me-3">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div>
+                        <div class="value">@totalOrders</div>
+                        <div class="label">Tổng đơn hàng</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-success bg-opacity-10 text-success me-3">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div>
+                        <div class="value">@completedOrders</div>
+                        <div class="label">Hoàn thành</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-danger bg-opacity-10 text-danger me-3">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div>
+                        <div class="value">@cancelledOrders</div>
+                        <div class="label">Đã hủy</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stats-card">
+                <div class="d-flex align-items-center">
+                    <div class="icon bg-warning bg-opacity-10 text-warning me-3">
+                        <i class="fas fa-coins"></i>
+                    </div>
+                    <div>
+                        <div class="value">@totalRevenue.ToString("N0")đ</div>
+                        <div class="label">Doanh thu</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-card">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label fw-bold"><i class="fas fa-filter me-1"></i>Lọc theo ngày</label>
+                <div class="d-flex gap-2">
+                    <input type="date" id="dateFrom" class="form-control" value="@dateFrom" placeholder="Từ ngày">
+                    <input type="date" id="dateTo" class="form-control" value="@dateTo" placeholder="Đến ngày">
+                    <button onclick="applyDateFilter()" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold"><i class="fas fa-truck me-1"></i>Hình thức nhận hàng</label>
+                <div class="order-type-filter">
+                    <a href="@Url.Action("OnlineOrders", new { status = selectedStatus, orderType = "all", dateFrom = dateFrom, dateTo = dateTo })" 
+                       class="order-type-btn @(selectedOrderType == "all" ? "active" : "")">
+                        <i class="fas fa-list"></i>
+                        <div class="count">@totalOrders</div>
+                        <div class="label">Tất cả</div>
+                    </a>
+                    <a href="@Url.Action("OnlineOrders", new { status = selectedStatus, orderType = "Delivery", dateFrom = dateFrom, dateTo = dateTo })" 
+                       class="order-type-btn @(selectedOrderType == "Delivery" ? "active" : "")">
+                        <i class="fas fa-motorcycle"></i>
+                        <div class="count">@deliveryOrders</div>
+                        <div class="label">Giao hàng</div>
+                    </a>
+                    <a href="@Url.Action("OnlineOrders", new { status = selectedStatus, orderType = "Pickup", dateFrom = dateFrom, dateTo = dateTo })" 
+                       class="order-type-btn @(selectedOrderType == "Pickup" ? "active" : "")">
+                        <i class="fas fa-store"></i>
+                        <div class="count">@pickupOrders</div>
+                        <div class="label">Tự đến lấy</div>
+                    </a>
+                    <a href="@Url.Action("OnlineOrders", new { status = selectedStatus, orderType = "DineIn", dateFrom = dateFrom, dateTo = dateTo })" 
+                       class="order-type-btn @(selectedOrderType == "DineIn" ? "active" : "")">
+                        <i class="fas fa-utensils"></i>
+                        <div class="count">@dineInOrders</div>
+                        <div class="label">Ăn tại quán</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="status-tabs">
+        <a href="@Url.Action("OnlineOrders", new { status = "all", orderType = selectedOrderType, dateFrom = dateFrom, dateTo = dateTo })" 
+           class="status-tab @(selectedStatus == "all" ? "active" : "")">
+            Tất cả <span class="badge bg-secondary">@(statusCounts?["all"] ?? 0)</span>
+        </a>
+        <a href="@Url.Action("OnlineOrders", new { status = "pending", orderType = selectedOrderType, dateFrom = dateFrom, dateTo = dateTo })" 
+           class="status-tab @(selectedStatus == "pending" ? "active" : "")">
+            Chờ xác nhận <span class="badge bg-warning text-dark">@(statusCounts?["pending"] ?? 0)</span>
+        </a>
+        <a href="@Url.Action("OnlineOrders", new { status = "confirmed", orderType = selectedOrderType, dateFrom = dateFrom, dateTo = dateTo })" 
+           class="status-tab @(selectedStatus == "confirmed" ? "active" : "")">
+            Đã xác nhận <span class="badge bg-info">@(statusCounts?["confirmed"] ?? 0)</span>
+        </a>
+        <a href="@Url.Action("OnlineOrders", new { status = "preparing", orderType = selectedOrderType, dateFrom = dateFrom, dateTo = dateTo })" 
+           class="status-tab @(selectedStatus == "preparing" ? "active" : "")">
+            Đang chuẩn bị <span class="badge bg-primary">@(statusCounts?["preparing"] ?? 0)</span>
+        </a>
+        <a href="@Url.Action("OnlineOrders", new { status = "ready", orderType = selectedOrderType, dateFrom = dateFrom, dateTo = dateTo })" 
+           class="status-tab @(selectedStatus == "ready" ? "active" : "")">
+            Sẵn sàng <span class="badge bg-success">@(statusCounts?["ready"] ?? 0)</span>
+        </a>
+        <a href="@Url.Action("OnlineOrders", new { status = "delivering", orderType = selectedOrderType, dateFrom = dateFrom, dateTo = dateTo })" 
+           class="status-tab @(selectedStatus == "delivering" ? "active" : "")">
+            Đang giao <span class="badge bg-purple">@(statusCounts?["delivering"] ?? 0)</span>
+        </a>
+        <a href="@Url.Action("OnlineOrders", new { status = "completed", orderType = selectedOrderType, dateFrom = dateFrom, dateTo = dateTo })" 
+           class="status-tab @(selectedStatus == "completed" ? "active" : "")">
+            Hoàn thành <span class="badge bg-success">@(statusCounts?["completed"] ?? 0)</span>
+        </a>
+        <a href="@Url.Action("OnlineOrders", new { status = "cancelled", orderType = selectedOrderType, dateFrom = dateFrom, dateTo = dateTo })" 
+           class="status-tab @(selectedStatus == "cancelled" ? "active" : "")">
+            Đã hủy <span class="badge bg-danger">@(statusCounts?["cancelled"] ?? 0)</span>
+        </a>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="order-table">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Thời gian</th>
+                    <th>Khách hàng</th>
+                    <th>Loại đơn</th>
+                    <th>Số món</th>
+                    <th>Tổng tiền</th>
+                    <th>Thanh toán</th>
+                    <th>Trạng thái</th>
+                    <th class="text-center">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var order in Model)
+                    {
+                        var typeClass = order.OrderType?.ToLower() == "delivery" ? "type-delivery" : 
+                                       order.OrderType?.ToLower() == "dinein" ? "type-dinein" : "type-pickup";
+                        <tr>
+                            <td>
+                                <strong class="text-primary">#@order.OrderCode</strong>
+                            </td>
+                            <td>
+                                <small>@order.OrderDateText</small>
+                            </td>
+                            <td>
+                                <div>@(order.CustomerName ?? "N/A")</div>
+                                <small class="text-muted">@order.CustomerPhone</small>
+                            </td>
+                            <td>
+                                <span class="order-type-badge @typeClass">
+                                    @order.OrderTypeText
+                                </span>
+                            </td>
+                            <td>@order.ItemCount món</td>
+                            <td>
+                                <strong>@order.TotalAmount.ToString("N0")đ</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-@(order.PaymentStatus == "Paid" ? "success" : "warning")">
+                                    @order.PaymentStatusText
+                                </span>
+                                <br>
+                                <small class="text-muted">@order.PaymentMethodText</small>
+                            </td>
+                            <td>
+                                <span class="status-badge status-@order.Status.ToLower()">
+                                    @order.StatusText
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <button class="action-btn btn btn-outline-primary btn-sm" onclick="showOrderDetail(@order.Id)">
+                                    <i class="fas fa-eye"></i> Chi tiết
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
+                            <h5 class="text-muted">Không có đơn hàng</h5>
+                            <p class="text-muted">Chưa có đơn hàng nào phù hợp với bộ lọc</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal fade" id="orderDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-receipt me-2"></i>Chi tiết đơn hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailContent">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function applyDateFilter() {
+            var dateFrom = document.getElementById('dateFrom').value;
+            var dateTo = document.getElementById('dateTo').value;
+            var url = '@Url.Action("OnlineOrders")?status=@selectedStatus&orderType=@selectedOrderType';
+            if (dateFrom) url += '&dateFrom=' + dateFrom;
+            if (dateTo) url += '&dateTo=' + dateTo;
+            window.location.href = url;
+        }
+
+        function showOrderDetail(orderId) {
+            var modal = new bootstrap.Modal(document.getElementById('orderDetailModal'));
+            document.getElementById('orderDetailContent').innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+            modal.show();
+
+            fetch('@Url.Action("GetOnlineOrderDetail")?orderId=' + orderId)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        var order = data.order;
+                        var shipperHtml = '';
+                        
+                        if (order.ShipperId && order.ShipperName) {
+                            shipperHtml = `
+                                <div class="alert alert-info mt-3">
+                                    <h6 class="mb-2"><i class="fas fa-motorcycle me-2"></i>Thông tin shipper</h6>
+                                    <p class="mb-1"><strong>Tên:</strong> ${order.ShipperName}</p>
+                                    <p class="mb-0"><strong>SĐT:</strong> ${order.ShipperPhone}</p>
+                                </div>
+                            `;
+                        }
+                        
+                        var html = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-3"><i class="fas fa-user me-2"></i>Thông tin khách hàng</h6>
+                                    <p><strong>Tên:</strong> ${order.CustomerName || 'N/A'}</p>
+                                    <p><strong>SĐT:</strong> ${order.CustomerPhone}</p>
+                                    <p><strong>Email:</strong> ${order.CustomerEmail || 'N/A'}</p>
+                                    ${order.OrderType === 'Delivery' ? `<p><strong>Địa chỉ:</strong> ${order.FullAddress}</p>` : ''}
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-3"><i class="fas fa-shopping-bag me-2"></i>Thông tin đơn hàng</h6>
+                                    <p><strong>Mã đơn:</strong> ${order.OrderCode}</p>
+                                    <p><strong>Ngày đặt:</strong> ${order.OrderDateText}</p>
+                                    <p><strong>Loại:</strong> <span class="badge bg-info">${order.OrderTypeText}</span></p>
+                                    <p><strong>Trạng thái:</strong> <span class="badge bg-${order.StatusClass}">${order.StatusText}</span></p>
+                                    <p><strong>Thanh toán:</strong> ${order.PaymentMethodText} - <span class="badge bg-${order.PaymentStatus === 'Paid' ? 'success' : 'warning'}">${order.PaymentStatusText}</span></p>
+                                </div>
+                            </div>
+                            ${shipperHtml}
+                            <hr>
+                            <h6 class="text-muted mb-3"><i class="fas fa-utensils me-2"></i>Danh sách món</h6>
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Món</th>
+                                        <th class="text-center">SL</th>
+                                        <th class="text-end">Đơn giá</th>
+                                        <th class="text-end">Thành tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${order.Items.map(item => `
+                                        <tr>
+                                            <td>
+                                                ${item.ItemName}
+                                                ${item.SpecialInstructions ? `<br><small class="text-muted fst-italic">${item.SpecialInstructions}</small>` : ''}
+                                            </td>
+                                            <td class="text-center">${item.Quantity}</td>
+                                            <td class="text-end">${formatCurrency(item.UnitPrice)}</td>
+                                            <td class="text-end">${formatCurrency(item.Subtotal)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="3" class="text-end">Tạm tính:</td>
+                                        <td class="text-end">${formatCurrency(order.SubTotal)}</td>
+                                    </tr>
+                                    ${order.DeliveryFee > 0 ? `
+                                    <tr>
+                                        <td colspan="3" class="text-end">Phí giao hàng:</td>
+                                        <td class="text-end">${formatCurrency(order.DeliveryFee)}</td>
+                                    </tr>` : ''}
+                                    ${order.Discount > 0 ? `
+                                    <tr>
+                                        <td colspan="3" class="text-end text-success">Giảm giá:</td>
+                                        <td class="text-end text-success">-${formatCurrency(order.Discount)}</td>
+                                    </tr>` : ''}
+                                    <tr class="fw-bold">
+                                        <td colspan="3" class="text-end">Tổng cộng:</td>
+                                        <td class="text-end text-primary fs-5">${formatCurrency(order.TotalAmount)}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            ${order.Note ? `<div class="alert alert-secondary"><i class="fas fa-sticky-note me-2"></i><strong>Ghi chú:</strong> ${order.Note}</div>` : ''}
+                        `;
+                        document.getElementById('orderDetailContent').innerHTML = html;
+                    } else {
+                        document.getElementById('orderDetailContent').innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('orderDetailContent').innerHTML = '<div class="alert alert-danger">Có lỗi xảy ra khi tải dữ liệu</div>';
+                });
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('vi-VN').format(value) + 'đ';
+        }
+    </script>
+}

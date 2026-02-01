@@ -1,8 +1,10 @@
 ﻿using NhaHangLDP.Models;
 using NhaHangLDP.Services.Management;
+using NhaHangLDP.Services;
 using NhaHangLDP.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -19,6 +21,7 @@ namespace NhaHangLDP.Controllers
         private readonly MenuAdminService menuService;
         private readonly InventoryService inventoryService;
         private readonly ManagementDashboardDataService dashboardService;
+        private readonly OrderQueryService orderQueryService;
 
         public ManagementController()
         {
@@ -27,6 +30,7 @@ namespace NhaHangLDP.Controllers
             menuService = new MenuAdminService(db);
             inventoryService = new InventoryService(db);
             dashboardService = new ManagementDashboardDataService(db);
+            orderQueryService = new OrderQueryService(db);
         }
 
         #region Authorization Helper
@@ -1093,28 +1097,501 @@ namespace NhaHangLDP.Controllers
 
         #region Reports
 
-        public ActionResult Reports()
-        {
-            if (!IsAuthorized())
-                return RedirectUnauthorized();
-
-            return RedirectToAction("Dashboard", "ReportsManagement");
-        }
-
-        public ActionResult InventoryReport()
+        public ActionResult InventoryReport(string fromDate = "", string toDate = "")
         {
             if (!IsAuthorized())
                 return RedirectUnauthorized();
 
             try
             {
-                var reportData = dashboardService.GetInventoryReportData();
+                DateTime? from = null;
+                DateTime? to = null;
+
+                if (!string.IsNullOrEmpty(fromDate))
+                {
+                    DateTime parsedFrom;
+                    if (DateTime.TryParse(fromDate, out parsedFrom))
+                        from = parsedFrom;
+                }
+
+                if (!string.IsNullOrEmpty(toDate))
+                {
+                    DateTime parsedTo;
+                    if (DateTime.TryParse(toDate, out parsedTo))
+                        to = parsedTo;
+                }
+
+                var reportData = inventoryService.GetInventoryReportData(from, to);
+                
+                ViewBag.FromDate = fromDate;
+                ViewBag.ToDate = toDate;
+                
                 return View(reportData);
             }
             catch (Exception ex)
             {
                 TempData["Error"] = "Có lỗi xảy ra khi tải báo cáo kho: " + ex.Message;
                 return RedirectToAction("Inventory");
+            }
+        }
+
+        /// <summary>
+        /// Xuất báo cáo kho ra file CSV
+        /// </summary>
+        public ActionResult ExportInventoryReport()
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            try
+            {
+                var csvContent = inventoryService.ExportInventoryToCsv();
+                var bytes = System.Text.Encoding.UTF8.GetBytes(csvContent);
+                var fileName = $"BaoCaoKho_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+                
+                // Thêm BOM để Excel hiển thị đúng tiếng Việt
+                var bom = new byte[] { 0xEF, 0xBB, 0xBF };
+                var result = new byte[bom.Length + bytes.Length];
+                bom.CopyTo(result, 0);
+                bytes.CopyTo(result, bom.Length);
+                
+                return File(result, "text/csv", fileName);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Có lỗi xảy ra khi xuất báo cáo: " + ex.Message;
+                return RedirectToAction("InventoryReport");
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu biểu đồ cho báo cáo kho (AJAX)
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetInventoryChartData(string period = "month")
+        {
+            if (!IsAuthorized())
+                return Json(new { success = false }, JsonRequestBehavior.AllowGet);
+
+            try
+            {
+                DateTime from;
+                switch (period.ToLower())
+                {
+                    case "week":
+                        from = DateTime.Today.AddDays(-7);
+                        break;
+                    case "month":
+                        from = DateTime.Today.AddDays(-30);
+                        break;
+                    case "quarter":
+                        from = DateTime.Today.AddDays(-90);
+                        break;
+                    case "year":
+                        from = DateTime.Today.AddDays(-365);
+                        break;
+                    default:
+                        from = DateTime.Today.AddDays(-30);
+                        break;
+                }
+
+                var reportData = inventoryService.GetInventoryReportData(from, DateTime.Today);
+
+                return Json(new
+                {
+                    success = true,
+                    labels = reportData.DailyTrends.Select(d => d.DateText).ToArray(),
+                    inboundData = reportData.DailyTrends.Select(d => d.InboundValue).ToArray(),
+                    outboundData = reportData.DailyTrends.Select(d => d.OutboundValue).ToArray(),
+                    categoryLabels = reportData.CategoryStats.Select(c => c.CategoryName).ToArray(),
+                    categoryValues = reportData.CategoryStats.Select(c => c.TotalValue).ToArray(),
+                    summary = new
+                    {
+                        totalInbound = reportData.TotalInboundValue,
+                        totalOutbound = reportData.TotalOutboundValue,
+                        netValue = reportData.NetStockValue,
+                        lowStockCount = reportData.LowStockCount,
+                        outOfStockCount = reportData.OutOfStockCount
+                    }
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        #endregion
+
+        #region Online Orders Management (for Manager)
+
+        /// <summary>
+        /// Trang quản lý đơn hàng online dành cho quản lý
+        /// </summary>
+        public ActionResult OnlineOrders(string status = "all", string orderType = "all", string dateFrom = "", string dateTo = "")
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            ViewBag.StatusCounts = orderQueryService.GetOnlineOrderCounts();
+            ViewBag.SelectedStatus = status;
+            ViewBag.SelectedOrderType = orderType;
+            ViewBag.DateFrom = dateFrom;
+            ViewBag.DateTo = dateTo;
+
+            var orders = orderQueryService.GetOnlineOrders(status, orderType);
+
+            // Filter by date range if provided
+            if (!string.IsNullOrEmpty(dateFrom))
+            {
+                DateTime fromDate;
+                if (DateTime.TryParse(dateFrom, out fromDate))
+                {
+                    orders = orders.Where(o => o.OrderDate >= fromDate).ToList();
+                }
+            }
+            if (!string.IsNullOrEmpty(dateTo))
+            {
+                DateTime toDate;
+                if (DateTime.TryParse(dateTo, out toDate))
+                {
+                    orders = orders.Where(o => o.OrderDate <= toDate.AddDays(1)).ToList();
+                }
+            }
+
+            // Calculate statistics for management
+            ViewBag.TotalRevenue = orders.Where(o => o.Status == "Completed").Sum(o => o.TotalAmount);
+            ViewBag.TotalOrders = orders.Count;
+            ViewBag.CompletedOrders = orders.Count(o => o.Status == "Completed");
+            ViewBag.CancelledOrders = orders.Count(o => o.Status == "Cancelled");
+            ViewBag.DeliveryOrders = orders.Count(o => o.OrderType == "Delivery");
+            ViewBag.PickupOrders = orders.Count(o => o.OrderType == "Pickup" || o.OrderType == "TakeAway");
+            ViewBag.DineInOrders = orders.Count(o => o.OrderType == "DineIn");
+
+            return View(orders);
+        }
+
+        /// <summary>
+        /// API lấy chi tiết đơn hàng online cho quản lý
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetOnlineOrderDetail(int orderId)
+        {
+            if (!IsAuthorized())
+                return Json(new { success = false, message = "Không có quyền truy cập!" }, JsonRequestBehavior.AllowGet);
+
+            try
+            {
+                var order = orderQueryService.GetOnlineOrderDetail(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);
+
+                return Json(new { success = true, order }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Xuất báo cáo đơn hàng online
+        /// </summary>
+        public ActionResult ExportOnlineOrdersReport(string dateFrom, string dateTo)
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            var orders = orderQueryService.GetOnlineOrders("all", "all");
+
+            if (!string.IsNullOrEmpty(dateFrom))
+            {
+                DateTime fromDate;
+                if (DateTime.TryParse(dateFrom, out fromDate))
+                {
+                    orders = orders.Where(o => o.OrderDate >= fromDate).ToList();
+                }
+            }
+            if (!string.IsNullOrEmpty(dateTo))
+            {
+                DateTime toDate;
+                if (DateTime.TryParse(dateTo, out toDate))
+                {
+                    orders = orders.Where(o => o.OrderDate <= toDate.AddDays(1)).ToList();
+                }
+            }
+
+            // Generate CSV content
+            var csv = new System.Text.StringBuilder();
+            csv.AppendLine("Mã đơn,Ngày đặt,Khách hàng,SĐT,Loại,Trạng thái,Thanh toán,Tổng tiền");
+
+            foreach (var order in orders)
+            {
+                csv.AppendLine($"{order.OrderCode},{order.OrderDateText},{order.CustomerName},{order.CustomerPhone},{order.OrderTypeText},{order.StatusText},{order.PaymentStatusText},{order.TotalAmount}");
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+            var fileName = $"DonHangOnline_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            return File(bytes, "text/csv", fileName);
+        }
+
+        /// <summary>
+        /// Thống kê đơn hàng online theo thời gian
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetOnlineOrderStats(string period = "week")
+        {
+            if (!IsAuthorized())
+                return Json(new { success = false, message = "Không có quyền truy cập!" }, JsonRequestBehavior.AllowGet);
+
+            try
+            {
+                var startDate = DateTime.Today;
+                switch (period.ToLower())
+                {
+                    case "today":
+                        startDate = DateTime.Today;
+                        break;
+                    case "week":
+                        startDate = DateTime.Today.AddDays(-7);
+                        break;
+                    case "month":
+                        startDate = DateTime.Today.AddDays(-30);
+                        break;
+                    case "year":
+                        startDate = DateTime.Today.AddDays(-365);
+                        break;
+                }
+
+                var orders = db.CustomerOrder
+                    .Where(o => o.OrderDate >= startDate)
+                    .ToList();
+
+                var stats = new
+                {
+                    totalOrders = orders.Count,
+                    completedOrders = orders.Count(o => o.Status == "Completed"),
+                    cancelledOrders = orders.Count(o => o.Status == "Cancelled"),
+                    totalRevenue = orders.Where(o => o.Status == "Completed").Sum(o => o.TotalAmount),
+                    averageOrderValue = orders.Where(o => o.Status == "Completed").Any() 
+                        ? orders.Where(o => o.Status == "Completed").Average(o => o.TotalAmount) 
+                        : 0,
+                    byType = new
+                    {
+                        delivery = orders.Count(o => o.OrderType == "Delivery"),
+                        pickup = orders.Count(o => o.OrderType == "Pickup" || o.OrderType == "TakeAway"),
+                        dineIn = orders.Count(o => o.OrderType == "DineIn")
+                    },
+                    byStatus = new
+                    {
+                        pending = orders.Count(o => o.Status == "Pending"),
+                        confirmed = orders.Count(o => o.Status == "Confirmed"),
+                        preparing = orders.Count(o => o.Status == "Preparing"),
+                        ready = orders.Count(o => o.Status == "Ready"),
+                        delivering = orders.Count(o => o.Status == "Delivering"),
+                        completed = orders.Count(o => o.Status == "Completed"),
+                        cancelled = orders.Count(o => o.Status == "Cancelled")
+                    }
+                };
+
+                return Json(new { success = true, stats }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        #endregion
+
+        #region Supplier Management
+
+        public ActionResult SupplierList()
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            try
+            {
+                var suppliers = inventoryService.GetSupplierList();
+                return View(suppliers);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Có lỗi xảy ra khi tải danh sách nhà cung cấp: " + ex.Message;
+                return View(new List<Supplier>());
+            }
+        }
+
+        public ActionResult CreateSupplier()
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            return View(new Supplier());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateSupplier(Supplier supplier)
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            if (ModelState.IsValid)
+            {
+                string errorMessage;
+                if (inventoryService.CreateSupplier(supplier, out errorMessage))
+                {
+                    TempData["Success"] = "Thêm nhà cung cấp thành công!";
+                    return RedirectToAction("SupplierList");
+                }
+                ModelState.AddModelError("Name", errorMessage);
+            }
+
+            return View(supplier);
+        }
+
+        public ActionResult EditSupplier(int id)
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            var supplier = inventoryService.GetSupplierById(id);
+            if (supplier == null)
+            {
+                TempData["Error"] = "Không tìm thấy nhà cung cấp.";
+                return RedirectToAction("SupplierList");
+            }
+
+            return View(supplier);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult EditSupplier(Supplier supplier)
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            if (ModelState.IsValid)
+            {
+                string errorMessage;
+                if (inventoryService.UpdateSupplier(supplier, out errorMessage))
+                {
+                    TempData["Success"] = "Cập nhật nhà cung cấp thành công!";
+                    return RedirectToAction("SupplierList");
+                }
+                ModelState.AddModelError("", errorMessage);
+            }
+
+            return View(supplier);
+        }
+
+        [HttpPost]
+        public JsonResult DeleteSupplier(int id)
+        {
+            if (!IsAuthorized())
+                return Json(new { success = false, message = "Không có quyền truy cập." });
+
+            string errorMessage;
+            if (inventoryService.DeleteSupplier(id, out errorMessage))
+                return Json(new { success = true, message = "Xóa nhà cung cấp thành công!" });
+
+            return Json(new { success = false, message = errorMessage });
+        }
+
+        [HttpGet]
+        public JsonResult GetSupplierDetail(int id)
+        {
+            if (!IsAuthorized())
+                return Json(new { success = false, message = "Không có quyền truy cập!" }, JsonRequestBehavior.AllowGet);
+
+            try
+            {
+                var detail = inventoryService.GetSupplierDetail(id);
+                if (detail == null)
+                    return Json(new { success = false, message = "Không tìm thấy nhà cung cấp!" }, JsonRequestBehavior.AllowGet);
+
+                return Json(new { 
+                    success = true, 
+                    supplier = new {
+                        id = detail.Supplier.Id,
+                        name = detail.Supplier.Name,
+                        contactPerson = detail.Supplier.ContactPerson,
+                        phoneNumber = detail.Supplier.PhoneNumber,
+                        address = detail.Supplier.Address,
+                        totalOrders = detail.TotalOrders,
+                        totalValue = detail.TotalValue
+                    },
+                    recentInbounds = detail.RecentInbounds
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult CreateSampleSuppliers()
+        {
+            if (!IsAuthorized())
+                return Json(new { success = false, message = "Không có quyền truy cập!" });
+
+            string errorMessage;
+            int count;
+            if (inventoryService.CreateSampleSuppliers(out errorMessage, out count))
+                return Json(new { success = true, message = $"Đã tạo thành công {count} nhà cung cấp mẫu!", count });
+
+            return Json(new { success = false, message = errorMessage });
+        }
+
+        #endregion
+
+        #region Expiring Items Alert
+
+        public ActionResult ExpiringItems()
+        {
+            if (!IsAuthorized())
+                return RedirectUnauthorized();
+
+            try
+            {
+                var expiringItems = inventoryService.GetExpiringItems(30); // 30 ngày
+                return View(expiringItems);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Có lỗi xảy ra: " + ex.Message;
+                return View(new List<ExpiringItem>());
+            }
+        }
+
+        [HttpGet]
+        public JsonResult GetExpiringItemsAlert()
+        {
+            if (!IsAuthorized())
+                return Json(new { success = false }, JsonRequestBehavior.AllowGet);
+
+            try
+            {
+                var expiringItems = inventoryService.GetExpiringItems(7); // 7 ngày
+                return Json(new { 
+                    success = true, 
+                    count = expiringItems.Count,
+                    items = expiringItems.Take(5).Select(e => new {
+                        name = e.IngredientName,
+                        quantity = e.Quantity,
+                        unit = e.Unit,
+                        daysLeft = e.DaysUntilExpiry,
+                        expiryDate = e.ExpiryDate.ToString("dd/MM/yyyy")
+                    })
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch
+            {
+                return Json(new { success = false, count = 0 }, JsonRequestBehavior.AllowGet);
             }
         }
 

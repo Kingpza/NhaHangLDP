@@ -1,0 +1,236 @@
+﻿@model NhaHangLDP.Models.ShipperEarningsViewModel
+@{
+    ViewBag.Title = "Thu nhập";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#667eea" />
+    <title>@ViewBag.Title - Shipper App</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0"
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                }
+            }
+        }
+    </script>
+    <style>
+        .hero-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-4px); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 20px); }
+    </style>
+</head>
+<body class="bg-sidebar-surface font-display text-text-primary min-h-screen pb-24">
+
+    <!-- Header with Total Earnings -->
+    <header class="hero-gradient text-white">
+        <div class="px-4 py-4 flex items-center gap-4">
+            <a href="@Url.Action("Dashboard")" class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <div class="flex-1">
+                <h1 class="text-xl font-bold">Thu nhập</h1>
+                <p class="text-sm text-white/80">Thống kê chi tiết</p>
+            </div>
+        </div>
+        
+        <!-- Total Earnings -->
+        <div class="px-4 pb-8 text-center">
+            <p class="text-white/80 text-sm mb-2">Tổng thu nhập</p>
+            <h2 class="text-5xl font-black mb-2">@Model.TotalEarnings.ToString("N0")đ</h2>
+            <p class="text-white/70 text-sm flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-lg">date_range</span>
+                @Model.FromDate.ToString("dd/MM") - @Model.ToDate.ToString("dd/MM/yyyy")
+            </p>
+        </div>
+    </header>
+
+    <!-- Filter -->
+    <section class="px-4 py-4 bg-white border-b border-border-light -mt-4 rounded-t-[2rem]">
+        <form method="get" class="flex gap-3 items-center">
+            <div class="flex-1 relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">calendar_today</span>
+                <input type="date" name="fromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" 
+                       class="w-full pl-12 pr-4 py-3 rounded-full border-2 border-border-light focus:border-primary focus:outline-none text-sm" />
+            </div>
+            <span class="text-text-secondary font-bold">→</span>
+            <div class="flex-1 relative">
+                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary">calendar_today</span>
+                <input type="date" name="toDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" 
+                       class="w-full pl-12 pr-4 py-3 rounded-full border-2 border-border-light focus:border-primary focus:outline-none text-sm" />
+            </div>
+            <button type="submit" class="w-12 h-12 hero-gradient text-white rounded-full flex items-center justify-center shadow-lg">
+                <span class="material-symbols-outlined">filter_alt</span>
+            </button>
+        </form>
+    </section>
+
+    <!-- Stats Cards -->
+    <section class="px-4 py-4">
+        <div class="grid grid-cols-2 gap-4">
+            <div class="stat-card bg-white rounded-[1.5rem] p-5 shadow-lg border border-border-light">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary">receipt_long</span>
+                    </div>
+                    <span class="text-text-secondary font-semibold">Tổng đơn</span>
+                </div>
+                <h3 class="text-3xl font-black text-text-primary">@Model.TotalOrders</h3>
+            </div>
+            <div class="stat-card bg-white rounded-[1.5rem] p-5 shadow-lg border border-border-light">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-green-600">trending_up</span>
+                    </div>
+                    <span class="text-text-secondary font-semibold">TB/đơn</span>
+                </div>
+                <h3 class="text-2xl font-black text-green-600">@Model.AverageEarningPerOrder.ToString("N0")đ</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chart -->
+    <section class="px-4 py-2">
+        <div class="bg-white rounded-[2rem] p-6 shadow-lg border border-border-light">
+            <h3 class="font-bold text-text-primary mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">bar_chart</span>
+                Biểu đồ thu nhập
+            </h3>
+            <div style="height: 220px;">
+                <canvas id="earningsChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Daily Earnings List -->
+    <section class="px-4 py-4">
+        <h3 class="font-bold text-text-primary mb-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">calendar_month</span>
+            Chi tiết theo ngày
+        </h3>
+        <div class="space-y-3">
+            @if (Model.DailyEarnings != null && Model.DailyEarnings.Any())
+            {
+                foreach (var day in Model.DailyEarnings)
+                {
+                    <div class="bg-white rounded-[1.5rem] p-5 shadow-md border border-border-light flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-sidebar-surface rounded-full flex items-center justify-center">
+                                <span class="material-symbols-outlined text-text-secondary">today</span>
+                            </div>
+                            <div>
+                                <div class="font-bold text-text-primary">@day.Date.ToString("dd/MM/yyyy")</div>
+                                <div class="text-sm text-text-secondary">@day.OrderCount đơn hàng</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-black text-xl text-green-600">+@day.Earnings.ToString("N0")đ</div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="bg-white rounded-[2rem] p-8 text-center shadow-lg border border-border-light">
+                    <div class="w-16 h-16 bg-sidebar-surface rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-symbols-outlined text-text-secondary text-3xl">payments</span>
+                    </div>
+                    <p class="text-text-secondary">Chưa có dữ liệu thu nhập trong khoảng thời gian này</p>
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light safe-bottom z-50 shadow-lg">
+        <div class="flex justify-around py-3">
+            <a href="@Url.Action("Dashboard")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">home</span>
+                <span class="text-xs">Trang chủ</span>
+            </a>
+            <a href="@Url.Action("NewOrders")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">list_alt</span>
+                <span class="text-xs">Đơn mới</span>
+            </a>
+            <a href="@Url.Action("History")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">history</span>
+                <span class="text-xs">Lịch sử</span>
+            </a>
+            <a href="@Url.Action("Earnings")" class="flex flex-col items-center py-2 px-4 text-primary">
+                <span class="material-symbols-outlined text-2xl">payments</span>
+                <span class="text-xs font-bold">Thu nhập</span>
+            </a>
+            <a href="@Url.Action("Profile")" class="flex flex-col items-center py-2 px-4 text-text-secondary hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-2xl">person</span>
+                <span class="text-xs">Cá nhân</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        var ctx = document.getElementById('earningsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                    Model.DailyEarnings != null ? Model.DailyEarnings.OrderBy(d => d.Date).Select(d => d.Date.ToString("dd/MM")).ToList() : new List<string>())),
+                datasets: [{
+                    label: 'Thu nhập (đ)',
+                    data: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(
+                        Model.DailyEarnings != null ? Model.DailyEarnings.OrderBy(d => d.Date).Select(d => d.Earnings).ToList() : new List<decimal>())),
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: '#667eea',
+                    borderWidth: 2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN') + 'đ';
+                            }
+                        },
+                        grid: { color: '#f0f2f5' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

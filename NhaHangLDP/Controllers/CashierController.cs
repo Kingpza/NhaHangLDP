@@ -778,5 +778,729 @@ namespace NhaHangLDP.Controllers
         }
 
         #endregion
+
+        #region Online Orders Management
+
+        /// <summary>
+        /// Trang quản lý đơn hàng online
+        /// </summary>
+        public ActionResult OnlineOrders(string status = "all", string orderType = "all")
+        {
+            if (shiftService.GetActiveShift() == null)
+                return RedirectToAction("OpenShift");
+
+            ViewBag.StatusCounts = orderQueryService.GetOnlineOrderCounts();
+            ViewBag.SelectedStatus = status;
+            ViewBag.SelectedOrderType = orderType;
+
+            var orders = orderQueryService.GetOnlineOrders(status, orderType);
+            return View(orders);
+        }
+
+        /// <summary>
+        /// API lấy danh sách đơn hàng online
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetOnlineOrdersData(string status = "all", string orderType = "all")
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" }, JsonRequestBehavior.AllowGet);
+
+                var orders = orderQueryService.GetOnlineOrders(status, orderType);
+                var counts = orderQueryService.GetOnlineOrderCounts();
+
+                return Json(new { success = true, orders, counts }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// API lấy chi tiết đơn hàng online
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetOnlineOrderDetail(int orderId)
+        {
+            try
+            {
+                var order = orderQueryService.GetOnlineOrderDetail(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" }, JsonRequestBehavior.AllowGet);
+
+                return Json(new { success = true, order }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Xác nhận đơn hàng online
+        /// </summary>
+        [HttpPost]
+        public JsonResult ConfirmOnlineOrder(int orderId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                string errorMessage;
+                if (orderQueryService.UpdateOnlineOrderStatus(orderId, "Confirmed", out errorMessage))
+                {
+                    return Json(new { success = true, message = "Đã xác nhận đơn hàng!" });
+                }
+                return Json(new { success = false, message = errorMessage });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Bắt đầu chuẩn bị đơn hàng online
+        /// </summary>
+        [HttpPost]
+        public JsonResult StartPreparingOnlineOrder(int orderId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                string errorMessage;
+                if (orderQueryService.UpdateOnlineOrderStatus(orderId, "Preparing", out errorMessage))
+                {
+                    return Json(new { success = true, message = "Đã bắt đầu chuẩn bị!" });
+                }
+                return Json(new { success = false, message = errorMessage });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Đánh dấu đơn hàng sẵn sàng
+        /// </summary>
+        [HttpPost]
+        public JsonResult MarkOnlineOrderReady(int orderId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                string errorMessage;
+                if (orderQueryService.UpdateOnlineOrderStatus(orderId, "Ready", out errorMessage))
+                {
+                    return Json(new { success = true, message = "Đơn hàng đã sẵn sàng!" });
+                }
+                return Json(new { success = false, message = errorMessage });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Hoàn thành đơn hàng online (cho đơn tự đến lấy hoặc không giao hàng)
+        /// </summary>
+        [HttpPost]
+        public JsonResult CompleteOnlineOrder(int orderId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var order = db.CustomerOrder.Find(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+
+                // Log để debug
+                System.Diagnostics.Debug.WriteLine($"CompleteOnlineOrder - OrderId: {orderId}, OrderType: '{order.OrderType}', Status: '{order.Status}'");
+
+                // Cho phép hoàn thành đơn không phải Delivery khi đã Ready
+                // OrderType có thể là "Pickup", "pickup", "TakeAway", "DineIn" hoặc bất kỳ giá trị nào không phải "Delivery"
+                bool isNotDelivery = string.IsNullOrEmpty(order.OrderType) || 
+                                     !order.OrderType.Equals("Delivery", StringComparison.OrdinalIgnoreCase);
+                
+                if (isNotDelivery && order.Status == "Ready")
+                {
+                    order.Status = "Completed";
+                    order.CompletedDate = DateTime.Now;
+                    order.PaymentStatus = "Paid";
+                    db.SaveChanges();
+                    return Json(new { success = true, message = "Đã hoàn thành đơn hàng!" });
+                }
+
+                // Nếu đơn đang Delivering và cần hoàn thành thủ công
+                if (order.Status == "Delivering")
+                {
+                    order.Status = "Completed";
+                    order.CompletedDate = DateTime.Now;
+                    order.PaymentStatus = "Paid";
+
+                    // Cập nhật shipper status
+                    var assignment = db.DeliveryAssignment
+                        .FirstOrDefault(a => a.OrderId == orderId && (a.Status == "Assigned" || a.Status == "PickedUp"));
+                    if (assignment != null)
+                    {
+                        assignment.Status = "Delivered";
+                        var shipper = db.Shipper.Find(assignment.ShipperId);
+                        if (shipper != null)
+                        {
+                            shipper.Status = "Available";
+                            shipper.TotalDeliveries = shipper.TotalDeliveries + 1;
+                        }
+                    }
+
+                    db.SaveChanges();
+                    return Json(new { success = true, message = "Đã hoàn thành đơn hàng!" });
+                }
+
+                return Json(new { 
+                    success = false, 
+                    message = $"Không thể hoàn thành đơn hàng này! (OrderType: {order.OrderType}, Status: {order.Status})" 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Hủy đơn hàng online
+        /// </summary>
+        [HttpPost]
+        public JsonResult CancelOnlineOrder(int orderId, string reason)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var order = db.CustomerOrder.Find(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+
+                // Không cho hủy đơn đang giao hoặc đã hoàn thành
+                if (order.Status == "Delivering" || order.Status == "Completed")
+                    return Json(new { success = false, message = "Không thể hủy đơn hàng này!" });
+
+                order.Status = "Cancelled";
+                order.CancelledDate = DateTime.Now;
+                order.CancelReason = reason;
+
+                // Hủy assignment nếu có
+                var assignment = db.DeliveryAssignment
+                    .FirstOrDefault(a => a.OrderId == orderId && a.Status != "Cancelled" && a.Status != "Delivered");
+                if (assignment != null)
+                {
+                    assignment.Status = "Cancelled";
+                    var shipper = db.Shipper.Find(assignment.ShipperId);
+                    if (shipper != null) shipper.Status = "Available";
+                }
+
+                db.SaveChanges();
+                return Json(new { success = true, message = "Đã hủy đơn hàng!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gán shipper cho đơn hàng online
+        /// </summary>
+        [HttpPost]
+        public JsonResult AssignShipperToOnlineOrder(int orderId, int shipperId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var order = db.CustomerOrder.Find(orderId);
+                if (order == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+
+                if (order.OrderType != "Delivery")
+                    return Json(new { success = false, message = "Đơn hàng này không phải đơn giao hàng!" });
+
+                if (order.Status != "Ready")
+                    return Json(new { success = false, message = "Đơn hàng chưa sẵn sàng để giao!" });
+
+                var shipper = db.Shipper.Find(shipperId);
+                if (shipper == null || !shipper.IsActive)
+                    return Json(new { success = false, message = "Shipper không hợp lệ!" });
+
+                if (shipper.Status == "Busy")
+                    return Json(new { success = false, message = "Shipper đang bận!" });
+
+                // Tạo assignment
+                var assignment = new DeliveryAssignment
+                {
+                    OrderId = orderId,
+                    ShipperId = shipperId,
+                    AssignedTime = DateTime.Now,
+                    Status = "Assigned",
+                    DeliveryFee = order.DeliveryFee,
+                    ShipperEarning = order.DeliveryFee * 0.8m // 80% phí ship
+                };
+
+                db.DeliveryAssignment.Add(assignment);
+                shipper.Status = "Busy";
+                order.Status = "Delivering";
+                order.DeliveringDate = DateTime.Now;
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = $"Đã gán shipper {shipper.FullName} cho đơn hàng!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách shipper khả dụng
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetAvailableShippersForOrder()
+        {
+            try
+            {
+                var shippers = db.Shipper
+                    .Where(s => s.IsActive && s.Status == "Available")
+                    .Select(s => new
+                    {
+                        s.Id,
+                        s.FullName,
+                        s.Phone,
+                        s.VehicleType,
+                        s.Rating,
+                        s.TotalDeliveries
+                    })
+                    .OrderByDescending(s => s.Rating)
+                    .ToList();
+
+                return Json(new { success = true, shippers }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        #endregion
+
+        #region Reservation Management
+
+        /// <summary>
+        /// Trang quản lý đơn đặt bàn
+        /// </summary>
+        public ActionResult Reservations(string status = "all", string date = "")
+        {
+            if (shiftService.GetActiveShift() == null)
+                return RedirectToAction("OpenShift");
+
+            ViewBag.SelectedStatus = status;
+            ViewBag.SelectedDate = date;
+            ViewBag.StatusCounts = GetReservationCounts();
+
+            return View();
+        }
+
+        /// <summary>
+        /// API lấy danh sách đơn đặt bàn
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetReservationsData(string status = "all", string date = "")
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" }, JsonRequestBehavior.AllowGet);
+
+                var query = db.Reservation.AsQueryable();
+
+                // Filter by status
+                if (!string.IsNullOrEmpty(status) && status != "all")
+                {
+                    query = query.Where(r => r.Status == status);
+                }
+
+                // Filter by date
+                DateTime filterDate;
+                if (!string.IsNullOrEmpty(date) && DateTime.TryParse(date, out filterDate))
+                {
+                    query = query.Where(r => DbFunctions.TruncateTime(r.ReservationDate) == filterDate.Date);
+                }
+                else
+                {
+                    // Default: show today and future reservations
+                    var today = DateTime.Today;
+                    query = query.Where(r => r.ReservationDate >= today);
+                }
+
+                var reservations = query
+                    .OrderBy(r => r.ReservationDate)
+                    .ThenBy(r => r.ReservationTime)
+                    .ToList()
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.ReservationCode,
+                        r.CustomerName,
+                        r.CustomerPhone,
+                        r.CustomerEmail,
+                        ReservationDate = r.ReservationDate.ToString("dd/MM/yyyy"),
+                        ReservationTime = r.ReservationTime.ToString(@"hh\:mm"),
+                        r.NumberOfGuests,
+                        r.TablePreference,
+                        r.SpecialRequests,
+                        r.Status,
+                        StatusText = GetReservationStatusText(r.Status),
+                        StatusClass = GetReservationStatusClass(r.Status),
+                        CreatedDate = r.CreatedDate.ToString("dd/MM/yyyy HH:mm"),
+                        CanConfirm = r.Status == "Pending",
+                        CanComplete = r.Status == "Confirmed",
+                        CanCancel = r.Status == "Pending" || r.Status == "Confirmed"
+                    })
+                    .ToList();
+
+                var counts = GetReservationCounts();
+
+                return Json(new { success = true, reservations, counts }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// API lấy chi tiết đơn đặt bàn
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetReservationDetail(int id)
+        {
+            try
+            {
+                var reservation = db.Reservation
+                    .Where(r => r.Id == id)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.ReservationCode,
+                        r.CustomerName,
+                        r.CustomerPhone,
+                        r.CustomerEmail,
+                        ReservationDate = r.ReservationDate,
+                        ReservationTime = r.ReservationTime,
+                        r.NumberOfGuests,
+                        r.TableId,
+                        r.TablePreference,
+                        r.SpecialRequests,
+                        r.Status,
+                        r.DepositAmount,
+                        r.DepositPaid,
+                        r.CancelReason,
+                        r.CreatedDate,
+                        r.ConfirmedDate,
+                        r.CancelledDate
+                    })
+                    .FirstOrDefault();
+
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" }, JsonRequestBehavior.AllowGet);
+
+                // Get table info if assigned
+                string tableName = null;
+                if (reservation.TableId.HasValue)
+                {
+                    var table = db.RestaurantTable.Find(reservation.TableId.Value);
+                    tableName = table?.TableNumber;
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    reservation = new
+                    {
+                        reservation.Id,
+                        reservation.ReservationCode,
+                        reservation.CustomerName,
+                        reservation.CustomerPhone,
+                        reservation.CustomerEmail,
+                        ReservationDate = reservation.ReservationDate.ToString("dd/MM/yyyy"),
+                        ReservationTime = reservation.ReservationTime.ToString(@"hh\:mm"),
+                        reservation.NumberOfGuests,
+                        reservation.TableId,
+                        TableName = tableName,
+                        reservation.TablePreference,
+                        reservation.SpecialRequests,
+                        reservation.Status,
+                        StatusText = GetReservationStatusText(reservation.Status),
+                        StatusClass = GetReservationStatusClass(reservation.Status),
+                        reservation.DepositAmount,
+                        reservation.DepositPaid,
+                        reservation.CancelReason,
+                        CreatedDate = reservation.CreatedDate.ToString("dd/MM/yyyy HH:mm"),
+                        ConfirmedDate = reservation.ConfirmedDate?.ToString("dd/MM/yyyy HH:mm"),
+                        CancelledDate = reservation.CancelledDate?.ToString("dd/MM/yyyy HH:mm"),
+                        CanConfirm = reservation.Status == "Pending",
+                        CanComplete = reservation.Status == "Confirmed",
+                        CanCancel = reservation.Status == "Pending" || reservation.Status == "Confirmed"
+                    }
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Xác nhận đơn đặt bàn
+        /// </summary>
+        [HttpPost]
+        public JsonResult ConfirmReservation(int id, int? tableId)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var reservation = db.Reservation.Find(id);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
+
+                if (reservation.Status != "Pending")
+                    return Json(new { success = false, message = "Đơn đặt bàn không ở trạng thái chờ xác nhận!" });
+
+                reservation.Status = "Confirmed";
+                reservation.ConfirmedDate = DateTime.Now;
+
+                if (tableId.HasValue && tableId.Value > 0)
+                {
+                    reservation.TableId = tableId.Value;
+                }
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Đã xác nhận đơn đặt bàn!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Từ chối đơn đặt bàn
+        /// </summary>
+        [HttpPost]
+        public JsonResult RejectReservation(int id, string reason)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var reservation = db.Reservation.Find(id);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
+
+                if (reservation.Status != "Pending" && reservation.Status != "Confirmed")
+                    return Json(new { success = false, message = "Không thể từ chối đơn đặt bàn này!" });
+
+                reservation.Status = "Cancelled";
+                reservation.CancelReason = reason ?? "Từ chối bởi nhà hàng";
+                reservation.CancelledDate = DateTime.Now;
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Đã từ chối đơn đặt bàn!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Hoàn thành đơn đặt bàn (khách đã đến)
+        /// </summary>
+        [HttpPost]
+        public JsonResult CompleteReservation(int id)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var reservation = db.Reservation.Find(id);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
+
+                if (reservation.Status != "Confirmed")
+                    return Json(new { success = false, message = "Đơn đặt bàn chưa được xác nhận!" });
+
+                reservation.Status = "Completed";
+
+                // Update table status if assigned
+                if (reservation.TableId.HasValue)
+                {
+                    var table = db.RestaurantTable.Find(reservation.TableId.Value);
+                    if (table != null)
+                    {
+                        table.Status = "Occupied";
+                    }
+                }
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Khách đã đến! Đơn đặt bàn hoàn thành." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Đánh dấu khách không đến
+        /// </summary>
+        [HttpPost]
+        public JsonResult NoShowReservation(int id)
+        {
+            try
+            {
+                if (shiftService.GetActiveShift() == null)
+                    return Json(new { success = false, message = "Vui lòng mở ca trước!" });
+
+                var reservation = db.Reservation.Find(id);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" });
+
+                if (reservation.Status != "Confirmed")
+                    return Json(new { success = false, message = "Đơn đặt bàn chưa được xác nhận!" });
+
+                reservation.Status = "NoShow";
+                reservation.CancelReason = "Khách không đến";
+                reservation.CancelledDate = DateTime.Now;
+
+                db.SaveChanges();
+
+                return Json(new { success = true, message = "Đã đánh dấu khách không đến." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách bàn trống cho đặt bàn
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetAvailableTablesForReservation(int reservationId)
+        {
+            try
+            {
+                var reservation = db.Reservation.Find(reservationId);
+                if (reservation == null)
+                    return Json(new { success = false, message = "Không tìm thấy đơn đặt bàn!" }, JsonRequestBehavior.AllowGet);
+
+                var timeMinutes = (int)reservation.ReservationTime.TotalMinutes;
+
+                // Get tables that can accommodate guests and are not reserved at the same time
+                var tables = db.RestaurantTable
+                    .Where(t => t.Capacity >= reservation.NumberOfGuests)
+                    .ToList()
+                    .Select(t => new
+                    {
+                        t.Id,
+                        t.TableNumber,
+                        t.Capacity,
+                        t.Status,
+                        IsAvailable = !db.Reservation.Any(r =>
+                            r.Id != reservationId &&
+                            r.TableId == t.Id &&
+                            r.ReservationDate == reservation.ReservationDate &&
+                            r.Status != "Cancelled" && r.Status != "NoShow" && r.Status != "Completed" &&
+                            Math.Abs((int)r.ReservationTime.TotalMinutes - timeMinutes) < 120)
+                    })
+                    .OrderBy(t => t.Capacity)
+                    .ThenBy(t => t.TableNumber)
+                    .ToList();
+
+                return Json(new { success = true, tables }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Lấy số lượng đơn đặt bàn theo trạng thái
+        /// </summary>
+        private object GetReservationCounts()
+        {
+            var today = DateTime.Today;
+            var reservations = db.Reservation.Where(r => r.ReservationDate >= today).ToList();
+
+            return new
+            {
+                all = reservations.Count,
+                pending = reservations.Count(r => r.Status == "Pending"),
+                confirmed = reservations.Count(r => r.Status == "Confirmed"),
+                completed = reservations.Count(r => r.Status == "Completed"),
+                cancelled = reservations.Count(r => r.Status == "Cancelled" || r.Status == "NoShow")
+            };
+        }
+
+        private string GetReservationStatusText(string status)
+        {
+            switch (status)
+            {
+                case "Pending": return "Chờ xác nhận";
+                case "Confirmed": return "Đã xác nhận";
+                case "Completed": return "Hoàn thành";
+                case "Cancelled": return "Đã hủy";
+                case "NoShow": return "Không đến";
+                default: return status;
+            }
+        }
+
+        private string GetReservationStatusClass(string status)
+        {
+            switch (status)
+            {
+                case "Pending": return "warning";
+                case "Confirmed": return "success";
+                case "Completed": return "info";
+                case "Cancelled": return "danger";
+                case "NoShow": return "secondary";
+                default: return "secondary";
+            }
+        }
+
+        #endregion
     }
 }

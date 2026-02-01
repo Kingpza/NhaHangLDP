@@ -88,6 +88,7 @@
                                 {
                                     foreach (var record in Model.InboundHistory)
                                     {
+                                        var totalPrice = record.Quantity * record.UnitPrice;
                                         <tr>
                                             <td>
                                                 <strong>@record.StockInbound.InboundDate.ToString("dd/MM/yyyy")</strong><br />
@@ -95,7 +96,7 @@
                                             </td>
                                             <td><span class="badge bg-success">+@record.Quantity.ToString("N2") @Model.Ingredient.Unit</span></td>
                                             <td>@record.UnitPrice.ToString("N0") VNĐ</td>
-                                            <td><strong>@(record.Quantity * record.UnitPrice).ToString("N0") VNĐ</strong></td>
+                                            <td><strong>@totalPrice.ToString("N0") VNĐ</strong></td>
                                             <td>
                                                 @if (record.StockInbound.Supplier != null)
                                                 {
@@ -143,13 +144,14 @@
                                 {
                                     foreach (var record in Model.DamagedHistory)
                                     {
+                                        var damageValue = record.Quantity * Model.Ingredient.EstimatedCost;
                                         <tr>
                                             <td>
                                                 <strong>@record.DamageDate.ToString("dd/MM/yyyy")</strong><br />
                                                 <small class="text-muted">@record.DamageDate.ToString("HH:mm")</small>
                                             </td>
                                             <td><span class="badge bg-danger">-@record.Quantity.ToString("N2") @Model.Ingredient.Unit</span></td>
-                                            <td><strong class="text-danger">@((record.Quantity * Model.Ingredient.EstimatedCost).ToString("N0")) VNĐ</strong></td>
+                                            <td><strong class="text-danger">@damageValue.ToString("N0") VNĐ</strong></td>
                                             <td>@record.Reason</td>
                                             <td>@(record.Employee?.FullName ?? "N/A")</td>
                                         </tr>

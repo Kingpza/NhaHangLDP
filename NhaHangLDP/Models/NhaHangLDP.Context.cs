@@ -68,5 +68,23 @@ namespace NhaHangLDP.Models
         public virtual DbSet<Payroll> Payroll { get; set; }
         public virtual DbSet<PerformanceReview> PerformanceReview { get; set; }
         public virtual DbSet<WorkShift> WorkShift { get; set; }
+        public virtual DbSet<Cart> Cart { get; set; }
+        public virtual DbSet<CartItem> CartItem { get; set; }
+        public virtual DbSet<Customer> Customer { get; set; }
+        public virtual DbSet<CustomerAddress> CustomerAddress { get; set; }
+        public virtual DbSet<CustomerNotification> CustomerNotification { get; set; }
+        public virtual DbSet<CustomerOrder> CustomerOrder { get; set; }
+        public virtual DbSet<CustomerOrderDetail> CustomerOrderDetail { get; set; }
+        public virtual DbSet<DeliveryAssignment> DeliveryAssignment { get; set; }
+        public virtual DbSet<DeliverySettings> DeliverySettings { get; set; }
+        public virtual DbSet<DeliveryZone> DeliveryZone { get; set; }
+        public virtual DbSet<Reservation> Reservation { get; set; }
+        public virtual DbSet<Review> Review { get; set; }
+        public virtual DbSet<Shipper> Shipper { get; set; }
+        public virtual DbSet<Voucher> Voucher { get; set; }
+        public virtual DbSet<VoucherUsage> VoucherUsage { get; set; }
+        public virtual DbSet<Wishlist> Wishlist { get; set; }
+        public virtual DbSet<SupportConversation> SupportConversation { get; set; }
+        public virtual DbSet<SupportMessage> SupportMessage { get; set; }
     }
 }

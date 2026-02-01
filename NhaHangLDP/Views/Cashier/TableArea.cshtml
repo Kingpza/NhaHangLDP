@@ -9,428 +9,697 @@
         padding: 0;
     }
 
+    /* Header */
     .area-header {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
-        padding: 20px;
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
         margin-bottom: 20px;
-        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
     }
 
-    .area-section {
-        margin-bottom: 30px;
+    .area-header-info h4 {
+        color: #1e293b;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 4px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
-        .area-section:not(:first-child) {
-            border-left: 1px solid rgba(255, 255, 255, 0.2);
-            padding-left: 20px;
-        }
-
-    .areas-wrapper {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 20px;
-        align-items: stretch;
+    .area-header-info h4 i {
+        color: #6366f1;
     }
 
-    .area-title {
-        background: rgba(220, 118, 51, 0.1);
-        border: 1px solid rgba(220, 118, 51, 0.3);
+    .area-header-info small {
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 10px 16px;
         border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 20px;
-        color: #dc7633;
-        font-weight: bold;
-        font-size: 1.1rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border: 2px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    .table-layout {
+    .btn-action:hover {
+        border-color: #6366f1;
+        color: #6366f1;
+        background: #f8fafc;
+    }
+
+    .btn-action.primary {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        border-color: #6366f1;
+        color: white;
+    }
+
+    .btn-action.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    /* Stats Cards */
+    .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .stat-box {
+        background: white;
+        border-radius: 16px;
         padding: 20px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
-        min-height: 200px;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .stat-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .stat-box.total .stat-number { color: #1e293b; }
+    .stat-box.available .stat-number { color: #22c55e; }
+    .stat-box.occupied .stat-number { color: #ef4444; }
+    .stat-box.reserved .stat-number { color: #f59e0b; }
+
+    /* Legend */
+    .legend-bar {
+        background: white;
+        border-radius: 16px;
+        padding: 16px 24px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        flex-wrap: wrap;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .legend-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+    }
+
+    .legend-dot.available { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
+    .legend-dot.occupied { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .legend-dot.reserved { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .legend-dot.selected { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
+
+    /* Operations Panel */
+    .operations-panel {
+        background: white;
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 2px solid #6366f1;
+        display: none;
+    }
+
+    .operations-panel.active {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @@keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .operations-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .operations-header h5 {
+        color: #1e293b;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .operations-header h5 i { color: #6366f1; }
+
+    .operations-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        align-items: end;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 8px;
+        font-size: 0.875rem;
+    }
+
+    .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        color: #1e293b;
+        background: white;
+    }
+
+    .form-group select:focus {
+        outline: none;
+        border-color: #6366f1;
+    }
+
+    /* Areas Grid */
+    .areas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 20px;
+    }
+
+    .area-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
+    }
+
+    .area-card-header {
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .area-card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .area-card-title i {
+        color: #6366f1;
+    }
+
+    .area-card-badge {
+        background: #f1f5f9;
+        color: #64748b;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .area-card-body {
+        padding: 20px;
+    }
+
+    .tables-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 12px;
     }
 
     .table-item {
         aspect-ratio: 1;
-        border-radius: 15px;
+        border-radius: 16px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         transition: all 0.3s ease;
-        border: 2px solid;
+        border: 3px solid;
         position: relative;
-        backdrop-filter: blur(10px);
+        background: white;
     }
 
-        .table-item.available {
-            background: rgba(40, 167, 69, 0.2);
-            border-color: #28a745;
-            color: #28a745;
-        }
+    .table-item.available {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%);
+        border-color: #22c55e;
+        color: #16a34a;
+    }
 
-        .table-item.occupied {
-            background: rgba(220, 53, 69, 0.2);
-            border-color: #dc3545;
-            color: #dc3545;
-        }
+    .table-item.occupied {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+        border-color: #ef4444;
+        color: #dc2626;
+    }
 
-        .table-item.reserved {
-            background: rgba(255, 193, 7, 0.2);
-            border-color: #ffc107;
-            color: #ffc107;
-        }
+    .table-item.reserved {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.05) 100%);
+        border-color: #f59e0b;
+        color: #d97706;
+    }
 
-        .table-item.selected {
-            background: rgba(0, 123, 255, 0.3);
-            border-color: #007bff;
-            color: #007bff;
-            box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
-        }
+    .table-item.selected {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.1) 100%);
+        border-color: #6366f1;
+        color: #4f46e5;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+    }
 
-        .table-item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-        }
+    .table-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
 
     .table-number {
-        font-size: 1.2rem;
-        font-weight: bold;
-        margin-bottom: 5px;
+        font-size: 1rem;
+        font-weight: 700;
     }
 
     .table-status {
-        font-size: 0.8rem;
+        font-size: 0.65rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+        margin-top: 4px;
     }
 
     .table-time {
         position: absolute;
-        bottom: 5px;
-        font-size: 0.7rem;
+        bottom: 6px;
+        font-size: 0.65rem;
         opacity: 0.8;
-    }
-
-    .legend {
-        display: flex;
-        gap: 20px;
-        align-items: center;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
-
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .legend-color {
-        width: 20px;
-        height: 20px;
-        border-radius: 4px;
-        border: 2px solid;
-    }
-
-    .stats-row {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-    }
-
-    .stat-card {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 15px;
-        text-align: center;
-        min-width: 120px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .stat-number {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #ffcc00;
-    }
-
-    .stat-label {
-        font-size: 0.8rem;
-        color: #adb5bd;
-        margin-top: 5px;
-    }
-
-    .table-details-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-
-    .modal-content {
-        background: #212529;
-        border-radius: 15px;
-        padding: 30px;
-        max-width: 500px;
-        width: 90%;
-        border: 2px solid #ffcc00;
-    }
-
-    .table-operations {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 20px;
-        display: none;
-    }
-
-        .table-operations.active {
-            display: block;
-        }
-
-    .operation-btn {
-        margin: 0 5px;
-    }
-
-    .transfer-form, .merge-form, .split-form {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        padding: 20px;
-        margin-top: 15px;
     }
 
     .empty-area {
         text-align: center;
-        color: #6c757d;
+        color: #94a3b8;
         padding: 40px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
-        border: 2px dashed rgba(255, 255, 255, 0.2);
+    }
+
+    .empty-area i {
+        font-size: 2.5rem;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    /* Modal Styles */
+    .table-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+
+    .table-modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        max-width: 480px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s ease;
+        overflow: hidden;
+    }
+
+    @@keyframes modalSlideIn {
+        from { opacity: 0; transform: scale(0.95) translateY(-20px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+        padding: 24px;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: white;
+        position: relative;
+    }
+
+    .modal-header h5 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+        color: #64748b;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-row strong {
+        color: #1e293b;
+    }
+
+    .modal-actions {
+        padding: 20px 24px;
+        background: #f8fafc;
+        display: flex;
+        gap: 12px;
+    }
+
+    .modal-btn {
+        flex: 1;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .modal-btn.success {
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: white;
+    }
+
+    .modal-btn.warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+
+    .modal-btn.info {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        color: white;
+    }
+
+    .modal-btn.danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .modal-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Responsive */
+    @@media (max-width: 1024px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .areas-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .area-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .header-actions {
+            justify-content: center;
+        }
+
+        .legend-bar {
+            gap: 16px;
+        }
     }
 </style>
 
 <div class="table-area-container">
     <div class="area-header">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h4 class="text-warning mb-0">
-                    <i class="fas fa-table me-2"></i>Khu Vực Bàn
-                </h4>
-                <small class="text-muted">Quản lý tình trạng và đặt bàn - Cập nhật: @Model.LastUpdated.ToString("HH:mm dd/MM/yyyy")</small>
-            </div>
-            <div class="col-md-6 text-end">
-                <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-outline-primary btn-sm operation-btn" onclick="toggleTableOperation('transfer')">
-                        <i class="fas fa-exchange-alt me-1"></i>Chuyển Bàn
-                    </button>
-                    <button class="btn btn-outline-success btn-sm operation-btn" onclick="toggleTableOperation('merge')">
-                        <i class="fas fa-object-group me-1"></i>Gộp Bàn
-                    </button>
-                    <button class="btn btn-outline-warning btn-sm operation-btn" onclick="toggleTableOperation('split')">
-                        <i class="fas fa-object-ungroup me-1"></i>Tách Bàn
-                    </button>
-                    <button class="btn btn-outline-info btn-sm" onclick="refreshTables()">
-                        <i class="fas fa-sync-alt me-1"></i>Làm Mới
-                    </button>
-                    <button class="btn btn-success btn-sm" onclick="showTableSettings()">
-                        <i class="fas fa-cog me-1"></i>Cài Đặt
-                    </button>
-                </div>
-            </div>
+        <div class="area-header-info">
+            <h4>
+                <i class="fas fa-border-all"></i>Khu Vực Bàn
+            </h4>
+            <small>Quản lý tình trạng bàn - Cập nhật: @Model.LastUpdated.ToString("HH:mm dd/MM/yyyy")</small>
+        </div>
+        <div class="header-actions">
+            <button class="btn-action" onclick="toggleTableOperation('transfer')">
+                <i class="fas fa-exchange-alt"></i>Chuyển Bàn
+            </button>
+            <button class="btn-action" onclick="toggleTableOperation('merge')">
+                <i class="fas fa-object-group"></i>Gộp Bàn
+            </button>
+            <button class="btn-action" onclick="toggleTableOperation('split')">
+                <i class="fas fa-object-ungroup"></i>Tách Bàn
+            </button>
+            <button class="btn-action primary" onclick="refreshTables()">
+                <i class="fas fa-sync-alt"></i>Làm Mới
+            </button>
         </div>
     </div>
 
-    <div class="stats-row">
-        <div class="stat-card">
+    <div class="stats-grid">
+        <div class="stat-box total">
             <div class="stat-number">@Model.TotalTables</div>
-            <div class="stat-label">Tổng Bàn</div>
+            <div class="stat-label">Tổng Số Bàn</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number text-success">@Model.AvailableTables</div>
-            <div class="stat-label">Trống</div>
+        <div class="stat-box available">
+            <div class="stat-number">@Model.AvailableTables</div>
+            <div class="stat-label">Bàn Trống</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number text-danger">@Model.OccupiedTables</div>
+        <div class="stat-box occupied">
+            <div class="stat-number">@Model.OccupiedTables</div>
             <div class="stat-label">Có Khách</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-number text-warning">@Model.ReservedTables</div>
+        <div class="stat-box reserved">
+            <div class="stat-number">@Model.ReservedTables</div>
             <div class="stat-label">Đã Đặt</div>
         </div>
     </div>
 
-    <div class="table-operations" id="tableOperations">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="text-warning mb-0" id="operationTitle">Chức Năng Quản Lý Bàn</h5>
-            <button class="btn btn-sm btn-outline-light" onclick="cancelOperation()">
-                <i class="fas fa-times"></i> Hủy
-            </button>
+    <div class="legend-bar">
+        <div class="legend-item">
+            <span class="legend-dot available"></span>
+            <span>Trống</span>
         </div>
-
-        <div class="transfer-form" id="transferForm" style="display: none;">
-            <div class="row">
-                <div class="col-md-6">
-                    <label class="form-label">Bàn nguồn:</label>
-                    <select class="form-select" id="transferSource">
-                        <option value="">Chọn bàn nguồn</option>
-                    </select>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Bàn đích:</label>
-                    <select class="form-select" id="transferTarget">
-                        <option value="">Chọn bàn đích</option>
-                    </select>
-                </div>
-            </div>
-            <div class="mt-3">
-                <button class="btn btn-primary" onclick="executeTransfer()">
-                    <i class="fas fa-exchange-alt me-1"></i>Thực Hiện Chuyển Bàn
-                </button>
-            </div>
+        <div class="legend-item">
+            <span class="legend-dot occupied"></span>
+            <span>Đang sử dụng</span>
         </div>
-
-        <div class="merge-form" id="mergeForm" style="display: none;">
-            <div class="row">
-                <div class="col-md-4">
-                    <label class="form-label">Bàn chính:</label>
-                    <select class="form-select" id="mergeMain">
-                        <option value="">Chọn bàn chính</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Bàn phụ:</label>
-                    <select class="form-select" id="mergeSecondary">
-                        <option value="">Chọn bàn phụ</option>
-                    </select>
-                </div>
-            </div>
-            <div class="mt-3">
-                <button class="btn btn-success" onclick="executeMerge()">
-                    <i class="fas fa-object-group me-1"></i>Thực Hiện Gộp Bàn
-                </button>
-            </div>
+        <div class="legend-item">
+            <span class="legend-dot reserved"></span>
+            <span>Đã đặt trước</span>
         </div>
-
-        <div class="split-form" id="splitForm" style="display: none;">
-            <div class="row">
-                <div class="col-md-4">
-                    <label class="form-label">Bàn cần tách:</label>
-                    <select class="form-select" id="splitSource">
-                        <option value="">Chọn bàn cần tách</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Bàn đích (trống):</label>
-                    <select class="form-select" id="splitTarget">
-                        <option value="">Chọn bàn đích</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-warning w-100" onclick="executeSplit()">
-                        <i class="fas fa-object-ungroup me-1"></i>Chọn món để tách
-                    </button>
-                </div>
-            </div>
+        <div class="legend-item">
+            <span class="legend-dot selected"></span>
+            <span>Đang chọn</span>
         </div>
     </div>
 
-    <div class="legend">
-        <div class="legend-item">
-            <div class="legend-color available" style="background: rgba(40, 167, 69, 0.2); border-color: #28a745;"></div>
-            <span class="text-success">Trống</span>
+    <div class="operations-panel" id="operationsPanel">
+        <div class="operations-header">
+            <h5 id="operationTitle"><i class="fas fa-tools"></i>Thao tác</h5>
+            <button class="btn-action" onclick="cancelOperation()">
+                <i class="fas fa-times"></i>Hủy
+            </button>
         </div>
-        <div class="legend-item">
-            <div class="legend-color occupied" style="background: rgba(220, 53, 69, 0.2); border-color: #dc3545;"></div>
-            <span class="text-danger">Đang sử dụng</span>
+
+        <div id="transferForm" class="operations-form" style="display: none;">
+            <div class="form-group">
+                <label>Bàn nguồn:</label>
+                <select id="transferSource"><option value="">Chọn bàn nguồn</option></select>
+            </div>
+            <div class="form-group">
+                <label>Bàn đích:</label>
+                <select id="transferTarget"><option value="">Chọn bàn đích</option></select>
+            </div>
+            <button class="btn-action primary" onclick="executeTransfer()">
+                <i class="fas fa-exchange-alt"></i>Thực hiện chuyển
+            </button>
         </div>
-        <div class="legend-item">
-            <div class="legend-color reserved" style="background: rgba(255, 193, 7, 0.2); border-color: #ffc107;"></div>
-            <span class="text-warning">Đã đặt</span>
+
+        <div id="mergeForm" class="operations-form" style="display: none;">
+            <div class="form-group">
+                <label>Bàn chính:</label>
+                <select id="mergeMain"><option value="">Chọn bàn chính</option></select>
+            </div>
+            <div class="form-group">
+                <label>Bàn phụ:</label>
+                <select id="mergeSecondary"><option value="">Chọn bàn phụ</option></select>
+            </div>
+            <button class="btn-action primary" onclick="executeMerge()">
+                <i class="fas fa-object-group"></i>Thực hiện gộp
+            </button>
         </div>
-        <div class="legend-item">
-            <div class="legend-color selected" style="background: rgba(0, 123, 255, 0.3); border-color: #007bff;"></div>
-            <span class="text-info">Đã chọn</span>
+
+        <div id="splitForm" class="operations-form" style="display: none;">
+            <div class="form-group">
+                <label>Bàn cần tách:</label>
+                <select id="splitSource"><option value="">Chọn bàn cần tách</option></select>
+            </div>
+            <div class="form-group">
+                <label>Bàn đích (trống):</label>
+                <select id="splitTarget"><option value="">Chọn bàn đích</option></select>
+            </div>
+            <button class="btn-action primary" onclick="executeSplit()">
+                <i class="fas fa-object-ungroup"></i>Chọn món tách
+            </button>
         </div>
     </div>
 
     @if (Model.TableAreas.Any())
     {
-        <div class="areas-wrapper">
+        <div class="areas-grid">
             @foreach (var area in Model.TableAreas)
             {
-                <div class="area-section">
-                    <div class="area-title">
-                        <i class="fas fa-map-marker-alt me-2"></i>@area.Name
-                        <span class="badge bg-secondary ms-2">@area.Tables.Count bàn</span>
+                <div class="area-card">
+                    <div class="area-card-header">
+                        <div class="area-card-title">
+                            <i class="fas fa-map-marker-alt"></i>@area.Name
+                        </div>
+                        <span class="area-card-badge">@area.Tables.Count bàn</span>
                     </div>
-
-                    @if (area.Tables.Any())
-                    {
-                        <div class="table-layout">
-                            @foreach (var table in area.Tables)
-                            {
-                                <div class="table-item @table.StatusClass"
-                                     data-table-id="@table.Id"
-                                     data-status="@table.Status"
-                                     onclick="handleTableClick(@table.Id)">
-                                    <div class="table-number">Bàn @table.TableNumber</div>
-                                    <div class="table-status">@table.StatusDisplay</div>
-                                    @if (!string.IsNullOrEmpty(table.OrderTimeDisplay))
-                                    {
-                                        <div class="table-time">@table.OrderTimeDisplay</div>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="empty-area">
-                            <i class="fas fa-table fa-2x mb-2"></i>
-                            <p class="mb-0">Chưa có bàn nào trong khu vực này</p>
-                        </div>
-                    }
+                    <div class="area-card-body">
+                        @if (area.Tables.Any())
+                        {
+                            <div class="tables-grid">
+                                @foreach (var table in area.Tables)
+                                {
+                                    <div class="table-item @table.StatusClass"
+                                         data-table-id="@table.Id"
+                                         data-status="@table.Status"
+                                         onclick="handleTableClick(@table.Id)">
+                                        <div class="table-number">Bàn @table.TableNumber</div>
+                                        <div class="table-status">@table.StatusDisplay</div>
+                                        @if (!string.IsNullOrEmpty(table.OrderTimeDisplay))
+                                        {
+                                            <div class="table-time">@table.OrderTimeDisplay</div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="empty-area">
+                                <i class="fas fa-table"></i>
+                                <p>Chưa có bàn nào</p>
+                            </div>
+                        }
+                    </div>
                 </div>
             }
         </div>
     }
     else
     {
-        <div class="empty-area">
-            <i class="fas fa-table fa-3x mb-3"></i>
-            <h5>Chưa có khu vực bàn nào</h5>
-            <p class="mb-0">Vui lòng liên hệ quản lý để thiết lập khu vực và bàn</p>
+        <div class="area-card">
+            <div class="area-card-body">
+                <div class="empty-area">
+                    <i class="fas fa-table"></i>
+                    <h5>Chưa có khu vực bàn nào</h5>
+                    <p>Vui lòng liên hệ quản lý để thiết lập</p>
+                </div>
+            </div>
         </div>
     }
 </div>
 
-<div class="table-details-modal" id="tableModal">
+<!-- Table Detail Modal -->
+<div class="table-modal" id="tableModal">
     <div class="modal-content">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="text-warning mb-0" id="modalTableTitle">Bàn #</h5>
-            <button class="btn btn-sm btn-outline-light" onclick="closeModal()">
-                <i class="fas fa-times"></i>
-            </button>
+        <div class="modal-header">
+            <h5 id="modalTableTitle">Bàn #</h5>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
-
-        <div id="modalContent">
-        </div>
-
-        <div class="modal-actions mt-3 d-flex gap-2" id="modalActions">
-        </div>
+        <div class="modal-body" id="modalContent"></div>
+        <div class="modal-actions" id="modalActions"></div>
     </div>
 </div>
 
@@ -441,34 +710,20 @@
     let selectedTables = [];
 
     window.addEventListener('load', function() {
-        console.log('Loading tables from database...');
         loadTablesFromDatabase();
     });
 
     function loadTablesFromDatabase() {
         fetch('@Url.Action("GetTablesData", "Cashier")', {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         })
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
+        .then(r => r.json())
+        .then(data => {
             if (data.success && data.tables) {
                 tables = data.tables;
-                console.log('Loaded', tables.length, 'tables from database');
                 updateOperationSelects();
-            } else {
-                console.error('Failed to load tables:', data.message);
-                showNotification('Không thể tải dữ liệu bàn: ' + (data.message || 'Lỗi không xác định'), 'error');
             }
-        })
-        .catch(function(error) {
-            console.error('Error loading tables:', error);
-            showNotification('Lỗi kết nối khi tải dữ liệu bàn!', 'error');
         });
     }
 
@@ -482,402 +737,51 @@
 
     function toggleTableSelection(tableId) {
         const index = selectedTables.indexOf(tableId);
-        if (index > -1) {
-            selectedTables.splice(index, 1);
-        } else {
-            selectedTables.push(tableId);
-        }
+        if (index > -1) selectedTables.splice(index, 1);
+        else selectedTables.push(tableId);
 
         document.querySelectorAll('.table-item').forEach(item => {
             const id = parseInt(item.dataset.tableId);
-            if (selectedTables.includes(id)) {
-                item.classList.add('selected');
-            } else {
-                item.classList.remove('selected');
-            }
+            item.classList.toggle('selected', selectedTables.includes(id));
         });
     }
 
     function toggleTableOperation(operation) {
-        if (currentOperation === operation) {
-            cancelOperation();
-            return;
-        }
+        if (currentOperation === operation) { cancelOperation(); return; }
 
         currentOperation = operation;
         selectedTables = [];
-
-        document.getElementById('tableOperations').classList.add('active');
-
+        document.getElementById('operationsPanel').classList.add('active');
         document.getElementById('transferForm').style.display = 'none';
         document.getElementById('mergeForm').style.display = 'none';
         document.getElementById('splitForm').style.display = 'none';
 
-        switch(operation) {
-            case 'transfer':
-                document.getElementById('operationTitle').textContent = 'Chuyển Bàn';
-                document.getElementById('transferForm').style.display = 'block';
-                break;
-            case 'merge':
-                document.getElementById('operationTitle').textContent = 'Gộp Bàn';
-                document.getElementById('mergeForm').style.display = 'block';
-                break;
-            case 'split':
-                document.getElementById('operationTitle').textContent = 'Tách Bàn';
-                document.getElementById('splitForm').style.display = 'block';
-                break;
-        }
-
+        const titles = { 'transfer': 'Chuyển Bàn', 'merge': 'Gộp Bàn', 'split': 'Tách Bàn' };
+        document.getElementById('operationTitle').innerHTML = '<i class="fas fa-tools"></i>' + titles[operation];
+        document.getElementById(operation + 'Form').style.display = 'grid';
         updateOperationSelects();
     }
 
     function cancelOperation() {
         currentOperation = null;
         selectedTables = [];
-        document.getElementById('tableOperations').classList.remove('active');
-
-        document.querySelectorAll('.table-item').forEach(item => {
-            item.classList.remove('selected');
-        });
+        document.getElementById('operationsPanel').classList.remove('active');
+        document.querySelectorAll('.table-item').forEach(item => item.classList.remove('selected'));
     }
 
     function updateOperationSelects() {
-        const transferSource = document.getElementById('transferSource');
-        const transferTarget = document.getElementById('transferTarget');
-
-        const mergeMain = document.getElementById('mergeMain');
-        const mergeSecondary = document.getElementById('mergeSecondary');
-
-        const splitSource = document.getElementById('splitSource');
-        const splitTarget = document.getElementById('splitTarget');
-
-        [transferSource, transferTarget, mergeMain, mergeSecondary, splitSource, splitTarget].forEach(select => {
-            if (select) {
-                const currentValue = select.value;
-                select.innerHTML = select.querySelector('option').outerHTML;
-
-                tables.forEach(table => {
-                    const option = document.createElement('option');
-                    option.value = table.id;
-                    option.textContent = `Bàn ${table.tableNumber} (${table.areaName})`;
-
-                    option.textContent += ` - ${table.statusText}`;
-
-                    if (select === transferSource && table.status === 'available') {
-                        option.disabled = true;
-                    }
-                    if (select === transferTarget && table.status !== 'available') {
-                        option.disabled = true;
-                    }
-                    if ((select === mergeMain || select === mergeSecondary) && table.status === 'available') {
-                        option.disabled = true;
-                    }
-                    if (select === splitSource && table.status === 'available') {
-                        option.disabled = true;
-                    }
-                    if (select === splitTarget && table.status !== 'available') {
-                        option.disabled = true;
-                    }
-
-                    select.appendChild(option);
-                });
-                select.value = currentValue;
-            }
-        });
-    }
-
-    function executeTransfer() {
-        const sourceId = parseInt(document.getElementById('transferSource').value);
-        const targetId = parseInt(document.getElementById('transferTarget').value);
-
-        if (!sourceId || !targetId) {
-            alert('Vui lòng chọn bàn nguồn và bàn đích!');
-            return;
-        }
-
-        if (sourceId === targetId) {
-            alert('Bàn nguồn và bàn đích không thể giống nhau!');
-            return;
-        }
-
-        const sourceTable = tables.find(t => t.id === sourceId);
-        const targetTable = tables.find(t => t.id === targetId);
-
-        if (!confirm(`Xác nhận chuyển đơn hàng từ Bàn ${sourceTable.tableNumber} sang Bàn ${targetTable.tableNumber}?`)) {
-            return;
-        }
-
-        showNotification('Đang chuyển bàn...', 'info');
-
-        const formData = new FormData();
-        formData.append('sourceTableId', sourceId);
-        formData.append('targetTableId', targetId);
-
-        fetch('@Url.Action("TransferTable", "Cashier")', {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification(data.message, 'success');
-                cancelOperation();
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showNotification('Lỗi: ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Có lỗi xảy ra khi chuyển bàn!', 'error');
-        });
-    }
-
-    function executeMerge() {
-        const mainId = parseInt(document.getElementById('mergeMain').value);
-        const secondaryId = parseInt(document.getElementById('mergeSecondary').value);
-
-        if (!mainId || !secondaryId) {
-            alert('Vui lòng chọn cả hai bàn cần gộp!');
-            return;
-        }
-
-        if (mainId === secondaryId) {
-            alert('Không thể gộp bàn với chính nó!');
-            return;
-        }
-
-        const mainTable = tables.find(t => t.id === mainId);
-        const secondaryTable = tables.find(t => t.id === secondaryId);
-
-        if (!confirm(`Xác nhận gộp Bàn ${secondaryTable.tableNumber} vào Bàn ${mainTable.tableNumber}?`)) {
-            return;
-        }
-
-        showNotification('Đang gộp bàn...', 'info');
-
-        const formData = new FormData();
-        formData.append('mainTableId', mainId);
-        formData.append('secondaryTableId', secondaryId);
-
-        fetch('@Url.Action("MergeTables", "Cashier")', {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification(data.message, 'success');
-                cancelOperation();
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showNotification('Lỗi: ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Có lỗi xảy ra khi gộp bàn!', 'error');
-        });
-    }
-
-    function executeSplit() {
-        const sourceId = parseInt(document.getElementById('splitSource').value);
-        const targetId = parseInt(document.getElementById('splitTarget').value);
-
-        if (!sourceId || !targetId) {
-            alert('Vui lòng chọn cả bàn nguồn và bàn đích!');
-            return;
-        }
-
-        if (sourceId === targetId) {
-            alert('Bàn nguồn và bàn đích không thể giống nhau!');
-            return;
-        }
-
-        fetch('@Url.Action("GetTableOrderItems", "Cashier")?tableId=' + sourceId, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSplitItemsModal(sourceId, targetId, data.items);
-            } else {
-                showNotification('Lỗi: ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Có lỗi xảy ra khi tải danh sách món!', 'error');
-        });
-    }
-
-    function showSplitItemsModal(sourceId, targetId, items) {
-        const sourceTable = tables.find(t => t.id === sourceId);
-        const targetTable = tables.find(t => t.id === targetId);
-
-        let modalHtml = `
-        <div class="modal fade" id="splitItemsModal" tabindex="-1" style="z-index: 2000;">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content" style="background: #212529; color: #fff; border: 2px solid #ffcc00;">
-                    <div class="modal-header" style="background: #dc7633; border-bottom: 2px solid #ffcc00;">
-                        <h5 class="modal-title">
-                            <i class="fas fa-cut me-2"></i>Chọn món tách từ Bàn ${sourceTable.tableNumber} sang Bàn ${targetTable.tableNumber}
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="table-responsive">
-                            <table class="table table-dark table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>
-                                            <input type="checkbox" id="selectAllItems" onchange="toggleSelectAllItems(this)">
-                                        </th>
-                                        <th>Món ăn</th>
-                                        <th>SL hiện tại</th>
-                                        <th>SL tách</th>
-                                        <th>Đơn giá</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-        `;
-
-        items.forEach(function(item) {
-            modalHtml += `
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="item-checkbox"
-                                                   data-item-id="${item.orderDetailId}"
-                                                   onchange="updateSplitQuantity(this, ${item.quantity})">
-                                        </td>
-                                        <td>${item.name}</td>
-                                        <td>${item.quantity}</td>
-                                        <td>
-                                            <input type="number" class="form-control split-quantity"
-                                                   data-item-id="${item.orderDetailId}"
-                                                   min="1" max="${item.quantity}" value="1" disabled
-                                                   style="max-width: 100px;">
-                                        </td>
-                                        <td>${item.price.toLocaleString()} VNĐ</td>
-                                    </tr>
-            `;
-        });
-
-        modalHtml += `
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer" style="border-top: 2px solid #ffcc00;">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i>Hủy
-                        </button>
-                        <button type="button" class="btn btn-warning" onclick="confirmSplit(${sourceId}, ${targetId})">
-                            <i class="fas fa-cut me-1"></i>Xác Nhận Tách Bàn
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
-
-        const existingModal = document.getElementById('splitItemsModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        const modal = new bootstrap.Modal(document.getElementById('splitItemsModal'));
-        modal.show();
-    }
-
-    function toggleSelectAllItems(checkbox) {
-        const itemCheckboxes = document.querySelectorAll('.item-checkbox');
-        itemCheckboxes.forEach(cb => {
-            cb.checked = checkbox.checked;
-            const itemId = cb.dataset.itemId;
-            const quantityInput = document.querySelector(`.split-quantity[data-item-id="${itemId}"]`);
-            quantityInput.disabled = !checkbox.checked;
-        });
-    }
-
-    function updateSplitQuantity(checkbox, maxQuantity) {
-        const itemId = checkbox.dataset.itemId;
-        const quantityInput = document.querySelector(`.split-quantity[data-item-id="${itemId}"]`);
-        quantityInput.disabled = !checkbox.checked;
-        if (checkbox.checked && !quantityInput.value) {
-            quantityInput.value = 1;
-        }
-    }
-
-    function confirmSplit(sourceId, targetId) {
-        const selectedItems = [];
-        const checkboxes = document.querySelectorAll('.item-checkbox:checked');
-
-        checkboxes.forEach(cb => {
-            const itemId = parseInt(cb.dataset.itemId);
-            const quantityInput = document.querySelector(`.split-quantity[data-item-id="${itemId}"]`);
-            const quantity = parseInt(quantityInput.value);
-
-            if (quantity > 0) {
-                selectedItems.push({
-                    OrderDetailId: itemId,
-                    Quantity: quantity
-                });
-            }
-        });
-
-        if (selectedItems.length === 0) {
-            alert('Vui lòng chọn ít nhất một món để tách!');
-            return;
-        }
-
-        const modal = bootstrap.Modal.getInstance(document.getElementById('splitItemsModal'));
-        modal.hide();
-
-        showNotification('Đang tách bàn...', 'info');
-
-        const formData = new FormData();
-        formData.append('sourceTableId', sourceId);
-        formData.append('targetTableId', targetId);
-        formData.append('itemsToSplit', JSON.stringify(selectedItems));
-
-        fetch('@Url.Action("SplitTable", "Cashier")', {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification(data.message, 'success');
-                cancelOperation();
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else {
-                showNotification('Lỗi: ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Có lỗi xảy ra khi tách bàn!', 'error');
+        ['transferSource', 'transferTarget', 'mergeMain', 'mergeSecondary', 'splitSource', 'splitTarget'].forEach(id => {
+            const select = document.getElementById(id);
+            if (!select) return;
+            select.innerHTML = '<option value="">' + select.querySelector('option').textContent + '</option>';
+            tables.forEach(table => {
+                const option = document.createElement('option');
+                option.value = table.id;
+                option.textContent = `Bàn ${table.tableNumber} (${table.areaName}) - ${table.statusText}`;
+                if ((id.includes('Source') || id.includes('Main') || id.includes('Secondary')) && table.status === 'available') option.disabled = true;
+                if (id.includes('Target') && table.status !== 'available') option.disabled = true;
+                select.appendChild(option);
+            });
         });
     }
 
@@ -885,463 +789,220 @@
         const table = tables.find(t => t.id === tableId);
         if (!table) return;
 
-        const modal = document.getElementById('tableModal');
-        const modalTitle = document.getElementById('modalTableTitle');
-        const modalContent = document.getElementById('modalContent');
-        const modalActions = document.getElementById('modalActions');
-
-        modalTitle.textContent = `Bàn ${table.tableNumber} - ${table.areaName}`;
-
-        modalContent.innerHTML = getModalContent(table);
-        modalActions.innerHTML = getModalActions(table);
-
-        modal.style.display = 'flex';
-    }
-
-    function getModalContent(table) {
-        const statusClass = table.status === 'available' ? 'text-success' :
-            table.status === 'occupied' ? 'text-danger' : 'text-warning';
+        document.getElementById('modalTableTitle').textContent = `Bàn ${table.tableNumber} - ${table.areaName}`;
 
         let content = `
-            <div class="mb-3 text-white">
-                <strong>Khu vực:</strong> ${table.areaName}
-            </div>
-            <div class="mb-3 text-white">
-                <strong>Sức chứa:</strong> ${table.capacity} người
-            </div>
-            <div class="mb-3 text-white">
-                <strong>Trạng thái:</strong>
-                <span class="${statusClass}">${table.statusText}</span>
-            </div>
+            <div class="info-row"><span>Khu vực:</span><strong>${table.areaName}</strong></div>
+            <div class="info-row"><span>Sức chứa:</span><strong>${table.capacity} người</strong></div>
+            <div class="info-row"><span>Trạng thái:</span><strong style="color: ${table.status === 'available' ? '#22c55e' : table.status === 'occupied' ? '#ef4444' : '#f59e0b'}">${table.statusText}</strong></div>
         `;
-
         if (table.status === 'occupied' && table.orderTime) {
-            content += `
-                <div class="mb-3 text-white">
-                    <strong>Giờ vào:</strong> ${table.orderTime}
-                </div>
-            `;
+            content += `<div class="info-row"><span>Giờ vào:</span><strong>${table.orderTime}</strong></div>`;
             if (table.activeOrderId) {
-                content += `
-                    <div class="mb-3 text-white">
-                        <strong>Mã đơn:</strong> #${table.activeOrderId}
-                    </div>
-                    <div class="mb-3 text-white">
-                        <strong>Số món:</strong> ${table.itemCount} món
-                    </div>
-                `;
+                content += `<div class="info-row"><span>Mã đơn:</span><strong>#${table.activeOrderId}</strong></div>`;
             }
         }
+        document.getElementById('modalContent').innerHTML = content;
 
-        return content;
-    }
-
-    function getModalActions(table) {
         let actions = '';
-
-        switch(table.status) {
-            case 'available':
-                actions = `
-                    <button class="btn btn-success flex-fill" onclick="assignTable(${table.id})">
-                        <i class="fas fa-user-plus me-1"></i>Xếp Khách
-                    </button>
-                    <button class="btn btn-warning flex-fill" onclick="reserveTable(${table.id})">
-                        <i class="fas fa-calendar me-1"></i>Đặt Bàn
-                    </button>
-                `;
-                break;
-            case 'occupied':
-                actions = `
-                    <button class="btn btn-info flex-fill" onclick="viewOrder(${table.activeOrderId})">
-                        <i class="fas fa-eye me-1"></i>Xem Đơn
-                    </button>
-                    <button class="btn btn-success flex-fill" onclick="checkoutTable(${table.id})">
-                        <i class="fas fa-money-bill me-1"></i>Thanh Toán
-                    </button>
-                `;
-                break;
-            case 'reserved':
-                actions = `
-                    <button class="btn btn-success flex-fill" onclick="confirmReservation(${table.id})">
-                        <i class="fas fa-check me-1"></i>Xác Nhận Đến
-                    </button>
-                    <button class="btn btn-danger flex-fill" onclick="cancelReservation(${table.id})">
-                        <i class="fas fa-times me-1"></i>Hủy Đặt
-                    </button>
-                `;
-                break;
+        if (table.status === 'available') {
+            actions = `
+                <button class="modal-btn success" onclick="assignTable(${table.id})"><i class="fas fa-user-plus"></i>Xếp Khách</button>
+                <button class="modal-btn warning" onclick="reserveTable(${table.id})"><i class="fas fa-calendar"></i>Đặt Bàn</button>
+            `;
+        } else if (table.status === 'occupied') {
+            actions = `
+                <button class="modal-btn info" onclick="viewOrder(${table.activeOrderId})"><i class="fas fa-eye"></i>Xem Đơn</button>
+                <button class="modal-btn success" onclick="checkoutTable(${table.id})"><i class="fas fa-money-bill"></i>Thanh Toán</button>
+            `;
+        } else if (table.status === 'reserved') {
+            actions = `
+                <button class="modal-btn success" onclick="confirmReservation(${table.id})"><i class="fas fa-check"></i>Xác Nhận</button>
+                <button class="modal-btn danger" onclick="cancelReservation(${table.id})"><i class="fas fa-times"></i>Hủy Đặt</button>
+            `;
         }
-
-        return actions;
+        document.getElementById('modalActions').innerHTML = actions;
+        document.getElementById('tableModal').classList.add('show');
     }
 
     function closeModal() {
-        document.getElementById('tableModal').style.display = 'none';
+        document.getElementById('tableModal').classList.remove('show');
     }
 
-    function assignTable(tableId) {
-        showCustomerInfoModal(tableId, 'assign');
+    function refreshTables() {
+        showToast('Đang làm mới...', 'info');
+        setTimeout(() => window.location.reload(), 500);
     }
 
-    function reserveTable(tableId) {
-        showCustomerInfoModal(tableId, 'reserve');
+    function showToast(message, type) {
+        const colors = { 'success': '#22c55e', 'error': '#ef4444', 'info': '#6366f1' };
+        const toast = document.createElement('div');
+        toast.style.cssText = `position: fixed; top: 80px; right: 20px; padding: 16px 24px; border-radius: 12px; color: white; font-weight: 600; z-index: 9999; background: ${colors[type] || colors.info}; box-shadow: 0 10px 40px rgba(0,0,0,0.2);`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     }
+
+    function assignTable(tableId) { showCustomerInfoModal(tableId, 'assign'); }
+    function reserveTable(tableId) { showCustomerInfoModal(tableId, 'reserve'); }
 
     function showCustomerInfoModal(tableId, action) {
         const table = tables.find(t => t.id === tableId);
         if (!table) return;
 
-        const modalTitle = action === 'assign' ? 'Xếp Khách Vào Bàn' : 'Đặt Bàn';
-        const submitText = action === 'assign' ? 'Xếp Khách' : 'Đặt Bàn';
-        const defaultTime = new Date();
-        defaultTime.setHours(defaultTime.getHours() + 1);
-        const timeString = defaultTime.toTimeString().substring(0, 5);
-
-        let modalHtml = `
-        <div class="modal fade" id="customerInfoModal" tabindex="-1" style="z-index: 2000;">
-            <div class="modal-dialog">
-                <div class="modal-content" style="background: #212529; color: #fff; border: 2px solid #ffcc00;">
-                    <div class="modal-header" style="background: #dc7633; border-bottom: 2px solid #ffcc00;">
-                        <h5 class="modal-title">
-                            <i class="fas fa-${action === 'assign' ? 'user-plus' : 'calendar'} me-2"></i>
-                            ${modalTitle} - Bàn ${table.tableNumber}
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" onclick="closeCustomerInfoModal()"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="customerInfoForm">
-                            <input type="hidden" id="modalTableId" value="${tableId}">
-                            <input type="hidden" id="modalAction" value="${action}">
-
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-users me-1"></i>Số khách <span class="text-danger">*</span>
-                                </label>
-                                <input type="number" class="form-control" id="customerCount"
-                                       min="1" max="${table.capacity}" value="2" required>
-                                <small class="text-muted">Tối đa ${table.capacity} khách cho bàn này</small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-user me-1"></i>Tên khách hàng
-                                </label>
-                                <input type="text" class="form-control" id="customerName"
-                                       placeholder="Nhập tên khách hàng (không bắt buộc)"
-                                       value="${action === 'assign' ? 'Khách vãng lai' : ''}">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-phone me-1"></i>Số điện thoại
-                                </label>
-                                <input type="tel" class="form-control" id="customerPhone"
-                                       placeholder="Nhập số điện thoại (không bắt buộc)">
-                            </div>`;
-
-        if (action === 'reserve') {
-            modalHtml += `
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-clock me-1"></i>Thời gian đặt bàn <span class="text-danger">*</span>
-                                </label>
-                                <input type="time" class="form-control" id="reservationTime"
-                                       value="${timeString}" required>
-                            </div>`;
-        }
-
-        modalHtml += `
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="fas fa-sticky-note me-1"></i>Ghi chú
-                                </label>
-                                <textarea class="form-control" id="customerNotes" rows="2"
-                                          placeholder="Ghi chú thêm (không bắt buộc)"></textarea>
-                            </div>
-                        </form>
-                    </div>
-                    <div class="modal-footer" style="border-top: 2px solid #ffcc00;">
-                        <button type="button" class="btn btn-secondary" onclick="closeCustomerInfoModal()">
-                            <i class="fas fa-times me-1"></i>Hủy
-                        </button>
-                        <button type="button" class="btn btn-warning" onclick="submitCustomerInfo()">
-                            <i class="fas fa-${action === 'assign' ? 'user-plus' : 'calendar'} me-1"></i>${submitText}
-                        </button>
-                    </div>
+        closeModal();
+        Swal.fire({
+            title: action === 'assign' ? 'Xếp Khách Vào Bàn' : 'Đặt Bàn',
+            html: `
+                <div style="text-align: left;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">Số khách</label>
+                    <input type="number" id="swal-customers" class="swal2-input" min="1" max="${table.capacity}" value="2" style="width: 100%;">
+                    <label style="display: block; margin: 12px 0 8px; font-weight: 600;">Tên khách hàng</label>
+                    <input type="text" id="swal-name" class="swal2-input" value="${action === 'assign' ? 'Khách vãng lai' : ''}" style="width: 100%;">
                 </div>
-            </div>
-        </div>
-        `;
-
-        const existingModal = document.getElementById('customerInfoModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        const modal = document.getElementById('customerInfoModal');
-        modal.style.display = 'block';
-        modal.classList.add('show');
-
-        setTimeout(() => {
-            document.getElementById('customerCount').focus();
-        }, 100);
-    }
-
-    function closeCustomerInfoModal() {
-        const modal = document.getElementById('customerInfoModal');
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
-        }
-    }
-
-    function submitCustomerInfo() {
-        const tableId = parseInt(document.getElementById('modalTableId').value);
-        const action = document.getElementById('modalAction').value;
-        const customerCount = parseInt(document.getElementById('customerCount').value);
-        const customerName = document.getElementById('customerName').value.trim();
-        const customerPhone = document.getElementById('customerPhone').value.trim();
-        const customerNotes = document.getElementById('customerNotes').value.trim();
-
-        if (!customerCount || customerCount <= 0) {
-            alert('Vui lòng nhập số khách hợp lệ!');
-            return;
-        }
-
-        const table = tables.find(t => t.id === tableId);
-        if (customerCount > table.capacity) {
-            alert(`Số khách (${customerCount}) vượt quá sức chứa của bàn (${table.capacity})!`);
-            return;
-        }
-
-        let params = {
-            customers: customerCount,
-            customerName: customerName || (action === 'assign' ? 'Khách vãng lai' : 'Khách đặt bàn'),
-            customerPhone: customerPhone,
-            notes: customerNotes
-        };
-
-        if (action === 'reserve') {
-            const reservationTime = document.getElementById('reservationTime').value;
-            if (!reservationTime) {
-                alert('Vui lòng chọn thời gian đặt bàn!');
-                return;
+            `,
+            confirmButtonText: action === 'assign' ? 'Xếp Khách' : 'Đặt Bàn',
+            showCancelButton: true,
+            cancelButtonText: 'Hủy',
+            preConfirm: () => {
+                const customers = document.getElementById('swal-customers').value;
+                const name = document.getElementById('swal-name').value;
+                if (!customers || customers <= 0) { Swal.showValidationMessage('Vui lòng nhập số khách!'); return false; }
+                return { customers, name };
             }
-            params.time = reservationTime;
-        }
-
-        closeCustomerInfoModal();
-
-        updateTableInfoEnhanced(tableId, action, params);
+        }).then(result => {
+            if (result.isConfirmed) {
+                updateTableInfoEnhanced(tableId, action, result.value);
+            }
+        });
     }
 
-    function updateTableInfoEnhanced(tableId, action, params = {}) {
+    function updateTableInfoEnhanced(tableId, action, params) {
         const formData = new FormData();
         formData.append('tableId', tableId);
         formData.append('action', action);
-
-        Object.keys(params).forEach(key => {
-            if (params[key]) {
-                formData.append(key, params[key]);
-            }
-        });
+        formData.append('customers', params.customers);
+        formData.append('customerName', params.name);
 
         fetch('@Url.Action("UpdateTableInfo", "Cashier")', {
             method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
             body: formData
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
-            if (data.success) {
-                showNotification(data.message, 'success');
-                closeModal();
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                showNotification('Lỗi: ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error updating table:', error);
-            showNotification('Có lỗi xảy ra khi cập nhật bàn!', 'error');
+            if (data.success) { showToast(data.message, 'success'); setTimeout(() => window.location.reload(), 1000); }
+            else showToast('Lỗi: ' + data.message, 'error');
         });
     }
 
-    function refreshTables() {
-        showNotification('Đang làm mới...', 'info');
-        loadTablesFromDatabase();
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
+    function executeTransfer() {
+        const sourceId = document.getElementById('transferSource').value;
+        const targetId = document.getElementById('transferTarget').value;
+        if (!sourceId || !targetId) { showToast('Vui lòng chọn cả 2 bàn!', 'error'); return; }
+
+        const formData = new FormData();
+        formData.append('sourceTableId', sourceId);
+        formData.append('targetTableId', targetId);
+
+        fetch('@Url.Action("TransferTable", "Cashier")', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData })
+        .then(r => r.json())
+        .then(data => { if (data.success) { showToast(data.message, 'success'); setTimeout(() => window.location.reload(), 1000); } else showToast('Lỗi: ' + data.message, 'error'); });
     }
 
-    function showTableSettings() {
-        showNotification('Chức năng cài đặt bàn sẽ được phát triển trong phiên bản tiếp theo', 'info');
+    function executeMerge() {
+        const mainId = document.getElementById('mergeMain').value;
+        const secondaryId = document.getElementById('mergeSecondary').value;
+        if (!mainId || !secondaryId) { showToast('Vui lòng chọn cả 2 bàn!', 'error'); return; }
+
+        const formData = new FormData();
+        formData.append('mainTableId', mainId);
+        formData.append('secondaryTableId', secondaryId);
+
+        fetch('@Url.Action("MergeTables", "Cashier")', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData })
+        .then(r => r.json())
+        .then(data => { if (data.success) { showToast(data.message, 'success'); setTimeout(() => window.location.reload(), 1000); } else showToast('Lỗi: ' + data.message, 'error'); });
     }
 
-    function showNotification(message, type = 'success') {
-        const notification = document.createElement('div');
-        const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : type === 'info' ? '#17a2b8' : '#28a745';
-        const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+    function executeSplit() {
+        const sourceId = document.getElementById('splitSource').value;
+        const targetId = document.getElementById('splitTarget').value;
+        if (!sourceId || !targetId) { showToast('Vui lòng chọn cả 2 bàn!', 'error'); return; }
 
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: linear-gradient(135deg, ${bgColor}, ${bgColor}dd);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            z-index: 9999;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            font-weight: bold;
-            animation: slideInRight 0.3s ease;
-            max-width: 350px;
-        `;
-        notification.innerHTML = `<i class="fas fa-${icon} me-2"></i>${message}`;
-        document.body.appendChild(notification);
+        fetch('@Url.Action("GetTableOrderItems", "Cashier")?tableId=' + sourceId, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.json())
+        .then(data => { if (data.success) showSplitItemsModal(sourceId, targetId, data.items); else showToast('Lỗi: ' + data.message, 'error'); });
+    }
 
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideOutRight 0.3s ease';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        document.body.removeChild(notification);
-                    }
-                }, 300);
+    function showSplitItemsModal(sourceId, targetId, items) {
+        let html = items.map(item => `<div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee;"><label><input type="checkbox" class="split-item" data-id="${item.orderDetailId}" data-max="${item.quantity}"> ${item.name}</label><input type="number" class="split-qty" data-id="${item.orderDetailId}" min="1" max="${item.quantity}" value="1" style="width: 60px;" disabled></div>`).join('');
+
+        Swal.fire({
+            title: 'Chọn món để tách',
+            html: `<div style="text-align: left; max-height: 400px; overflow-y: auto;">${html}</div>`,
+            confirmButtonText: 'Tách bàn',
+            showCancelButton: true,
+            cancelButtonText: 'Hủy',
+            didOpen: () => {
+                document.querySelectorAll('.split-item').forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        document.querySelector(`.split-qty[data-id="${this.dataset.id}"]`).disabled = !this.checked;
+                    });
+                });
+            },
+            preConfirm: () => {
+                const selected = [];
+                document.querySelectorAll('.split-item:checked').forEach(cb => {
+                    selected.push({ OrderDetailId: parseInt(cb.dataset.id), Quantity: parseInt(document.querySelector(`.split-qty[data-id="${cb.dataset.id}"]`).value) });
+                });
+                if (selected.length === 0) { Swal.showValidationMessage('Chọn ít nhất 1 món!'); return false; }
+                return selected;
             }
-        }, 3000);
+        }).then(result => {
+            if (result.isConfirmed) {
+                const formData = new FormData();
+                formData.append('sourceTableId', sourceId);
+                formData.append('targetTableId', targetId);
+                formData.append('itemsToSplit', JSON.stringify(result.value));
+
+                fetch('@Url.Action("SplitTable", "Cashier")', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData })
+                .then(r => r.json())
+                .then(data => { if (data.success) { showToast(data.message, 'success'); setTimeout(() => window.location.reload(), 1000); } else showToast('Lỗi: ' + data.message, 'error'); });
+            }
+        });
     }
 
-    document.getElementById('tableModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
-    });
-
-    const style = document.createElement('style');
-    style.textContent = `
-        @@keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @@keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-    `;
-    document.head.appendChild(style);
-
-    setInterval(function() {
-        loadTablesFromDatabase();
-    }, 60000);
-
-    function viewOrder(orderId) {
-        if (orderId) {
-            window.open('@Url.Action("Menu", "Cashier")?orderId=' + orderId, '_blank');
-        }
-    }
+    function viewOrder(orderId) { if (orderId) window.location.href = '@Url.Action("Orders", "Cashier")'; }
 
     function checkoutTable(tableId) {
-        if (confirm('Xác nhận trả bàn? Vui lòng đảm bảo đã thanh toán xong.')) {
-            const formData = new FormData();
-            formData.append('tableId', tableId);
-
-            fetch('@Url.Action("CheckoutTableAPI", "Cashier")', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    closeModal();
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    showNotification('Lỗi: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Có lỗi xảy ra khi trả bàn!', 'error');
-            });
-        }
+        Swal.fire({ title: 'Xác nhận trả bàn?', icon: 'question', showCancelButton: true, confirmButtonText: 'Trả bàn', cancelButtonText: 'Hủy' }).then(result => {
+            if (result.isConfirmed) {
+                const formData = new FormData();
+                formData.append('tableId', tableId);
+                fetch('@Url.Action("CheckoutTableAPI", "Cashier")', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData })
+                .then(r => r.json())
+                .then(data => { if (data.success) { showToast(data.message, 'success'); closeModal(); setTimeout(() => window.location.reload(), 1000); } else showToast('Lỗi: ' + data.message, 'error'); });
+            }
+        });
     }
 
     function confirmReservation(tableId) {
-        if (confirm('Xác nhận khách đã đến?')) {
-            const formData = new FormData();
-            formData.append('tableId', tableId);
-
-            fetch('@Url.Action("ConfirmReservationAPI", "Cashier")', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    closeModal();
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    showNotification('Lỗi: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Có lỗi xảy ra!', 'error');
-            });
-        }
+        const formData = new FormData();
+        formData.append('tableId', tableId);
+        fetch('@Url.Action("ConfirmReservationAPI", "Cashier")', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData })
+        .then(r => r.json())
+        .then(data => { if (data.success) { showToast(data.message, 'success'); closeModal(); setTimeout(() => window.location.reload(), 1000); } else showToast('Lỗi: ' + data.message, 'error'); });
     }
 
     function cancelReservation(tableId) {
-        if (confirm('Xác nhận hủy đặt bàn?')) {
-            const formData = new FormData();
-            formData.append('tableId', tableId);
-
-            fetch('@Url.Action("CancelReservationAPI", "Cashier")', {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    closeModal();
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    showNotification('Lỗi: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Có lỗi xảy ra!', 'error');
-            });
-        }
+        const formData = new FormData();
+        formData.append('tableId', tableId);
+        fetch('@Url.Action("CancelReservationAPI", "Cashier")', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' }, body: formData })
+        .then(r => r.json())
+        .then(data => { if (data.success) { showToast(data.message, 'success'); closeModal(); setTimeout(() => window.location.reload(), 1000); } else showToast('Lỗi: ' + data.message, 'error'); });
     }
+
+    document.getElementById('tableModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+    setInterval(loadTablesFromDatabase, 60000);
     </script>
 }

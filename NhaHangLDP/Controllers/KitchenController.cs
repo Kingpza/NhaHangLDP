@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web.Mvc;
 using NhaHangLDP.Models;
 using NhaHangLDP.Filters;
+using NhaHangLDP.Services;
 
 namespace NhaHangLDP.Controllers
 {
@@ -14,6 +15,12 @@ namespace NhaHangLDP.Controllers
     public class KitchenController : Controller
     {
         private NhaHangLDPEntities db = new NhaHangLDPEntities();
+        private readonly RealTimeNotificationService _notificationService;
+
+        public KitchenController()
+        {
+            _notificationService = new RealTimeNotificationService();
+        }
 
         #region Display Pages
 
@@ -108,6 +115,7 @@ namespace NhaHangLDP.Controllers
                     db.SaveChanges();
 
                     // Tạo kitchen items
+                    var itemsList = new List<object>();
                     foreach (var detail in order.OrderDetail)
                     {
                         var item = new KitchenOrderItem
@@ -123,6 +131,12 @@ namespace NhaHangLDP.Controllers
                             Station = GetStationForCategory(detail.MenuItem.Category)
                         };
                         db.KitchenOrderItem.Add(item);
+                        
+                        itemsList.Add(new { 
+                            name = detail.MenuItem.Name, 
+                            quantity = detail.Quantity, 
+                            notes = detail.Notes 
+                        });
                     }
 
                     // Cập nhật Order status
@@ -130,6 +144,21 @@ namespace NhaHangLDP.Controllers
 
                     db.SaveChanges();
                     transaction.Commit();
+
+                    // Gửi thông báo real-time đến bếp
+                    _notificationService.SendNewTicketToKitchen(new KitchenTicketNotification
+                    {
+                        TicketId = ticket.Id,
+                        TicketCode = ticket.TicketCode,
+                        OrderId = dto.OrderId,
+                        TableNumber = order.RestaurantTable?.TableNumber ?? "",
+                        ItemCount = order.OrderDetail.Count,
+                        Priority = ticket.Priority,
+                        SpecialNotes = ticket.SpecialNotes,
+                        EstimatedMinutes = ticket.EstimatedMinutes,
+                        StationCode = dto.Station,
+                        Items = itemsList
+                    });
 
                     return Json(new
                     {
@@ -224,6 +253,15 @@ namespace NhaHangLDP.Controllers
                     item.CompletedTime = DateTime.Now;
                 }
 
+                // Gửi thông báo real-time về món đã hoàn thành
+                _notificationService.UpdateItemCompleted(
+                    item.KitchenOrderTicketId,
+                    item.Id,
+                    item.ItemName,
+                    item.CompletedQuantity,
+                    item.Quantity
+                );
+
                 // Kiểm tra nếu tất cả items đã xong
                 var ticket = item.KitchenOrderTicket;
                 var allItems = db.KitchenOrderItem.Where(i => i.KitchenOrderTicketId == ticket.Id).ToList();
@@ -240,11 +278,13 @@ namespace NhaHangLDP.Controllers
                         order.Status = "Ready";
                     }
 
+                    var tableNumber = db.RestaurantTable.Find(ticket.TableId)?.TableNumber ?? "";
+
                     // Tạo notification cho thu ngân
                     var notification = new Notification
                     {
                         Type = "OrderReady",
-                        Title = $"Đơn hàng bàn {db.RestaurantTable.Find(ticket.TableId)?.TableNumber} đã sẵn sàng",
+                        Title = $"Đơn hàng bàn {tableNumber} đã sẵn sàng",
                         Message = $"Ticket #{ticket.TicketCode} đã hoàn thành",
                         Data = ticket.TableId.ToString(),
                         CreatedDate = DateTime.Now,
@@ -252,6 +292,10 @@ namespace NhaHangLDP.Controllers
                         Level = "High"
                     };
                     db.Notification.Add(notification);
+
+                    // Gửi thông báo real-time
+                    _notificationService.NotifyOrderReady(ticket.OrderId, tableNumber, ticket.TicketCode);
+                    _notificationService.UpdateTicketStatus(ticket.Id, ticket.TicketCode, "Ready", tableNumber);
                 }
 
                 db.SaveChanges();
@@ -307,10 +351,12 @@ namespace NhaHangLDP.Controllers
 
                 // Notification
                 var table = db.RestaurantTable.Find(ticket.TableId);
+                var tableNumber = table?.TableNumber ?? "";
+                
                 db.Notification.Add(new Notification
                 {
                     Type = "OrderReady",
-                    Title = $"Bàn {table?.TableNumber} - Đơn sẵn sàng",
+                    Title = $"Bàn {tableNumber} - Đơn sẵn sàng",
                     Message = $"Ticket #{ticket.TicketCode}",
                     Data = ticket.TableId.ToString(),
                     CreatedDate = DateTime.Now,
@@ -319,6 +365,10 @@ namespace NhaHangLDP.Controllers
                 });
 
                 db.SaveChanges();
+
+                // Gửi thông báo real-time
+                _notificationService.NotifyOrderReady(ticket.OrderId, tableNumber, ticket.TicketCode);
+                _notificationService.UpdateTicketStatus(ticket.Id, ticket.TicketCode, "Ready", tableNumber);
 
                 return Json(new { success = true, message = "Đơn hàng đã sẵn sàng phục vụ!" });
             }

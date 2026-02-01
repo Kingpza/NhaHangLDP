@@ -1,0 +1,317 @@
+﻿@model List<NhaHangLDP.Models.MyReservationViewModel>
+@{
+    ViewBag.Title = "Đặt bàn của tôi";
+    Layout = null;
+    
+    var upcomingReservations = Model.Where(r => r.IsUpcoming).ToList();
+    var pastReservations = Model.Where(r => !r.IsUpcoming).ToList();
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Đặt bàn của tôi - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007bff",
+                        "primary-dark": "#0056b3",
+                        success: "#28a745",
+                        warning: "#ffc107",
+                        danger: "#dc3545",
+                        info: "#17a2b8",
+                        "background": "#ffffff",
+                        "sidebar-surface": "#f0f2f5",
+                        "text-secondary": "#6c757d",
+                        "text-primary": "#212529",
+                        "border-light": "#e0e0e0"
+                    },
+                    fontFamily: {
+                        display: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .reservation-card {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .reservation-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+            border-color: #007bff;
+        }
+        .reservation-card.upcoming {
+            border-left: 4px solid #28a745;
+        }
+        .reservation-card.past {
+            opacity: 0.85;
+        }
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-confirmed { background: #d4edda; color: #155724; }
+        .status-completed { background: #d1ecf1; color: #0c5460; }
+        .status-cancelled { background: #f8d7da; color: #721c24; }
+        .status-noshow { background: #e2e3e5; color: #383d41; }
+    </style>
+</head>
+<body class="bg-gray-50 font-display min-h-screen">
+    
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 border-b border-border-light bg-white/95 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="@Url.Action("Index", "Home")" class="flex items-center gap-3">
+                        <div class="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-2xl">restaurant</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-black text-text-primary">NHÀ HÀNG LDP</h1>
+                            <p class="text-xs text-text-secondary">Fine Dining Experience</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="@Url.Action("Index", "Home")" class="text-text-secondary hover:text-primary transition-colors">Trang chủ</a>
+                    <a href="@Url.Action("Menu", "Public")" class="text-text-secondary hover:text-primary transition-colors">Thực đơn</a>
+                    <a href="@Url.Action("Index", "Reservation")" class="text-text-secondary hover:text-primary transition-colors">Đặt bàn</a>
+                    <a href="@Url.Action("MyReservations", "CustomerAccount")" class="text-primary font-semibold border-b-2 border-primary pb-1">Bàn của tôi</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="@Url.Action("Profile", "CustomerAccount")" class="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-all">
+                        <span class="material-symbols-outlined text-lg">account_circle</span>
+                        <span class="hidden sm:inline font-medium">@Session["CustomerName"]</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-black text-text-primary mb-2">
+                    <span class="material-symbols-outlined text-primary align-middle mr-2" style="font-size: 36px;">calendar_month</span>
+                    Đặt bàn của tôi
+                </h1>
+                <p class="text-text-secondary">Quản lý các lượt đặt bàn tại Nhà Hàng LDP</p>
+            </div>
+            <a href="@Url.Action("Index", "Reservation")" class="mt-4 md:mt-0 inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full font-bold hover:bg-primary-dark transition-all shadow-lg">
+                <span class="material-symbols-outlined">add</span>
+                Đặt bàn mới
+            </a>
+        </div>
+
+        @if (Model.Count == 0)
+        {
+            <!-- Empty State -->
+            <div class="bg-white rounded-3xl p-12 text-center shadow-lg">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span class="material-symbols-outlined text-gray-400" style="font-size: 48px;">event_busy</span>
+                </div>
+                <h3 class="text-2xl font-bold text-text-primary mb-3">Chưa có đặt bàn nào</h3>
+                <p class="text-text-secondary mb-8 max-w-md mx-auto">
+                    Bạn chưa có lượt đặt bàn nào. Hãy đặt bàn ngay để trải nghiệm ẩm thực tuyệt vời tại Nhà Hàng LDP!
+                </p>
+                <a href="@Url.Action("Index", "Reservation")" class="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white rounded-full font-bold text-lg hover:bg-primary-dark transition-all shadow-lg">
+                    <span class="material-symbols-outlined">restaurant</span>
+                    Đặt bàn ngay
+                </a>
+            </div>
+        }
+        else
+        {
+            <!-- Upcoming Reservations -->
+            if (upcomingReservations.Any())
+            {
+                <div class="mb-10">
+                    <h2 class="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-success">upcoming</span>
+                        Đặt bàn sắp tới
+                        <span class="bg-success text-white text-sm px-3 py-1 rounded-full">@upcomingReservations.Count</span>
+                    </h2>
+                    <div class="grid gap-4">
+                        @foreach (var reservation in upcomingReservations)
+                        {
+                            <div class="reservation-card upcoming bg-white rounded-2xl p-6 shadow-md">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                            <span class="material-symbols-outlined text-primary" style="font-size: 32px;">table_restaurant</span>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-bold text-lg text-text-primary">@reservation.ReservationDateFormatted</span>
+                                                <span class="text-primary font-bold">@reservation.ReservationTimeFormatted</span>
+                                            </div>
+                                            <p class="text-text-secondary mb-2">
+                                                <span class="material-symbols-outlined text-sm align-middle">group</span>
+                                                @reservation.NumberOfGuests khách
+                                                @if (!string.IsNullOrEmpty(reservation.TableName))
+                                                {
+                                                    <span class="mx-2">•</span>
+                                                    <span>Bàn @reservation.TableName</span>
+                                                }
+                                                @if (!string.IsNullOrEmpty(reservation.TablePreference))
+                                                {
+                                                    <span class="mx-2">•</span>
+                                                    <span>@reservation.TablePreference</span>
+                                                }
+                                            </p>
+                                            <p class="text-sm text-text-secondary">
+                                                Mã đặt bàn: <span class="font-mono font-bold text-primary">@reservation.ReservationCode</span>
+                                            </p>
+                                            @if (!string.IsNullOrEmpty(reservation.SpecialRequests))
+                                            {
+                                                <p class="text-sm text-text-secondary mt-1">
+                                                    <span class="material-symbols-outlined text-sm align-middle">notes</span>
+                                                    @reservation.SpecialRequests
+                                                </p>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="status-badge status-@reservation.Status.ToLower()">@reservation.StatusText</span>
+                                        @if (reservation.CanCancel)
+                                        {
+                                            <button onclick="cancelReservation('@reservation.ReservationCode')" 
+                                                    class="px-4 py-2 text-danger border-2 border-danger rounded-full font-semibold hover:bg-danger hover:text-white transition-all">
+                                                <span class="material-symbols-outlined text-sm align-middle">close</span>
+                                                Hủy
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Past Reservations -->
+            if (pastReservations.Any())
+            {
+                <div>
+                    <h2 class="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-text-secondary">history</span>
+                        Lịch sử đặt bàn
+                        <span class="bg-gray-500 text-white text-sm px-3 py-1 rounded-full">@pastReservations.Count</span>
+                    </h2>
+                    <div class="grid gap-4">
+                        @foreach (var reservation in pastReservations.Take(10))
+                        {
+                            <div class="reservation-card past bg-white rounded-2xl p-6 shadow-md">
+                                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div class="flex items-start gap-4">
+                                        <div class="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <span class="material-symbols-outlined text-gray-400" style="font-size: 28px;">table_restaurant</span>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-semibold text-text-primary">@reservation.ReservationDateFormatted</span>
+                                                <span class="text-text-secondary">@reservation.ReservationTimeFormatted</span>
+                                            </div>
+                                            <p class="text-text-secondary text-sm">
+                                                @reservation.NumberOfGuests khách
+                                                <span class="mx-2">•</span>
+                                                Mã: <span class="font-mono">@reservation.ReservationCode</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-3">
+                                        <span class="status-badge status-@reservation.Status.ToLower()">@reservation.StatusText</span>
+                                        @if (reservation.Status == "Completed")
+                                        {
+                                            <a href="@Url.Action("Index", "Reservation")" class="px-4 py-2 text-primary border-2 border-primary rounded-full font-semibold hover:bg-primary hover:text-white transition-all">
+                                                Đặt lại
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-text-primary text-white py-8 mt-12">
+        <div class="max-w-6xl mx-auto px-6 text-center">
+            <p class="text-white/70 text-sm">© 2024 Nhà Hàng LDP. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function cancelReservation(code) {
+            Swal.fire({
+                title: 'Hủy đặt bàn?',
+                text: 'Bạn có chắc muốn hủy đặt bàn này không?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Xác nhận hủy',
+                cancelButtonText: 'Không'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("CancelReservation", "CustomerAccount")', {
+                        code: code,
+                        reason: 'Khách hàng hủy'
+                    }).done(function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đã hủy!',
+                                text: response.message,
+                                confirmButtonColor: '#007bff'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi',
+                                text: response.message,
+                                confirmButtonColor: '#007bff'
+                            });
+                        }
+                    }).fail(function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi kết nối',
+                            text: 'Không thể kết nối đến máy chủ!',
+                            confirmButtonColor: '#007bff'
+                        });
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

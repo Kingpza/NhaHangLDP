@@ -76,6 +76,28 @@
           <Property Name="Notes" Type="nvarchar(max)" />
           <Property Name="CreatedDate" Type="datetime2" Precision="7" Nullable="false" />
         </EntityType>
+        <EntityType Name="Cart">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CustomerId" Type="int" />
+          <Property Name="SessionId" Type="nvarchar" MaxLength="100" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedDate" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CartItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CartId" Type="int" Nullable="false" />
+          <Property Name="MenuItemId" Type="int" Nullable="false" />
+          <Property Name="Quantity" Type="int" Nullable="false" />
+          <Property Name="UnitPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="SpecialInstructions" Type="nvarchar" MaxLength="500" />
+          <Property Name="AddedDate" Type="datetime" Nullable="false" />
+        </EntityType>
         <EntityType Name="CashierShift">
           <Key>
             <PropertyRef Name="Id" />
@@ -89,6 +111,110 @@
           <Property Name="TotalRevenue" Type="decimal" Precision="18" Scale="2" />
           <Property Name="Status" Type="nvarchar" MaxLength="50" Nullable="false" />
         </EntityType>
+        <EntityType Name="Customer">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="FullName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="Email" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="Phone" Type="nvarchar" MaxLength="20" />
+          <Property Name="PasswordHash" Type="nvarchar" MaxLength="256" />
+          <Property Name="DateOfBirth" Type="date" />
+          <Property Name="Gender" Type="nvarchar" MaxLength="10" />
+          <Property Name="AvatarUrl" Type="nvarchar" MaxLength="500" />
+          <Property Name="LoyaltyPoints" Type="int" Nullable="false" />
+          <Property Name="MembershipLevel" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
+          <Property Name="EmailVerified" Type="bit" Nullable="false" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+          <Property Name="LastLoginDate" Type="datetime" />
+        </EntityType>
+        <EntityType Name="CustomerAddress">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CustomerId" Type="int" Nullable="false" />
+          <Property Name="ReceiverName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="ReceiverPhone" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="AddressLine" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="Ward" Type="nvarchar" MaxLength="100" />
+          <Property Name="District" Type="nvarchar" MaxLength="100" />
+          <Property Name="City" Type="nvarchar" MaxLength="100" />
+          <Property Name="AddressType" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="IsDefault" Type="bit" Nullable="false" />
+          <Property Name="Latitude" Type="decimal" Precision="10" Scale="7" />
+          <Property Name="Longitude" Type="decimal" Precision="10" Scale="7" />
+        </EntityType>
+        <EntityType Name="CustomerNotification">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CustomerId" Type="int" Nullable="false" />
+          <Property Name="Title" Type="nvarchar" MaxLength="200" Nullable="false" />
+          <Property Name="Message" Type="nvarchar" MaxLength="1000" />
+          <Property Name="Type" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="ActionUrl" Type="nvarchar" MaxLength="500" />
+          <Property Name="ImageUrl" Type="nvarchar" MaxLength="200" />
+          <Property Name="IsRead" Type="bit" Nullable="false" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+          <Property Name="ReadDate" Type="datetime" />
+        </EntityType>
+        <EntityType Name="CustomerOrder">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="OrderCode" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="CustomerId" Type="int" />
+          <Property Name="CustomerName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="CustomerPhone" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="CustomerEmail" Type="nvarchar" MaxLength="100" />
+          <Property Name="OrderType" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="DeliveryAddress" Type="nvarchar" MaxLength="500" />
+          <Property Name="Ward" Type="nvarchar" MaxLength="100" />
+          <Property Name="District" Type="nvarchar" MaxLength="100" />
+          <Property Name="City" Type="nvarchar" MaxLength="100" />
+          <Property Name="SubTotal" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="DeliveryFee" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Discount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="VoucherCode" Type="nvarchar" MaxLength="50" />
+          <Property Name="TotalAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="PaymentMethod" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="PaymentStatus" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="PaidDate" Type="datetime" />
+          <Property Name="TransactionId" Type="nvarchar" MaxLength="100" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="Note" Type="nvarchar" MaxLength="500" />
+          <Property Name="CancelReason" Type="nvarchar" MaxLength="500" />
+          <Property Name="OrderDate" Type="datetime" Nullable="false" />
+          <Property Name="ConfirmedDate" Type="datetime" />
+          <Property Name="PreparingDate" Type="datetime" />
+          <Property Name="ReadyDate" Type="datetime" />
+          <Property Name="DeliveringDate" Type="datetime" />
+          <Property Name="CompletedDate" Type="datetime" />
+          <Property Name="CancelledDate" Type="datetime" />
+          <Property Name="EstimatedDeliveryTime" Type="datetime" />
+          <Property Name="Rating" Type="int" />
+          <Property Name="ReviewComment" Type="nvarchar" MaxLength="500" />
+          <Property Name="EarnedPoints" Type="int" Nullable="false" />
+          <Property Name="UsedPoints" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CustomerOrderDetail">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CustomerOrderId" Type="int" Nullable="false" />
+          <Property Name="MenuItemId" Type="int" Nullable="false" />
+          <Property Name="ItemName" Type="nvarchar" MaxLength="200" Nullable="false" />
+          <Property Name="Quantity" Type="int" Nullable="false" />
+          <Property Name="UnitPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Subtotal" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="SpecialInstructions" Type="nvarchar" MaxLength="500" />
+        </EntityType>
         <EntityType Name="DamagedStock">
           <Key>
             <PropertyRef Name="Id" />
@@ -99,6 +225,54 @@
           <Property Name="DamageDate" Type="datetime2" Precision="7" Nullable="false" />
           <Property Name="Reason" Type="nvarchar(max)" Nullable="false" />
           <Property Name="ReportedByEmployeeId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="DeliveryAssignment">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="OrderId" Type="int" Nullable="false" />
+          <Property Name="ShipperId" Type="int" Nullable="false" />
+          <Property Name="AssignedTime" Type="datetime" Nullable="false" />
+          <Property Name="PickupTime" Type="datetime" />
+          <Property Name="DeliveryTime" Type="datetime" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="CurrentLatitude" Type="decimal" Precision="10" Scale="8" />
+          <Property Name="CurrentLongitude" Type="decimal" Precision="11" Scale="8" />
+          <Property Name="EstimatedArrival" Type="datetime" />
+          <Property Name="ActualDistance" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="DeliveryFee" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="ShipperEarning" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Notes" Type="nvarchar" MaxLength="500" />
+          <Property Name="FailureReason" Type="nvarchar" MaxLength="500" />
+          <Property Name="ProofImageUrl" Type="nvarchar" MaxLength="500" />
+          <Property Name="CustomerRating" Type="int" />
+          <Property Name="CustomerFeedback" Type="nvarchar" MaxLength="500" />
+        </EntityType>
+        <EntityType Name="DeliverySettings">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="SettingKey" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="SettingValue" Type="nvarchar" MaxLength="500" />
+          <Property Name="Description" Type="nvarchar" MaxLength="200" />
+          <Property Name="UpdatedDate" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="DeliveryZone">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ZoneName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="District" Type="nvarchar" MaxLength="100" />
+          <Property Name="Ward" Type="nvarchar" MaxLength="100" />
+          <Property Name="DeliveryFee" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="MinOrderForFreeDelivery" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="EstimatedTime" Type="int" Nullable="false" />
+          <Property Name="MaxDistance" Type="decimal" Precision="10" Scale="2" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
+          <Property Name="DisplayOrder" Type="int" Nullable="false" />
         </EntityType>
         <EntityType Name="EmailConfig">
           <Key>
@@ -491,6 +665,30 @@
           <Property Name="ItemStatus" Type="nvarchar" MaxLength="50" Nullable="false" />
           <Property Name="AddedTime" Type="datetime" Nullable="false" />
         </EntityType>
+        <EntityType Name="Reservation">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ReservationCode" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="CustomerId" Type="int" />
+          <Property Name="CustomerName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="CustomerPhone" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="CustomerEmail" Type="nvarchar" MaxLength="100" />
+          <Property Name="ReservationDate" Type="date" Nullable="false" />
+          <Property Name="ReservationTime" Type="time" Precision="7" Nullable="false" />
+          <Property Name="NumberOfGuests" Type="int" Nullable="false" />
+          <Property Name="TableId" Type="int" />
+          <Property Name="TablePreference" Type="nvarchar" MaxLength="50" />
+          <Property Name="SpecialRequests" Type="nvarchar" MaxLength="500" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="DepositAmount" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="DepositPaid" Type="bit" Nullable="false" />
+          <Property Name="CancelReason" Type="nvarchar" MaxLength="500" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+          <Property Name="ConfirmedDate" Type="datetime" />
+          <Property Name="CancelledDate" Type="datetime" />
+        </EntityType>
         <EntityType Name="RestaurantTable">
           <Key>
             <PropertyRef Name="Id" />
@@ -523,6 +721,26 @@
           <Property Name="UnitPrice" Type="decimal" Precision="18" Scale="2" Nullable="false" />
           <Property Name="IsDamaged" Type="bit" Nullable="false" />
         </EntityType>
+        <EntityType Name="Review">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CustomerId" Type="int" Nullable="false" />
+          <Property Name="MenuItemId" Type="int" Nullable="false" />
+          <Property Name="OrderId" Type="int" />
+          <Property Name="Rating" Type="int" Nullable="false" />
+          <Property Name="Comment" Type="nvarchar" MaxLength="1000" />
+          <Property Name="ImageUrls" Type="nvarchar" MaxLength="500" />
+          <Property Name="LikesCount" Type="int" Nullable="false" />
+          <Property Name="IsVerifiedPurchase" Type="bit" Nullable="false" />
+          <Property Name="AdminReply" Type="nvarchar" MaxLength="500" />
+          <Property Name="AdminReplyDate" Type="datetime" />
+          <Property Name="IsApproved" Type="bit" Nullable="false" />
+          <Property Name="IsHidden" Type="bit" Nullable="false" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedDate" Type="datetime" />
+        </EntityType>
         <EntityType Name="Role">
           <Key>
             <PropertyRef Name="Id" />
@@ -537,6 +755,28 @@
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="EmployeeId" Type="int" Nullable="false" />
           <Property Name="CashierShiftId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Shipper">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="FullName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="Phone" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="Email" Type="nvarchar" MaxLength="100" />
+          <Property Name="PasswordHash" Type="nvarchar" MaxLength="256" />
+          <Property Name="VehicleType" Type="nvarchar" MaxLength="50" />
+          <Property Name="LicensePlate" Type="nvarchar" MaxLength="20" />
+          <Property Name="AvatarUrl" Type="nvarchar" MaxLength="200" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="Rating" Type="decimal" Precision="3" Scale="2" Nullable="false" />
+          <Property Name="TotalDeliveries" Type="int" Nullable="false" />
+          <Property Name="TotalEarnings" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="CurrentLatitude" Type="decimal" Precision="10" Scale="8" />
+          <Property Name="CurrentLongitude" Type="decimal" Precision="11" Scale="8" />
+          <Property Name="LastLocationUpdate" Type="datetime" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="StockInbound">
           <Key>
@@ -574,6 +814,47 @@
           <Property Name="PhoneNumber" Type="nvarchar" MaxLength="20" />
           <Property Name="Address" Type="nvarchar(max)" />
         </EntityType>
+        <EntityType Name="SupportConversation">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ConversationCode" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="CustomerId" Type="nvarchar" MaxLength="100" />
+          <Property Name="CustomerName" Type="nvarchar" MaxLength="100" />
+          <Property Name="CustomerEmail" Type="nvarchar" MaxLength="200" />
+          <Property Name="CustomerPhone" Type="nvarchar" MaxLength="20" />
+          <Property Name="AssignedStaffId" Type="int" />
+          <Property Name="Status" Type="nvarchar" MaxLength="20" />
+          <Property Name="Subject" Type="nvarchar" MaxLength="200" />
+          <Property Name="Priority" Type="nvarchar" MaxLength="20" />
+          <Property Name="StartTime" Type="datetime" Nullable="false" />
+          <Property Name="EndTime" Type="datetime" />
+          <Property Name="LastMessageTime" Type="datetime" />
+          <Property Name="CustomerRating" Type="int" />
+          <Property Name="CustomerFeedback" Type="nvarchar(max)" />
+          <Property Name="InternalNotes" Type="nvarchar(max)" />
+          <Property Name="Tags" Type="nvarchar" MaxLength="500" />
+        </EntityType>
+        <EntityType Name="SupportMessage">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="SenderId" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="SenderType" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="SenderName" Type="nvarchar" MaxLength="100" />
+          <Property Name="RecipientId" Type="nvarchar" MaxLength="100" />
+          <Property Name="RecipientType" Type="nvarchar" MaxLength="20" />
+          <Property Name="Message" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="MessageType" Type="nvarchar" MaxLength="20" />
+          <Property Name="AttachmentUrl" Type="nvarchar" MaxLength="500" />
+          <Property Name="SentTime" Type="datetime" Nullable="false" />
+          <Property Name="IsRead" Type="bit" Nullable="false" />
+          <Property Name="ReadTime" Type="datetime" />
+          <Property Name="ConversationId" Type="nvarchar" MaxLength="100" />
+          <Property Name="Metadata" Type="nvarchar(max)" />
+        </EntityType>
         <EntityType Name="TableArea">
           <Key>
             <PropertyRef Name="Id" />
@@ -592,6 +873,48 @@
           <Property Name="EndTime" Type="datetime" />
           <Property Name="Status" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="GuestCount" Type="int" />
+        </EntityType>
+        <EntityType Name="Voucher">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Code" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="200" />
+          <Property Name="Description" Type="nvarchar" MaxLength="500" />
+          <Property Name="DiscountType" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="DiscountValue" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="MaxDiscountAmount" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="MinOrderAmount" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="UsageLimit" Type="int" />
+          <Property Name="UsedCount" Type="int" Nullable="false" />
+          <Property Name="PerCustomerLimit" Type="int" />
+          <Property Name="StartDate" Type="datetime" Nullable="false" />
+          <Property Name="EndDate" Type="datetime" Nullable="false" />
+          <Property Name="IsActive" Type="bit" Nullable="false" />
+          <Property Name="ApplicableTo" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="ApplicableItemIds" Type="nvarchar" MaxLength="500" />
+          <Property Name="CreatedDate" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="VoucherUsage">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="VoucherId" Type="int" Nullable="false" />
+          <Property Name="CustomerId" Type="int" />
+          <Property Name="OrderId" Type="int" Nullable="false" />
+          <Property Name="DiscountAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="UsedDate" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Wishlist">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CustomerId" Type="int" Nullable="false" />
+          <Property Name="MenuItemId" Type="int" Nullable="false" />
+          <Property Name="AddedDate" Type="datetime" Nullable="false" />
         </EntityType>
         <EntityType Name="WorkShift">
           <Key>
@@ -665,6 +988,46 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Cart_Customer">
+          <End Role="Customer" Type="Self.Customer" Multiplicity="0..1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Cart" Type="Self.Cart" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Cart">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CartItem_Cart">
+          <End Role="Cart" Type="Self.Cart" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CartItem" Type="Self.CartItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Cart">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CartItem">
+              <PropertyRef Name="CartId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CartItem_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1" />
+          <End Role="CartItem" Type="Self.CartItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CartItem">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_CashierShift_Employee">
           <End Role="Employee" Type="Self.Employee" Multiplicity="1" />
           <End Role="CashierShift" Type="Self.CashierShift" Multiplicity="*" />
@@ -674,6 +1037,72 @@
             </Principal>
             <Dependent Role="CashierShift">
               <PropertyRef Name="CashierId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerAddress_Customer">
+          <End Role="Customer" Type="Self.Customer" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CustomerAddress" Type="Self.CustomerAddress" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerAddress">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerNotification_Customer">
+          <End Role="Customer" Type="Self.Customer" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CustomerNotification" Type="Self.CustomerNotification" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerNotification">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerOrder_Customer">
+          <End Role="Customer" Type="Self.Customer" Multiplicity="0..1" />
+          <End Role="CustomerOrder" Type="Self.CustomerOrder" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerOrder">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerOrderDetail_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1" />
+          <End Role="CustomerOrderDetail" Type="Self.CustomerOrderDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerOrderDetail">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerOrderDetail_Order">
+          <End Role="CustomerOrder" Type="Self.CustomerOrder" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CustomerOrderDetail" Type="Self.CustomerOrderDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CustomerOrder">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerOrderDetail">
+              <PropertyRef Name="CustomerOrderId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -698,6 +1127,30 @@
             </Principal>
             <Dependent Role="DamagedStock">
               <PropertyRef Name="IngredientId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_DeliveryAssignment_CustomerOrder">
+          <End Role="CustomerOrder" Type="Self.CustomerOrder" Multiplicity="1" />
+          <End Role="DeliveryAssignment" Type="Self.DeliveryAssignment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CustomerOrder">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="DeliveryAssignment">
+              <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_DeliveryAssignment_Shipper">
+          <End Role="Shipper" Type="Self.Shipper" Multiplicity="1" />
+          <End Role="DeliveryAssignment" Type="Self.DeliveryAssignment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Shipper">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="DeliveryAssignment">
+              <PropertyRef Name="ShipperId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1119,6 +1572,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_Reservation_Customer">
+          <End Role="Customer" Type="Self.Customer" Multiplicity="0..1" />
+          <End Role="Reservation" Type="Self.Reservation" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Reservation">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_RestaurantTable_TableArea">
           <End Role="TableArea" Type="Self.TableArea" Multiplicity="1" />
           <End Role="RestaurantTable" Type="Self.RestaurantTable" Multiplicity="*" />
@@ -1178,6 +1643,42 @@
             </Principal>
             <Dependent Role="ReturnBillDetail">
               <PropertyRef Name="ReturnBillID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Review_Customer">
+          <End Role="Customer" Type="Self.Customer" Multiplicity="1" />
+          <End Role="Review" Type="Self.Review" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Review">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Review_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1" />
+          <End Role="Review" Type="Self.Review" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Review">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Review_Order">
+          <End Role="CustomerOrder" Type="Self.CustomerOrder" Multiplicity="0..1" />
+          <End Role="Review" Type="Self.Review" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CustomerOrder">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Review">
+              <PropertyRef Name="OrderId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1257,6 +1758,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_SupportConversation_Employee">
+          <End Role="Employee" Type="Self.Employee" Multiplicity="0..1" />
+          <End Role="SupportConversation" Type="Self.SupportConversation" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="SupportConversation">
+              <PropertyRef Name="AssignedStaffId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_TableSession_Table">
           <End Role="RestaurantTable" Type="Self.RestaurantTable" Multiplicity="1">
             <OnDelete Action="Cascade" />
@@ -1271,14 +1784,86 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_VoucherUsage_Customer">
+          <End Role="Customer" Type="Self.Customer" Multiplicity="0..1" />
+          <End Role="VoucherUsage" Type="Self.VoucherUsage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="VoucherUsage">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_VoucherUsage_Order">
+          <End Role="CustomerOrder" Type="Self.CustomerOrder" Multiplicity="1" />
+          <End Role="VoucherUsage" Type="Self.VoucherUsage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CustomerOrder">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="VoucherUsage">
+              <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_VoucherUsage_Voucher">
+          <End Role="Voucher" Type="Self.Voucher" Multiplicity="1" />
+          <End Role="VoucherUsage" Type="Self.VoucherUsage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Voucher">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="VoucherUsage">
+              <PropertyRef Name="VoucherId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Wishlist_Customer">
+          <End Role="Customer" Type="Self.Customer" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Wishlist" Type="Self.Wishlist" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Wishlist">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Wishlist_MenuItem">
+          <End Role="MenuItem" Type="Self.MenuItem" Multiplicity="1" />
+          <End Role="Wishlist" Type="Self.Wishlist" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Wishlist">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <EntityContainer Name="NhaHangLDPModelStoreContainer">
           <EntitySet Name="Account" EntityType="Self.Account" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AppSetting" EntityType="Self.AppSetting" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Attendance" EntityType="Self.Attendance" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Bill" EntityType="Self.Bill" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Booking" EntityType="Self.Booking" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Cart" EntityType="Self.Cart" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CartItem" EntityType="Self.CartItem" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="CashierShift" EntityType="Self.CashierShift" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Customer" EntityType="Self.Customer" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CustomerAddress" EntityType="Self.CustomerAddress" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CustomerNotification" EntityType="Self.CustomerNotification" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CustomerOrder" EntityType="Self.CustomerOrder" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CustomerOrderDetail" EntityType="Self.CustomerOrderDetail" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="DamagedStock" EntityType="Self.DamagedStock" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="DeliveryAssignment" EntityType="Self.DeliveryAssignment" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="DeliverySettings" EntityType="Self.DeliverySettings" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="DeliveryZone" EntityType="Self.DeliveryZone" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EmailConfig" EntityType="Self.EmailConfig" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EmailLog" EntityType="Self.EmailLog" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="EmailTemplate" EntityType="Self.EmailTemplate" Schema="dbo" store:Type="Tables" />
@@ -1304,16 +1889,24 @@
           <EntitySet Name="PromotionUsage" EntityType="Self.PromotionUsage" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QROrder" EntityType="Self.QROrder" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="QROrderDetail" EntityType="Self.QROrderDetail" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Reservation" EntityType="Self.Reservation" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="RestaurantTable" EntityType="Self.RestaurantTable" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ReturnBill" EntityType="Self.ReturnBill" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ReturnBillDetail" EntityType="Self.ReturnBillDetail" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Review" EntityType="Self.Review" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Role" EntityType="Self.Role" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ShiftSupportStaff" EntityType="Self.ShiftSupportStaff" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Shipper" EntityType="Self.Shipper" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="StockInbound" EntityType="Self.StockInbound" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="StockInboundDetail" EntityType="Self.StockInboundDetail" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Supplier" EntityType="Self.Supplier" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SupportConversation" EntityType="Self.SupportConversation" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SupportMessage" EntityType="Self.SupportMessage" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TableArea" EntityType="Self.TableArea" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="TableSession" EntityType="Self.TableSession" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Voucher" EntityType="Self.Voucher" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="VoucherUsage" EntityType="Self.VoucherUsage" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Wishlist" EntityType="Self.Wishlist" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="WorkShift" EntityType="Self.WorkShift" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_Account_Role" Association="Self.FK_Account_Role">
             <End Role="Role" EntitySet="Role" />
@@ -1335,9 +1928,41 @@
             <End Role="RestaurantTable" EntitySet="RestaurantTable" />
             <End Role="Booking" EntitySet="Booking" />
           </AssociationSet>
+          <AssociationSet Name="FK_Cart_Customer" Association="Self.FK_Cart_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="Cart" EntitySet="Cart" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CartItem_Cart" Association="Self.FK_CartItem_Cart">
+            <End Role="Cart" EntitySet="Cart" />
+            <End Role="CartItem" EntitySet="CartItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CartItem_MenuItem" Association="Self.FK_CartItem_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="CartItem" EntitySet="CartItem" />
+          </AssociationSet>
           <AssociationSet Name="FK_CashierShift_Employee" Association="Self.FK_CashierShift_Employee">
             <End Role="Employee" EntitySet="Employee" />
             <End Role="CashierShift" EntitySet="CashierShift" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerAddress_Customer" Association="Self.FK_CustomerAddress_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="CustomerAddress" EntitySet="CustomerAddress" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerNotification_Customer" Association="Self.FK_CustomerNotification_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="CustomerNotification" EntitySet="CustomerNotification" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerOrder_Customer" Association="Self.FK_CustomerOrder_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerOrderDetail_MenuItem" Association="Self.FK_CustomerOrderDetail_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="CustomerOrderDetail" EntitySet="CustomerOrderDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerOrderDetail_Order" Association="Self.FK_CustomerOrderDetail_Order">
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+            <End Role="CustomerOrderDetail" EntitySet="CustomerOrderDetail" />
           </AssociationSet>
           <AssociationSet Name="FK_DamagedStock_Employee" Association="Self.FK_DamagedStock_Employee">
             <End Role="Employee" EntitySet="Employee" />
@@ -1346,6 +1971,14 @@
           <AssociationSet Name="FK_DamagedStock_Ingredient" Association="Self.FK_DamagedStock_Ingredient">
             <End Role="Ingredient" EntitySet="Ingredient" />
             <End Role="DamagedStock" EntitySet="DamagedStock" />
+          </AssociationSet>
+          <AssociationSet Name="FK_DeliveryAssignment_CustomerOrder" Association="Self.FK_DeliveryAssignment_CustomerOrder">
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+            <End Role="DeliveryAssignment" EntitySet="DeliveryAssignment" />
+          </AssociationSet>
+          <AssociationSet Name="FK_DeliveryAssignment_Shipper" Association="Self.FK_DeliveryAssignment_Shipper">
+            <End Role="Shipper" EntitySet="Shipper" />
+            <End Role="DeliveryAssignment" EntitySet="DeliveryAssignment" />
           </AssociationSet>
           <AssociationSet Name="FK_Employee_Role" Association="Self.FK_Employee_Role">
             <End Role="Role" EntitySet="Role" />
@@ -1479,6 +2112,10 @@
             <End Role="QROrder" EntitySet="QROrder" />
             <End Role="QROrderDetail" EntitySet="QROrderDetail" />
           </AssociationSet>
+          <AssociationSet Name="FK_Reservation_Customer" Association="Self.FK_Reservation_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="Reservation" EntitySet="Reservation" />
+          </AssociationSet>
           <AssociationSet Name="FK_RestaurantTable_TableArea" Association="Self.FK_RestaurantTable_TableArea">
             <End Role="TableArea" EntitySet="TableArea" />
             <End Role="RestaurantTable" EntitySet="RestaurantTable" />
@@ -1498,6 +2135,18 @@
           <AssociationSet Name="FK_ReturnBillDetail_ReturnBill" Association="Self.FK_ReturnBillDetail_ReturnBill">
             <End Role="ReturnBill" EntitySet="ReturnBill" />
             <End Role="ReturnBillDetail" EntitySet="ReturnBillDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Review_Customer" Association="Self.FK_Review_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="Review" EntitySet="Review" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Review_MenuItem" Association="Self.FK_Review_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="Review" EntitySet="Review" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Review_Order" Association="Self.FK_Review_Order">
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+            <End Role="Review" EntitySet="Review" />
           </AssociationSet>
           <AssociationSet Name="FK_ShiftSupportStaff_CashierShift" Association="Self.FK_ShiftSupportStaff_CashierShift">
             <End Role="CashierShift" EntitySet="CashierShift" />
@@ -1523,9 +2172,33 @@
             <End Role="StockInbound" EntitySet="StockInbound" />
             <End Role="StockInboundDetail" EntitySet="StockInboundDetail" />
           </AssociationSet>
+          <AssociationSet Name="FK_SupportConversation_Employee" Association="Self.FK_SupportConversation_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="SupportConversation" EntitySet="SupportConversation" />
+          </AssociationSet>
           <AssociationSet Name="FK_TableSession_Table" Association="Self.FK_TableSession_Table">
             <End Role="RestaurantTable" EntitySet="RestaurantTable" />
             <End Role="TableSession" EntitySet="TableSession" />
+          </AssociationSet>
+          <AssociationSet Name="FK_VoucherUsage_Customer" Association="Self.FK_VoucherUsage_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="VoucherUsage" EntitySet="VoucherUsage" />
+          </AssociationSet>
+          <AssociationSet Name="FK_VoucherUsage_Order" Association="Self.FK_VoucherUsage_Order">
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+            <End Role="VoucherUsage" EntitySet="VoucherUsage" />
+          </AssociationSet>
+          <AssociationSet Name="FK_VoucherUsage_Voucher" Association="Self.FK_VoucherUsage_Voucher">
+            <End Role="Voucher" EntitySet="Voucher" />
+            <End Role="VoucherUsage" EntitySet="VoucherUsage" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Wishlist_Customer" Association="Self.FK_Wishlist_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="Wishlist" EntitySet="Wishlist" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Wishlist_MenuItem" Association="Self.FK_Wishlist_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="Wishlist" EntitySet="Wishlist" />
           </AssociationSet>
         </EntityContainer>
       </Schema></edmx:StorageModels>
@@ -1658,6 +2331,7 @@
           <NavigationProperty Name="Payroll" Relationship="NhaHangLDPModel.FK_Payroll_Employee" FromRole="Employee" ToRole="Payroll" />
           <NavigationProperty Name="PerformanceReview" Relationship="NhaHangLDPModel.FK_PerformanceReview_Employee" FromRole="Employee" ToRole="PerformanceReview" />
           <NavigationProperty Name="PerformanceReview1" Relationship="NhaHangLDPModel.FK_PerformanceReview_Reviewer" FromRole="Employee" ToRole="PerformanceReview" />
+          <NavigationProperty Name="SupportConversation" Relationship="NhaHangLDPModel.FK_SupportConversation_Employee" FromRole="Employee" ToRole="SupportConversation" />
         </EntityType>
         <EntityType Name="Ingredient">
           <Key>
@@ -1729,6 +2403,10 @@
           <NavigationProperty Name="ReturnBillDetail" Relationship="Self.FK_ReturnBillDetail_MenuItem" FromRole="MenuItem" ToRole="ReturnBillDetail" />
           <NavigationProperty Name="KitchenOrderItem" Relationship="NhaHangLDPModel.FK_KitchenItem_MenuItem" FromRole="MenuItem" ToRole="KitchenOrderItem" />
           <NavigationProperty Name="QROrderDetail" Relationship="NhaHangLDPModel.FK_QROrderDetail_MenuItem" FromRole="MenuItem" ToRole="QROrderDetail" />
+          <NavigationProperty Name="CartItem" Relationship="NhaHangLDPModel.FK_CartItem_MenuItem" FromRole="MenuItem" ToRole="CartItem" />
+          <NavigationProperty Name="CustomerOrderDetail" Relationship="NhaHangLDPModel.FK_CustomerOrderDetail_MenuItem" FromRole="MenuItem" ToRole="CustomerOrderDetail" />
+          <NavigationProperty Name="Review" Relationship="NhaHangLDPModel.FK_Review_MenuItem" FromRole="MenuItem" ToRole="Review" />
+          <NavigationProperty Name="Wishlist" Relationship="NhaHangLDPModel.FK_Wishlist_MenuItem" FromRole="MenuItem" ToRole="Wishlist" />
         </EntityType>
         <EntityType Name="MenuItemIngredient">
           <Key>
@@ -2533,6 +3211,104 @@
             <End Role="WorkShift" EntitySet="WorkShift" />
             <End Role="EmployeeSchedule" EntitySet="EmployeeSchedule" />
           </AssociationSet>
+          <EntitySet Name="Cart" EntityType="NhaHangLDPModel.Cart" />
+          <EntitySet Name="CartItem" EntityType="NhaHangLDPModel.CartItem" />
+          <EntitySet Name="Customer" EntityType="NhaHangLDPModel.Customer" />
+          <EntitySet Name="CustomerAddress" EntityType="NhaHangLDPModel.CustomerAddress" />
+          <EntitySet Name="CustomerNotification" EntityType="NhaHangLDPModel.CustomerNotification" />
+          <EntitySet Name="CustomerOrder" EntityType="NhaHangLDPModel.CustomerOrder" />
+          <EntitySet Name="CustomerOrderDetail" EntityType="NhaHangLDPModel.CustomerOrderDetail" />
+          <EntitySet Name="DeliveryAssignment" EntityType="NhaHangLDPModel.DeliveryAssignment" />
+          <EntitySet Name="DeliverySettings" EntityType="NhaHangLDPModel.DeliverySettings" />
+          <EntitySet Name="DeliveryZone" EntityType="NhaHangLDPModel.DeliveryZone" />
+          <EntitySet Name="Reservation" EntityType="NhaHangLDPModel.Reservation" />
+          <EntitySet Name="Review" EntityType="NhaHangLDPModel.Review" />
+          <EntitySet Name="Shipper" EntityType="NhaHangLDPModel.Shipper" />
+          <EntitySet Name="Voucher" EntityType="NhaHangLDPModel.Voucher" />
+          <EntitySet Name="VoucherUsage" EntityType="NhaHangLDPModel.VoucherUsage" />
+          <EntitySet Name="Wishlist" EntityType="NhaHangLDPModel.Wishlist" />
+          <AssociationSet Name="FK_Cart_Customer" Association="NhaHangLDPModel.FK_Cart_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="Cart" EntitySet="Cart" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CartItem_Cart" Association="NhaHangLDPModel.FK_CartItem_Cart">
+            <End Role="Cart" EntitySet="Cart" />
+            <End Role="CartItem" EntitySet="CartItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CartItem_MenuItem" Association="NhaHangLDPModel.FK_CartItem_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="CartItem" EntitySet="CartItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerAddress_Customer" Association="NhaHangLDPModel.FK_CustomerAddress_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="CustomerAddress" EntitySet="CustomerAddress" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerNotification_Customer" Association="NhaHangLDPModel.FK_CustomerNotification_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="CustomerNotification" EntitySet="CustomerNotification" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerOrder_Customer" Association="NhaHangLDPModel.FK_CustomerOrder_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Reservation_Customer" Association="NhaHangLDPModel.FK_Reservation_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="Reservation" EntitySet="Reservation" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Review_Customer" Association="NhaHangLDPModel.FK_Review_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="Review" EntitySet="Review" />
+          </AssociationSet>
+          <AssociationSet Name="FK_VoucherUsage_Customer" Association="NhaHangLDPModel.FK_VoucherUsage_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="VoucherUsage" EntitySet="VoucherUsage" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Wishlist_Customer" Association="NhaHangLDPModel.FK_Wishlist_Customer">
+            <End Role="Customer" EntitySet="Customer" />
+            <End Role="Wishlist" EntitySet="Wishlist" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerOrderDetail_Order" Association="NhaHangLDPModel.FK_CustomerOrderDetail_Order">
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+            <End Role="CustomerOrderDetail" EntitySet="CustomerOrderDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_DeliveryAssignment_CustomerOrder" Association="NhaHangLDPModel.FK_DeliveryAssignment_CustomerOrder">
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+            <End Role="DeliveryAssignment" EntitySet="DeliveryAssignment" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Review_Order" Association="NhaHangLDPModel.FK_Review_Order">
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+            <End Role="Review" EntitySet="Review" />
+          </AssociationSet>
+          <AssociationSet Name="FK_VoucherUsage_Order" Association="NhaHangLDPModel.FK_VoucherUsage_Order">
+            <End Role="CustomerOrder" EntitySet="CustomerOrder" />
+            <End Role="VoucherUsage" EntitySet="VoucherUsage" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CustomerOrderDetail_MenuItem" Association="NhaHangLDPModel.FK_CustomerOrderDetail_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="CustomerOrderDetail" EntitySet="CustomerOrderDetail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_DeliveryAssignment_Shipper" Association="NhaHangLDPModel.FK_DeliveryAssignment_Shipper">
+            <End Role="Shipper" EntitySet="Shipper" />
+            <End Role="DeliveryAssignment" EntitySet="DeliveryAssignment" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Review_MenuItem" Association="NhaHangLDPModel.FK_Review_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="Review" EntitySet="Review" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Wishlist_MenuItem" Association="NhaHangLDPModel.FK_Wishlist_MenuItem">
+            <End Role="MenuItem" EntitySet="MenuItem" />
+            <End Role="Wishlist" EntitySet="Wishlist" />
+          </AssociationSet>
+          <AssociationSet Name="FK_VoucherUsage_Voucher" Association="NhaHangLDPModel.FK_VoucherUsage_Voucher">
+            <End Role="Voucher" EntitySet="Voucher" />
+            <End Role="VoucherUsage" EntitySet="VoucherUsage" />
+          </AssociationSet>
+          <EntitySet Name="SupportConversation" EntityType="NhaHangLDPModel.SupportConversation" />
+          <EntitySet Name="SupportMessage" EntityType="NhaHangLDPModel.SupportMessage" />
+          <AssociationSet Name="FK_SupportConversation_Employee" Association="NhaHangLDPModel.FK_SupportConversation_Employee">
+            <End Role="Employee" EntitySet="Employee" />
+            <End Role="SupportConversation" EntitySet="SupportConversation" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="EmailConfig">
           <Key>
@@ -3158,6 +3934,616 @@
             </Principal>
             <Dependent Role="EmployeeSchedule">
               <PropertyRef Name="WorkShiftId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Cart">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CustomerId" Type="Int32" />
+          <Property Name="SessionId" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Customer" Relationship="NhaHangLDPModel.FK_Cart_Customer" FromRole="Cart" ToRole="Customer" />
+          <NavigationProperty Name="CartItem" Relationship="NhaHangLDPModel.FK_CartItem_Cart" FromRole="Cart" ToRole="CartItem" />
+        </EntityType>
+        <EntityType Name="CartItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CartId" Type="Int32" Nullable="false" />
+          <Property Name="MenuItemId" Type="Int32" Nullable="false" />
+          <Property Name="Quantity" Type="Int32" Nullable="false" />
+          <Property Name="UnitPrice" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="SpecialInstructions" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="AddedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Cart" Relationship="NhaHangLDPModel.FK_CartItem_Cart" FromRole="CartItem" ToRole="Cart" />
+          <NavigationProperty Name="MenuItem" Relationship="NhaHangLDPModel.FK_CartItem_MenuItem" FromRole="CartItem" ToRole="MenuItem" />
+        </EntityType>
+        <EntityType Name="Customer">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="FullName" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Email" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Phone" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="PasswordHash" Type="String" MaxLength="256" FixedLength="false" Unicode="true" />
+          <Property Name="DateOfBirth" Type="DateTime" Precision="0" />
+          <Property Name="Gender" Type="String" MaxLength="10" FixedLength="false" Unicode="true" />
+          <Property Name="AvatarUrl" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="LoyaltyPoints" Type="Int32" Nullable="false" />
+          <Property Name="MembershipLevel" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <Property Name="EmailVerified" Type="Boolean" Nullable="false" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="LastLoginDate" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="Cart" Relationship="NhaHangLDPModel.FK_Cart_Customer" FromRole="Customer" ToRole="Cart" />
+          <NavigationProperty Name="CustomerAddress" Relationship="NhaHangLDPModel.FK_CustomerAddress_Customer" FromRole="Customer" ToRole="CustomerAddress" />
+          <NavigationProperty Name="CustomerNotification" Relationship="NhaHangLDPModel.FK_CustomerNotification_Customer" FromRole="Customer" ToRole="CustomerNotification" />
+          <NavigationProperty Name="CustomerOrder" Relationship="NhaHangLDPModel.FK_CustomerOrder_Customer" FromRole="Customer" ToRole="CustomerOrder" />
+          <NavigationProperty Name="Reservation" Relationship="NhaHangLDPModel.FK_Reservation_Customer" FromRole="Customer" ToRole="Reservation" />
+          <NavigationProperty Name="Review" Relationship="NhaHangLDPModel.FK_Review_Customer" FromRole="Customer" ToRole="Review" />
+          <NavigationProperty Name="VoucherUsage" Relationship="NhaHangLDPModel.FK_VoucherUsage_Customer" FromRole="Customer" ToRole="VoucherUsage" />
+          <NavigationProperty Name="Wishlist" Relationship="NhaHangLDPModel.FK_Wishlist_Customer" FromRole="Customer" ToRole="Wishlist" />
+        </EntityType>
+        <EntityType Name="CustomerAddress">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CustomerId" Type="Int32" Nullable="false" />
+          <Property Name="ReceiverName" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="ReceiverPhone" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="AddressLine" Type="String" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="Ward" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="District" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="City" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="AddressType" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="IsDefault" Type="Boolean" Nullable="false" />
+          <Property Name="Latitude" Type="Decimal" Precision="10" Scale="7" />
+          <Property Name="Longitude" Type="Decimal" Precision="10" Scale="7" />
+          <NavigationProperty Name="Customer" Relationship="NhaHangLDPModel.FK_CustomerAddress_Customer" FromRole="CustomerAddress" ToRole="Customer" />
+        </EntityType>
+        <EntityType Name="CustomerNotification">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CustomerId" Type="Int32" Nullable="false" />
+          <Property Name="Title" Type="String" Nullable="false" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="Message" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Name="Type" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="ActionUrl" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="ImageUrl" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="IsRead" Type="Boolean" Nullable="false" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="ReadDate" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="Customer" Relationship="NhaHangLDPModel.FK_CustomerNotification_Customer" FromRole="CustomerNotification" ToRole="Customer" />
+        </EntityType>
+        <EntityType Name="CustomerOrder">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="OrderCode" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerId" Type="Int32" />
+          <Property Name="CustomerName" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerPhone" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerEmail" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="OrderType" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="DeliveryAddress" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="Ward" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="District" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="City" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="SubTotal" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="DeliveryFee" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="Discount" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="VoucherCode" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="TotalAmount" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="PaymentMethod" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="PaymentStatus" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="PaidDate" Type="DateTime" Precision="3" />
+          <Property Name="TransactionId" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Status" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Note" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="CancelReason" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="OrderDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="ConfirmedDate" Type="DateTime" Precision="3" />
+          <Property Name="PreparingDate" Type="DateTime" Precision="3" />
+          <Property Name="ReadyDate" Type="DateTime" Precision="3" />
+          <Property Name="DeliveringDate" Type="DateTime" Precision="3" />
+          <Property Name="CompletedDate" Type="DateTime" Precision="3" />
+          <Property Name="CancelledDate" Type="DateTime" Precision="3" />
+          <Property Name="EstimatedDeliveryTime" Type="DateTime" Precision="3" />
+          <Property Name="Rating" Type="Int32" />
+          <Property Name="ReviewComment" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="EarnedPoints" Type="Int32" Nullable="false" />
+          <Property Name="UsedPoints" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Customer" Relationship="NhaHangLDPModel.FK_CustomerOrder_Customer" FromRole="CustomerOrder" ToRole="Customer" />
+          <NavigationProperty Name="CustomerOrderDetail" Relationship="NhaHangLDPModel.FK_CustomerOrderDetail_Order" FromRole="CustomerOrder" ToRole="CustomerOrderDetail" />
+          <NavigationProperty Name="DeliveryAssignment" Relationship="NhaHangLDPModel.FK_DeliveryAssignment_CustomerOrder" FromRole="CustomerOrder" ToRole="DeliveryAssignment" />
+          <NavigationProperty Name="Review" Relationship="NhaHangLDPModel.FK_Review_Order" FromRole="CustomerOrder" ToRole="Review" />
+          <NavigationProperty Name="VoucherUsage" Relationship="NhaHangLDPModel.FK_VoucherUsage_Order" FromRole="CustomerOrder" ToRole="VoucherUsage" />
+        </EntityType>
+        <EntityType Name="CustomerOrderDetail">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CustomerOrderId" Type="Int32" Nullable="false" />
+          <Property Name="MenuItemId" Type="Int32" Nullable="false" />
+          <Property Name="ItemName" Type="String" Nullable="false" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="Quantity" Type="Int32" Nullable="false" />
+          <Property Name="UnitPrice" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="Subtotal" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="SpecialInstructions" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="CustomerOrder" Relationship="NhaHangLDPModel.FK_CustomerOrderDetail_Order" FromRole="CustomerOrderDetail" ToRole="CustomerOrder" />
+          <NavigationProperty Name="MenuItem" Relationship="NhaHangLDPModel.FK_CustomerOrderDetail_MenuItem" FromRole="CustomerOrderDetail" ToRole="MenuItem" />
+        </EntityType>
+        <EntityType Name="DeliveryAssignment">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="OrderId" Type="Int32" Nullable="false" />
+          <Property Name="ShipperId" Type="Int32" Nullable="false" />
+          <Property Name="AssignedTime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="PickupTime" Type="DateTime" Precision="3" />
+          <Property Name="DeliveryTime" Type="DateTime" Precision="3" />
+          <Property Name="Status" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="CurrentLatitude" Type="Decimal" Precision="10" Scale="8" />
+          <Property Name="CurrentLongitude" Type="Decimal" Precision="11" Scale="8" />
+          <Property Name="EstimatedArrival" Type="DateTime" Precision="3" />
+          <Property Name="ActualDistance" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="DeliveryFee" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="ShipperEarning" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="Notes" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="FailureReason" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="ProofImageUrl" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerRating" Type="Int32" />
+          <Property Name="CustomerFeedback" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="CustomerOrder" Relationship="NhaHangLDPModel.FK_DeliveryAssignment_CustomerOrder" FromRole="DeliveryAssignment" ToRole="CustomerOrder" />
+          <NavigationProperty Name="Shipper" Relationship="NhaHangLDPModel.FK_DeliveryAssignment_Shipper" FromRole="DeliveryAssignment" ToRole="Shipper" />
+        </EntityType>
+        <EntityType Name="DeliverySettings">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="SettingKey" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="SettingValue" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="Description" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="UpdatedDate" Type="DateTime" Nullable="false" Precision="3" />
+        </EntityType>
+        <EntityType Name="DeliveryZone">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ZoneName" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="District" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Ward" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="DeliveryFee" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="MinOrderForFreeDelivery" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="EstimatedTime" Type="Int32" Nullable="false" />
+          <Property Name="MaxDistance" Type="Decimal" Precision="10" Scale="2" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <Property Name="DisplayOrder" Type="Int32" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Reservation">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ReservationCode" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerId" Type="Int32" />
+          <Property Name="CustomerName" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerPhone" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerEmail" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="ReservationDate" Type="DateTime" Nullable="false" Precision="0" />
+          <Property Name="ReservationTime" Type="Time" Nullable="false" Precision="7" />
+          <Property Name="NumberOfGuests" Type="Int32" Nullable="false" />
+          <Property Name="TableId" Type="Int32" />
+          <Property Name="TablePreference" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="SpecialRequests" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="Status" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="DepositAmount" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="DepositPaid" Type="Boolean" Nullable="false" />
+          <Property Name="CancelReason" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="ConfirmedDate" Type="DateTime" Precision="3" />
+          <Property Name="CancelledDate" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="Customer" Relationship="NhaHangLDPModel.FK_Reservation_Customer" FromRole="Reservation" ToRole="Customer" />
+        </EntityType>
+        <EntityType Name="Review">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CustomerId" Type="Int32" Nullable="false" />
+          <Property Name="MenuItemId" Type="Int32" Nullable="false" />
+          <Property Name="OrderId" Type="Int32" />
+          <Property Name="Rating" Type="Int32" Nullable="false" />
+          <Property Name="Comment" Type="String" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Name="ImageUrls" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="LikesCount" Type="Int32" Nullable="false" />
+          <Property Name="IsVerifiedPurchase" Type="Boolean" Nullable="false" />
+          <Property Name="AdminReply" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="AdminReplyDate" Type="DateTime" Precision="3" />
+          <Property Name="IsApproved" Type="Boolean" Nullable="false" />
+          <Property Name="IsHidden" Type="Boolean" Nullable="false" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedDate" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="Customer" Relationship="NhaHangLDPModel.FK_Review_Customer" FromRole="Review" ToRole="Customer" />
+          <NavigationProperty Name="CustomerOrder" Relationship="NhaHangLDPModel.FK_Review_Order" FromRole="Review" ToRole="CustomerOrder" />
+          <NavigationProperty Name="MenuItem" Relationship="NhaHangLDPModel.FK_Review_MenuItem" FromRole="Review" ToRole="MenuItem" />
+        </EntityType>
+        <EntityType Name="Shipper">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="FullName" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Phone" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Email" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="PasswordHash" Type="String" MaxLength="256" FixedLength="false" Unicode="true" />
+          <Property Name="VehicleType" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="LicensePlate" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="AvatarUrl" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="Status" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Rating" Type="Decimal" Nullable="false" Precision="3" Scale="2" />
+          <Property Name="TotalDeliveries" Type="Int32" Nullable="false" />
+          <Property Name="TotalEarnings" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="CurrentLatitude" Type="Decimal" Precision="10" Scale="8" />
+          <Property Name="CurrentLongitude" Type="Decimal" Precision="11" Scale="8" />
+          <Property Name="LastLocationUpdate" Type="DateTime" Precision="3" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <NavigationProperty Name="DeliveryAssignment" Relationship="NhaHangLDPModel.FK_DeliveryAssignment_Shipper" FromRole="Shipper" ToRole="DeliveryAssignment" />
+        </EntityType>
+        <EntityType Name="Voucher">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Code" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Name" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="Description" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="DiscountType" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="DiscountValue" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="MaxDiscountAmount" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="MinOrderAmount" Type="Decimal" Precision="18" Scale="2" />
+          <Property Name="UsageLimit" Type="Int32" />
+          <Property Name="UsedCount" Type="Int32" Nullable="false" />
+          <Property Name="PerCustomerLimit" Type="Int32" />
+          <Property Name="StartDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="EndDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="IsActive" Type="Boolean" Nullable="false" />
+          <Property Name="ApplicableTo" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="ApplicableItemIds" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="CreatedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="VoucherUsage" Relationship="NhaHangLDPModel.FK_VoucherUsage_Voucher" FromRole="Voucher" ToRole="VoucherUsage" />
+        </EntityType>
+        <EntityType Name="VoucherUsage">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="VoucherId" Type="Int32" Nullable="false" />
+          <Property Name="CustomerId" Type="Int32" />
+          <Property Name="OrderId" Type="Int32" Nullable="false" />
+          <Property Name="DiscountAmount" Type="Decimal" Nullable="false" Precision="18" Scale="2" />
+          <Property Name="UsedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Customer" Relationship="NhaHangLDPModel.FK_VoucherUsage_Customer" FromRole="VoucherUsage" ToRole="Customer" />
+          <NavigationProperty Name="CustomerOrder" Relationship="NhaHangLDPModel.FK_VoucherUsage_Order" FromRole="VoucherUsage" ToRole="CustomerOrder" />
+          <NavigationProperty Name="Voucher" Relationship="NhaHangLDPModel.FK_VoucherUsage_Voucher" FromRole="VoucherUsage" ToRole="Voucher" />
+        </EntityType>
+        <EntityType Name="Wishlist">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="CustomerId" Type="Int32" Nullable="false" />
+          <Property Name="MenuItemId" Type="Int32" Nullable="false" />
+          <Property Name="AddedDate" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Customer" Relationship="NhaHangLDPModel.FK_Wishlist_Customer" FromRole="Wishlist" ToRole="Customer" />
+          <NavigationProperty Name="MenuItem" Relationship="NhaHangLDPModel.FK_Wishlist_MenuItem" FromRole="Wishlist" ToRole="MenuItem" />
+        </EntityType>
+        <Association Name="FK_Cart_Customer">
+          <End Type="NhaHangLDPModel.Customer" Role="Customer" Multiplicity="0..1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="NhaHangLDPModel.Cart" Role="Cart" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Cart">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CartItem_Cart">
+          <End Type="NhaHangLDPModel.Cart" Role="Cart" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="NhaHangLDPModel.CartItem" Role="CartItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Cart">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CartItem">
+              <PropertyRef Name="CartId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CartItem_MenuItem">
+          <End Type="NhaHangLDPModel.MenuItem" Role="MenuItem" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.CartItem" Role="CartItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CartItem">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerAddress_Customer">
+          <End Type="NhaHangLDPModel.Customer" Role="Customer" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="NhaHangLDPModel.CustomerAddress" Role="CustomerAddress" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerAddress">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerNotification_Customer">
+          <End Type="NhaHangLDPModel.Customer" Role="Customer" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="NhaHangLDPModel.CustomerNotification" Role="CustomerNotification" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerNotification">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerOrder_Customer">
+          <End Type="NhaHangLDPModel.Customer" Role="Customer" Multiplicity="0..1" />
+          <End Type="NhaHangLDPModel.CustomerOrder" Role="CustomerOrder" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerOrder">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Reservation_Customer">
+          <End Type="NhaHangLDPModel.Customer" Role="Customer" Multiplicity="0..1" />
+          <End Type="NhaHangLDPModel.Reservation" Role="Reservation" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Reservation">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Review_Customer">
+          <End Type="NhaHangLDPModel.Customer" Role="Customer" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.Review" Role="Review" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Review">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_VoucherUsage_Customer">
+          <End Type="NhaHangLDPModel.Customer" Role="Customer" Multiplicity="0..1" />
+          <End Type="NhaHangLDPModel.VoucherUsage" Role="VoucherUsage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="VoucherUsage">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Wishlist_Customer">
+          <End Type="NhaHangLDPModel.Customer" Role="Customer" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="NhaHangLDPModel.Wishlist" Role="Wishlist" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Customer">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Wishlist">
+              <PropertyRef Name="CustomerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerOrderDetail_Order">
+          <End Type="NhaHangLDPModel.CustomerOrder" Role="CustomerOrder" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="NhaHangLDPModel.CustomerOrderDetail" Role="CustomerOrderDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CustomerOrder">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerOrderDetail">
+              <PropertyRef Name="CustomerOrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_DeliveryAssignment_CustomerOrder">
+          <End Type="NhaHangLDPModel.CustomerOrder" Role="CustomerOrder" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.DeliveryAssignment" Role="DeliveryAssignment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CustomerOrder">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="DeliveryAssignment">
+              <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Review_Order">
+          <End Type="NhaHangLDPModel.CustomerOrder" Role="CustomerOrder" Multiplicity="0..1" />
+          <End Type="NhaHangLDPModel.Review" Role="Review" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CustomerOrder">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Review">
+              <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_VoucherUsage_Order">
+          <End Type="NhaHangLDPModel.CustomerOrder" Role="CustomerOrder" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.VoucherUsage" Role="VoucherUsage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CustomerOrder">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="VoucherUsage">
+              <PropertyRef Name="OrderId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CustomerOrderDetail_MenuItem">
+          <End Type="NhaHangLDPModel.MenuItem" Role="MenuItem" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.CustomerOrderDetail" Role="CustomerOrderDetail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CustomerOrderDetail">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_DeliveryAssignment_Shipper">
+          <End Type="NhaHangLDPModel.Shipper" Role="Shipper" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.DeliveryAssignment" Role="DeliveryAssignment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Shipper">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="DeliveryAssignment">
+              <PropertyRef Name="ShipperId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Review_MenuItem">
+          <End Type="NhaHangLDPModel.MenuItem" Role="MenuItem" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.Review" Role="Review" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Review">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Wishlist_MenuItem">
+          <End Type="NhaHangLDPModel.MenuItem" Role="MenuItem" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.Wishlist" Role="Wishlist" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MenuItem">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Wishlist">
+              <PropertyRef Name="MenuItemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_VoucherUsage_Voucher">
+          <End Type="NhaHangLDPModel.Voucher" Role="Voucher" Multiplicity="1" />
+          <End Type="NhaHangLDPModel.VoucherUsage" Role="VoucherUsage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Voucher">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="VoucherUsage">
+              <PropertyRef Name="VoucherId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="SupportConversation">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ConversationCode" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerId" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerEmail" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="CustomerPhone" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="AssignedStaffId" Type="Int32" />
+          <Property Name="Status" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Subject" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="Priority" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="StartTime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="EndTime" Type="DateTime" Precision="3" />
+          <Property Name="LastMessageTime" Type="DateTime" Precision="3" />
+          <Property Name="CustomerRating" Type="Int32" />
+          <Property Name="CustomerFeedback" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="InternalNotes" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Tags" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Employee" Relationship="NhaHangLDPModel.FK_SupportConversation_Employee" FromRole="SupportConversation" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="SupportMessage">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="SenderId" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="SenderType" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="SenderName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="RecipientId" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="RecipientType" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="Message" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="MessageType" Type="String" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Name="AttachmentUrl" Type="String" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Name="SentTime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="IsRead" Type="Boolean" Nullable="false" />
+          <Property Name="ReadTime" Type="DateTime" Precision="3" />
+          <Property Name="ConversationId" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="Metadata" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <Association Name="FK_SupportConversation_Employee">
+          <End Type="NhaHangLDPModel.Employee" Role="Employee" Multiplicity="0..1" />
+          <End Type="NhaHangLDPModel.SupportConversation" Role="SupportConversation" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Employee">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="SupportConversation">
+              <PropertyRef Name="AssignedStaffId" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -3806,6 +5192,347 @@
                 <ScalarProperty Name="EndTime" ColumnName="EndTime" />
                 <ScalarProperty Name="StartTime" ColumnName="StartTime" />
                 <ScalarProperty Name="ShiftName" ColumnName="ShiftName" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Cart">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Cart">
+              <MappingFragment StoreEntitySet="Cart">
+                <ScalarProperty Name="UpdatedDate" ColumnName="UpdatedDate" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="SessionId" ColumnName="SessionId" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CartItem">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.CartItem">
+              <MappingFragment StoreEntitySet="CartItem">
+                <ScalarProperty Name="AddedDate" ColumnName="AddedDate" />
+                <ScalarProperty Name="SpecialInstructions" ColumnName="SpecialInstructions" />
+                <ScalarProperty Name="UnitPrice" ColumnName="UnitPrice" />
+                <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+                <ScalarProperty Name="MenuItemId" ColumnName="MenuItemId" />
+                <ScalarProperty Name="CartId" ColumnName="CartId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Customer">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Customer">
+              <MappingFragment StoreEntitySet="Customer">
+                <ScalarProperty Name="LastLoginDate" ColumnName="LastLoginDate" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="EmailVerified" ColumnName="EmailVerified" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="MembershipLevel" ColumnName="MembershipLevel" />
+                <ScalarProperty Name="LoyaltyPoints" ColumnName="LoyaltyPoints" />
+                <ScalarProperty Name="AvatarUrl" ColumnName="AvatarUrl" />
+                <ScalarProperty Name="Gender" ColumnName="Gender" />
+                <ScalarProperty Name="DateOfBirth" ColumnName="DateOfBirth" />
+                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
+                <ScalarProperty Name="Phone" ColumnName="Phone" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="FullName" ColumnName="FullName" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CustomerAddress">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.CustomerAddress">
+              <MappingFragment StoreEntitySet="CustomerAddress">
+                <ScalarProperty Name="Longitude" ColumnName="Longitude" />
+                <ScalarProperty Name="Latitude" ColumnName="Latitude" />
+                <ScalarProperty Name="IsDefault" ColumnName="IsDefault" />
+                <ScalarProperty Name="AddressType" ColumnName="AddressType" />
+                <ScalarProperty Name="City" ColumnName="City" />
+                <ScalarProperty Name="District" ColumnName="District" />
+                <ScalarProperty Name="Ward" ColumnName="Ward" />
+                <ScalarProperty Name="AddressLine" ColumnName="AddressLine" />
+                <ScalarProperty Name="ReceiverPhone" ColumnName="ReceiverPhone" />
+                <ScalarProperty Name="ReceiverName" ColumnName="ReceiverName" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CustomerNotification">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.CustomerNotification">
+              <MappingFragment StoreEntitySet="CustomerNotification">
+                <ScalarProperty Name="ReadDate" ColumnName="ReadDate" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="IsRead" ColumnName="IsRead" />
+                <ScalarProperty Name="ImageUrl" ColumnName="ImageUrl" />
+                <ScalarProperty Name="ActionUrl" ColumnName="ActionUrl" />
+                <ScalarProperty Name="Type" ColumnName="Type" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+                <ScalarProperty Name="Title" ColumnName="Title" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CustomerOrder">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.CustomerOrder">
+              <MappingFragment StoreEntitySet="CustomerOrder">
+                <ScalarProperty Name="UsedPoints" ColumnName="UsedPoints" />
+                <ScalarProperty Name="EarnedPoints" ColumnName="EarnedPoints" />
+                <ScalarProperty Name="ReviewComment" ColumnName="ReviewComment" />
+                <ScalarProperty Name="Rating" ColumnName="Rating" />
+                <ScalarProperty Name="EstimatedDeliveryTime" ColumnName="EstimatedDeliveryTime" />
+                <ScalarProperty Name="CancelledDate" ColumnName="CancelledDate" />
+                <ScalarProperty Name="CompletedDate" ColumnName="CompletedDate" />
+                <ScalarProperty Name="DeliveringDate" ColumnName="DeliveringDate" />
+                <ScalarProperty Name="ReadyDate" ColumnName="ReadyDate" />
+                <ScalarProperty Name="PreparingDate" ColumnName="PreparingDate" />
+                <ScalarProperty Name="ConfirmedDate" ColumnName="ConfirmedDate" />
+                <ScalarProperty Name="OrderDate" ColumnName="OrderDate" />
+                <ScalarProperty Name="CancelReason" ColumnName="CancelReason" />
+                <ScalarProperty Name="Note" ColumnName="Note" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="TransactionId" ColumnName="TransactionId" />
+                <ScalarProperty Name="PaidDate" ColumnName="PaidDate" />
+                <ScalarProperty Name="PaymentStatus" ColumnName="PaymentStatus" />
+                <ScalarProperty Name="PaymentMethod" ColumnName="PaymentMethod" />
+                <ScalarProperty Name="TotalAmount" ColumnName="TotalAmount" />
+                <ScalarProperty Name="VoucherCode" ColumnName="VoucherCode" />
+                <ScalarProperty Name="Discount" ColumnName="Discount" />
+                <ScalarProperty Name="DeliveryFee" ColumnName="DeliveryFee" />
+                <ScalarProperty Name="SubTotal" ColumnName="SubTotal" />
+                <ScalarProperty Name="City" ColumnName="City" />
+                <ScalarProperty Name="District" ColumnName="District" />
+                <ScalarProperty Name="Ward" ColumnName="Ward" />
+                <ScalarProperty Name="DeliveryAddress" ColumnName="DeliveryAddress" />
+                <ScalarProperty Name="OrderType" ColumnName="OrderType" />
+                <ScalarProperty Name="CustomerEmail" ColumnName="CustomerEmail" />
+                <ScalarProperty Name="CustomerPhone" ColumnName="CustomerPhone" />
+                <ScalarProperty Name="CustomerName" ColumnName="CustomerName" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="OrderCode" ColumnName="OrderCode" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CustomerOrderDetail">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.CustomerOrderDetail">
+              <MappingFragment StoreEntitySet="CustomerOrderDetail">
+                <ScalarProperty Name="SpecialInstructions" ColumnName="SpecialInstructions" />
+                <ScalarProperty Name="Subtotal" ColumnName="Subtotal" />
+                <ScalarProperty Name="UnitPrice" ColumnName="UnitPrice" />
+                <ScalarProperty Name="Quantity" ColumnName="Quantity" />
+                <ScalarProperty Name="ItemName" ColumnName="ItemName" />
+                <ScalarProperty Name="MenuItemId" ColumnName="MenuItemId" />
+                <ScalarProperty Name="CustomerOrderId" ColumnName="CustomerOrderId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="DeliveryAssignment">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.DeliveryAssignment">
+              <MappingFragment StoreEntitySet="DeliveryAssignment">
+                <ScalarProperty Name="CustomerFeedback" ColumnName="CustomerFeedback" />
+                <ScalarProperty Name="CustomerRating" ColumnName="CustomerRating" />
+                <ScalarProperty Name="ProofImageUrl" ColumnName="ProofImageUrl" />
+                <ScalarProperty Name="FailureReason" ColumnName="FailureReason" />
+                <ScalarProperty Name="Notes" ColumnName="Notes" />
+                <ScalarProperty Name="ShipperEarning" ColumnName="ShipperEarning" />
+                <ScalarProperty Name="DeliveryFee" ColumnName="DeliveryFee" />
+                <ScalarProperty Name="ActualDistance" ColumnName="ActualDistance" />
+                <ScalarProperty Name="EstimatedArrival" ColumnName="EstimatedArrival" />
+                <ScalarProperty Name="CurrentLongitude" ColumnName="CurrentLongitude" />
+                <ScalarProperty Name="CurrentLatitude" ColumnName="CurrentLatitude" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="DeliveryTime" ColumnName="DeliveryTime" />
+                <ScalarProperty Name="PickupTime" ColumnName="PickupTime" />
+                <ScalarProperty Name="AssignedTime" ColumnName="AssignedTime" />
+                <ScalarProperty Name="ShipperId" ColumnName="ShipperId" />
+                <ScalarProperty Name="OrderId" ColumnName="OrderId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="DeliverySettings">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.DeliverySettings">
+              <MappingFragment StoreEntitySet="DeliverySettings">
+                <ScalarProperty Name="UpdatedDate" ColumnName="UpdatedDate" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="SettingValue" ColumnName="SettingValue" />
+                <ScalarProperty Name="SettingKey" ColumnName="SettingKey" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="DeliveryZone">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.DeliveryZone">
+              <MappingFragment StoreEntitySet="DeliveryZone">
+                <ScalarProperty Name="DisplayOrder" ColumnName="DisplayOrder" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="MaxDistance" ColumnName="MaxDistance" />
+                <ScalarProperty Name="EstimatedTime" ColumnName="EstimatedTime" />
+                <ScalarProperty Name="MinOrderForFreeDelivery" ColumnName="MinOrderForFreeDelivery" />
+                <ScalarProperty Name="DeliveryFee" ColumnName="DeliveryFee" />
+                <ScalarProperty Name="Ward" ColumnName="Ward" />
+                <ScalarProperty Name="District" ColumnName="District" />
+                <ScalarProperty Name="ZoneName" ColumnName="ZoneName" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Reservation">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Reservation">
+              <MappingFragment StoreEntitySet="Reservation">
+                <ScalarProperty Name="CancelledDate" ColumnName="CancelledDate" />
+                <ScalarProperty Name="ConfirmedDate" ColumnName="ConfirmedDate" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="CancelReason" ColumnName="CancelReason" />
+                <ScalarProperty Name="DepositPaid" ColumnName="DepositPaid" />
+                <ScalarProperty Name="DepositAmount" ColumnName="DepositAmount" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="SpecialRequests" ColumnName="SpecialRequests" />
+                <ScalarProperty Name="TablePreference" ColumnName="TablePreference" />
+                <ScalarProperty Name="TableId" ColumnName="TableId" />
+                <ScalarProperty Name="NumberOfGuests" ColumnName="NumberOfGuests" />
+                <ScalarProperty Name="ReservationTime" ColumnName="ReservationTime" />
+                <ScalarProperty Name="ReservationDate" ColumnName="ReservationDate" />
+                <ScalarProperty Name="CustomerEmail" ColumnName="CustomerEmail" />
+                <ScalarProperty Name="CustomerPhone" ColumnName="CustomerPhone" />
+                <ScalarProperty Name="CustomerName" ColumnName="CustomerName" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="ReservationCode" ColumnName="ReservationCode" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Review">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Review">
+              <MappingFragment StoreEntitySet="Review">
+                <ScalarProperty Name="UpdatedDate" ColumnName="UpdatedDate" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="IsHidden" ColumnName="IsHidden" />
+                <ScalarProperty Name="IsApproved" ColumnName="IsApproved" />
+                <ScalarProperty Name="AdminReplyDate" ColumnName="AdminReplyDate" />
+                <ScalarProperty Name="AdminReply" ColumnName="AdminReply" />
+                <ScalarProperty Name="IsVerifiedPurchase" ColumnName="IsVerifiedPurchase" />
+                <ScalarProperty Name="LikesCount" ColumnName="LikesCount" />
+                <ScalarProperty Name="ImageUrls" ColumnName="ImageUrls" />
+                <ScalarProperty Name="Comment" ColumnName="Comment" />
+                <ScalarProperty Name="Rating" ColumnName="Rating" />
+                <ScalarProperty Name="OrderId" ColumnName="OrderId" />
+                <ScalarProperty Name="MenuItemId" ColumnName="MenuItemId" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Shipper">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Shipper">
+              <MappingFragment StoreEntitySet="Shipper">
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="LastLocationUpdate" ColumnName="LastLocationUpdate" />
+                <ScalarProperty Name="CurrentLongitude" ColumnName="CurrentLongitude" />
+                <ScalarProperty Name="CurrentLatitude" ColumnName="CurrentLatitude" />
+                <ScalarProperty Name="TotalEarnings" ColumnName="TotalEarnings" />
+                <ScalarProperty Name="TotalDeliveries" ColumnName="TotalDeliveries" />
+                <ScalarProperty Name="Rating" ColumnName="Rating" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="AvatarUrl" ColumnName="AvatarUrl" />
+                <ScalarProperty Name="LicensePlate" ColumnName="LicensePlate" />
+                <ScalarProperty Name="VehicleType" ColumnName="VehicleType" />
+                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="Phone" ColumnName="Phone" />
+                <ScalarProperty Name="FullName" ColumnName="FullName" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Voucher">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Voucher">
+              <MappingFragment StoreEntitySet="Voucher">
+                <ScalarProperty Name="CreatedDate" ColumnName="CreatedDate" />
+                <ScalarProperty Name="ApplicableItemIds" ColumnName="ApplicableItemIds" />
+                <ScalarProperty Name="ApplicableTo" ColumnName="ApplicableTo" />
+                <ScalarProperty Name="IsActive" ColumnName="IsActive" />
+                <ScalarProperty Name="EndDate" ColumnName="EndDate" />
+                <ScalarProperty Name="StartDate" ColumnName="StartDate" />
+                <ScalarProperty Name="PerCustomerLimit" ColumnName="PerCustomerLimit" />
+                <ScalarProperty Name="UsedCount" ColumnName="UsedCount" />
+                <ScalarProperty Name="UsageLimit" ColumnName="UsageLimit" />
+                <ScalarProperty Name="MinOrderAmount" ColumnName="MinOrderAmount" />
+                <ScalarProperty Name="MaxDiscountAmount" ColumnName="MaxDiscountAmount" />
+                <ScalarProperty Name="DiscountValue" ColumnName="DiscountValue" />
+                <ScalarProperty Name="DiscountType" ColumnName="DiscountType" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Code" ColumnName="Code" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="VoucherUsage">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.VoucherUsage">
+              <MappingFragment StoreEntitySet="VoucherUsage">
+                <ScalarProperty Name="UsedDate" ColumnName="UsedDate" />
+                <ScalarProperty Name="DiscountAmount" ColumnName="DiscountAmount" />
+                <ScalarProperty Name="OrderId" ColumnName="OrderId" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="VoucherId" ColumnName="VoucherId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Wishlist">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.Wishlist">
+              <MappingFragment StoreEntitySet="Wishlist">
+                <ScalarProperty Name="AddedDate" ColumnName="AddedDate" />
+                <ScalarProperty Name="MenuItemId" ColumnName="MenuItemId" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SupportConversation">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.SupportConversation">
+              <MappingFragment StoreEntitySet="SupportConversation">
+                <ScalarProperty Name="Tags" ColumnName="Tags" />
+                <ScalarProperty Name="InternalNotes" ColumnName="InternalNotes" />
+                <ScalarProperty Name="CustomerFeedback" ColumnName="CustomerFeedback" />
+                <ScalarProperty Name="CustomerRating" ColumnName="CustomerRating" />
+                <ScalarProperty Name="LastMessageTime" ColumnName="LastMessageTime" />
+                <ScalarProperty Name="EndTime" ColumnName="EndTime" />
+                <ScalarProperty Name="StartTime" ColumnName="StartTime" />
+                <ScalarProperty Name="Priority" ColumnName="Priority" />
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="AssignedStaffId" ColumnName="AssignedStaffId" />
+                <ScalarProperty Name="CustomerPhone" ColumnName="CustomerPhone" />
+                <ScalarProperty Name="CustomerEmail" ColumnName="CustomerEmail" />
+                <ScalarProperty Name="CustomerName" ColumnName="CustomerName" />
+                <ScalarProperty Name="CustomerId" ColumnName="CustomerId" />
+                <ScalarProperty Name="ConversationCode" ColumnName="ConversationCode" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SupportMessage">
+            <EntityTypeMapping TypeName="NhaHangLDPModel.SupportMessage">
+              <MappingFragment StoreEntitySet="SupportMessage">
+                <ScalarProperty Name="Metadata" ColumnName="Metadata" />
+                <ScalarProperty Name="ConversationId" ColumnName="ConversationId" />
+                <ScalarProperty Name="ReadTime" ColumnName="ReadTime" />
+                <ScalarProperty Name="IsRead" ColumnName="IsRead" />
+                <ScalarProperty Name="SentTime" ColumnName="SentTime" />
+                <ScalarProperty Name="AttachmentUrl" ColumnName="AttachmentUrl" />
+                <ScalarProperty Name="MessageType" ColumnName="MessageType" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+                <ScalarProperty Name="RecipientType" ColumnName="RecipientType" />
+                <ScalarProperty Name="RecipientId" ColumnName="RecipientId" />
+                <ScalarProperty Name="SenderName" ColumnName="SenderName" />
+                <ScalarProperty Name="SenderType" ColumnName="SenderType" />
+                <ScalarProperty Name="SenderId" ColumnName="SenderId" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>

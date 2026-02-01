@@ -1,0 +1,430 @@
+﻿@model List<NhaHangLDP.Models.Supplier>
+@{
+    ViewBag.Title = "Quản Lý Nhà Cung Cấp";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+@section styles {
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .page-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #e5e7eb;
+            height: 100%;
+        }
+
+        .stat-card .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .stat-card .label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 15px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+
+        .table-card .card-header {
+            background: #f8fafc;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .table-custom {
+            margin: 0;
+        }
+
+        .table-custom thead th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 15px;
+        }
+
+        .table-custom tbody td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+
+        .table-custom tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .supplier-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .contact-info {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .btn-action {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 20px;
+        }
+
+        .badge-orders {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+    </style>
+}
+
+<!-- Page Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="fas fa-truck me-2"></i>Quản Lý Nhà Cung Cấp</h1>
+            <p>Quản lý thông tin các nhà cung cấp nguyên liệu</p>
+        </div>
+        <div>
+            <a href="@Url.Action("CreateSupplier", "Management")" class="btn btn-light">
+                <i class="fas fa-plus me-2"></i>Thêm Nhà Cung Cấp
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="icon bg-primary bg-opacity-10 text-primary me-3">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div>
+                    <div class="value">@Model.Count</div>
+                    <div class="label">Tổng nhà cung cấp</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="icon bg-success bg-opacity-10 text-success me-3">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <div>
+                    <div class="value">@Model.Sum(s => s.StockInbound?.Count ?? 0)</div>
+                    <div class="label">Tổng phiếu nhập</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <div class="icon bg-info bg-opacity-10 text-info me-3">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <div>
+                    <div class="value">@Model.Count(s => !string.IsNullOrEmpty(s.PhoneNumber))</div>
+                    <div class="label">Có liên hệ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Suppliers Table -->
+@if (Model == null || !Model.Any())
+{
+    <div class="table-card">
+        <div class="empty-state">
+            <i class="fas fa-truck"></i>
+            <h4 class="text-muted">Chưa có nhà cung cấp nào</h4>
+            <p class="text-muted">Thêm nhà cung cấp để quản lý việc nhập kho</p>
+            <div class="mt-4">
+                <a href="@Url.Action("CreateSupplier", "Management")" class="btn btn-primary me-2">
+                    <i class="fas fa-plus me-2"></i>Thêm Nhà Cung Cấp
+                </a>
+                <button class="btn btn-outline-secondary" onclick="createSampleSuppliers()">
+                    <i class="fas fa-magic me-2"></i>Tạo Dữ Liệu Mẫu
+                </button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="table-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Danh Sách Nhà Cung Cấp</h5>
+            <div>
+                <input type="text" class="form-control" id="searchInput" placeholder="Tìm kiếm..." style="width: 250px;">
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-custom" id="supplierTable">
+                <thead>
+                    <tr>
+                        <th>Nhà Cung Cấp</th>
+                        <th>Người Liên Hệ</th>
+                        <th>Số Điện Thoại</th>
+                        <th>Địa Chỉ</th>
+                        <th>Số Phiếu Nhập</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var supplier in Model)
+                    {
+                        <tr data-name="@supplier.Name.ToLower()">
+                            <td>
+                                <span class="supplier-name">@supplier.Name</span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(supplier.ContactPerson))
+                                {
+                                    <i class="fas fa-user text-muted me-1"></i>@supplier.ContactPerson
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(supplier.PhoneNumber))
+                                {
+                                    <a href="tel:@supplier.PhoneNumber" class="text-decoration-none">
+                                        <i class="fas fa-phone text-success me-1"></i>@supplier.PhoneNumber
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(supplier.Address))
+                                {
+                                    <span class="contact-info" title="@supplier.Address">
+                                        <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                        @(supplier.Address.Length > 40 ? supplier.Address.Substring(0, 40) + "..." : supplier.Address)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa có</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge-orders">@(supplier.StockInbound?.Count ?? 0) phiếu</span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-info btn-action" onclick="viewSupplierDetail(@supplier.Id)" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="@Url.Action("EditSupplier", "Management", new { id = supplier.Id })" class="btn btn-sm btn-outline-primary btn-action" title="Sửa">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteSupplier(@supplier.Id, '@supplier.Name')" title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+<!-- Modal Chi tiết nhà cung cấp -->
+<div class="modal fade" id="supplierDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-truck me-2"></i>Chi Tiết Nhà Cung Cấp</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="supplierDetailContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Tìm kiếm
+        document.getElementById('searchInput')?.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#supplierTable tbody tr');
+            
+            rows.forEach(row => {
+                const name = row.getAttribute('data-name');
+                row.style.display = name.includes(searchTerm) ? '' : 'none';
+            });
+        });
+
+        function viewSupplierDetail(id) {
+            const modal = new bootstrap.Modal(document.getElementById('supplierDetailModal'));
+            modal.show();
+
+            fetch(`@Url.Action("GetSupplierDetail", "Management")?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('supplierDetailContent').innerHTML = renderSupplierDetail(data);
+                    } else {
+                        document.getElementById('supplierDetailContent').innerHTML = `
+                            <div class="text-center text-danger">
+                                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                <p>${data.message}</p>
+                            </div>`;
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('supplierDetailContent').innerHTML = `
+                        <div class="text-center text-danger">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p>Lỗi tải thông tin chi tiết.</p>
+                        </div>`;
+                });
+        }
+
+        function renderSupplierDetail(data) {
+            const s = data.supplier;
+            let html = `
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>Thông Tin Cơ Bản</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr><td class="text-muted" width="40%">Tên:</td><td><strong>${s.name}</strong></td></tr>
+                            <tr><td class="text-muted">Người liên hệ:</td><td>${s.contactPerson || '<span class="text-muted">Chưa có</span>'}</td></tr>
+                            <tr><td class="text-muted">Số điện thoại:</td><td>${s.phoneNumber || '<span class="text-muted">Chưa có</span>'}</td></tr>
+                            <tr><td class="text-muted">Địa chỉ:</td><td>${s.address || '<span class="text-muted">Chưa có</span>'}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-chart-bar me-2"></i>Thống Kê</h6>
+                        <table class="table table-borderless table-sm">
+                            <tr><td class="text-muted" width="50%">Tổng phiếu nhập:</td><td><strong>${s.totalOrders}</strong> phiếu</td></tr>
+                            <tr><td class="text-muted">Tổng giá trị:</td><td><strong class="text-success">${parseInt(s.totalValue).toLocaleString('vi-VN')} VNĐ</strong></td></tr>
+                        </table>
+                    </div>
+                </div>`;
+
+            if (data.recentInbounds && data.recentInbounds.length > 0) {
+                html += `
+                    <h6 class="fw-bold mb-3"><i class="fas fa-history me-2"></i>Phiếu Nhập Gần Đây</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã phiếu</th>
+                                    <th>Ngày nhập</th>
+                                    <th>Số mặt hàng</th>
+                                    <th>Tổng tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                
+                data.recentInbounds.forEach(inbound => {
+                    html += `
+                        <tr>
+                            <td>${inbound.inboundCode}</td>
+                            <td>${new Date(inbound.inboundDate).toLocaleDateString('vi-VN')}</td>
+                            <td>${inbound.itemCount} mặt hàng</td>
+                            <td class="text-success">${parseInt(inbound.totalCost).toLocaleString('vi-VN')} VNĐ</td>
+                        </tr>`;
+                });
+
+                html += `</tbody></table></div>`;
+            }
+
+            return html;
+        }
+
+        function deleteSupplier(id, name) {
+            if (!confirm(`Bạn có chắc muốn xóa nhà cung cấp "${name}" không?`)) return;
+
+            fetch('@Url.Action("DeleteSupplier", "Management")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `id=${id}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if (data.success) location.reload();
+            })
+            .catch(() => alert('Lỗi khi xóa nhà cung cấp.'));
+        }
+
+        function createSampleSuppliers() {
+            if (confirm('Tạo dữ liệu mẫu cho nhà cung cấp?')) {
+                fetch('@Url.Action("CreateSampleSuppliers", "Management")', { method: 'POST' })
+                    .then(res => res.json())
+                    .then(data => {
+                        alert(data.message);
+                        if (data.success) location.reload();
+                    })
+                    .catch(() => alert('Lỗi tạo dữ liệu mẫu.'));
+            }
+        }
+    </script>
+}
