@@ -556,7 +556,7 @@ namespace NhaHangLDP.Controllers
                 var addresses = _db.Database.SqlQuery<CustomerAddressInfo>(
                     @"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault
                       FROM CustomerAddress
-                      WHERE CustomerId = @p0 AND IsDeleted = 0
+                      WHERE CustomerId = @p0
                       ORDER BY IsDefault DESC, Id DESC",
                     customerId).ToList();
 
@@ -597,7 +597,7 @@ namespace NhaHangLDP.Controllers
                 var address = _db.Database.SqlQuery<CustomerAddressInfo>(
                     @"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault
                       FROM CustomerAddress
-                      WHERE Id = @p0 AND CustomerId = @p1 AND IsDeleted = 0",
+                      WHERE Id = @p0 AND CustomerId = @p1",
                     id, customerId).FirstOrDefault();
 
                 if (address == null)
@@ -641,8 +641,8 @@ namespace NhaHangLDP.Controllers
                 {
                     // Insert new address
                     _db.Database.ExecuteSqlCommand(
-                        @"INSERT INTO CustomerAddress (CustomerId, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault, IsDeleted, CreatedDate)
-                          VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, 0, GETDATE())",
+                        @"INSERT INTO CustomerAddress (CustomerId, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault)
+                          VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8)",
                         customerId, receiverName, receiverPhone, addressLine, ward, district, city, addressType, isDefault);
             
             return Json(new { success = true, message = "Thêm địa chỉ thành công!" });
@@ -721,9 +721,9 @@ public JsonResult DeleteAddress(int id)
             return Json(new { success = false, message = "Không thể xóa địa chỉ mặc định!" });
         }
 
-        // Soft delete
+        // Delete address
         _db.Database.ExecuteSqlCommand(
-            "UPDATE CustomerAddress SET IsDeleted = 1 WHERE Id = @p0 AND CustomerId = @p1",
+            "DELETE FROM CustomerAddress WHERE Id = @p0 AND CustomerId = @p1",
             id, customerId);
 
         return Json(new { success = true, message = "Đã xóa địa chỉ!" });

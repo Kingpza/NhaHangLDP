@@ -180,37 +180,6 @@
                                 <span id="subtotal">@Model.SubTotal.ToString("N0")đ</span>
                             </div>
 
-                            @if (ViewBag.HasAddress == true)
-                            {
-                                <div class="flex justify-between text-text-secondary">
-                                    <span>Phí giao hàng</span>
-                                    <span id="deliveryFee">
-                                        @if (Model.DeliveryFee == 0)
-                                        {
-                                            <span class="text-success">Miễn phí</span>
-                                        }
-                                        else
-                                        {
-                                            @Model.DeliveryFee.ToString("N0")@:đ
-                                        }
-                                    </span>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="flex justify-between items-center">
-                                    <span class="text-text-secondary">Phí giao hàng</span>
-                                    <span class="text-xs text-warning flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-sm">info</span>
-                                        Chưa xác định
-                                    </span>
-                                </div>
-                                <div class="bg-warning/10 border border-warning/30 rounded-lg p-3 text-sm text-warning">
-                                    <span class="material-symbols-outlined align-middle">location_on</span>
-                                    <strong>Vui lòng nhập địa chỉ</strong> để xem phí giao hàng chính xác
-                                </div>
-                            }
-
                             @if (Model.Discount > 0)
                             {
                                 <div class="flex justify-between text-success">
@@ -221,61 +190,23 @@
                             <div class="flex justify-between text-lg font-bold pt-3 border-t border-border">
                                 <span>Tổng cộng</span>
                                 <span id="totalAmount" class="text-primary">
-                                    @if (ViewBag.HasAddress == true)
-                                    {
-                                        @Model.TotalAmount.ToString("N0")@:đ
+                                    @{
+                                        var cartTotal = Model.SubTotal - Model.Discount;
+                                        if (cartTotal < 0) { cartTotal = 0; }
                                     }
-                                    else
-                                    {
-                                        <span class="text-sm text-warning">Chưa xác định</span>
-                                    }
+                                    @cartTotal.ToString("N0")đ
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Free Shipping Notice -->
-                        @{
-                            decimal freeMinOrder = ViewBag.FreeDeliveryMinOrder != null ? (decimal)ViewBag.FreeDeliveryMinOrder : 300000m;
-                        }
-                        @if (freeMinOrder > 0 && Model.SubTotal < freeMinOrder)
-                        {
-                            var remaining = freeMinOrder - Model.SubTotal;
-                            <div class="mt-4 p-3 bg-warning/10 rounded-lg text-sm">
-                                <span class="material-symbols-outlined text-warning align-middle">local_shipping</span>
-                                Mua thêm <strong>@remaining.ToString("N0")đ</strong> để được miễn phí giao hàng!
-                            </div>
-                        }
-                        else if (freeMinOrder > 0)
-                        {
-                            <div class="mt-4 p-3 bg-success/10 rounded-lg text-sm text-success">
-                                <span class="material-symbols-outlined align-middle">check_circle</span>
-                                Bạn được miễn phí giao hàng!
-                            </div>
-                        }
-
                         <!-- Checkout Button -->
                         @if (Session["CustomerId"] != null)
                         {
-                            if (ViewBag.HasAddress == true)
-                            {
-                                <button type="button" id="btnCheckout1"
-                                   class="mt-6 w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/30">
-                                    <span class="material-symbols-outlined">shopping_cart_checkout</span>
-                                    <span>Đặt hàng ngay</span>
-                                </button>
-                            }
-                            else
-                            {
-                                <button type="button" id="btnCheckout2"
-                                   class="mt-6 w-full py-4 bg-warning text-white rounded-xl font-bold text-lg hover:bg-yellow-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-warning/30">
-                                    <span class="material-symbols-outlined">location_on</span>
-                                    <span>Nhập địa chỉ giao hàng</span>
-                                </button>
-                                <p class="text-xs text-text-secondary text-center mt-3 flex items-center justify-center gap-1">
-                                    <span class="material-symbols-outlined text-sm">info</span>
-                                    Bạn cần nhập địa chỉ để đặt hàng
-                                </p>
-                            }
+                            <button type="button" id="btnCheckout1"
+                               class="mt-6 w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:bg-primary-dark transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/30">
+                                <span class="material-symbols-outlined">shopping_cart_checkout</span>
+                                <span>Đặt hàng ngay</span>
+                            </button>
                         }
                         else
                         {
@@ -486,12 +417,9 @@
         // Update cart summary
         function updateCartSummary(cart) {
             $('#subtotal').text(formatPrice(cart.SubTotal));
-            if (cart.DeliveryFee === 0) {
-                $('#deliveryFee').html('<span class="text-success">Miễn phí</span>');
-            } else {
-                $('#deliveryFee').text(formatPrice(cart.DeliveryFee));
-            }
-            $('#totalAmount').text(formatPrice(cart.TotalAmount));
+            var total = cart.SubTotal - (cart.Discount || 0);
+            if (total < 0) total = 0;
+            $('#totalAmount').text(formatPrice(total));
             $('h2 .text-primary').first().text(cart.TotalItems);
         }
 
@@ -592,8 +520,8 @@
                 }
             });
 
-            // Checkout buttons - redirect to checkout page
-            $('#btnCheckout1, #btnCheckout2').on('click', function(e) {
+            // Checkout button - redirect to checkout page
+            $('#btnCheckout1').on('click', function(e) {
                 console.log('Button clicked, redirecting to:', checkoutUrl);
                 window.location.href = checkoutUrl;
             });
