@@ -32,28 +32,57 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>@ViewBag.Title - Nhà Hàng LDP</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: { extend: {
-                colors: { "primary": "#007bff", "text-primary": "#212529" },
+                colors: { "primary": "#007bff", "sidebar-surface": "#f0f2f5", "text-primary": "#212529", "text-secondary": "#6c757d", "border-light": "#e0e0e0" },
                 fontFamily: { "display": ["Manrope", "sans-serif"] }
             }}
         }
     </script>
 </head>
-<body class="bg-gray-50 font-display min-h-screen">
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="@Url.Action("Index", "Delivery")" class="text-gray-600 hover:text-primary"><i class="fas fa-arrow-left"></i></a>
-                <h1 class="text-2xl font-bold">Đơn Hàng Đang Giao</h1>
+<body class="bg-sidebar-surface font-display text-text-primary min-h-screen">
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 border-b border-border-light bg-white/95 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="@Url.Action("Index", "Delivery")" class="flex items-center gap-3">
+                        <div class="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-2xl">local_shipping</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-black text-text-primary">GIAO HÀNG</h1>
+                            <p class="text-xs text-text-secondary">Delivery Management</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="@Url.Action("Index", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Dashboard</a>
+                    <a href="@Url.Action("Management", "Delivery")" class="text-primary font-semibold border-b-2 border-primary pb-1">Quản lý giao hàng</a>
+                    <a href="@Url.Action("Orders", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Đơn hàng</a>
+                    <a href="@Url.Action("Shippers", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Shipper</a>
+                    <a href="@Url.Action("Tracking", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Theo dõi</a>
+                    <a href="@Url.Action("FeeSettings", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Cài đặt phí</a>
+                    <a href="@Url.Action("Statistics", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Thống kê</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="location.reload()" class="flex items-center gap-2 px-4 py-2 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all font-semibold">
+                        <span class="material-symbols-outlined text-lg">refresh</span>
+                        Làm mới
+                    </button>
+                    <a href="@Url.Action("Dashboard", "Management")" class="flex items-center gap-2 px-6 py-2 bg-primary rounded-full text-white hover:bg-blue-700 transition-all font-bold shadow-lg">
+                        <span class="material-symbols-outlined text-lg">dashboard</span>
+                        Quản lý
+                    </a>
+                </div>
             </div>
-            <button onclick="location.reload()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600"><i class="fas fa-sync-alt mr-2"></i>Làm mới</button>
         </div>
-    </header>
-    <main class="container mx-auto px-6 py-6">
+    </nav>
+    <main class="max-w-7xl mx-auto px-6 py-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white rounded-xl p-6 shadow-sm border"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center"><i class="fas fa-shipping-fast text-blue-600 text-xl"></i></div><div><p class="text-gray-500 text-sm">Đơn hôm nay</p><p class="text-2xl font-bold">@Model.TodayOrderCount</p></div></div></div>
             <div class="bg-white rounded-xl p-6 shadow-sm border"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center"><i class="fas fa-check text-green-600 text-xl"></i></div><div><p class="text-gray-500 text-sm">Đã hoàn thành</p><p class="text-2xl font-bold">@Model.TodayCompletedCount</p></div></div></div>

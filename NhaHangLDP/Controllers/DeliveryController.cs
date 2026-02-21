@@ -886,13 +886,15 @@ namespace NhaHangLDP.Controllers
                 Fee10To20Km = GetSettingValue("Fee10To20Km", 25000),
                 FeeOver20Km = GetSettingValue("FeeOver20Km", 40000),
                 FreeDeliveryMinOrder = GetSettingValue("FreeDeliveryMinOrder", 0),
-                EnableDistanceBasedFee = GetSettingBool("EnableDistanceBasedFee", true)
+                EnableDistanceBasedFee = GetSettingBool("EnableDistanceBasedFee", true),
+                RestaurantLat = GetSettingDouble("RestaurantLat", 10.77690),
+                RestaurantLng = GetSettingDouble("RestaurantLng", 106.70090)
             };
             return View(viewModel);
         }
 
         /// <summary>
-        /// Cập nhật cài đặt phí giao hàng
+        /// Cập nhật cài đặt phí giao hàng (Form POST)
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -916,6 +918,34 @@ namespace NhaHangLDP.Controllers
             }
 
             return RedirectToAction("FeeSettings");
+        }
+
+        /// <summary>
+        /// Lưu cài đặt phí giao hàng (AJAX JSON)
+        /// </summary>
+        [HttpPost]
+        public JsonResult SaveFeeSettings()
+        {
+            try
+            {
+                Request.InputStream.Seek(0, System.IO.SeekOrigin.Begin);
+                var bodyText = new System.IO.StreamReader(Request.InputStream).ReadToEnd();
+                var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<DistanceFeeSettingsViewModel>(bodyText);
+
+                if (settings == null)
+                    return Json(new { success = false, message = "Dữ liệu không hợp lệ!" });
+
+                var success = _deliveryService.UpdateDistanceFeeSettings(settings);
+                return Json(new
+                {
+                    success = success,
+                    message = success ? "Đã lưu cài đặt phí giao hàng!" : "Không thể lưu cài đặt"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
         }
 
         /// <summary>
@@ -970,6 +1000,16 @@ namespace NhaHangLDP.Controllers
             {
                 return setting.SettingValue?.ToLower() == "true";
             }
+            return defaultValue;
+        }
+
+        private double GetSettingDouble(string key, double defaultValue)
+        {
+            var setting = _db.DeliverySettings.FirstOrDefault(s => s.SettingKey == key);
+            if (setting != null && double.TryParse(setting.SettingValue,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out double value))
+                return value;
             return defaultValue;
         }
 

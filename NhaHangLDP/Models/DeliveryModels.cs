@@ -489,6 +489,8 @@ namespace NhaHangLDP.Models
         public decimal FeeOver20Km { get; set; }
         public decimal FreeDeliveryMinOrder { get; set; }
         public bool EnableDistanceBasedFee { get; set; }
+        public double RestaurantLat { get; set; }
+        public double RestaurantLng { get; set; }
     }
 
     #endregion

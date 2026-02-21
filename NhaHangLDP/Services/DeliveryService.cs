@@ -222,6 +222,8 @@ namespace NhaHangLDP.Services
                 UpdateOrCreateSetting("Fee10To20Km", settings.Fee10To20Km.ToString());
                 UpdateOrCreateSetting("FeeOver20Km", settings.FeeOver20Km.ToString());
                 UpdateOrCreateSetting("FreeDeliveryMinOrder", settings.FreeDeliveryMinOrder.ToString());
+                UpdateOrCreateSetting("RestaurantLat", settings.RestaurantLat.ToString(System.Globalization.CultureInfo.InvariantCulture));
+                UpdateOrCreateSetting("RestaurantLng", settings.RestaurantLng.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
                 _db.SaveChanges();
                 return true;

@@ -185,22 +185,117 @@ namespace NhaHangLDP.Controllers
         [HttpPost]
         public JsonResult CalculateDeliveryFee(string district)
         {
-            // Simple logic: Free for orders >= 300k, 25k otherwise
             var cart = GetCart();
-            decimal fee = cart.SubTotal >= 300000 ? 0 : 25000;
+            if (cart == null) return Json(new { success = false });
+            var defaultFee = GetDeliveryFeeFromSettings();
+            var freeMinOrder = GetFreeDeliveryMinOrder();
+            decimal fee = (freeMinOrder > 0 && cart.SubTotal >= freeMinOrder) ? 0 : defaultFee;
 
             return Json(new { success = true, fee = fee });
         }
 
         /// <summary>
-        /// Validate voucher
+        /// Tính phí ship theo khoảng cách (Haversine - không cần API key)
+        /// Tọa độ nhà hàng lấy từ DeliverySettings (RestaurantLat / RestaurantLng)
         /// </summary>
         [HttpPost]
-        public JsonResult ValidateVoucher(string code)
+        public JsonResult CalculateDeliveryFeeByDistance(double customerLat, double customerLng)
         {
-            // Already implemented in CartController
-            return Json(new { success = true });
+            try
+            {
+                // Tọa độ nhà hàng (lấy từ DB hoặc dùng giá trị mặc định)
+                double restaurantLat = GetRestaurantCoordinate("RestaurantLat", 10.7769);  // Mặc định: TP.HCM
+                double restaurantLng = GetRestaurantCoordinate("RestaurantLng", 106.7009);
+
+                // Tính khoảng cách theo công thức Haversine
+                double distanceKm = CalculateHaversineDistance(restaurantLat, restaurantLng, customerLat, customerLng);
+
+                // Lấy phí theo km từ DB
+                decimal fee;
+                string rangeText;
+                if (distanceKm < 10)
+                {
+                    fee = GetFeeByKey("FeeUnder10Km", 15000);
+                    rangeText = "Dưới 10km";
+                }
+                else if (distanceKm <= 20)
+                {
+                    fee = GetFeeByKey("Fee10To20Km", 25000);
+                    rangeText = "10 - 20km";
+                }
+                else
+                {
+                    fee = GetFeeByKey("FeeOver20Km", 40000);
+                    rangeText = "Trên 20km";
+                }
+
+                // Kiểm tra miễn phí
+                var cart = GetCart();
+                var freeMinOrder = GetFreeDeliveryMinOrder();
+                if (freeMinOrder > 0 && cart != null && cart.SubTotal >= freeMinOrder)
+                {
+                    fee = 0;
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    distanceKm = Math.Round(distanceKm, 1),
+                    fee = fee,
+                    rangeText = rangeText,
+                    message = fee == 0 ? "Miễn phí giao hàng!" : $"Phí giao hàng ({rangeText}): {fee:N0}đ"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
+
+        private double GetRestaurantCoordinate(string key, double defaultValue)
+        {
+            try
+            {
+                var result = _db.Database.SqlQuery<string>(
+                    "SELECT SettingValue FROM DeliverySettings WHERE SettingKey = @p0", key
+                ).FirstOrDefault();
+                if (result != null && double.TryParse(result, System.Globalization.NumberStyles.Any,
+                    System.Globalization.CultureInfo.InvariantCulture, out double val))
+                    return val;
+            }
+            catch { }
+            return defaultValue;
+        }
+
+        private decimal GetFeeByKey(string key, decimal defaultValue)
+        {
+            try
+            {
+                var result = _db.Database.SqlQuery<string>(
+                    "SELECT SettingValue FROM DeliverySettings WHERE SettingKey = @p0", key
+                ).FirstOrDefault();
+                if (result != null && decimal.TryParse(result, out decimal value))
+                    return value;
+            }
+            catch { }
+            return defaultValue;
+        }
+
+        /// <summary>
+        /// Công thức Haversine tính khoảng cách (km) giữa 2 tọa độ
+        /// </summary>
+        private double CalculateHaversineDistance(double lat1, double lng1, double lat2, double lng2)
+        {
+            const double R = 6371; // Bán kính Trái Đất (km)
+            var dLat = ToRad(lat2 - lat1);
+            var dLng = ToRad(lng2 - lng1);
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                    Math.Cos(ToRad(lat1)) * Math.Cos(ToRad(lat2)) *
+                    Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
+            return R * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        }
+
+        private double ToRad(double deg) => deg * Math.PI / 180;
 
         #endregion
 
@@ -208,7 +303,107 @@ namespace NhaHangLDP.Controllers
 
         private CartViewModel GetCart()
         {
+            var customerId = Session["CustomerId"] as int?;
+
+            // Đã đăng nhập: lấy giỏ hàng từ database (giống CartController)
+            if (customerId.HasValue)
+            {
+                try
+                {
+                    var items = _db.Database.SqlQuery<CartItemDbModel>(
+                        @"SELECT ci.Id, ci.MenuItemId, m.Name, m.ImageUrl, m.Category,
+                                 ci.Quantity, m.Price as UnitPrice,
+                                 (ci.Quantity * m.Price) as Subtotal,
+                                 ci.SpecialInstructions
+                          FROM CartItem ci
+                          JOIN MenuItem m ON ci.MenuItemId = m.Id
+                          WHERE ci.CustomerId = @p0",
+                        customerId.Value).ToList();
+
+                    var cartItems = items.Select(i => new CartItemViewModel
+                    {
+                        Id = i.Id,
+                        MenuItemId = i.MenuItemId,
+                        Name = i.Name,
+                        ImageUrl = i.ImageUrl,
+                        Category = i.Category,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice,
+                        Subtotal = i.Subtotal,
+                        SpecialInstructions = i.SpecialInstructions
+                    }).ToList();
+
+                    var subTotal = cartItems.Sum(i => i.Subtotal);
+                    var defaultFee = GetDeliveryFeeFromSettings();
+                    var freeMinOrder = GetFreeDeliveryMinOrder();
+                    var deliveryFee = (freeMinOrder > 0 && subTotal >= freeMinOrder) ? 0 : defaultFee;
+
+                    return new CartViewModel
+                    {
+                        Items = cartItems,
+                        SubTotal = subTotal,
+                        DeliveryFee = deliveryFee,
+                        Discount = 0,
+                        TotalAmount = subTotal + deliveryFee,
+                        TotalItems = cartItems.Sum(i => i.Quantity)
+                    };
+                }
+                catch
+                {
+                    // Fallback: thử lấy từ session
+                    return Session[CART_SESSION_KEY] as CartViewModel;
+                }
+            }
+
+            // Chưa đăng nhập: lấy từ Session
             return Session[CART_SESSION_KEY] as CartViewModel;
+        }
+
+        private class CartItemDbModel
+        {
+            public int Id { get; set; }
+            public int MenuItemId { get; set; }
+            public string Name { get; set; }
+            public string ImageUrl { get; set; }
+            public string Category { get; set; }
+            public int Quantity { get; set; }
+            public decimal UnitPrice { get; set; }
+            public decimal Subtotal { get; set; }
+            public string SpecialInstructions { get; set; }
+        }
+
+        /// <summary>
+        /// Lấy phí giao hàng mặc định từ DB
+        /// </summary>
+        private decimal GetDeliveryFeeFromSettings()
+        {
+            try
+            {
+                var result = _db.Database.SqlQuery<string>(
+                    "SELECT SettingValue FROM DeliverySettings WHERE SettingKey = 'DefaultDeliveryFee'"
+                ).FirstOrDefault();
+                if (result != null && decimal.TryParse(result, out decimal value))
+                    return value;
+            }
+            catch { }
+            return 25000m;
+        }
+
+        /// <summary>
+        /// Lấy ngưỡng đơn miễn phí giao hàng từ DB
+        /// </summary>
+        private decimal GetFreeDeliveryMinOrder()
+        {
+            try
+            {
+                var result = _db.Database.SqlQuery<string>(
+                    "SELECT SettingValue FROM DeliverySettings WHERE SettingKey = 'FreeDeliveryMinOrder'"
+                ).FirstOrDefault();
+                if (result != null && decimal.TryParse(result, out decimal value))
+                    return value;
+            }
+            catch { }
+            return 300000m;
         }
 
         private CustomerInfoViewModel GetCustomerInfo()
