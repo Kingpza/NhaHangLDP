@@ -47,6 +47,17 @@ namespace NhaHangLDP.Controllers
                 viewModel.Form.CustomerName = viewModel.CustomerInfo.FullName;
                 viewModel.Form.CustomerPhone = viewModel.CustomerInfo.Phone;
                 viewModel.Form.CustomerEmail = viewModel.CustomerInfo.Email;
+
+                // Auto-fill default address
+                var defaultAddress = viewModel.SavedAddresses?.FirstOrDefault(a => a.IsDefault)
+                    ?? viewModel.SavedAddresses?.FirstOrDefault();
+                if (defaultAddress != null)
+                {
+                    viewModel.Form.DeliveryAddress = defaultAddress.AddressLine;
+                    viewModel.Form.Ward = defaultAddress.Ward;
+                    viewModel.Form.District = defaultAddress.District;
+                    viewModel.Form.City = defaultAddress.City;
+                }
             }
 
             return View(viewModel);
@@ -178,6 +189,66 @@ namespace NhaHangLDP.Controllers
         #endregion
 
         #region API Endpoints
+
+        /// <summary>
+        /// Lưu địa chỉ giao hàng vào Profile từ trang Checkout
+        /// </summary>
+        [HttpPost]
+        public JsonResult SaveAddressFromCheckout(string deliveryAddress, string ward, string district, string city)
+        {
+            try
+            {
+                var customerId = Session["CustomerId"] as int?;
+                if (!customerId.HasValue)
+                {
+                    return Json(new { success = false, message = "Vui lòng đăng nhập!" });
+                }
+
+                if (string.IsNullOrWhiteSpace(deliveryAddress))
+                {
+                    return Json(new { success = false, message = "Vui lòng nhập địa chỉ!" });
+                }
+
+                // Get customer info for receiver name/phone
+                var customer = _db.Database.SqlQuery<CustomerBasicInfo>(
+                    "SELECT Id, FullName, Email, Phone FROM Customer WHERE Id = @p0",
+                    customerId.Value).FirstOrDefault();
+
+                if (customer == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy thông tin khách hàng!" });
+                }
+
+                // Check if address already exists
+                var existingCount = _db.Database.SqlQuery<int>(
+                    "SELECT COUNT(*) FROM CustomerAddress WHERE CustomerId = @p0 AND AddressLine = @p1 AND District = @p2",
+                    customerId.Value, deliveryAddress, district ?? "").FirstOrDefault();
+
+                if (existingCount > 0)
+                {
+                    return Json(new { success = true, message = "Địa chỉ đã được lưu trước đó!" });
+                }
+
+                // Check if this is the first address (make it default)
+                var addressCount = _db.Database.SqlQuery<int>(
+                    "SELECT COUNT(*) FROM CustomerAddress WHERE CustomerId = @p0",
+                    customerId.Value).FirstOrDefault();
+
+                var isDefault = addressCount == 0;
+
+                _db.Database.ExecuteSqlCommand(
+                    @"INSERT INTO CustomerAddress (CustomerId, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault)
+                      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, 'Home', @p7)",
+                    customerId.Value, customer.FullName, customer.Phone, deliveryAddress,
+                    ward ?? "", district ?? "", city ?? "TP. Hồ Chí Minh", isDefault);
+
+                return Json(new { success = true, message = "Đã lưu địa chỉ thành công!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
 
         /// <summary>
         /// Tính phí ship

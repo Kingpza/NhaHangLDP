@@ -12,6 +12,8 @@
     <title>Tài khoản - Nhà Hàng LDP</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -395,6 +397,26 @@
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
                     </div>
                 </div>
+
+                <!-- Leaflet Map Section -->
+                <div class="border border-gray-200 rounded-xl overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-3 flex items-center justify-between border-b border-gray-200">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">map</span>
+                            <span class="text-sm font-semibold">Chọn vị trí trên bản đồ</span>
+                        </div>
+                        <button type="button" onclick="getProfileCurrentLocation()" class="px-3 py-1.5 bg-primary text-white rounded-lg text-sm font-medium flex items-center gap-1 hover:bg-blue-600 transition-colors">
+                            <span class="material-symbols-outlined text-sm">my_location</span>
+                            Vị trí hiện tại
+                        </button>
+                    </div>
+                    <div id="profileMap" class="h-64 w-full bg-gray-100"></div>
+                    <div class="bg-blue-50 p-2 text-xs text-blue-700">
+                        <span class="material-symbols-outlined text-sm align-middle">info</span>
+                        Click trên bản đồ hoặc kéo marker đỏ để chọn địa chỉ. Địa chỉ sẽ tự động điền vào form.
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium mb-2">Địa chỉ cụ thể</label>
                     <input type="text" name="addressLine" id="addressLine" required placeholder="Số nhà, tên đường..."
@@ -452,6 +474,8 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         // Section navigation
         function showSection(sectionId) {
@@ -526,12 +550,112 @@
         });
 
         // Address Modal Functions
+        var profileMap;
+        var profileMarker;
+        var profileMapInitialized = false;
+
+        function initProfileMap() {
+            if (profileMapInitialized) return;
+            var defaultLocation = [10.8231, 106.6297]; // Ho Chi Minh City
+            profileMap = L.map('profileMap').setView(defaultLocation, 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(profileMap);
+
+            var deliveryIcon = L.divIcon({
+                className: 'custom-marker-delivery',
+                html: '<div style="background-color: #dc3545; width: 36px; height: 36px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 3px 10px rgba(220,53,69,0.5);"><div style="transform: rotate(45deg); color: white; text-align: center; line-height: 30px; font-size: 18px;">📍</div></div>',
+                iconSize: [36, 36],
+                iconAnchor: [18, 36]
+            });
+
+            profileMarker = L.marker(defaultLocation, {
+                icon: deliveryIcon,
+                draggable: true,
+                title: 'Kéo để chọn địa chỉ'
+            }).addTo(profileMap);
+
+            profileMarker.bindPopup('Kéo tôi đến địa chỉ của bạn!').openPopup();
+
+            profileMap.on('click', function(e) {
+                profileMarker.setLatLng(e.latlng);
+                profileGeocodePosition(e.latlng.lat, e.latlng.lng);
+            });
+
+            profileMarker.on('dragend', function(e) {
+                var pos = profileMarker.getLatLng();
+                profileGeocodePosition(pos.lat, pos.lng);
+            });
+
+            profileMapInitialized = true;
+        }
+
+        function profileGeocodePosition(lat, lng) {
+            profileMarker.bindPopup('🔄 Đang tìm địa chỉ...').openPopup();
+            fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&addressdetails=1')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data && data.address) {
+                        var addr = data.address;
+                        var streetAddress = '';
+                        if (addr.house_number) streetAddress += addr.house_number + ' ';
+                        if (addr.road) streetAddress += addr.road;
+                        else if (addr.pedestrian) streetAddress += addr.pedestrian;
+                        if (!streetAddress.trim() && data.display_name) {
+                            streetAddress = data.display_name.split(',')[0];
+                        }
+                        $('#addressLine').val(streetAddress.trim());
+                        $('#ward').val(addr.suburb || addr.quarter || addr.neighbourhood || '');
+                        $('#district').val(addr.city_district || addr.county || addr.town || '');
+                        var city = addr.city || addr.province || addr.state || '';
+                        if (city) {
+                            if (city.toLowerCase().indexOf('hồ chí minh') >= 0 || city.toLowerCase().indexOf('ho chi minh') >= 0) {
+                                city = 'TP. Hồ Chí Minh';
+                            }
+                            $('#city').val(city);
+                        }
+                        profileMarker.bindPopup('<b>📍 Địa chỉ</b><br>' + (streetAddress.trim() || data.display_name)).openPopup();
+                    } else {
+                        profileMarker.bindPopup('❌ Không tìm thấy địa chỉ').openPopup();
+                    }
+                })
+                .catch(function() {
+                    profileMarker.bindPopup('❌ Lỗi tìm địa chỉ').openPopup();
+                });
+        }
+
+        function getProfileCurrentLocation() {
+            if (navigator.geolocation) {
+                Swal.fire({ title: 'Đang lấy vị trí...', html: 'Vui lòng cho phép truy cập vị trí', allowOutsideClick: false, showConfirmButton: false, willOpen: function() { Swal.showLoading(); } });
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        Swal.close();
+                        var lat = position.coords.latitude;
+                        var lng = position.coords.longitude;
+                        profileMap.setView([lat, lng], 17);
+                        profileMarker.setLatLng([lat, lng]);
+                        profileGeocodePosition(lat, lng);
+                    },
+                    function(error) {
+                        Swal.close();
+                        var msg = error.code === error.PERMISSION_DENIED ? 'Bạn đã từ chối quyền truy cập vị trí.' : 'Không thể lấy vị trí của bạn.';
+                        Swal.fire('Lỗi', msg, 'error');
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+            } else {
+                Swal.fire('Lỗi', 'Trình duyệt không hỗ trợ định vị.', 'error');
+            }
+        }
+
         function openAddAddressModal() {
             $('#addressModalTitle').text('Thêm địa chỉ mới');
             $('#addressForm')[0].reset();
             $('#addressId').val(0);
             $('#city').val('TP. Hồ Chí Minh');
             $('#addressModal').removeClass('hidden');
+            setTimeout(function() { initProfileMap(); if (profileMap) profileMap.invalidateSize(); }, 200);
         }
 
         function closeAddressModal() {
@@ -555,6 +679,7 @@
                         $('input[name="addressType"][value="' + addr.AddressType + '"]').prop('checked', true);
                         $('#isDefault').prop('checked', addr.IsDefault);
                         $('#addressModal').removeClass('hidden');
+                        setTimeout(function() { initProfileMap(); if (profileMap) profileMap.invalidateSize(); }, 200);
                     }
                 });
         }

@@ -229,6 +229,7 @@
                                     </label>
                                     <div class="relative">
                                         <input type="text" name="DeliveryAddress" id="deliveryAddress"
+                                               value="@Model.Form.DeliveryAddress"
                                                class="w-full px-4 py-3 pr-10 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                                placeholder="Ví dụ: 123 Nguyễn Huệ" />
                                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">home</span>
@@ -242,18 +243,20 @@
                                     <div>
                                         <label class="block text-sm font-medium mb-2">Phường/Xã</label>
                                         <input type="text" name="Ward" id="ward"
+                                               value="@Model.Form.Ward"
                                                class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                                placeholder="Phường/Xã" />
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-2">Quận/Huyện</label>
                                         <input type="text" name="District" id="district"
+                                               value="@Model.Form.District"
                                                class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                                placeholder="Quận/Huyện" />
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-2">Tỉnh/TP</label>
-                                        <input type="text" name="City" id="city" value="TP. Hồ Chí Minh"
+                                        <input type="text" name="City" id="city" value="@(Model.Form.City ?? "TP. Hồ Chí Minh")"
                                                class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
                                     </div>
                                 </div>
@@ -264,13 +267,10 @@
                                 
                                 @if (Model.CustomerInfo?.IsLoggedIn == true)
                                 {
-                                    <label class="flex items-center gap-2 cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                        <input type="checkbox" name="SaveAddress" value="true" class="w-5 h-5 text-primary rounded focus:ring-primary" />
-                                        <span class="text-sm flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-sm">bookmark</span>
-                                            Lưu địa chỉ này cho lần sau
-                                        </span>
-                                    </label>
+                                    <button type="button" onclick="saveAddressToProfile()" class="px-4 py-2 bg-success text-white rounded-xl font-medium hover:bg-green-600 transition-colors flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-sm">save</span>
+                                        Lưu địa chỉ
+                                    </button>
                                 }
                             </div>
                         </div>
@@ -295,16 +295,16 @@
                                 <input type="radio" name="PaymentMethod" value="VNPay" class="w-5 h-5 text-primary" />
                                 <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/6/0oxhzjmxbksr1686814746087.png" alt="VNPay" class="h-8" />
                                 <div class="flex-1">
-                                    <p class="font-semibold">VNPay</p>
-                                    <p class="text-sm text-text-secondary">Thanh toán qua VNPay QR, ATM, Visa...</p>
+                                    <p class="font-semibold">VNPay <span class="text-xs bg-warning/20 text-warning px-2 py-0.5 rounded-full">Sandbox</span></p>
+                                    <p class="text-sm text-text-secondary">Thanh toán qua VNPay QR, ATM, Visa... (Chế độ test)</p>
                                 </div>
                             </label>
-                            <label class="flex items-center gap-4 p-4 border-2 border-border rounded-xl cursor-pointer hover:border-primary transition-all opacity-50">
-                                <input type="radio" name="PaymentMethod" value="MoMo" disabled class="w-5 h-5" />
+                            <label class="flex items-center gap-4 p-4 border-2 border-border rounded-xl cursor-pointer hover:border-primary transition-all">
+                                <input type="radio" name="PaymentMethod" value="MoMo" class="w-5 h-5 text-primary" />
                                 <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" class="h-8" />
                                 <div class="flex-1">
-                                    <p class="font-semibold">Ví MoMo</p>
-                                    <p class="text-sm text-text-secondary">Sắp ra mắt</p>
+                                    <p class="font-semibold">Ví MoMo <span class="text-xs bg-warning/20 text-warning px-2 py-0.5 rounded-full">Sandbox</span></p>
+                                    <p class="text-sm text-text-secondary">Thanh toán qua ví MoMo (Chế độ test)</p>
                                 </div>
                             </label>
                         </div>
@@ -363,19 +363,15 @@
                                 <span>Tạm tính</span>
                                 <span>@Model.Cart.SubTotal.ToString("N0")đ</span>
                             </div>
-                            <div class="flex justify-between text-text-secondary">
-                                <span>Phí giao hàng</span>
-                                <span id="checkoutDeliveryFee">
-                                    @if (Model.Cart.DeliveryFee == 0)
-                                    {
-                                        <span class="text-success">Miễn phí</span>
-                                    }
-                                    else
-                                    {
-                                        @Model.Cart.DeliveryFee.ToString("N0")@:đ
-                                    }
-                                </span>
-                            </div>
+                            @if (Model.Cart.DeliveryFee > 0)
+                            {
+                                <div class="flex justify-between text-text-secondary">
+                                    <span>Phí giao hàng</span>
+                                    <span id="checkoutDeliveryFee">
+                                        @Model.Cart.DeliveryFee.ToString("N0")đ
+                                    </span>
+                                </div>
+                            }
                             @if (Model.Cart.Discount > 0)
                             {
                                 <div class="flex justify-between text-success">
@@ -672,6 +668,29 @@
             document.getElementById('city').value = radio.dataset.city;
             document.getElementById('newAddressForm').classList.add('hidden');
             highlightFilledFields();
+        }
+
+        // Save address to profile
+        function saveAddressToProfile() {
+            var address = $('#deliveryAddress').val().trim();
+            if (!address) {
+                Swal.fire('Lỗi', 'Vui lòng nhập địa chỉ trước khi lưu!', 'error');
+                return;
+            }
+            $.post('@Url.Action("SaveAddressFromCheckout", "Checkout")', {
+                deliveryAddress: address,
+                ward: $('#ward').val(),
+                district: $('#district').val(),
+                city: $('#city').val()
+            }).done(function(response) {
+                if (response.success) {
+                    Swal.fire('Thành công!', response.message, 'success');
+                } else {
+                    Swal.fire('Lỗi', response.message, 'error');
+                }
+            }).fail(function() {
+                Swal.fire('Lỗi', 'Có lỗi xảy ra!', 'error');
+            });
         }
 
         // Form submit
