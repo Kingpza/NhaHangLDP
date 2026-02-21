@@ -316,8 +316,9 @@ namespace NhaHangLDP.Controllers
                                  (ci.Quantity * m.Price) as Subtotal,
                                  ci.SpecialInstructions
                           FROM CartItem ci
+                          JOIN Cart c ON ci.CartId = c.Id
                           JOIN MenuItem m ON ci.MenuItemId = m.Id
-                          WHERE ci.CustomerId = @p0",
+                          WHERE c.CustomerId = @p0",
                         customerId.Value).ToList();
 
                     var cartItems = items.Select(i => new CartItemViewModel
