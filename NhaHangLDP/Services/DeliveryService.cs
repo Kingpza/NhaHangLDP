@@ -86,6 +86,172 @@ namespace NhaHangLDP.Services
         }
 
         /// <summary>
+        /// Tính phí giao hàng dựa trên khoảng cách (KM)
+        /// </summary>
+        public DeliveryFeeResponse CalculateDeliveryFeeByDistance(decimal distanceKm, decimal orderAmount)
+        {
+            var response = new DeliveryFeeResponse
+            {
+                DistanceKm = distanceKm
+            };
+
+            try
+            {
+                // Kiểm tra có bật tính phí theo khoảng cách không
+                var enableSetting = _db.DeliverySettings
+                    .FirstOrDefault(s => s.SettingKey == "EnableDistanceBasedFee");
+                
+                bool enableDistanceFee = enableSetting != null && 
+                    enableSetting.SettingValue?.ToLower() == "true";
+
+                if (!enableDistanceFee)
+                {
+                    // Fallback về phí mặc định
+                    response.DeliveryFee = GetDefaultDeliveryFee();
+                    response.EstimatedTime = 45;
+                    response.Message = "Phí giao hàng tiêu chuẩn";
+                    return response;
+                }
+
+                // Tính phí theo khoảng cách
+                decimal fee;
+                string distanceRange;
+
+                if (distanceKm < 10)
+                {
+                    fee = GetFeeFromSettings("FeeUnder10Km", 15000);
+                    distanceRange = "Dưới 10km";
+                    response.EstimatedTime = 30;
+                }
+                else if (distanceKm <= 20)
+                {
+                    fee = GetFeeFromSettings("Fee10To20Km", 25000);
+                    distanceRange = "10km - 20km";
+                    response.EstimatedTime = 45;
+                }
+                else
+                {
+                    fee = GetFeeFromSettings("FeeOver20Km", 40000);
+                    distanceRange = "Trên 20km";
+                    response.EstimatedTime = 60;
+                }
+
+                // Kiểm tra miễn phí giao hàng
+                var freeDeliveryMin = GetFeeFromSettings("FreeDeliveryMinOrder", 0);
+                if (freeDeliveryMin > 0 && orderAmount >= freeDeliveryMin)
+                {
+                    response.DeliveryFee = 0;
+                    response.IsFreeDelivery = true;
+                    response.MinOrderForFree = freeDeliveryMin;
+                    response.Message = $"Miễn phí giao hàng cho đơn từ {freeDeliveryMin:N0}đ";
+                }
+                else
+                {
+                    response.DeliveryFee = fee;
+                    response.IsFreeDelivery = false;
+                    response.MinOrderForFree = freeDeliveryMin;
+                    
+                    if (freeDeliveryMin > 0)
+                    {
+                        var remaining = freeDeliveryMin - orderAmount;
+                        response.Message = $"Thêm {remaining:N0}đ để được miễn phí giao hàng";
+                    }
+                }
+
+                response.DistanceRange = distanceRange;
+            }
+            catch (Exception)
+            {
+                response.DeliveryFee = GetDefaultDeliveryFee();
+                response.EstimatedTime = 45;
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// Lấy giá trị phí từ settings
+        /// </summary>
+        private decimal GetFeeFromSettings(string key, decimal defaultValue)
+        {
+            var setting = _db.DeliverySettings.FirstOrDefault(s => s.SettingKey == key);
+            if (setting != null && decimal.TryParse(setting.SettingValue, out decimal value))
+            {
+                return value;
+            }
+            return defaultValue;
+        }
+
+        /// <summary>
+        /// Lấy cấu hình phí giao hàng theo khoảng cách
+        /// </summary>
+        public List<DistanceBasedFeeConfig> GetDistanceFeeConfigs()
+        {
+            return new List<DistanceBasedFeeConfig>
+            {
+                new DistanceBasedFeeConfig 
+                { 
+                    MaxDistanceKm = 10, 
+                    Fee = GetFeeFromSettings("FeeUnder10Km", 15000),
+                    RangeName = "Dưới 10km"
+                },
+                new DistanceBasedFeeConfig 
+                { 
+                    MaxDistanceKm = 20, 
+                    Fee = GetFeeFromSettings("Fee10To20Km", 25000),
+                    RangeName = "10km - 20km"
+                },
+                new DistanceBasedFeeConfig 
+                { 
+                    MaxDistanceKm = 9999, 
+                    Fee = GetFeeFromSettings("FeeOver20Km", 40000),
+                    RangeName = "Trên 20km"
+                }
+            };
+        }
+
+        /// <summary>
+        /// Cập nhật cấu hình phí giao hàng theo khoảng cách
+        /// </summary>
+        public bool UpdateDistanceFeeSettings(DistanceFeeSettingsViewModel settings)
+        {
+            try
+            {
+                UpdateOrCreateSetting("EnableDistanceBasedFee", settings.EnableDistanceBasedFee.ToString().ToLower());
+                UpdateOrCreateSetting("FeeUnder10Km", settings.FeeUnder10Km.ToString());
+                UpdateOrCreateSetting("Fee10To20Km", settings.Fee10To20Km.ToString());
+                UpdateOrCreateSetting("FeeOver20Km", settings.FeeOver20Km.ToString());
+                UpdateOrCreateSetting("FreeDeliveryMinOrder", settings.FreeDeliveryMinOrder.ToString());
+
+                _db.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void UpdateOrCreateSetting(string key, string value)
+        {
+            var setting = _db.DeliverySettings.FirstOrDefault(s => s.SettingKey == key);
+            if (setting != null)
+            {
+                setting.SettingValue = value;
+                setting.UpdatedDate = DateTime.Now;
+            }
+            else
+            {
+                _db.DeliverySettings.Add(new DeliverySettings
+                {
+                    SettingKey = key,
+                    SettingValue = value,
+                    UpdatedDate = DateTime.Now
+                });
+            }
+        }
+
+        /// <summary>
         /// Lấy phí giao hàng mặc định
         /// </summary>
         private decimal GetDefaultDeliveryFee()
@@ -255,7 +421,7 @@ namespace NhaHangLDP.Services
         #region Order Assignment
 
         /// <summary>
-        /// Gán shipper cho đơn hàng
+        /// Gán shipper của shop cho đơn hàng
         /// </summary>
         public AssignmentResult AssignShipperToOrder(int orderId, int shipperId)
         {
@@ -383,6 +549,294 @@ namespace NhaHangLDP.Services
             }
 
             return AssignShipperToOrder(orderId, shipper.Id);
+        }
+
+        /// <summary>
+        /// Gán đơn hàng cho bên thứ 3 (Grab, ShopeeFood, ...)
+        /// </summary>
+        public AssignmentResult AssignToThirdParty(AssignThirdPartyDto dto)
+        {
+            var result = new AssignmentResult();
+
+            try
+            {
+                var order = _db.CustomerOrder.Find(dto.OrderId);
+                if (order == null)
+                {
+                    result.Success = false;
+                    result.Message = "Không tìm thấy đơn hàng";
+                    return result;
+                }
+
+                // Kiểm tra đã có assignment chưa
+                var existingAssignment = _db.DeliveryAssignment
+                    .FirstOrDefault(a => a.OrderId == dto.OrderId &&
+                        a.Status != "Cancelled" && a.Status != "Failed");
+
+                if (existingAssignment != null)
+                {
+                    result.Success = false;
+                    result.Message = "Đơn hàng đã được gán shipper";
+                    return result;
+                }
+
+                // Tạo assignment cho bên thứ 3
+                var notes = BuildThirdPartyNotes(
+                    dto.ThirdPartyName, 
+                    dto.ThirdPartyOrderCode, 
+                    dto.ThirdPartyShipperName, 
+                    dto.ThirdPartyShipperPhone, 
+                    dto.Notes);
+
+                var assignment = new DeliveryAssignment
+                {
+                    OrderId = dto.OrderId,
+                    ShipperId = 0, // Không có shipper nội bộ
+                    AssignedTime = DateTime.Now,
+                    Status = "AssignedToThirdParty",
+                    DeliveryFee = order.DeliveryFee,
+                    ShipperEarning = 0, // Bên thứ 3 tự xử lý
+                    Notes = notes,
+                    EstimatedArrival = DateTime.Now.AddMinutes(45)
+                };
+
+
+                _db.DeliveryAssignment.Add(assignment);
+
+                // Cập nhật trạng thái đơn hàng
+                order.Status = "Delivering";
+                order.DeliveringDate = DateTime.Now;
+
+                _db.SaveChanges();
+
+                // Gửi thông báo cập nhật trạng thái giao hàng
+                _notificationService.UpdateDeliveryStatus(
+                    order.Id,
+                    order.OrderCode,
+                    "Delivering",
+                    0, // Không có shipper nội bộ
+                    order.CustomerPhone
+                );
+
+                result.Success = true;
+                result.Message = $"Đã chuyển đơn hàng cho {dto.ThirdPartyName}";
+                result.AssignmentId = assignment.Id;
+                result.ShipperName = dto.ThirdPartyShipperName ?? dto.ThirdPartyName;
+                result.ShipperPhone = dto.ThirdPartyShipperPhone;
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Lỗi: " + ex.Message;
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật thông tin shipper bên thứ 3
+        /// </summary>
+        public bool UpdateThirdPartyInfo(int assignmentId, string shipperName, string shipperPhone, string orderCode)
+        {
+            try
+            {
+                var assignment = _db.DeliveryAssignment.Find(assignmentId);
+                if (assignment == null) return false;
+
+                // Giữ lại tên hãng giao hàng từ Notes cũ
+                var existingThirdPartyName = assignment.GetThirdPartyNameFromNotes();
+                assignment.Notes = BuildThirdPartyNotes(
+                    existingThirdPartyName, orderCode, shipperName, shipperPhone, null);
+                _db.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách đơn hàng đang giao bởi nhân viên shop
+        /// </summary>
+        public List<ShopEmployeeDeliveryViewModel> GetShopEmployeeActiveDeliveries(int? shipperId = null)
+        {
+            var query = _db.DeliveryAssignment
+                .Include(a => a.CustomerOrder)
+                .Include(a => a.CustomerOrder.CustomerOrderDetail)
+                .Include(a => a.Shipper)
+                .Where(a => (a.Status == "Assigned" || a.Status == "Accepted" || 
+                            a.Status == "PickedUp" || a.Status == "Delivering"));
+
+            if (shipperId.HasValue)
+            {
+                query = query.Where(a => a.ShipperId == shipperId.Value);
+            }
+
+            return query
+                .OrderByDescending(a => a.AssignedTime)
+                .ToList()
+                .Select(a => new ShopEmployeeDeliveryViewModel
+                {
+                    AssignmentId = a.Id,
+                    OrderId = a.OrderId,
+                    OrderCode = a.CustomerOrder.OrderCode,
+                    CustomerName = a.CustomerOrder.CustomerName,
+                    CustomerPhone = a.CustomerOrder.CustomerPhone,
+                    DeliveryAddress = a.CustomerOrder.DeliveryAddress,
+                    District = a.CustomerOrder.District,
+                    Ward = a.CustomerOrder.Ward,
+                    TotalAmount = a.CustomerOrder.TotalAmount,
+                    DeliveryFee = a.DeliveryFee,
+                    PaymentMethod = a.CustomerOrder.PaymentMethod,
+                    PaymentStatus = a.CustomerOrder.PaymentStatus,
+                    Note = a.CustomerOrder.Note,
+                    Status = a.Status,
+                    OrderDate = a.CustomerOrder.OrderDate,
+                    AssignedTime = a.AssignedTime,
+                    PickupTime = a.PickupTime,
+                    EstimatedArrival = a.EstimatedArrival,
+                    DeliveryType = DeliveryType.ShopEmployee,
+                    DistanceKm = a.ActualDistance,
+                    EmployeeName = a.Shipper?.FullName,
+                    Items = a.CustomerOrder.CustomerOrderDetail?.Select(d => new OrderItemSummary
+                    {
+                        ItemName = d.ItemName,
+                        Quantity = d.Quantity,
+                        Price = d.UnitPrice,
+                        SpecialInstructions = d.SpecialInstructions
+                    }).ToList() ?? new List<OrderItemSummary>()
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Lấy danh sách đơn hàng đang giao bởi bên thứ 3
+        /// </summary>
+        public List<DeliveryOrderItemViewModel> GetThirdPartyActiveDeliveries()
+        {
+            return _db.DeliveryAssignment
+                .Include(a => a.CustomerOrder)
+                .Where(a => a.Status == "AssignedToThirdParty" || 
+                           (a.Status == "Delivering" && a.ShipperId == 0))
+                .OrderByDescending(a => a.AssignedTime)
+                .ToList()
+                .Select(a => new DeliveryOrderItemViewModel
+                {
+                    OrderId = a.OrderId,
+                    OrderCode = a.CustomerOrder.OrderCode,
+                    CustomerName = a.CustomerOrder.CustomerName,
+                    CustomerPhone = a.CustomerOrder.CustomerPhone,
+                    DeliveryAddress = a.CustomerOrder.DeliveryAddress,
+                    District = a.CustomerOrder.District,
+                    Ward = a.CustomerOrder.Ward,
+                    TotalAmount = a.CustomerOrder.TotalAmount,
+                    DeliveryFee = a.DeliveryFee,
+                    PaymentMethod = a.CustomerOrder.PaymentMethod,
+                    PaymentStatus = a.CustomerOrder.PaymentStatus,
+                    Status = a.Status,
+                    OrderDate = a.CustomerOrder.OrderDate,
+                    EstimatedDeliveryTime = a.EstimatedArrival,
+                    Note = a.CustomerOrder.Note,
+                    DeliveryType = DeliveryType.ThirdParty,
+                    DeliveryStatus = a.Status,
+                    ThirdPartyName = a.GetThirdPartyNameFromNotes(),
+                    ThirdPartyOrderCode = a.GetThirdPartyOrderCodeFromNotes(),
+                    ThirdPartyShipperName = a.GetThirdPartyShipperNameFromNotes(),
+                    ThirdPartyShipperPhone = a.GetThirdPartyShipperPhoneFromNotes()
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Lấy đơn hàng chờ giao
+        /// </summary>
+        public List<DeliveryOrderItemViewModel> GetPendingDeliveryOrders()
+        {
+            return _db.CustomerOrder
+                .Include(o => o.CustomerOrderDetail)
+                .Where(o => o.OrderType == "Delivery" && 
+                           (o.Status == "Confirmed" || o.Status == "Ready"))
+                .OrderBy(o => o.OrderDate)
+                .ToList()
+                .Select(o => new DeliveryOrderItemViewModel
+                {
+                    OrderId = o.Id,
+                    OrderCode = o.OrderCode,
+                    CustomerName = o.CustomerName,
+                    CustomerPhone = o.CustomerPhone,
+                    DeliveryAddress = o.DeliveryAddress,
+                    District = o.District,
+                    Ward = o.Ward,
+                    SubTotal = o.SubTotal,
+                    DeliveryFee = o.DeliveryFee,
+                    TotalAmount = o.TotalAmount,
+                    PaymentMethod = o.PaymentMethod,
+                    PaymentStatus = o.PaymentStatus,
+                    Status = o.Status,
+                    OrderDate = o.OrderDate,
+                    EstimatedDeliveryTime = o.EstimatedDeliveryTime,
+                    Note = o.Note,
+                    Items = o.CustomerOrderDetail?.Select(d => new OrderItemSummary
+                    {
+                        ItemName = d.ItemName,
+                        Quantity = d.Quantity,
+                        Price = d.UnitPrice,
+                        SpecialInstructions = d.SpecialInstructions
+                    }).ToList() ?? new List<OrderItemSummary>()
+                })
+                .ToList();
+        }
+
+        /// <summary>
+        /// Lấy ViewModel quản lý giao hàng tổng hợp
+        /// </summary>
+        public DeliveryManagementViewModel GetDeliveryManagementData()
+        {
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            return new DeliveryManagementViewModel
+            {
+                PendingOrders = GetPendingDeliveryOrders(),
+                ShopDeliveryOrders = GetShopEmployeeActiveDeliveries()
+                    .Select(s => new DeliveryOrderItemViewModel
+                    {
+                        OrderId = s.OrderId,
+                        OrderCode = s.OrderCode,
+                        CustomerName = s.CustomerName,
+                        CustomerPhone = s.CustomerPhone,
+                        DeliveryAddress = s.DeliveryAddress,
+                        District = s.District,
+                        Ward = s.Ward,
+                        TotalAmount = s.TotalAmount,
+                        DeliveryFee = s.DeliveryFee,
+                        PaymentMethod = s.PaymentMethod,
+                        Status = s.Status,
+                        OrderDate = s.OrderDate,
+                        EstimatedDeliveryTime = s.EstimatedArrival,
+                        ShipperName = s.EmployeeName,
+                        DeliveryType = DeliveryType.ShopEmployee,
+                        DeliveryStatus = s.Status,
+                        DistanceKm = s.DistanceKm
+                    }).ToList(),
+                ThirdPartyOrders = GetThirdPartyActiveDeliveries(),
+                AvailableShopShippers = _db.Shipper
+                    .Where(s => s.IsActive && s.Status == "Available")
+                    .OrderByDescending(s => s.Rating)
+                    .ToList(),
+                FeeConfigs = GetDistanceFeeConfigs(),
+                TotalPending = _db.CustomerOrder
+                    .Count(o => o.OrderType == "Delivery" && 
+                               (o.Status == "Confirmed" || o.Status == "Ready")),
+                TotalDelivering = _db.CustomerOrder
+                    .Count(o => o.OrderType == "Delivery" && o.Status == "Delivering"),
+                TotalCompletedToday = _db.CustomerOrder
+                    .Count(o => o.OrderType == "Delivery" && 
+                               o.Status == "Completed" &&
+                               o.CompletedDate >= today && o.CompletedDate < tomorrow)
+            };
         }
 
         #endregion
@@ -709,6 +1163,27 @@ namespace NhaHangLDP.Services
         private double ToRadians(double degrees)
         {
             return degrees * Math.PI / 180;
+        }
+
+        /// <summary>
+        /// Xây dựng chuỗi Notes cấu trúc cho đơn giao bên thứ 3
+        /// </summary>
+        private string BuildThirdPartyNotes(string thirdPartyName, string orderCode, string shipperName, string shipperPhone, string additionalNotes)
+        {
+            var parts = new List<string>();
+
+            if (!string.IsNullOrEmpty(thirdPartyName))
+                parts.Add($"[Hang:{thirdPartyName}]");
+            if (!string.IsNullOrEmpty(orderCode))
+                parts.Add($"[Ma don:{orderCode}]");
+            if (!string.IsNullOrEmpty(shipperName))
+                parts.Add($"[Shipper:{shipperName}]");
+            if (!string.IsNullOrEmpty(shipperPhone))
+                parts.Add($"[SDT:{shipperPhone}]");
+            if (!string.IsNullOrEmpty(additionalNotes))
+                parts.Add(additionalNotes);
+
+            return string.Join(" ", parts);
         }
 
         #endregion

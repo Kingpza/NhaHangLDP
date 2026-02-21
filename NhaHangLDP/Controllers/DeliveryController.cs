@@ -23,6 +23,7 @@ namespace NhaHangLDP.Controllers
             _deliveryService = new DeliveryService(_db);
         }
 
+
         #region Dashboard
 
         /// <summary>
@@ -43,6 +44,33 @@ namespace NhaHangLDP.Controllers
             try
             {
                 var data = _deliveryService.GetDashboardStats();
+                return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Trang quản lý giao hàng tổng hợp (Shop + Bên thứ 3)
+        /// </summary>
+        public ActionResult Management()
+        {
+            var viewModel = _deliveryService.GetDeliveryManagementData();
+            ViewBag.ThirdPartyShippers = ThirdPartyShippers.GetAll();
+            return View(viewModel);
+        }
+
+        /// <summary>
+        /// API lấy dữ liệu quản lý giao hàng
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetManagementData()
+        {
+            try
+            {
+                var data = _deliveryService.GetDeliveryManagementData();
                 return Json(new { success = true, data = data }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -84,7 +112,7 @@ namespace NhaHangLDP.Controllers
                     .Include(a => a.Shipper)
                     .FirstOrDefault(a => a.OrderId == o.Id && a.Status != "Cancelled");
 
-                return new DeliveryOrderItemViewModel
+                var vm = new DeliveryOrderItemViewModel
                 {
                     OrderId = o.Id,
                     OrderCode = o.OrderCode,
@@ -103,8 +131,6 @@ namespace NhaHangLDP.Controllers
                     EstimatedDeliveryTime = o.EstimatedDeliveryTime,
                     Note = o.Note,
                     ShipperId = assignment?.ShipperId,
-                    ShipperName = assignment?.Shipper?.FullName,
-                    ShipperPhone = assignment?.Shipper?.Phone,
                     DeliveryStatus = assignment?.Status,
                     Items = o.CustomerOrderDetail?.Select(d => new OrderItemSummary
                     {
@@ -114,6 +140,25 @@ namespace NhaHangLDP.Controllers
                         SpecialInstructions = d.SpecialInstructions
                     }).ToList() ?? new List<OrderItemSummary>()
                 };
+
+                // Phan biet shipper noi bo vs ben thu 3
+                if (assignment != null && assignment.IsThirdPartyDelivery)
+                {
+                    vm.DeliveryType = DeliveryType.ThirdParty;
+                    vm.ThirdPartyName = assignment.GetThirdPartyNameFromNotes();
+                    vm.ThirdPartyOrderCode = assignment.GetThirdPartyOrderCodeFromNotes();
+                    vm.ThirdPartyShipperName = assignment.GetThirdPartyShipperNameFromNotes();
+                    vm.ThirdPartyShipperPhone = assignment.GetThirdPartyShipperPhoneFromNotes();
+                    vm.ShipperName = vm.ThirdPartyName ?? "Ben thu 3";
+                }
+                else
+                {
+                    vm.DeliveryType = DeliveryType.ShopEmployee;
+                    vm.ShipperName = assignment?.Shipper?.FullName;
+                    vm.ShipperPhone = assignment?.Shipper?.Phone;
+                }
+
+                return vm;
             }).ToList();
 
             var viewModel = new DeliveryOrderListViewModel
@@ -377,6 +422,40 @@ namespace NhaHangLDP.Controllers
         {
             var result = _deliveryService.AutoAssignShipper(orderId);
             return Json(result);
+        }
+
+        /// <summary>
+        /// Gán đơn hàng cho bên thứ 3
+        /// </summary>
+        [HttpPost]
+        public JsonResult AssignToThirdParty(AssignThirdPartyDto dto)
+        {
+            try
+            {
+                var result = _deliveryService.AssignToThirdParty(dto);
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật thông tin shipper bên thứ 3
+        /// </summary>
+        [HttpPost]
+        public JsonResult UpdateThirdPartyInfo(int assignmentId, string shipperName, string shipperPhone, string orderCode)
+        {
+            try
+            {
+                var success = _deliveryService.UpdateThirdPartyInfo(assignmentId, shipperName, shipperPhone, orderCode);
+                return Json(new { success = success, message = success ? "Đã cập nhật" : "Không thể cập nhật" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         /// <summary>
@@ -794,6 +873,185 @@ namespace NhaHangLDP.Controllers
 
         #endregion
 
+        #region Distance-based Fee Settings
+
+        /// <summary>
+        /// Trang cài đặt phí giao hàng theo khoảng cách
+        /// </summary>
+        public ActionResult FeeSettings()
+        {
+            var viewModel = new DistanceFeeSettingsViewModel
+            {
+                FeeUnder10Km = GetSettingValue("FeeUnder10Km", 15000),
+                Fee10To20Km = GetSettingValue("Fee10To20Km", 25000),
+                FeeOver20Km = GetSettingValue("FeeOver20Km", 40000),
+                FreeDeliveryMinOrder = GetSettingValue("FreeDeliveryMinOrder", 0),
+                EnableDistanceBasedFee = GetSettingBool("EnableDistanceBasedFee", true)
+            };
+            return View(viewModel);
+        }
+
+        /// <summary>
+        /// Cập nhật cài đặt phí giao hàng
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateFeeSettings(DistanceFeeSettingsViewModel model)
+        {
+            try
+            {
+                var success = _deliveryService.UpdateDistanceFeeSettings(model);
+                if (success)
+                {
+                    TempData["Success"] = "Đã cập nhật cài đặt phí giao hàng";
+                }
+                else
+                {
+                    TempData["Error"] = "Không thể cập nhật cài đặt";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Lỗi: " + ex.Message;
+            }
+
+            return RedirectToAction("FeeSettings");
+        }
+
+        /// <summary>
+        /// API tính phí giao hàng theo khoảng cách
+        /// </summary>
+        [HttpPost]
+        [AllowAnonymous]
+        public JsonResult CalculateFeeByDistance(CalculateFeeByDistanceDto dto)
+        {
+            try
+            {
+                var result = _deliveryService.CalculateDeliveryFeeByDistance(dto.DistanceKm, dto.OrderAmount);
+                return Json(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// API lấy cấu hình phí theo khoảng cách
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetDistanceFeeConfigs()
+        {
+            try
+            {
+                var configs = _deliveryService.GetDistanceFeeConfigs();
+                return Json(new { success = true, data = configs }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        private decimal GetSettingValue(string key, decimal defaultValue)
+        {
+            var setting = _db.DeliverySettings.FirstOrDefault(s => s.SettingKey == key);
+            if (setting != null && decimal.TryParse(setting.SettingValue, out decimal value))
+            {
+                return value;
+            }
+            return defaultValue;
+        }
+
+        private bool GetSettingBool(string key, bool defaultValue)
+        {
+            var setting = _db.DeliverySettings.FirstOrDefault(s => s.SettingKey == key);
+            if (setting != null)
+            {
+                return setting.SettingValue?.ToLower() == "true";
+            }
+            return defaultValue;
+        }
+
+        #endregion
+
+        #region Shop Employee Delivery
+
+        /// <summary>
+        /// Trang đơn hàng đang giao cho nhân viên shop
+        /// </summary>
+        public ActionResult ShopEmployeeOrders(int? shipperId = null)
+        {
+            // Nếu không có shipperId, lấy từ session hoặc employee hiện tại
+            int? currentShipperId = shipperId;
+            
+            if (!currentShipperId.HasValue && Session["ShipperId"] != null)
+            {
+                currentShipperId = (int)Session["ShipperId"];
+            }
+
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+
+            var viewModel = new ShopEmployeeDeliveryDashboardViewModel
+            {
+                ActiveOrders = _deliveryService.GetShopEmployeeActiveDeliveries(currentShipperId),
+                CompletedTodayOrders = _db.DeliveryAssignment
+                    .Include(a => a.CustomerOrder)
+                    .Where(a => a.Status == "Delivered" &&
+                               a.DeliveryTime >= today && a.DeliveryTime < tomorrow)
+                    .Where(a => !currentShipperId.HasValue || a.ShipperId == currentShipperId.Value)
+                    .OrderByDescending(a => a.DeliveryTime)
+                    .ToList()
+                    .Select(a => new ShopEmployeeDeliveryViewModel
+                    {
+                        AssignmentId = a.Id,
+                        OrderId = a.OrderId,
+                        OrderCode = a.CustomerOrder.OrderCode,
+                        CustomerName = a.CustomerOrder.CustomerName,
+                        TotalAmount = a.CustomerOrder.TotalAmount,
+                        DeliveryFee = a.DeliveryFee,
+                        Status = a.Status
+                    })
+                    .ToList()
+            };
+
+            // Get shipper/employee info
+            if (currentShipperId.HasValue)
+            {
+                var shipper = _db.Shipper.Find(currentShipperId.Value);
+                if (shipper != null)
+                {
+                    viewModel.Employee = new Employee { FullName = shipper.FullName };
+                }
+            }
+
+            viewModel.TodayOrderCount = viewModel.ActiveOrders.Count + viewModel.CompletedTodayOrders.Count;
+            viewModel.TodayCompletedCount = viewModel.CompletedTodayOrders.Count;
+            viewModel.TodayTotalDeliveryFees = viewModel.CompletedTodayOrders.Sum(o => o.DeliveryFee);
+
+            return View(viewModel);
+        }
+
+        /// <summary>
+        /// API lấy đơn hàng đang giao của nhân viên shop
+        /// </summary>
+        [HttpGet]
+        public JsonResult GetShopEmployeeActiveOrders(int? shipperId = null)
+        {
+            try
+            {
+                var orders = _deliveryService.GetShopEmployeeActiveDeliveries(shipperId);
+                return Json(new { success = true, data = orders }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        #endregion
+
         #region Statistics
 
         /// <summary>
@@ -803,6 +1061,7 @@ namespace NhaHangLDP.Controllers
         {
             var from = fromDate ?? DateTime.Today.AddDays(-30);
             var to = toDate ?? DateTime.Today;
+
 
             var viewModel = _deliveryService.GetStatistics(from, to);
             return View(viewModel);

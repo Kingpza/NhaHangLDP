@@ -1,0 +1,158 @@
+﻿@model NhaHangLDP.Models.DistanceFeeSettingsViewModel
+@{
+    ViewBag.Title = "Cài Đặt Phí Giao Hàng";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewBag.Title - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: {
+                colors: { "primary": "#007bff", "text-primary": "#212529" },
+                fontFamily: { "display": ["Manrope", "sans-serif"] }
+            }}
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-display min-h-screen">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4 flex items-center gap-4">
+            <a href="@Url.Action("Management", "Delivery")" class="text-gray-600 hover:text-primary"><i class="fas fa-arrow-left"></i></a>
+            <h1 class="text-2xl font-bold">Cài Đặt Phí Giao Hàng</h1>
+        </div>
+    </header>
+    <main class="container mx-auto px-6 py-8">
+        <div class="max-w-2xl mx-auto space-y-8">
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><i class="fas fa-road text-blue-600"></i></div>
+                        <div><h2 class="font-bold text-lg">Phí theo khoảng cách</h2><p class="text-sm text-gray-500">Cấu hình phí giao hàng dựa trên số km</p></div>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="enableDistanceFee" @(Model.EnableDistanceBasedFee ? "checked" : "") class="w-5 h-5 rounded" />
+                        <span class="text-sm font-medium">Bật tính phí theo km</span>
+                    </label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="border rounded-xl p-4 text-center">
+                        <div class="flex items-center justify-center gap-2 mb-3">
+                            <i class="fas fa-walking text-green-600"></i>
+                            <div><h3 class="font-bold">Dưới 10 km</h3><p class="text-xs text-gray-500">Gần nhất</p></div>
+                        </div>
+                        <div class="flex items-center justify-center gap-1">
+                            <input type="number" id="feeUnder10" value="@Model.FeeUnder10Km" class="w-24 text-center p-2 border rounded-lg font-bold text-lg" />
+                            <span class="text-gray-500">đ</span>
+                        </div>
+                    </div>
+                    <div class="border rounded-xl p-4 text-center">
+                        <div class="flex items-center justify-center gap-2 mb-3">
+                            <i class="fas fa-bicycle text-yellow-600"></i>
+                            <div><h3 class="font-bold">10 - 20 km</h3><p class="text-xs text-gray-500">Trung bình</p></div>
+                        </div>
+                        <div class="flex items-center justify-center gap-1">
+                            <input type="number" id="fee10To20" value="@Model.Fee10To20Km" class="w-24 text-center p-2 border rounded-lg font-bold text-lg" />
+                            <span class="text-gray-500">đ</span>
+                        </div>
+                    </div>
+                    <div class="border rounded-xl p-4 text-center">
+                        <div class="flex items-center justify-center gap-2 mb-3">
+                            <i class="fas fa-motorcycle text-red-600"></i>
+                            <div><h3 class="font-bold">Trên 20 km</h3><p class="text-xs text-gray-500">Xa nhất</p></div>
+                        </div>
+                        <div class="flex items-center justify-center gap-1">
+                            <input type="number" id="feeOver20" value="@Model.FeeOver20Km" class="w-24 text-center p-2 border rounded-lg font-bold text-lg" />
+                            <span class="text-gray-500">đ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-4">
+                    <i class="fas fa-gift text-green-600"></i>
+                    <div><h2 class="font-bold text-lg">Miễn phí giao hàng</h2><p class="text-sm text-gray-500">Cài đặt giá trị đơn hàng tối thiểu để được miễn phí ship</p></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-600">Đơn hàng tối thiểu để miễn phí giao hàng</span>
+                    <input type="number" id="freeDeliveryMin" value="@Model.FreeDeliveryMinOrder" class="w-32 text-center p-2 border rounded-lg font-bold" />
+                    <span class="text-gray-500">đ</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>Đặt 0 để tắt tính năng miễn phí giao hàng</p>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="font-bold mb-4"><i class="fas fa-eye mr-2"></i>Xem trước</h3>
+                <div class="grid grid-cols-3 gap-3 mb-4">
+                    <div class="bg-green-50 rounded-lg p-3 text-center"><p class="text-sm text-gray-600">Dưới 10km</p><p class="font-bold text-green-600" id="previewUnder10">@Model.FeeUnder10Km.ToString("N0")đ</p></div>
+                    <div class="bg-yellow-50 rounded-lg p-3 text-center"><p class="text-sm text-gray-600">10 - 20km</p><p class="font-bold text-yellow-600" id="preview10To20">@Model.Fee10To20Km.ToString("N0")đ</p></div>
+                    <div class="bg-red-50 rounded-lg p-3 text-center"><p class="text-sm text-gray-600">Trên 20km</p><p class="font-bold text-red-600" id="previewOver20">@Model.FeeOver20Km.ToString("N0")đ</p></div>
+                </div>
+                <p class="text-sm text-gray-500"><i class="fas fa-gift mr-1 text-green-500"></i>Miễn phí giao hàng cho đơn từ <span id="previewFreeMin">@Model.FreeDeliveryMinOrder.ToString("N0")</span>đ</p>
+            </div>
+            <div class="flex gap-4">
+                <a href="@Url.Action("Management", "Delivery")" class="flex-1 py-3 text-center bg-gray-200 rounded-lg hover:bg-gray-300 font-medium">Hủy</a>
+                <button onclick="saveSettings()" class="flex-1 py-3 bg-primary text-white rounded-lg hover:bg-blue-600 font-bold"><i class="fas fa-save mr-2"></i>Lưu cài đặt</button>
+            </div>
+        </div>
+        <div class="max-w-2xl mx-auto mt-8 bg-white rounded-xl shadow-sm p-6">
+            <h3 class="font-bold mb-4"><i class="fas fa-calculator mr-2"></i>Công cụ tính phí</h3>
+            <div class="flex items-end gap-4">
+                <div><label class="text-sm text-gray-600">Khoảng cách (km)</label><input type="number" id="calcDistance" value="5" class="w-full p-2 border rounded-lg" /></div>
+                <div><label class="text-sm text-gray-600">Giá trị đơn hàng</label><input type="number" id="calcAmount" value="150000" class="w-full p-2 border rounded-lg" /></div>
+                <button onclick="calculateFee()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-blue-600"><i class="fas fa-calculator mr-1"></i>Tính phí</button>
+            </div>
+            <div id="calcResult" class="mt-4 hidden bg-blue-50 rounded-lg p-4"></div>
+        </div>
+    </main>
+    <script>
+        function updatePreview(){
+            var f=function(v){return Number(v).toLocaleString('vi-VN')+'đ'};
+            document.getElementById('previewUnder10').textContent=f(document.getElementById('feeUnder10').value);
+            document.getElementById('preview10To20').textContent=f(document.getElementById('fee10To20').value);
+            document.getElementById('previewOver20').textContent=f(document.getElementById('feeOver20').value);
+            document.getElementById('previewFreeMin').textContent=Number(document.getElementById('freeDeliveryMin').value).toLocaleString('vi-VN');
+        }
+        document.getElementById('feeUnder10').addEventListener('input',updatePreview);
+        document.getElementById('fee10To20').addEventListener('input',updatePreview);
+        document.getElementById('feeOver20').addEventListener('input',updatePreview);
+        document.getElementById('freeDeliveryMin').addEventListener('input',updatePreview);
+
+        function saveSettings(){
+            var data={
+                FeeUnder10Km:parseFloat(document.getElementById('feeUnder10').value),
+                Fee10To20Km:parseFloat(document.getElementById('fee10To20').value),
+                FeeOver20Km:parseFloat(document.getElementById('feeOver20').value),
+                FreeDeliveryMinOrder:parseFloat(document.getElementById('freeDeliveryMin').value),
+                EnableDistanceBasedFee:document.getElementById('enableDistanceFee').checked
+            };
+            fetch('@Url.Action("SaveFeeSettings","Delivery")',{
+                method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)
+            }).then(function(r){return r.json()}).then(function(d){
+                if(d.success){alert('Đã lưu cài đặt phí giao hàng!');}else{alert(d.message||'Có lỗi xảy ra');}
+            });
+        }
+
+        function calculateFee(){
+            var km=parseFloat(document.getElementById('calcDistance').value);
+            var amt=parseFloat(document.getElementById('calcAmount').value);
+            var fee=0;
+            if(km<10) fee=parseFloat(document.getElementById('feeUnder10').value);
+            else if(km<=20) fee=parseFloat(document.getElementById('fee10To20').value);
+            else fee=parseFloat(document.getElementById('feeOver20').value);
+            var freeMin=parseFloat(document.getElementById('freeDeliveryMin').value);
+            var isFree=freeMin>0&&amt>=freeMin;
+            var r=document.getElementById('calcResult');
+            r.classList.remove('hidden');
+            r.innerHTML='<p class="font-bold text-lg">Khoảng cách: '+km+' km</p>'
+                +'<p>Phí giao hàng: <strong>'+(isFree?'MIỄN PHÍ':fee.toLocaleString("vi-VN")+'đ')+'</strong></p>'
+                +(isFree?'<p class="text-green-600"><i class="fas fa-gift mr-1"></i>Đơn hàng đủ điều kiện miễn phí giao hàng!</p>':'');
+        }
+    </script>
+</body>
+</html>

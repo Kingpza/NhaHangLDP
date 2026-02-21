@@ -173,6 +173,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\AuthorizationHelper.cs" />
+    <Compile Include="Helpers\DeliveryFeeHelper.cs" />
     <Compile Include="Helpers\SettingsHelper.cs" />
     <Compile Include="Helpers\StatusTextHelper.cs" />
     <Compile Include="Hubs\RestaurantHub.cs" />
@@ -226,6 +227,7 @@
     <Compile Include="Models\DeliveryAssignment.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\DeliveryAssignment.Extended.cs" />
     <Compile Include="Models\DeliveryModels.cs" />
     <Compile Include="Models\DeliverySettings.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
@@ -523,6 +525,7 @@
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\chatbot.js" />
     <None Include="Scripts\jquery-3.7.1.intellisense.js" />
+    <Content Include="Scripts\DeliveryManagement_Extended.sql" />
     <Content Include="Scripts\jquery-3.7.1.js" />
     <Content Include="Scripts\jquery-3.7.1.min.js" />
     <Content Include="Scripts\jquery-3.7.1.slim.js" />
@@ -707,6 +710,9 @@
     <Content Include="Views\QRCode\AllEmployeesQR.cshtml" />
     <Content Include="Views\QRCode\CheckInScanner.cshtml" />
     <Content Include="Views\QRCode\BankTransferQR.cshtml" />
+    <Content Include="Views\Delivery\Management.cshtml" />
+    <Content Include="Views\Delivery\FeeSettings.cshtml" />
+    <Content Include="Views\Delivery\ShopEmployeeOrders.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
