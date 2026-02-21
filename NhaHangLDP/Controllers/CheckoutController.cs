@@ -221,7 +221,7 @@ namespace NhaHangLDP.Controllers
 
                 // Check if address already exists
                 var existingCount = _db.Database.SqlQuery<int>(
-                    "SELECT COUNT(*) FROM CustomerAddress WHERE CustomerId = @p0 AND AddressLine = @p1 AND District = @p2",
+                    "SELECT COUNT(*) FROM CustomerAddress WHERE CustomerId = @p0 AND AddressLine = @p1 AND ISNULL(District, '') = @p2",
                     customerId.Value, deliveryAddress, district ?? "").FirstOrDefault();
 
                 if (existingCount > 0)
@@ -235,12 +235,13 @@ namespace NhaHangLDP.Controllers
                     customerId.Value).FirstOrDefault();
 
                 var isDefault = addressCount == 0;
+                var saveCity = !string.IsNullOrWhiteSpace(city) ? city : "TP. Hồ Chí Minh";
 
                 _db.Database.ExecuteSqlCommand(
                     @"INSERT INTO CustomerAddress (CustomerId, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault)
                       VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, 'Home', @p7)",
                     customerId.Value, customer.FullName, customer.Phone, deliveryAddress,
-                    ward ?? "", district ?? "", city ?? "TP. Hồ Chí Minh", isDefault);
+                    ward ?? "", district ?? "", saveCity, isDefault);
 
                 return Json(new { success = true, message = "Đã lưu địa chỉ thành công!" });
             }
