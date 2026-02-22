@@ -360,9 +360,9 @@ namespace NhaHangLDP.Controllers
             var pageSize = 10;
             var orders = _db.Database.SqlQuery<OrderSummaryInfo>(
                 @"SELECT o.Id, o.OrderCode, o.OrderDate, o.Status, o.TotalAmount,
-                         (SELECT COUNT(*) FROM OrderDetail WHERE OrderId = o.Id) as ItemCount,
-                         (SELECT TOP 1 m.ImageUrl FROM OrderDetail od 
-                          JOIN MenuItem m ON od.MenuItemId = m.Id WHERE od.OrderId = o.Id) as FirstItemImage
+                         (SELECT COUNT(*) FROM CustomerOrderDetail WHERE CustomerOrderId = o.Id) as ItemCount,
+                         (SELECT TOP 1 m.ImageUrl FROM CustomerOrderDetail od 
+                          JOIN MenuItem m ON od.MenuItemId = m.Id WHERE od.CustomerOrderId = o.Id) as FirstItemImage
                   FROM CustomerOrder o
                   WHERE o.CustomerId = @p0
                   ORDER BY o.OrderDate DESC

@@ -363,15 +363,23 @@
                                 <span>Tạm tính</span>
                                 <span>@Model.Cart.SubTotal.ToString("N0")đ</span>
                             </div>
-                            @if (Model.Cart.DeliveryFee > 0)
-                            {
-                                <div class="flex justify-between text-text-secondary">
-                                    <span>Phí giao hàng</span>
-                                    <span id="checkoutDeliveryFee">
-                                        @Model.Cart.DeliveryFee.ToString("N0")đ
-                                    </span>
-                                </div>
-                            }
+                            <div id="deliveryFeeRow" class="flex justify-between text-text-secondary">
+                                <span>Phí giao hàng</span>
+                                <span id="checkoutDeliveryFee">
+                                    @if (Model.Cart.DeliveryFee > 0)
+                                    {
+                                        @Model.Cart.DeliveryFee.ToString("N0")@:đ
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success">Miễn phí</span>
+                                    }
+                                </span>
+                            </div>
+                            <div id="distanceInfoRow" class="flex justify-between text-text-secondary text-sm" style="display:none;">
+                                <span>Khoảng cách</span>
+                                <span id="distanceText"></span>
+                            </div>
                             @if (Model.Cart.Discount > 0)
                             {
                                 <div class="flex justify-between text-success">
@@ -381,7 +389,7 @@
                             }
                             <div class="flex justify-between text-xl font-bold pt-3 border-t border-border">
                                 <span>Tổng cộng</span>
-                                <span class="text-primary">@Model.Cart.TotalAmount.ToString("N0")đ</span>
+                                <span id="checkoutTotal" class="text-primary">@Model.Cart.TotalAmount.ToString("N0")đ</span>
                             </div>
                         </div>
 
@@ -532,6 +540,9 @@
                         // Visual feedback
                         highlightFilledFields();
                         showAddressUpdated();
+
+                        // Calculate delivery fee by distance
+                        calculateDeliveryFeeByDistance(lat, lng);
                     } else {
                         marker.getPopup().setContent('❌ Không tìm thấy địa chỉ').update();
                     }
@@ -640,10 +651,63 @@
             if (orderType === 'Delivery') {
                 section.style.display = 'block';
                 document.getElementById('deliveryAddress').required = true;
+                // Recalculate delivery fee based on current position
+                var lat = document.getElementById('latitude').value;
+                var lng = document.getElementById('longitude').value;
+                if (lat && lng) {
+                    calculateDeliveryFeeByDistance(parseFloat(lat), parseFloat(lng));
+                } else {
+                    updateDeliveryFeeDisplay(@Model.Cart.DeliveryFee, null);
+                }
             } else {
                 section.style.display = 'none';
                 document.getElementById('deliveryAddress').required = false;
+                // No delivery fee for pickup/dine-in
+                updateDeliveryFeeDisplay(0, null);
             }
+        }
+
+        // Update delivery fee display and total
+        var currentSubTotal = @Model.Cart.SubTotal;
+        var currentDiscount = @Model.Cart.Discount;
+        var currentDeliveryFee = @Model.Cart.DeliveryFee;
+
+        function updateDeliveryFeeDisplay(fee, distanceKm) {
+            currentDeliveryFee = fee;
+            var feeEl = document.getElementById('checkoutDeliveryFee');
+            var feeRow = document.getElementById('deliveryFeeRow');
+            var distanceRow = document.getElementById('distanceInfoRow');
+            var distanceText = document.getElementById('distanceText');
+            var totalEl = document.getElementById('checkoutTotal');
+
+            if (fee > 0) {
+                feeEl.innerHTML = fee.toLocaleString('vi-VN') + 'đ';
+            } else {
+                feeEl.innerHTML = '<span class="text-success">Miễn phí</span>';
+            }
+            feeRow.style.display = 'flex';
+
+            if (distanceKm !== null && distanceKm !== undefined) {
+                distanceRow.style.display = 'flex';
+                distanceText.textContent = distanceKm.toFixed(1) + ' km';
+            } else {
+                distanceRow.style.display = 'none';
+            }
+
+            var total = currentSubTotal + fee - currentDiscount;
+            totalEl.textContent = total.toLocaleString('vi-VN') + 'đ';
+        }
+
+        // Calculate delivery fee by distance
+        function calculateDeliveryFeeByDistance(lat, lng) {
+            $.post('@Url.Action("CalculateDeliveryFeeByDistance", "Checkout")', {
+                customerLat: lat,
+                customerLng: lng
+            }).done(function(response) {
+                if (response.success) {
+                    updateDeliveryFeeDisplay(response.fee, response.distanceKm);
+                }
+            });
         }
 
         // Toggle new address form
@@ -717,15 +781,28 @@
             $.post('@Url.Action("PlaceOrder", "Checkout")', formData)
                 .done(function(response) {
                     if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Đặt hàng thành công!',
-                            text: 'Mã đơn hàng: ' + response.orderCode,
-                            confirmButtonText: 'Xem đơn hàng',
-                            confirmButtonColor: '#007bff'
-                        }).then(() => {
-                            window.location.href = response.redirectUrl;
-                        });
+                        if (response.requirePayment) {
+                            // Non-COD payment: redirect to payment page
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Đơn hàng đã tạo!',
+                                text: 'Vui lòng hoàn tất thanh toán qua ' + response.paymentMethod,
+                                confirmButtonText: 'Thanh toán ngay',
+                                confirmButtonColor: '#007bff'
+                            }).then(() => {
+                                window.location.href = response.redirectUrl;
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đặt hàng thành công!',
+                                text: 'Mã đơn hàng: ' + response.orderCode,
+                                confirmButtonText: 'Xem đơn hàng',
+                                confirmButtonColor: '#007bff'
+                            }).then(() => {
+                                window.location.href = response.redirectUrl;
+                            });
+                        }
                     } else {
                         btn.prop('disabled', false).html(originalText);
                         Swal.fire('Lỗi', response.message, 'error');

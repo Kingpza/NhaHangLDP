@@ -90,6 +90,44 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Vui lòng nhập địa chỉ giao hàng!" });
                 }
 
+                // Set delivery fee to 0 for pickup/dine-in
+                if (form.OrderType == "TakeAway" || form.OrderType == "DineIn")
+                {
+                    cart.DeliveryFee = 0;
+                    cart.TotalAmount = cart.SubTotal - cart.Discount;
+                }
+
+                // Enforce payment for non-COD methods
+                if (form.PaymentMethod != "COD" && form.PaymentMethod != null)
+                {
+                    // For VNPay/MoMo, create order first then redirect to payment
+                    var orderCode = GenerateOrderCode();
+                    var orderId = CreateOrderInDatabase(orderCode, form, cart);
+
+                    // Clear cart
+                    Session[CART_SESSION_KEY] = null;
+                    var custId = Session["CustomerId"] as int?;
+                    if (custId.HasValue)
+                    {
+                        ClearDatabaseCart(custId.Value);
+                    }
+
+                    // Store order info for payment processing
+                    Session["PendingPaymentOrderId"] = orderId;
+                    Session["PendingPaymentOrderCode"] = orderCode;
+                    Session["PendingPaymentAmount"] = cart.TotalAmount;
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Vui lòng hoàn tất thanh toán!",
+                        orderCode = orderCode,
+                        requirePayment = true,
+                        paymentMethod = form.PaymentMethod,
+                        redirectUrl = Url.Action("ProcessOnlinePayment", new { code = orderCode, method = form.PaymentMethod })
+                    });
+                }
+
                 // Generate order code
                 var orderCode = GenerateOrderCode();
 
@@ -98,6 +136,13 @@ namespace NhaHangLDP.Controllers
 
                 // Clear cart after successful order
                 Session[CART_SESSION_KEY] = null;
+
+                // Clear database cart for logged-in users
+                var customerId = Session["CustomerId"] as int?;
+                if (customerId.HasValue)
+                {
+                    ClearDatabaseCart(customerId.Value);
+                }
 
                 return Json(new { 
                     success = true, 
@@ -184,6 +229,64 @@ namespace NhaHangLDP.Controllers
             }
 
             return RedirectToAction("TrackOrder", new { code = orderCode });
+        }
+
+        #endregion
+
+        #region Online Payment
+
+        /// <summary>
+        /// Xử lý thanh toán trực tuyến (VNPay/MoMo)
+        /// </summary>
+        public ActionResult ProcessOnlinePayment(string code, string method)
+        {
+            if (string.IsNullOrEmpty(code))
+            {
+                return RedirectToAction("Menu", "Public");
+            }
+
+            var order = GetOrderByCode(code);
+            if (order == null)
+            {
+                TempData["Error"] = "Không tìm thấy đơn hàng!";
+                return RedirectToAction("Menu", "Public");
+            }
+
+            ViewBag.PaymentMethod = method;
+            ViewBag.OrderCode = code;
+            ViewBag.TotalAmount = order.TotalAmount;
+            return View(order);
+        }
+
+        /// <summary>
+        /// Xác nhận thanh toán trực tuyến (sandbox mode)
+        /// </summary>
+        [HttpPost]
+        public JsonResult ConfirmOnlinePayment(string orderCode)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(orderCode))
+                {
+                    return Json(new { success = false, message = "Mã đơn hàng không hợp lệ!" });
+                }
+
+                // Update payment status
+                _db.Database.ExecuteSqlCommand(
+                    "UPDATE CustomerOrder SET PaymentStatus = 'Paid' WHERE OrderCode = @p0",
+                    orderCode);
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Thanh toán thành công!",
+                    redirectUrl = Url.Action("Confirmation", new { code = orderCode })
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
         }
 
         #endregion
@@ -707,6 +810,30 @@ namespace NhaHangLDP.Controllers
             }
 
             return steps;
+        }
+
+        /// <summary>
+        /// Xóa giỏ hàng trong database
+        /// </summary>
+        private void ClearDatabaseCart(int customerId)
+        {
+            try
+            {
+                var cart = _db.Cart.FirstOrDefault(c => c.CustomerId == customerId);
+                if (cart != null)
+                {
+                    var cartItems = _db.CartItem.Where(ci => ci.CartId == cart.Id).ToList();
+                    foreach (var item in cartItems)
+                    {
+                        _db.CartItem.Remove(item);
+                    }
+                    _db.SaveChanges();
+                }
+            }
+            catch
+            {
+                // Silent fail - cart session already cleared
+            }
         }
 
         private string GetPaymentMethodText(string method)

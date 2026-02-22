@@ -1,0 +1,144 @@
+﻿@model NhaHangLDP.Models.OrderConfirmationViewModel
+@{
+    ViewBag.Title = "Thanh toán trực tuyến";
+    Layout = null;
+    var paymentMethod = ViewBag.PaymentMethod as string ?? "VNPay";
+    var orderCode = ViewBag.OrderCode as string;
+    var totalAmount = (decimal)(ViewBag.TotalAmount ?? 0m);
+    var paymentName = paymentMethod == "MoMo" ? "Ví MoMo" : "VNPay";
+    var paymentColor = paymentMethod == "MoMo" ? "#ae2070" : "#0066cc";
+    var paymentLogo = paymentMethod == "MoMo"
+        ? "https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png"
+        : "https://vnpay.vn/s1/statics.vnpay.vn/2023/6/0oxhzjmxbksr1686814746087.png";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Thanh toán @paymentName - Nhà Hàng LDP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#007bff",
+                        success: "#28a745",
+                        warning: "#ffc107",
+                        danger: "#dc3545"
+                    },
+                    fontFamily: {
+                        display: ["Manrope", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-display min-h-screen">
+    <header class="bg-white shadow-sm">
+        <div class="max-w-xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="@Url.Action("Menu", "Public")" class="flex items-center gap-2 text-gray-600 hover:text-primary">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span>Trang chủ</span>
+            </a>
+            <h1 class="text-lg font-bold">Thanh toán</h1>
+            <div class="w-20"></div>
+        </div>
+    </header>
+
+    <main class="max-w-xl mx-auto px-4 py-8">
+        <!-- Payment Info -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6 text-center">
+            <img src="@paymentLogo" alt="@paymentName" class="h-16 mx-auto mb-4" />
+            <h2 class="text-xl font-bold mb-2">Thanh toán qua @paymentName</h2>
+            <p class="text-gray-500 text-sm mb-4">
+                <span class="bg-warning/20 text-warning px-2 py-1 rounded-full text-xs font-semibold">Sandbox Mode</span>
+            </p>
+            <div class="bg-gray-50 rounded-xl p-4 mb-4">
+                <p class="text-sm text-gray-500">Mã đơn hàng</p>
+                <p class="text-lg font-bold text-primary">@orderCode</p>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                <p class="text-sm text-gray-500">Số tiền thanh toán</p>
+                <p class="text-3xl font-bold" style="color: @paymentColor">@totalAmount.ToString("N0")đ</p>
+            </div>
+
+            <!-- Order Items Summary -->
+            @if (Model.Items != null && Model.Items.Any())
+            {
+                <div class="border-t border-gray-100 pt-4 mb-6">
+                    <h3 class="text-sm font-semibold text-gray-600 mb-3 text-left">Chi tiết đơn hàng</h3>
+                    <div class="space-y-2">
+                        @foreach (var item in Model.Items)
+                        {
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">@item.Name x@item.Quantity</span>
+                                <span class="font-medium">@item.Subtotal.ToString("N0")đ</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Sandbox Payment Button -->
+            <div class="space-y-3">
+                <p class="text-sm text-gray-500">
+                    Đây là chế độ Sandbox (test). Nhấn nút bên dưới để mô phỏng thanh toán thành công.
+                </p>
+                <button id="payNowBtn" onclick="processPayment()"
+                        class="w-full py-4 text-white rounded-xl font-bold text-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2 shadow-lg"
+                        style="background-color: @paymentColor">
+                    <span class="material-symbols-outlined">payment</span>
+                    Thanh toán @totalAmount.ToString("N0")đ
+                </button>
+                <a href="@Url.Action("TrackOrder", new { code = orderCode })"
+                   class="block w-full py-3 border-2 border-gray-300 text-gray-600 rounded-xl font-semibold text-center hover:bg-gray-100 transition-colors">
+                    Thanh toán sau
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function processPayment() {
+            var btn = document.getElementById('payNowBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Đang xử lý thanh toán...';
+
+            // Simulate payment processing delay
+            setTimeout(function () {
+                $.post('@Url.Action("ConfirmOnlinePayment", "Checkout")', {
+                    orderCode: '@orderCode'
+                }).done(function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Thanh toán thành công!',
+                            text: 'Đơn hàng ' + '@orderCode' + ' đã được thanh toán.',
+                            confirmButtonText: 'Xem đơn hàng',
+                            confirmButtonColor: '#007bff'
+                        }).then(function () {
+                            window.location.href = response.redirectUrl;
+                        });
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="material-symbols-outlined">payment</span> Thanh toán @totalAmount.ToString("N0")đ';
+                        Swal.fire('Lỗi', response.message, 'error');
+                    }
+                }).fail(function () {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="material-symbols-outlined">payment</span> Thanh toán @totalAmount.ToString("N0")đ';
+                    Swal.fire('Lỗi', 'Có lỗi xảy ra, vui lòng thử lại!', 'error');
+                });
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
