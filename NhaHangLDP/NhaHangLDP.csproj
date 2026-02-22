@@ -158,6 +158,7 @@
     <Compile Include="Controllers\KitchenController.cs" />
     <Compile Include="Controllers\ManagementController.cs" />
     <Compile Include="Controllers\PaymentController.cs" />
+    <Compile Include="Controllers\PermissionController.cs" />
     <Compile Include="Controllers\PromotionController.cs" />
     <Compile Include="Controllers\PublicController.cs" />
     <Compile Include="Controllers\QRCodeController.cs" />
@@ -315,6 +316,7 @@
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\PaymentModels.cs" />
+    <Compile Include="Models\PermissionViewModels.cs" />
     <Compile Include="Models\Payroll.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -540,6 +542,7 @@
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\restaurant-signalr.js" />
     <Content Include="Scripts\sweetalert-helpers.js" />
+    <None Include="Scripts\RolePermission_Create.sql" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
@@ -687,6 +690,8 @@
     <Content Include="Views\Delivery\Tracking.cshtml" />
     <Content Include="Views\Delivery\Zones.cshtml" />
     <Content Include="Views\Delivery\Statistics.cshtml" />
+    <Content Include="Views\Permission\Index.cshtml" />
+    <Content Include="Views\Checkout\ProcessOnlinePayment.cshtml" />
     <Content Include="Views\ShipperApp\Login.cshtml" />
     <Content Include="Views\ShipperApp\Dashboard.cshtml" />
     <Content Include="Views\ShipperApp\NewOrders.cshtml" />

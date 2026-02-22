@@ -694,7 +694,7 @@
                 distanceRow.style.display = 'none';
             }
 
-            var total = currentSubTotal + fee - currentDiscount;
+            var total = currentSubTotal + fee - (currentDiscount || 0);
             totalEl.textContent = total.toLocaleString('vi-VN') + 'đ';
         }
 
@@ -707,6 +707,8 @@
                 if (response.success) {
                     updateDeliveryFeeDisplay(response.fee, response.distanceKm);
                 }
+            }).fail(function() {
+                console.error('Không thể tính phí giao hàng theo khoảng cách');
             });
         }
 

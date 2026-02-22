@@ -101,30 +101,25 @@ namespace NhaHangLDP.Controllers
                 if (form.PaymentMethod != "COD" && form.PaymentMethod != null)
                 {
                     // For VNPay/MoMo, create order first then redirect to payment
-                    var orderCode = GenerateOrderCode();
-                    var orderId = CreateOrderInDatabase(orderCode, form, cart);
+                    var paymentOrderCode = GenerateOrderCode();
+                    var paymentOrderId = CreateOrderInDatabase(paymentOrderCode, form, cart);
 
-                    // Clear cart
-                    Session[CART_SESSION_KEY] = null;
-                    var custId = Session["CustomerId"] as int?;
-                    if (custId.HasValue)
-                    {
-                        ClearDatabaseCart(custId.Value);
-                    }
+                    // Clear cart (session + database)
+                    ClearAllCarts();
 
                     // Store order info for payment processing
-                    Session["PendingPaymentOrderId"] = orderId;
-                    Session["PendingPaymentOrderCode"] = orderCode;
+                    Session["PendingPaymentOrderId"] = paymentOrderId;
+                    Session["PendingPaymentOrderCode"] = paymentOrderCode;
                     Session["PendingPaymentAmount"] = cart.TotalAmount;
 
                     return Json(new
                     {
                         success = true,
                         message = "Vui lòng hoàn tất thanh toán!",
-                        orderCode = orderCode,
+                        orderCode = paymentOrderCode,
                         requirePayment = true,
                         paymentMethod = form.PaymentMethod,
-                        redirectUrl = Url.Action("ProcessOnlinePayment", new { code = orderCode, method = form.PaymentMethod })
+                        redirectUrl = Url.Action("ProcessOnlinePayment", new { code = paymentOrderCode, method = form.PaymentMethod })
                     });
                 }
 
@@ -134,15 +129,8 @@ namespace NhaHangLDP.Controllers
                 // Create order using raw SQL (since entities are not in EDMX yet)
                 var orderId = CreateOrderInDatabase(orderCode, form, cart);
 
-                // Clear cart after successful order
-                Session[CART_SESSION_KEY] = null;
-
-                // Clear database cart for logged-in users
-                var customerId = Session["CustomerId"] as int?;
-                if (customerId.HasValue)
-                {
-                    ClearDatabaseCart(customerId.Value);
-                }
+                // Clear cart (session + database)
+                ClearAllCarts();
 
                 return Json(new { 
                     success = true, 
@@ -833,6 +821,19 @@ namespace NhaHangLDP.Controllers
             catch
             {
                 // Silent fail - cart session already cleared
+            }
+        }
+
+        /// <summary>
+        /// Xóa cả session cart và database cart
+        /// </summary>
+        private void ClearAllCarts()
+        {
+            Session[CART_SESSION_KEY] = null;
+            var customerId = Session["CustomerId"] as int?;
+            if (customerId.HasValue)
+            {
+                ClearDatabaseCart(customerId.Value);
             }
         }
 
