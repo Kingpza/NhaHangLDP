@@ -250,6 +250,7 @@ namespace NhaHangLDP.Controllers
         /// Xác nhận thanh toán trực tuyến (sandbox mode)
         /// </summary>
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult ConfirmOnlinePayment(string orderCode)
         {
             try
@@ -259,10 +260,23 @@ namespace NhaHangLDP.Controllers
                     return Json(new { success = false, message = "Mã đơn hàng không hợp lệ!" });
                 }
 
+                // Verify order ownership
+                var customerId = Session["CustomerId"] as int?;
+                var pendingCode = Session["PendingPaymentOrderCode"] as string;
+                if (pendingCode != orderCode)
+                {
+                    return Json(new { success = false, message = "Không có quyền xác nhận thanh toán cho đơn hàng này!" });
+                }
+
                 // Update payment status
                 _db.Database.ExecuteSqlCommand(
                     "UPDATE CustomerOrder SET PaymentStatus = 'Paid' WHERE OrderCode = @p0",
                     orderCode);
+
+                // Clear pending payment session
+                Session["PendingPaymentOrderId"] = null;
+                Session["PendingPaymentOrderCode"] = null;
+                Session["PendingPaymentAmount"] = null;
 
                 return Json(new
                 {

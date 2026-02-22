@@ -104,10 +104,12 @@
         </div>
     </main>
 
+    @Html.AntiForgeryToken()
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         var safeOrderCode = @Html.Raw(Json.Encode(orderCode));
+        var antiForgeryToken = $('input[name="__RequestVerificationToken"]').val();
 
         function processPayment() {
             var btn = document.getElementById('payNowBtn');
@@ -117,7 +119,8 @@
             // Simulate payment processing delay
             setTimeout(function () {
                 $.post('@Url.Action("ConfirmOnlinePayment", "Checkout")', {
-                    orderCode: safeOrderCode
+                    orderCode: safeOrderCode,
+                    __RequestVerificationToken: antiForgeryToken
                 }).done(function (response) {
                     if (response.success) {
                         Swal.fire({
