@@ -527,7 +527,6 @@
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\chatbot.js" />
     <None Include="Scripts\jquery-3.7.1.intellisense.js" />
-    <Content Include="Scripts\DeliveryManagement_Extended.sql" />
     <Content Include="Scripts\jquery-3.7.1.js" />
     <Content Include="Scripts\jquery-3.7.1.min.js" />
     <Content Include="Scripts\jquery-3.7.1.slim.js" />
@@ -542,7 +541,6 @@
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\restaurant-signalr.js" />
     <Content Include="Scripts\sweetalert-helpers.js" />
-    <None Include="Scripts\RolePermission_Create.sql" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
