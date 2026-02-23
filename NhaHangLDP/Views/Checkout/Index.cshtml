@@ -657,7 +657,7 @@
                 if (lat && lng) {
                     calculateDeliveryFeeByDistance(parseFloat(lat), parseFloat(lng));
                 } else {
-                    updateDeliveryFeeDisplay(@Model.Cart.DeliveryFee, null);
+                    updateDeliveryFeeDisplay(@Html.Raw(Model.Cart.DeliveryFee.ToString(System.Globalization.CultureInfo.InvariantCulture)), null);
                 }
             } else {
                 section.style.display = 'none';
@@ -668,9 +668,9 @@
         }
 
         // Update delivery fee display and total
-        var currentSubTotal = @Model.Cart.SubTotal;
-        var currentDiscount = @Model.Cart.Discount;
-        var currentDeliveryFee = @Model.Cart.DeliveryFee;
+        var currentSubTotal = @Html.Raw(Model.Cart.SubTotal.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        var currentDiscount = @Html.Raw(Model.Cart.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        var currentDeliveryFee = @Html.Raw(Model.Cart.DeliveryFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
         function updateDeliveryFeeDisplay(fee, distanceKm) {
             currentDeliveryFee = fee;
@@ -734,6 +734,28 @@
             document.getElementById('city').value = radio.dataset.city;
             document.getElementById('newAddressForm').classList.add('hidden');
             highlightFilledFields();
+
+            // Geocode the saved address to calculate delivery fee by distance
+            var fullAddress = [radio.dataset.address, radio.dataset.ward, radio.dataset.district, radio.dataset.city]
+                .filter(function(part) { return part && part.trim(); })
+                .join(', ');
+
+            if (fullAddress) {
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fullAddress) + '&limit=1')
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data && data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lng = parseFloat(data[0].lon);
+                            document.getElementById('latitude').value = lat;
+                            document.getElementById('longitude').value = lng;
+                            calculateDeliveryFeeByDistance(lat, lng);
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('Geocoding saved address error:', error);
+                    });
+            }
         }
 
         // Save address to profile

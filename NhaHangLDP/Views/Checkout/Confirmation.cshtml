@@ -157,5 +157,21 @@
             <p class="mt-1">Hoặc email: support@nhahangldp.com</p>
         </div>
     </div>
+
+    @if (TempData["PaymentSuccess"] != null)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thanh toán thành công!',
+                    text: '@Html.Raw(TempData["PaymentMessage"])',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#007bff'
+                });
+            });
+        </script>
+    }
 </body>
 </html>

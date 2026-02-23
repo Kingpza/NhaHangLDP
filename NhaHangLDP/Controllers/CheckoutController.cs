@@ -1,9 +1,14 @@
 ﻿using NhaHangLDP.Models;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Script.Serialization;
 
 namespace NhaHangLDP.Controllers
 {
@@ -288,6 +293,294 @@ namespace NhaHangLDP.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Tạo URL thanh toán VNPay sandbox và chuyển hướng
+        /// </summary>
+        public ActionResult CreateVNPayPayment(string orderCode)
+        {
+            try
+            {
+                var order = GetOrderByCode(orderCode);
+                if (order == null)
+                {
+                    TempData["Error"] = "Không tìm thấy đơn hàng!";
+                    return RedirectToAction("Menu", "Public");
+                }
+
+                var vnp_TmnCode = System.Configuration.ConfigurationManager.AppSettings["VNPay:TmnCode"];
+                var vnp_HashSecret = System.Configuration.ConfigurationManager.AppSettings["VNPay:HashSecret"];
+                var vnp_BaseUrl = System.Configuration.ConfigurationManager.AppSettings["VNPay:BaseUrl"];
+                var vnp_ReturnUrl = System.Configuration.ConfigurationManager.AppSettings["VNPay:ReturnUrl"];
+
+                // Build absolute return URL
+                var returnUrl = Request.Url.GetLeftPart(UriPartial.Authority) + vnp_ReturnUrl;
+
+                var vnp_Params = new SortedDictionary<string, string>
+                {
+                    { "vnp_Version", "2.1.0" },
+                    { "vnp_Command", "pay" },
+                    { "vnp_TmnCode", vnp_TmnCode },
+                    { "vnp_Amount", ((long)(order.TotalAmount * 100)).ToString() },
+                    { "vnp_CurrCode", "VND" },
+                    { "vnp_TxnRef", orderCode },
+                    { "vnp_OrderInfo", "Thanh toan don hang " + orderCode },
+                    { "vnp_OrderType", "other" },
+                    { "vnp_Locale", "vn" },
+                    { "vnp_ReturnUrl", returnUrl },
+                    { "vnp_IpAddr", Request.UserHostAddress ?? "127.0.0.1" },
+                    { "vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss") }
+                };
+
+                // Build query string and hash
+                var queryBuilder = new StringBuilder();
+                foreach (var kv in vnp_Params)
+                {
+                    if (queryBuilder.Length > 0) queryBuilder.Append("&");
+                    queryBuilder.Append(HttpUtility.UrlEncode(kv.Key) + "=" + HttpUtility.UrlEncode(kv.Value));
+                }
+
+                var signData = queryBuilder.ToString();
+                var vnp_SecureHash = HmacSHA512(vnp_HashSecret, signData);
+                var paymentUrl = vnp_BaseUrl + "?" + signData + "&vnp_SecureHash=" + vnp_SecureHash;
+
+                return Redirect(paymentUrl);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Lỗi tạo thanh toán VNPay: " + ex.Message;
+                return RedirectToAction("ProcessOnlinePayment", new { code = orderCode, method = "VNPay" });
+            }
+        }
+
+        /// <summary>
+        /// Xử lý kết quả trả về từ VNPay
+        /// </summary>
+        public ActionResult VNPayReturn()
+        {
+            try
+            {
+                var vnp_HashSecret = System.Configuration.ConfigurationManager.AppSettings["VNPay:HashSecret"];
+                var vnp_SecureHash = Request.QueryString["vnp_SecureHash"];
+                var orderCode = Request.QueryString["vnp_TxnRef"];
+                var vnp_ResponseCode = Request.QueryString["vnp_ResponseCode"];
+
+                // Build data for hash verification
+                var vnp_Params = new SortedDictionary<string, string>();
+                foreach (string key in Request.QueryString.AllKeys)
+                {
+                    if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_") && key != "vnp_SecureHash" && key != "vnp_SecureHashType")
+                    {
+                        vnp_Params[key] = Request.QueryString[key];
+                    }
+                }
+
+                var queryBuilder = new StringBuilder();
+                foreach (var kv in vnp_Params)
+                {
+                    if (queryBuilder.Length > 0) queryBuilder.Append("&");
+                    queryBuilder.Append(HttpUtility.UrlEncode(kv.Key) + "=" + HttpUtility.UrlEncode(kv.Value));
+                }
+
+                var checkHash = HmacSHA512(vnp_HashSecret, queryBuilder.ToString());
+                var isValidHash = checkHash.Equals(vnp_SecureHash, StringComparison.InvariantCultureIgnoreCase);
+
+                if (isValidHash && vnp_ResponseCode == "00")
+                {
+                    // Payment successful - update order status
+                    _db.Database.ExecuteSqlCommand(
+                        "UPDATE CustomerOrder SET PaymentStatus = 'Paid' WHERE OrderCode = @p0",
+                        orderCode);
+
+                    Session["PendingPaymentOrderId"] = null;
+                    Session["PendingPaymentOrderCode"] = null;
+                    Session["PendingPaymentAmount"] = null;
+
+                    TempData["PaymentSuccess"] = true;
+                    TempData["PaymentMessage"] = "Thanh toán VNPay thành công!";
+                    return RedirectToAction("Confirmation", new { code = orderCode });
+                }
+                else
+                {
+                    TempData["Error"] = "Thanh toán VNPay không thành công. Mã lỗi: " + vnp_ResponseCode;
+                    return RedirectToAction("TrackOrder", new { code = orderCode });
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Lỗi xử lý kết quả VNPay: " + ex.Message;
+                return RedirectToAction("Menu", "Public");
+            }
+        }
+
+        /// <summary>
+        /// Tạo thanh toán MoMo sandbox và chuyển hướng
+        /// </summary>
+        public ActionResult CreateMoMoPayment(string orderCode)
+        {
+            try
+            {
+                var order = GetOrderByCode(orderCode);
+                if (order == null)
+                {
+                    TempData["Error"] = "Không tìm thấy đơn hàng!";
+                    return RedirectToAction("Menu", "Public");
+                }
+
+                var partnerCode = System.Configuration.ConfigurationManager.AppSettings["MoMo:PartnerCode"];
+                var accessKey = System.Configuration.ConfigurationManager.AppSettings["MoMo:AccessKey"];
+                var secretKey = System.Configuration.ConfigurationManager.AppSettings["MoMo:SecretKey"];
+                var endpoint = System.Configuration.ConfigurationManager.AppSettings["MoMo:Endpoint"];
+                var returnUrlPath = System.Configuration.ConfigurationManager.AppSettings["MoMo:ReturnUrl"];
+                var ipnUrlPath = System.Configuration.ConfigurationManager.AppSettings["MoMo:IpnUrl"];
+
+                var baseUrl = Request.Url.GetLeftPart(UriPartial.Authority);
+                var redirectUrl = baseUrl + returnUrlPath;
+                var ipnUrl = baseUrl + ipnUrlPath;
+
+                var requestId = Guid.NewGuid().ToString();
+                var amount = ((long)order.TotalAmount).ToString();
+                var orderInfo = "Thanh toan don hang " + orderCode;
+                var extraData = "";
+                var requestType = "captureWallet";
+
+                // Build signature
+                var rawSignature = $"accessKey={accessKey}&amount={amount}&extraData={extraData}&ipnUrl={ipnUrl}&orderId={orderCode}&orderInfo={orderInfo}&partnerCode={partnerCode}&redirectUrl={redirectUrl}&requestId={requestId}&requestType={requestType}";
+                var signature = HmacSHA256(secretKey, rawSignature);
+
+                // Build request body
+                var requestBody = new
+                {
+                    partnerCode = partnerCode,
+                    accessKey = accessKey,
+                    requestId = requestId,
+                    amount = amount,
+                    orderId = orderCode,
+                    orderInfo = orderInfo,
+                    redirectUrl = redirectUrl,
+                    ipnUrl = ipnUrl,
+                    extraData = extraData,
+                    requestType = requestType,
+                    signature = signature,
+                    lang = "vi"
+                };
+
+                var serializer = new JavaScriptSerializer();
+                var jsonBody = serializer.Serialize(requestBody);
+
+                // POST to MoMo API
+                using (var client = new WebClient())
+                {
+                    client.Headers[HttpRequestHeader.ContentType] = "application/json";
+                    var responseJson = client.UploadString(endpoint, jsonBody);
+                    var response = serializer.Deserialize<Dictionary<string, object>>(responseJson);
+
+                    if (response.ContainsKey("payUrl") && response["payUrl"] != null)
+                    {
+                        return Redirect(response["payUrl"].ToString());
+                    }
+                    else
+                    {
+                        var message = response.ContainsKey("message") ? response["message"].ToString() : "Không thể tạo thanh toán MoMo";
+                        TempData["Error"] = message;
+                        return RedirectToAction("ProcessOnlinePayment", new { code = orderCode, method = "MoMo" });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Lỗi tạo thanh toán MoMo: " + ex.Message;
+                return RedirectToAction("ProcessOnlinePayment", new { code = orderCode, method = "MoMo" });
+            }
+        }
+
+        /// <summary>
+        /// Xử lý kết quả trả về từ MoMo (redirect)
+        /// </summary>
+        public ActionResult MoMoReturn()
+        {
+            try
+            {
+                var orderCode = Request.QueryString["orderId"];
+                var resultCode = Request.QueryString["resultCode"];
+
+                if (resultCode == "0")
+                {
+                    // Payment successful
+                    _db.Database.ExecuteSqlCommand(
+                        "UPDATE CustomerOrder SET PaymentStatus = 'Paid' WHERE OrderCode = @p0",
+                        orderCode);
+
+                    Session["PendingPaymentOrderId"] = null;
+                    Session["PendingPaymentOrderCode"] = null;
+                    Session["PendingPaymentAmount"] = null;
+
+                    TempData["PaymentSuccess"] = true;
+                    TempData["PaymentMessage"] = "Thanh toán MoMo thành công!";
+                    return RedirectToAction("Confirmation", new { code = orderCode });
+                }
+                else
+                {
+                    TempData["Error"] = "Thanh toán MoMo không thành công.";
+                    return RedirectToAction("TrackOrder", new { code = orderCode });
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Lỗi xử lý kết quả MoMo: " + ex.Message;
+                return RedirectToAction("Menu", "Public");
+            }
+        }
+
+        /// <summary>
+        /// Xử lý IPN callback từ MoMo (server-to-server)
+        /// </summary>
+        [HttpPost]
+        public JsonResult MoMoIPN()
+        {
+            try
+            {
+                Request.InputStream.Position = 0;
+                var reader = new System.IO.StreamReader(Request.InputStream);
+                var body = reader.ReadToEnd();
+                var serializer = new JavaScriptSerializer();
+                var data = serializer.Deserialize<Dictionary<string, object>>(body);
+
+                var orderCode = data.ContainsKey("orderId") ? data["orderId"]?.ToString() : null;
+                var resultCode = data.ContainsKey("resultCode") ? data["resultCode"]?.ToString() : null;
+
+                if (resultCode == "0" && !string.IsNullOrEmpty(orderCode))
+                {
+                    _db.Database.ExecuteSqlCommand(
+                        "UPDATE CustomerOrder SET PaymentStatus = 'Paid' WHERE OrderCode = @p0",
+                        orderCode);
+                }
+
+                return Json(new { success = true });
+            }
+            catch
+            {
+                return Json(new { success = false });
+            }
+        }
+
+        private string HmacSHA512(string key, string data)
+        {
+            using (var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(key)))
+            {
+                var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
+                return BitConverter.ToString(hash).Replace("-", "").ToLower();
+            }
+        }
+
+        private string HmacSHA256(string key, string data)
+        {
+            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key)))
+            {
+                var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
+                return BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
         }
 
