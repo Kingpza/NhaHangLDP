@@ -741,7 +741,9 @@
                 .join(', ');
 
             if (fullAddress) {
-                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fullAddress) + '&limit=1')
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fullAddress) + '&limit=1', {
+                        headers: { 'User-Agent': 'NhaHangLDP/1.0' }
+                    })
                     .then(function(response) { return response.json(); })
                     .then(function(data) {
                         if (data && data.length > 0) {

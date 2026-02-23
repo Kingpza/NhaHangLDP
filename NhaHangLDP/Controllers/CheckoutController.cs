@@ -385,18 +385,11 @@ namespace NhaHangLDP.Controllers
                 }
 
                 var checkHash = HmacSHA512(vnp_HashSecret, queryBuilder.ToString());
-                var isValidHash = checkHash.Equals(vnp_SecureHash, StringComparison.InvariantCultureIgnoreCase);
+                var isValidHash = SecureCompare(checkHash, vnp_SecureHash);
 
                 if (isValidHash && vnp_ResponseCode == "00")
                 {
-                    // Payment successful - update order status
-                    _db.Database.ExecuteSqlCommand(
-                        "UPDATE CustomerOrder SET PaymentStatus = 'Paid' WHERE OrderCode = @p0",
-                        orderCode);
-
-                    Session["PendingPaymentOrderId"] = null;
-                    Session["PendingPaymentOrderCode"] = null;
-                    Session["PendingPaymentAmount"] = null;
+                    MarkOrderAsPaid(orderCode);
 
                     TempData["PaymentSuccess"] = true;
                     TempData["PaymentMessage"] = "Thanh toán VNPay thành công!";
@@ -508,14 +501,7 @@ namespace NhaHangLDP.Controllers
 
                 if (resultCode == "0")
                 {
-                    // Payment successful
-                    _db.Database.ExecuteSqlCommand(
-                        "UPDATE CustomerOrder SET PaymentStatus = 'Paid' WHERE OrderCode = @p0",
-                        orderCode);
-
-                    Session["PendingPaymentOrderId"] = null;
-                    Session["PendingPaymentOrderCode"] = null;
-                    Session["PendingPaymentAmount"] = null;
+                    MarkOrderAsPaid(orderCode);
 
                     TempData["PaymentSuccess"] = true;
                     TempData["PaymentMessage"] = "Thanh toán MoMo thành công!";
@@ -550,8 +536,27 @@ namespace NhaHangLDP.Controllers
 
                 var orderCode = data.ContainsKey("orderId") ? data["orderId"]?.ToString() : null;
                 var resultCode = data.ContainsKey("resultCode") ? data["resultCode"]?.ToString() : null;
+                var receivedSignature = data.ContainsKey("signature") ? data["signature"]?.ToString() : null;
 
-                if (resultCode == "0" && !string.IsNullOrEmpty(orderCode))
+                // Verify signature
+                var secretKey = System.Configuration.ConfigurationManager.AppSettings["MoMo:SecretKey"];
+                var accessKey = System.Configuration.ConfigurationManager.AppSettings["MoMo:AccessKey"];
+
+                var amount = data.ContainsKey("amount") ? data["amount"]?.ToString() : "";
+                var extraData = data.ContainsKey("extraData") ? data["extraData"]?.ToString() : "";
+                var message = data.ContainsKey("message") ? data["message"]?.ToString() : "";
+                var orderInfo = data.ContainsKey("orderInfo") ? data["orderInfo"]?.ToString() : "";
+                var orderType = data.ContainsKey("orderType") ? data["orderType"]?.ToString() : "";
+                var partnerCode = data.ContainsKey("partnerCode") ? data["partnerCode"]?.ToString() : "";
+                var payType = data.ContainsKey("payType") ? data["payType"]?.ToString() : "";
+                var requestId = data.ContainsKey("requestId") ? data["requestId"]?.ToString() : "";
+                var responseTime = data.ContainsKey("responseTime") ? data["responseTime"]?.ToString() : "";
+                var transId = data.ContainsKey("transId") ? data["transId"]?.ToString() : "";
+
+                var rawSignature = $"accessKey={accessKey}&amount={amount}&extraData={extraData}&message={message}&orderId={orderCode}&orderInfo={orderInfo}&orderType={orderType}&partnerCode={partnerCode}&payType={payType}&requestId={requestId}&responseTime={responseTime}&resultCode={resultCode}&transId={transId}";
+                var expectedSignature = HmacSHA256(secretKey, rawSignature);
+
+                if (SecureCompare(expectedSignature, receivedSignature) && resultCode == "0" && !string.IsNullOrEmpty(orderCode))
                 {
                     _db.Database.ExecuteSqlCommand(
                         "UPDATE CustomerOrder SET PaymentStatus = 'Paid' WHERE OrderCode = @p0",
@@ -564,6 +569,17 @@ namespace NhaHangLDP.Controllers
             {
                 return Json(new { success = false });
             }
+        }
+
+        private void MarkOrderAsPaid(string orderCode)
+        {
+            _db.Database.ExecuteSqlCommand(
+                "UPDATE CustomerOrder SET PaymentStatus = 'Paid' WHERE OrderCode = @p0",
+                orderCode);
+
+            Session["PendingPaymentOrderId"] = null;
+            Session["PendingPaymentOrderCode"] = null;
+            Session["PendingPaymentAmount"] = null;
         }
 
         private string HmacSHA512(string key, string data)
@@ -582,6 +598,21 @@ namespace NhaHangLDP.Controllers
                 var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
                 return BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
+        }
+
+        private static bool SecureCompare(string a, string b)
+        {
+            if (a == null || b == null) return false;
+            var aLower = a.ToLowerInvariant();
+            var bLower = b.ToLowerInvariant();
+            if (aLower.Length != bLower.Length) return false;
+
+            int result = 0;
+            for (int i = 0; i < aLower.Length; i++)
+            {
+                result |= aLower[i] ^ bLower[i];
+            }
+            return result == 0;
         }
 
         #endregion
