@@ -800,6 +800,80 @@ namespace NhaHangLDP.Controllers
 
         #endregion
 
+        #region Cancel Unpaid Order
+
+        /// <summary>
+        /// Hủy đơn hàng chưa thanh toán sau 1 giờ
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public JsonResult CancelUnpaidOrder(string orderCode)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(orderCode))
+                {
+                    return Json(new { success = false, message = "Mã đơn hàng không hợp lệ!" });
+                }
+
+                // Check if order exists and is still unpaid
+                var order = _db.Database.SqlQuery<OrderStatusInfo>(
+                    @"SELECT Id, OrderCode, PaymentStatus, Status, OrderDate
+                      FROM CustomerOrder 
+                      WHERE OrderCode = @p0",
+                    orderCode).FirstOrDefault();
+
+                if (order == null)
+                {
+                    return Json(new { success = false, message = "Không tìm thấy đơn hàng!" });
+                }
+
+                // Only cancel if payment is still pending
+                if (order.PaymentStatus != "Pending")
+                {
+                    return Json(new { success = false, message = "Đơn hàng đã được thanh toán hoặc đã bị hủy!" });
+                }
+
+                // Check if order is older than 1 hour
+                var oneHourAgo = DateTime.Now.AddHours(-1);
+                if (order.OrderDate > oneHourAgo)
+                {
+                    return Json(new { success = false, message = "Chưa hết thời gian thanh toán!" });
+                }
+
+                // Cancel the order
+                _db.Database.ExecuteSqlCommand(
+                    @"UPDATE CustomerOrder 
+                      SET Status = 'Cancelled', 
+                          PaymentStatus = 'Cancelled',
+                          CancelReason = N'Hủy tự động do quá thời gian thanh toán (1 giờ)',
+                          CancelledDate = GETDATE()
+                      WHERE OrderCode = @p0",
+                    orderCode);
+
+                // Clear pending payment session if this is the current order
+                var pendingCode = Session["PendingPaymentOrderCode"] as string;
+                if (pendingCode == orderCode)
+                {
+                    Session["PendingPaymentOrderId"] = null;
+                    Session["PendingPaymentOrderCode"] = null;
+                    Session["PendingPaymentAmount"] = null;
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Đơn hàng đã được hủy do quá thời gian thanh toán."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Lỗi: " + ex.Message });
+            }
+        }
+
+        #endregion
+
         #region Helper Methods
 
         private CartViewModel GetCart()
@@ -1253,6 +1327,15 @@ namespace NhaHangLDP.Controllers
             public int Quantity { get; set; }
             public decimal UnitPrice { get; set; }
             public decimal Subtotal { get; set; }
+        }
+
+        private class OrderStatusInfo
+        {
+            public int Id { get; set; }
+            public string OrderCode { get; set; }
+            public string PaymentStatus { get; set; }
+            public string Status { get; set; }
+            public DateTime OrderDate { get; set; }
         }
 
         #endregion

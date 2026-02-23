@@ -1,44 +1,11 @@
 ﻿@model NhaHangLDP.Models.PermissionManagementViewModel
 @{
     ViewBag.Title = "Quản Lý Phân Quyền";
-    Layout = null;
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
 }
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Quản Lý Phân Quyền - Nhà Hàng LDP</title>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3b82f6',
-                        'primary-dark': '#1e3a5f',
-                        success: '#22c55e',
-                        warning: '#f59e0b',
-                        danger: '#ef4444',
-                        info: '#06b6d4'
-                    },
-                    fontFamily: {
-                        display: ['Manrope', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
+@section styles {
     <style>
-        .toggle-checkbox:checked {
-            background-color: #3b82f6;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #3b82f6;
-        }
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -75,293 +42,278 @@
         input:checked + .toggle-slider:before {
             transform: translateX(18px);
         }
+
+        .permission-tab {
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .permission-tab.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: #fff !important;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .permission-tab:not(.active):hover {
+            background: #f0f4f8;
+        }
     </style>
-</head>
-<body class="bg-gray-50 font-display min-h-screen">
-    <!-- Header -->
-    <header class="bg-gradient-to-r from-primary-dark to-slate-900 text-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-6 py-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <a href="@Url.Action("Index", "Management")" class="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
-                        <span class="material-symbols-outlined">arrow_back</span>
-                    </a>
-                    <div>
-                        <h1 class="text-2xl font-bold flex items-center gap-3">
-                            <span class="material-symbols-outlined text-3xl">admin_panel_settings</span>
-                            Quản Lý Phân Quyền
-                        </h1>
-                        <p class="text-white/70 text-sm mt-1">Thiết lập quyền truy cập cho từng vai trò trong hệ thống</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <span class="text-sm text-white/70">
-                        <span class="material-symbols-outlined text-sm align-middle">person</span>
-                        @(Session["FullName"] ?? "Admin")
-                    </span>
-                </div>
-            </div>
-        </div>
-    </header>
+}
 
-    <main class="max-w-7xl mx-auto px-6 py-8">
-        <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-2xl shadow-sm p-6 flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-primary text-2xl">badge</span>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-800">@Model.Roles.Count</p>
-                    <p class="text-sm text-gray-500">Vai trò</p>
-                </div>
-            </div>
-            <div class="bg-white rounded-2xl shadow-sm p-6 flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-success/10 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-success text-2xl">description</span>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-800">@Model.AvailablePages.Count</p>
-                    <p class="text-sm text-gray-500">Trang chức năng</p>
-                </div>
-            </div>
-            <div class="bg-white rounded-2xl shadow-sm p-6 flex items-center gap-4">
-                <div class="w-14 h-14 rounded-xl bg-warning/10 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-warning text-2xl">people</span>
-                </div>
-                <div>
-                    <p class="text-2xl font-bold text-gray-800">@Model.Roles.Sum(r => r.AccountCount)</p>
-                    <p class="text-sm text-gray-500">Tài khoản</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Role Tabs -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <!-- Tab Headers -->
-            <div class="border-b border-gray-100 px-6 pt-4">
-                <div class="flex gap-1 overflow-x-auto">
-                    @for (int i = 0; i < Model.Roles.Count; i++)
-                    {
-                        var role = Model.Roles[i];
-                        var roleColorClass = role.RoleName == "Admin" ? "text-red-600" :
-                                             role.RoleName == "Manager" ? "text-blue-600" :
-                                             role.RoleName == "Cashier" ? "text-green-600" :
-                                             role.RoleName == "Delivery" ? "text-purple-600" : "text-gray-600";
-                        <button onclick="switchTab(@role.RoleId)" id="tab-@role.RoleId"
-                                class="px-5 py-3 text-sm font-semibold rounded-t-lg transition-colors whitespace-nowrap
-                                       @(i == 0 ? "bg-primary text-white" : "text-gray-500 hover:bg-gray-50")">
-                            <span class="@roleColorClass @(i == 0 ? "!text-white" : "")">@role.RoleName</span>
-                            <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full @(i == 0 ? "bg-white/20" : "bg-gray-100")">@role.AccountCount</span>
-                        </button>
-                    }
-                </div>
-            </div>
-
-            <!-- Tab Content -->
-            @foreach (var role in Model.Roles)
-            {
-                <div id="content-@role.RoleId" class="tab-content p-6" style="display: @(role == Model.Roles.First() ? "block" : "none")">
-                    <div class="flex items-center justify-between mb-6">
+<div class="container-fluid"
+        <div class="container-fluid">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h2 class="text-xl font-bold text-gray-800">Quyền của vai trò: @role.RoleName</h2>
-                            <p class="text-sm text-gray-500">@role.AccountCount tài khoản đang sử dụng vai trò này</p>
+                            <h4 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">
+                                <i class="fas fa-shield-alt me-2" style="color: var(--primary-blue);"></i>Quản Lý Phân Quyền
+                            </h4>
+                            <p class="text-muted mb-0" style="font-size: 14px;">Thiết lập quyền truy cập cho từng vai trò trong hệ thống</p>
                         </div>
-                        <button onclick="saveAllPermissions(@role.RoleId)" 
-                                class="px-5 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-sm">
-                            <span class="material-symbols-outlined text-lg">save</span>
-                            Lưu thay đổi
-                        </button>
-                    </div>
-
-                    <!-- Permission Table -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead>
-                                <tr class="bg-gray-50">
-                                    <th class="text-left px-4 py-3 text-sm font-semibold text-gray-600 rounded-l-lg">Trang / Chức năng</th>
-                                    <th class="text-center px-4 py-3 text-sm font-semibold text-gray-600 w-24">
-                                        <span class="material-symbols-outlined text-sm align-middle">visibility</span> Xem
-                                    </th>
-                                    <th class="text-center px-4 py-3 text-sm font-semibold text-gray-600 w-24">
-                                        <span class="material-symbols-outlined text-sm align-middle">add_circle</span> Thêm
-                                    </th>
-                                    <th class="text-center px-4 py-3 text-sm font-semibold text-gray-600 w-24">
-                                        <span class="material-symbols-outlined text-sm align-middle">edit</span> Sửa
-                                    </th>
-                                    <th class="text-center px-4 py-3 text-sm font-semibold text-gray-600 w-24 rounded-r-lg">
-                                        <span class="material-symbols-outlined text-sm align-middle">delete</span> Xóa
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @{
-                                    var categories = Model.AvailablePages.Select(p => p.Category).Distinct();
-                                }
-                                @foreach (var category in categories)
-                                {
-                                    <tr>
-                                        <td colspan="5" class="px-4 pt-4 pb-2">
-                                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">@category</span>
-                                        </td>
-                                    </tr>
-                                    foreach (var page in Model.AvailablePages.Where(p => p.Category == category))
-                                    {
-                                        var perm = role.Permissions.FirstOrDefault(p => p.Controller == page.Controller && p.ActionName == page.ActionName);
-                                        var canView = perm?.CanView ?? false;
-                                        var canAdd = perm?.CanAdd ?? false;
-                                        var canEdit = perm?.CanEdit ?? false;
-                                        var canDelete = perm?.CanDelete ?? false;
-
-                                        <tr class="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                                            <td class="px-4 py-3">
-                                                <div class="flex items-center gap-3">
-                                                    <span class="material-symbols-outlined text-gray-400">@page.Icon</span>
-                                                    <span class="font-medium text-gray-700">@page.DisplayName</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-center px-4 py-3">
-                                                <label class="toggle-switch">
-                                                    <input type="checkbox" class="perm-checkbox" 
-                                                           data-role="@role.RoleId" data-controller="@page.Controller" 
-                                                           data-action="@page.ActionName" data-type="view"
-                                                           @(canView ? "checked" : "") />
-                                                    <span class="toggle-slider"></span>
-                                                </label>
-                                            </td>
-                                            <td class="text-center px-4 py-3">
-                                                <label class="toggle-switch">
-                                                    <input type="checkbox" class="perm-checkbox"
-                                                           data-role="@role.RoleId" data-controller="@page.Controller"
-                                                           data-action="@page.ActionName" data-type="add"
-                                                           @(canAdd ? "checked" : "") />
-                                                    <span class="toggle-slider"></span>
-                                                </label>
-                                            </td>
-                                            <td class="text-center px-4 py-3">
-                                                <label class="toggle-switch">
-                                                    <input type="checkbox" class="perm-checkbox"
-                                                           data-role="@role.RoleId" data-controller="@page.Controller"
-                                                           data-action="@page.ActionName" data-type="edit"
-                                                           @(canEdit ? "checked" : "") />
-                                                    <span class="toggle-slider"></span>
-                                                </label>
-                                            </td>
-                                            <td class="text-center px-4 py-3">
-                                                <label class="toggle-switch">
-                                                    <input type="checkbox" class="perm-checkbox"
-                                                           data-role="@role.RoleId" data-controller="@page.Controller"
-                                                           data-action="@page.ActionName" data-type="delete"
-                                                           @(canDelete ? "checked" : "") />
-                                                    <span class="toggle-slider"></span>
-                                                </label>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                            </tbody>
-                        </table>
                     </div>
                 </div>
-            }
-        </div>
+            </div>
 
-        <!-- Info Note -->
-        <div class="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
-            <span class="material-symbols-outlined text-primary mt-0.5">info</span>
-            <div class="text-sm text-gray-600">
-                <p class="font-semibold text-gray-800 mb-1">Hướng dẫn phân quyền</p>
-                <ul class="list-disc list-inside space-y-1">
-                    <li><strong>Xem:</strong> Cho phép truy cập và xem dữ liệu của trang</li>
-                    <li><strong>Thêm:</strong> Cho phép thêm mới dữ liệu</li>
-                    <li><strong>Sửa:</strong> Cho phép chỉnh sửa dữ liệu hiện có</li>
-                    <li><strong>Xóa:</strong> Cho phép xóa dữ liệu</li>
-                </ul>
-                <p class="mt-2 text-gray-500">Lưu ý: Cần chạy file <code class="bg-gray-100 px-1 rounded">Scripts/RolePermission_Create.sql</code> trong SQL Server để tạo bảng trước khi sử dụng.</p>
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stat-icon me-3" style="background: rgba(59, 130, 246, 0.1);">
+                                <i class="fas fa-user-tag" style="color: #3b82f6;"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@Model.Roles.Count</h3>
+                                <p class="text-muted mb-0" style="font-size: 14px;">Vai trò</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stat-icon me-3" style="background: rgba(34, 197, 94, 0.1);">
+                                <i class="fas fa-file-alt" style="color: #22c55e;"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@Model.AvailablePages.Count</h3>
+                                <p class="text-muted mb-0" style="font-size: 14px;">Trang chức năng</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body d-flex align-items-center">
+                            <div class="stat-icon me-3" style="background: rgba(245, 158, 11, 0.1);">
+                                <i class="fas fa-users" style="color: #f59e0b;"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@Model.Roles.Sum(r => r.AccountCount)</h3>
+                                <p class="text-muted mb-0" style="font-size: 14px;">Tài khoản</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permission Management Card -->
+            <div class="card border-0 shadow-sm">
+                <!-- Tab Navigation -->
+                <div class="card-header bg-white border-bottom">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        @for (int i = 0; i < Model.Roles.Count; i++)
+                        {
+                            var role = Model.Roles[i];
+                            var roleColorClass = role.RoleName == "Admin" ? "text-danger" :
+                                                 role.RoleName == "Manager" ? "text-primary" :
+                                                 role.RoleName == "Cashier" ? "text-success" :
+                                                 role.RoleName == "Delivery" ? "text-purple" : "text-secondary";
+                            <li class="nav-item">
+                                <a class="nav-link permission-tab @(i == 0 ? "active" : "")" 
+                                   id="tab-@role.RoleId" 
+                                   data-bs-toggle="tab" 
+                                   href="#content-@role.RoleId" 
+                                   role="tab">
+                                    <span class="@roleColorClass fw-bold">@role.RoleName</span>
+                                    <span class="badge bg-light text-dark ms-2">@role.AccountCount</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content card-body">
+                    @foreach (var role in Model.Roles)
+                    {
+                        <div class="tab-pane fade @(role == Model.Roles.First() ? "show active" : "")" 
+                             id="content-@role.RoleId" 
+                             role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h5 class="mb-1" style="color: var(--primary-dark); font-weight: 600;">Quyền của vai trò: @role.RoleName</h5>
+                                    <p class="text-muted mb-0" style="font-size: 13px;">@role.AccountCount tài khoản đang sử dụng vai trò này</p>
+                                </div>
+                                <button onclick="saveAllPermissions(@role.RoleId)" 
+                                        class="btn btn-primary-custom">
+                                    <i class="fas fa-save me-2"></i>Lưu thay đổi
+                                </button>
+                            </div>
+
+                            <!-- Permission Table -->
+                            <div class="table-responsive">
+                                <table class="table table-custom">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40%;">Trang / Chức năng</th>
+                                            <th class="text-center" style="width: 15%;">
+                                                <i class="fas fa-eye me-1"></i> Xem
+                                            </th>
+                                            <th class="text-center" style="width: 15%;">
+                                                <i class="fas fa-plus-circle me-1"></i> Thêm
+                                            </th>
+                                            <th class="text-center" style="width: 15%;">
+                                                <i class="fas fa-edit me-1"></i> Sửa
+                                            </th>
+                                            <th class="text-center" style="width: 15%;">
+                                                <i class="fas fa-trash me-1"></i> Xóa
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            var categories = Model.AvailablePages.Select(p => p.Category).Distinct();
+                                        }
+                                        @foreach (var category in categories)
+                                        {
+                                            <tr>
+                                                <td colspan="5" class="pt-3 pb-2">
+                                                    <span class="text-uppercase fw-bold" style="font-size: 11px; color: #94a3b8; letter-spacing: 0.5px;">@category</span>
+                                                </td>
+                                            </tr>
+                                            foreach (var page in Model.AvailablePages.Where(p => p.Category == category))
+                                            {
+                                                var perm = role.Permissions.FirstOrDefault(p => p.Controller == page.Controller && p.ActionName == page.ActionName);
+                                                var canView = perm?.CanView ?? false;
+                                                var canAdd = perm?.CanAdd ?? false;
+                                                var canEdit = perm?.CanEdit ?? false;
+                                                var canDelete = perm?.CanDelete ?? false;
+
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="fas fa-@page.Icon me-2 text-muted"></i>
+                                                            <span style="font-weight: 500; color: var(--text-dark);">@page.DisplayName</span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <label class="toggle-switch">
+                                                            <input type="checkbox" class="perm-checkbox" 
+                                                                   data-role="@role.RoleId" data-controller="@page.Controller" 
+                                                                   data-action="@page.ActionName" data-type="view"
+                                                                   @(canView ? "checked" : "") />
+                                                            <span class="toggle-slider"></span>
+                                                        </label>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <label class="toggle-switch">
+                                                            <input type="checkbox" class="perm-checkbox"
+                                                                   data-role="@role.RoleId" data-controller="@page.Controller"
+                                                                   data-action="@page.ActionName" data-type="add"
+                                                                   @(canAdd ? "checked" : "") />
+                                                            <span class="toggle-slider"></span>
+                                                        </label>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <label class="toggle-switch">
+                                                            <input type="checkbox" class="perm-checkbox"
+                                                                   data-role="@role.RoleId" data-controller="@page.Controller"
+                                                                   data-action="@page.ActionName" data-type="edit"
+                                                                   @(canEdit ? "checked" : "") />
+                                                            <span class="toggle-slider"></span>
+                                                        </label>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <label class="toggle-switch">
+                                                            <input type="checkbox" class="perm-checkbox"
+                                                                   data-role="@role.RoleId" data-controller="@page.Controller"
+                                                                   data-action="@page.ActionName" data-type="delete"
+                                                                   @(canDelete ? "checked" : "") />
+                                                            <span class="toggle-slider"></span>
+                                                        </label>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
-    </main>
 
-    @Html.AntiForgeryToken()
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        var antiForgeryToken = $('input[name="__RequestVerificationToken"]').val();
-        // Switch tab
-        function switchTab(roleId) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            // Reset all tab buttons
-            document.querySelectorAll('[id^="tab-"]').forEach(el => {
-                el.classList.remove('bg-primary', 'text-white');
-                el.classList.add('text-gray-500');
-                el.querySelectorAll('span').forEach(s => s.classList.remove('!text-white'));
-                el.querySelector('span:last-child').classList.remove('bg-white/20');
-                el.querySelector('span:last-child').classList.add('bg-gray-100');
-            });
-            // Show selected tab
-            document.getElementById('content-' + roleId).style.display = 'block';
-            var tabBtn = document.getElementById('tab-' + roleId);
-            tabBtn.classList.add('bg-primary', 'text-white');
-            tabBtn.classList.remove('text-gray-500');
-            tabBtn.querySelectorAll('span').forEach(s => s.classList.add('!text-white'));
-            tabBtn.querySelector('span:last-child').classList.add('bg-white/20');
-            tabBtn.querySelector('span:last-child').classList.remove('bg-gray-100');
-        }
+        @section scripts {
+            <script>
+                // Save all permissions for a role
+                function saveAllPermissions(roleId) {
+                    var permissions = [];
+                    var checkboxes = document.querySelectorAll('#content-' + roleId + ' .perm-checkbox');
+                    var permMap = {};
 
-        // Save all permissions for a role
-        function saveAllPermissions(roleId) {
-            var permissions = [];
-            var checkboxes = document.querySelectorAll('#content-' + roleId + ' .perm-checkbox');
-            var permMap = {};
+                    checkboxes.forEach(function(cb) {
+                        var key = cb.dataset.controller + '|' + cb.dataset.action;
+                        if (!permMap[key]) {
+                            permMap[key] = {
+                                RoleId: parseInt(cb.dataset.role),
+                                Controller: cb.dataset.controller,
+                                ActionName: cb.dataset.action,
+                                CanView: false,
+                                CanAdd: false,
+                                CanEdit: false,
+                                CanDelete: false,
+                                Description: ''
+                            };
+                        }
+                        if (cb.dataset.type === 'view') permMap[key].CanView = cb.checked;
+                        if (cb.dataset.type === 'add') permMap[key].CanAdd = cb.checked;
+                        if (cb.dataset.type === 'edit') permMap[key].CanEdit = cb.checked;
+                        if (cb.dataset.type === 'delete') permMap[key].CanDelete = cb.checked;
+                    });
 
-            checkboxes.forEach(function(cb) {
-                var key = cb.dataset.controller + '|' + cb.dataset.action;
-                if (!permMap[key]) {
-                    permMap[key] = {
-                        RoleId: parseInt(cb.dataset.role),
-                        Controller: cb.dataset.controller,
-                        ActionName: cb.dataset.action,
-                        CanView: false,
-                        CanAdd: false,
-                        CanEdit: false,
-                        CanDelete: false,
-                        Description: ''
-                    };
-                }
-                if (cb.dataset.type === 'view') permMap[key].CanView = cb.checked;
-                if (cb.dataset.type === 'add') permMap[key].CanAdd = cb.checked;
-                if (cb.dataset.type === 'edit') permMap[key].CanEdit = cb.checked;
-                if (cb.dataset.type === 'delete') permMap[key].CanDelete = cb.checked;
-            });
-
-            for (var key in permMap) {
-                permissions.push(permMap[key]);
-            }
-
-            $.ajax({
-                url: '@Url.Action("BulkUpdatePermissions", "Permission")',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({ roleId: roleId, permissions: permissions }),
-                success: function(response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Thành công!',
-                            text: response.message,
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                    } else {
-                        Swal.fire('Lỗi', response.message, 'error');
+                    for (var key in permMap) {
+                        permissions.push(permMap[key]);
                     }
-                },
-                error: function() {
-                    Swal.fire('Lỗi', 'Có lỗi xảy ra khi lưu quyền!', 'error');
+
+                    $.ajax({
+                        url: '@Url.Action("BulkUpdatePermissions", "Permission")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ roleId: roleId, permissions: permissions }),
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Thành công!',
+                                    text: response.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            } else {
+                                Swal.fire('Lỗi', response.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Lỗi', 'Có lỗi xảy ra khi lưu quyền!', 'error');
+                        }
+                    });
                 }
-            });
+            </script>
         }
-    </script>
-</body>
-</html>

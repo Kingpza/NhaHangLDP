@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
@@ -10,7 +10,7 @@ namespace NhaHangLDP.Controllers
     /// <summary>
     /// Controller quản lý phân quyền cho các tài khoản
     /// </summary>
-    [CustomAuthorize("Admin")]
+    [CustomAuthorize("Admin", "Manager")]
     public class PermissionController : Controller
     {
         private readonly NhaHangLDPEntities _db = new NhaHangLDPEntities();

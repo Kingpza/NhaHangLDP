@@ -519,6 +519,7 @@
     <Content Include="Models\NhaHangLDP.edmx.diagram">
       <DependentUpon>NhaHangLDP.edmx</DependentUpon>
     </Content>
+    <Content Include="Scripts\AddCancelledFieldsToCustomerOrder.sql" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
