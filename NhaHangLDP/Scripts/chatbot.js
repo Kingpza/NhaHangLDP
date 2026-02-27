@@ -11,6 +11,9 @@
         apiEndpoint: '/Public/ChatBotAI',
         searchEndpoint: '/Public/SearchMenu',
         suggestionsEndpoint: '/Public/GetQuickSuggestions',
+        addToCartEndpoint: '/Public/ChatBotAddToCart',
+        getCartEndpoint: '/Public/ChatBotGetCart',
+        clearCartEndpoint: '/Public/ChatBotClearCart',
         sendCustomerMessageEndpoint: '/ChatSupport/SendCustomerMessage',
         getChatHistoryEndpoint: '/ChatSupport/GetChatHistory',
         getUnreadCountEndpoint: '/ChatSupport/GetUnreadCount',
@@ -266,6 +269,12 @@
         // Add user message
         addUserMessage(message);
         input.val('');
+
+        // Handle special cart actions
+        if (state.mode === 'bot' && (message === '❌ Xóa giỏ hàng' || message.toLowerCase() === 'xóa giỏ hàng')) {
+            clearChatCart();
+            return;
+        }
 
         if (state.mode === 'live') {
             sendToLiveSupport(message);
@@ -538,9 +547,14 @@
                         <h4>${escapeHtml(name)}</h4>
                         <p class="suggestion-price">${price}</p>
                     </div>
-                    <button class="btn-view-dish" data-id="${id}">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                    <div class="suggestion-actions">
+                        <button class="btn-add-cart" data-id="${id}" data-name="${escapeHtml(name)}" title="Thêm vào giỏ">
+                            <i class="fas fa-cart-plus"></i>
+                        </button>
+                        <button class="btn-view-dish" data-id="${id}" title="Xem chi tiết">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -564,8 +578,16 @@
             window.open('/Public/Detail/' + id, '_blank');
         });
 
+        // Add to cart button
+        $('.btn-add-cart').off('click').on('click', function (e) {
+            e.stopPropagation();
+            const id = $(this).data('id');
+            const name = $(this).data('name');
+            addToCartFromButton(id, name);
+        });
+
         $('.suggestion-card').off('click').on('click', function (e) {
-            if (!$(e.target).hasClass('btn-view-dish') && !$(e.target).closest('.btn-view-dish').length) {
+            if (!$(e.target).closest('.btn-view-dish').length && !$(e.target).closest('.btn-add-cart').length) {
                 const name = $(this).find('h4').text();
                 $('#chatbot-input').val('Cho tôi biết thêm về ' + name);
                 sendMessage();
@@ -642,15 +664,15 @@
         else if (hour < 18) greeting = 'Chào buổi chiều';
         else greeting = 'Chào buổi tối';
 
-        const welcomeText = `👋 ${greeting}! Mình là **LDP Bot**.\n\nMình có thể giúp bạn tìm món ăn, gợi ý theo ngân sách, hoặc hỗ trợ đặt bàn.\n\nNếu cần nói chuyện với nhân viên, hãy chuyển sang chế độ **"Nhân viên"** ở trên.`;
+        const welcomeText = `👋 ${greeting}! Mình là **LDP Bot**.\n\nMình có thể giúp bạn:\n🍽️ Tìm món ăn & gợi ý\n🛒 **Đặt món** nhanh qua chat\n📅 **Đặt bàn** trực tiếp\n🎤 Hỗ trợ giọng nói\n\nNếu cần nhân viên, chuyển sang chế độ **"Nhân viên"** ở trên.`;
         
         addBotMessage(welcomeText);
         
         addQuickReplies([
             '🔥 Top món bán chạy',
-            '💰 Món dưới 100k',
-            '⭐ Món đặc biệt',
+            '🛒 Đặt món ăn',
             '📅 Đặt bàn',
+            '💰 Món dưới 100k',
             '👨‍💼 Chat với nhân viên'
         ]);
     }
@@ -786,6 +808,86 @@
         }
     }
 
+    // ===== CHATBOT ORDERING FUNCTIONS =====
+
+    /**
+     * Thêm món vào giỏ qua nút bấm trên suggestion card
+     */
+    function addToCartFromButton(menuItemId, itemName) {
+        showTypingIndicator();
+
+        $.ajax({
+            url: CONFIG.addToCartEndpoint,
+            method: 'POST',
+            data: {
+                menuItemId: menuItemId,
+                quantity: 1,
+                sessionId: state.sessionId
+            },
+            success: function (response) {
+                hideTypingIndicator();
+
+                if (response.success) {
+                    if (response.sessionId) {
+                        state.sessionId = response.sessionId;
+                        localStorage.setItem('chatbot_session_id', response.sessionId);
+                    }
+
+                    addBotMessage(response.response);
+
+                    if (response.quickReplies && response.quickReplies.length > 0) {
+                        addQuickReplies(response.quickReplies);
+                    }
+
+                    // Update cart badge
+                    if (response.metadata && response.metadata.cart_count) {
+                        updateCartBadge(response.metadata.cart_count);
+                    }
+                } else {
+                    addBotMessage(response.response || '❌ Không thể thêm món. Vui lòng thử lại!');
+                }
+            },
+            error: function () {
+                hideTypingIndicator();
+                addBotMessage('❌ Lỗi kết nối. Vui lòng thử lại!');
+            }
+        });
+    }
+
+    /**
+     * Xóa giỏ hàng chatbot
+     */
+    function clearChatCart() {
+        $.ajax({
+            url: CONFIG.clearCartEndpoint,
+            method: 'POST',
+            data: { sessionId: state.sessionId },
+            success: function (response) {
+                if (response.success) {
+                    addBotMessage(response.response);
+                    updateCartBadge(0);
+                    if (response.quickReplies && response.quickReplies.length > 0) {
+                        addQuickReplies(response.quickReplies);
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Cập nhật badge giỏ hàng trên chatbot header
+     */
+    function updateCartBadge(count) {
+        let badge = $('.chatbot-cart-badge');
+        if (badge.length === 0 && count > 0) {
+            $('.chatbot-header').append('<span class="chatbot-cart-badge">🛒 ' + count + '</span>');
+        } else if (count > 0) {
+            badge.text('🛒 ' + count).show();
+        } else {
+            badge.hide();
+        }
+    }
+
     // ===== EXPOSE PUBLIC API =====
     window.LDPChatbot = {
         open: openChatbot,
@@ -793,6 +895,8 @@
         toggle: toggleChatbot,
         switchToLive: function() { switchMode('live'); },
         switchToBot: function() { switchMode('bot'); },
+        addToCart: addToCartFromButton,
+        clearCart: clearChatCart,
         getState: function() { return state; }
     };
 

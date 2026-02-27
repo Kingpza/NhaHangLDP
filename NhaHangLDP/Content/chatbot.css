@@ -386,6 +386,63 @@
     color: white;
 }
 
+/* ===== SUGGESTION ACTIONS (Add to cart + View) ===== */
+.suggestion-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+}
+
+.suggestion-actions .btn-view-dish,
+.suggestion-actions .btn-add-cart {
+    position: static;
+}
+
+.btn-add-cart {
+    width: 30px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.btn-add-cart:hover {
+    background: #10b981;
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-add-cart i {
+    font-size: 12px;
+    color: #10b981;
+}
+
+.btn-add-cart:hover i {
+    color: white;
+}
+
+/* ===== CART BADGE ON HEADER ===== */
+.chatbot-cart-badge {
+    position: absolute;
+    top: 12px;
+    right: 50px;
+    background: #10b981;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    animation: fadeIn 0.3s ease;
+}
+
 /* ===== QUICK REPLIES ===== */
 .quick-replies-container {
     display: flex;

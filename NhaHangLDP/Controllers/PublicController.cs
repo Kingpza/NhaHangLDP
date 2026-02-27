@@ -261,6 +261,78 @@ namespace NhaHangLDP.Controllers
             }
             base.Dispose(disposing);
         }
+
+        // ===== CHATBOT ORDERING API =====
+
+        /// <summary>
+        /// Thêm món vào giỏ hàng chatbot
+        /// </summary>
+        [HttpPost]
+        public JsonResult ChatBotAddToCart(int menuItemId, int quantity = 1, string sessionId = null)
+        {
+            try
+            {
+                var response = _chatbotService.AddItemToCart(menuItemId, quantity, sessionId);
+                return Json(new
+                {
+                    success = response.Success,
+                    response = response.Response,
+                    sessionId = response.SessionId,
+                    quickReplies = response.QuickReplies,
+                    metadata = response.Metadata
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"ChatBotAddToCart Error: {ex.Message}");
+                return Json(new { success = false, response = "Không thể thêm món. Vui lòng thử lại!" });
+            }
+        }
+
+        /// <summary>
+        /// Xem giỏ hàng chatbot
+        /// </summary>
+        [HttpGet]
+        public JsonResult ChatBotGetCart(string sessionId)
+        {
+            try
+            {
+                var cart = _chatbotService.GetCurrentCart(sessionId);
+                return Json(new
+                {
+                    success = true,
+                    items = cart.Items,
+                    totalAmount = cart.TotalAmount,
+                    totalItems = cart.TotalItems
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        /// <summary>
+        /// Xóa giỏ hàng chatbot
+        /// </summary>
+        [HttpPost]
+        public JsonResult ChatBotClearCart(string sessionId)
+        {
+            try
+            {
+                var response = _chatbotService.ClearCart(sessionId);
+                return Json(new
+                {
+                    success = response.Success,
+                    response = response.Response,
+                    quickReplies = response.QuickReplies
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
     }
 
     // ===== VIEW MODELS FOR CHATBOT (Legacy support) =====
