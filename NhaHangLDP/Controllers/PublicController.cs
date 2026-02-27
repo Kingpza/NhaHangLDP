@@ -8,6 +8,7 @@ using System.Web.Mvc;
 using System.Threading.Tasks;
 using NhaHangLDP.Models;
 using NhaHangLDP.Services;
+using NhaHangLDP.Filters;
 using System.Text.RegularExpressions;
 
 namespace NhaHangLDP.Controllers
@@ -105,6 +106,7 @@ namespace NhaHangLDP.Controllers
         /// API endpoint chính cho chatbot (async với AI support)
         /// </summary>
         [HttpPost]
+        [RateLimit(MaxRequests = 20, TimeWindowSeconds = 60, Message = "Bạn đã gửi quá nhiều tin nhắn. Vui lòng chờ một chút.")]
         public async Task<JsonResult> ChatBotAI(string message, string sessionId = null)
         {
             try
@@ -268,6 +270,7 @@ namespace NhaHangLDP.Controllers
         /// Thêm món vào giỏ hàng chatbot
         /// </summary>
         [HttpPost]
+        [RateLimit(MaxRequests = 30, TimeWindowSeconds = 60, Message = "Bạn thao tác quá nhanh. Vui lòng chờ một chút.")]
         public JsonResult ChatBotAddToCart(int menuItemId, int quantity = 1, string sessionId = null)
         {
             try

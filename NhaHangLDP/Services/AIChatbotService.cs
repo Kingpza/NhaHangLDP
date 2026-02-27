@@ -23,6 +23,7 @@ namespace NhaHangLDP.Services
         private readonly string _geminiApiKey;
         private readonly bool _useGeminiAI;
         private static readonly HttpClient _httpClient = new HttpClient();
+        private readonly RedisCacheService _cache = RedisCacheService.Instance;
         
         // Cache sessions trong memory (production nên dùng Redis)
         private static Dictionary<string, ChatSession> _sessions = new Dictionary<string, ChatSession>();
@@ -521,31 +522,36 @@ CÂU HỎI: {message}";
         {
             var response = new ChatBotResponseModel();
 
-            var topItems = _db.MenuItem
-                .Where(m => m.IsAvailable)
-                .OrderByDescending(m => m.SoldCount)
-                .Take(5)
-                .ToList();
+            // Cache top sellers trong 5 phút
+            var topItems = _cache.GetOrSet(RedisCacheService.Keys.TopSellers, () =>
+            {
+                return _db.MenuItem
+                    .Where(m => m.IsAvailable)
+                    .OrderByDescending(m => m.SoldCount)
+                    .Take(5)
+                    .Select(m => new MenuSuggestionModel
+                    {
+                        Id = m.Id,
+                        Name = m.Name,
+                        Price = m.Price,
+                        ImageUrl = m.ImageUrl,
+                        Description = m.Description,
+                        Category = m.Category,
+                        SoldCount = m.SoldCount
+                    }).ToList();
+            }, TimeSpan.FromMinutes(5));
 
             response.Response = $"🔥 **Top {topItems.Count} món bán chạy nhất:**\n\n" +
                 "Đây là những món được yêu thích nhất!";
 
-            response.Suggestions = topItems.Select(m => new MenuSuggestionModel
-            {
-                Id = m.Id,
-                Name = m.Name,
-                Price = m.Price,
-                ImageUrl = m.ImageUrl,
-                Description = m.Description,
-                Category = m.Category,
-                SoldCount = m.SoldCount
-            }).ToList();
+            response.Suggestions = topItems;
 
             response.QuickReplies = new List<string>
             {
                 "💰 Món giá rẻ",
                 "✨ Món mới",
                 "🥗 Xem theo loại",
+                "🛒 Đặt món ăn",
                 "📅 Đặt bàn"
             };
 

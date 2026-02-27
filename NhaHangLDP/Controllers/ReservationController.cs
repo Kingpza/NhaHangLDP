@@ -1,5 +1,6 @@
 ﻿using NhaHangLDP.Models;
 using NhaHangLDP.Services;
+using NhaHangLDP.Filters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,7 @@ namespace NhaHangLDP.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RateLimit(MaxRequests = 5, TimeWindowSeconds = 60, Message = "Bạn đã đặt bàn quá nhiều lần. Vui lòng thử lại sau.")]
         public ActionResult Book(ReservationFormModel model, int? selectedTableId)
         {
             try
