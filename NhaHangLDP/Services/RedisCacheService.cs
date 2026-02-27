@@ -177,7 +177,7 @@ namespace NhaHangLDP.Services
         public T GetOrSet<T>(string key, Func<T> factory, TimeSpan? expiry = null)
         {
             var cached = Get<T>(key);
-            if (cached != null && !cached.Equals(default(T)))
+            if (cached != null)
             {
                 return cached;
             }
@@ -193,7 +193,7 @@ namespace NhaHangLDP.Services
         public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> factory, TimeSpan? expiry = null)
         {
             var cached = await GetAsync<T>(key);
-            if (cached != null && !cached.Equals(default(T)))
+            if (cached != null)
             {
                 return cached;
             }

@@ -23,6 +23,7 @@ namespace NhaHangLDP.Services
         private readonly string _geminiApiKey;
         private readonly bool _useGeminiAI;
         private static readonly HttpClient _httpClient = new HttpClient();
+        private static readonly Random _random = new Random();
         private readonly RedisCacheService _cache = RedisCacheService.Instance;
         
         // Cache sessions trong memory (production nên dùng Redis)
@@ -1642,7 +1643,7 @@ CÂU HỎI: {message}";
             try
             {
                 // Tạo mã đơn hàng
-                var orderCode = "DH" + DateTime.Now.ToString("yyMMdd") + new Random().Next(1000, 9999).ToString();
+                var orderCode = "DH" + DateTime.Now.ToString("yyMMdd") + _random.Next(1000, 9999).ToString();
 
                 // Insert CustomerOrder
                 var sql = @"INSERT INTO CustomerOrder 
@@ -1978,7 +1979,7 @@ CÂU HỎI: {message}";
             try
             {
                 // Tạo reservation code
-                var resCode = "RES" + DateTime.Now.ToString("yyMMddHHmm") + new Random().Next(100, 999).ToString();
+                var resCode = "RES" + DateTime.Now.ToString("yyMMddHHmm") + _random.Next(100, 999).ToString();
 
                 // Tìm bàn phù hợp
                 var table = _db.RestaurantTable
