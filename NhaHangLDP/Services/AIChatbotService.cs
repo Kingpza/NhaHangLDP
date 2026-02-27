@@ -50,7 +50,11 @@ namespace NhaHangLDP.Services
             { "VEGETARIAN", new List<string> { "chay", "rau", "vegetarian", "vegan", "không thịt" } },
             { "HEALTHY", new List<string> { "healthy", "lành mạnh", "diet", "ít calo", "giảm cân", "salad" } },
             { "ALLERGIES", new List<string> { "dị ứng", "allergy", "không ăn được", "kiêng" } },
-            { "ORDER_STATUS", new List<string> { "đơn hàng", "order", "trạng thái", "bao lâu", "khi nào" } }
+            { "ORDER_STATUS", new List<string> { "đơn hàng", "order", "trạng thái", "bao lâu", "khi nào" } },
+            { "ADD_TO_CART", new List<string> { "thêm", "đặt món", "order món", "gọi món", "cho tôi", "lấy", "mua", "muốn ăn", "muốn gọi", "thêm vào" } },
+            { "VIEW_CART", new List<string> { "giỏ hàng", "cart", "xem giỏ", "đã đặt gì", "đã chọn", "đơn hiện tại" } },
+            { "CONFIRM_ORDER", new List<string> { "xác nhận đơn", "đặt hàng", "thanh toán", "hoàn tất đơn", "đặt ngay", "order ngay", "xác nhận" } },
+            { "CONFIRM_BOOKING", new List<string> { "xác nhận đặt bàn", "đặt bàn ngay", "ok đặt", "đồng ý đặt", "xác nhận bàn" } }
         };
 
         // FAQ Database
@@ -346,6 +350,37 @@ CÂU HỎI: {message}";
 
             message = message.ToLower();
 
+            // Kiểm tra nếu đang trong booking flow (ưu tiên context)
+            if (session.Context.ContainsKey("BookingInfo") && intent.Intent != "GREETING" && intent.Intent != "GOODBYE"
+                && intent.Intent != "VIEW_CART" && intent.Intent != "ADD_TO_CART")
+            {
+                // Nếu user muốn hủy
+                if (message.Contains("hủy") || message.Contains("thôi") || message.Contains("cancel"))
+                {
+                    session.Context.Remove("BookingInfo");
+                    response.Response = "❌ Đã hủy đặt bàn.\n\nBạn cần gì thêm không?";
+                    response.QuickReplies = new List<string> { "📅 Đặt bàn lại", "🍜 Xem menu", "🔥 Top bán chạy" };
+                    return response;
+                }
+                return HandleConfirmBooking(message, session);
+            }
+
+            // Kiểm tra nếu đang trong order flow (ưu tiên context)
+            if (session.Context.ContainsKey("OrderStep") && intent.Intent != "GREETING" && intent.Intent != "GOODBYE"
+                && intent.Intent != "VIEW_CART" && intent.Intent != "BOOK_TABLE")
+            {
+                // Nếu user muốn hủy
+                if (message.Contains("hủy") || message.Contains("xóa giỏ") || message.Contains("cancel"))
+                {
+                    session.Context["OrderCart"] = new ChatOrderCart();
+                    session.Context.Remove("OrderStep");
+                    response.Response = "🗑️ Đã hủy đơn hàng.\n\nBạn cần gì thêm không?";
+                    response.QuickReplies = new List<string> { "🍜 Xem menu", "🔥 Top bán chạy", "📅 Đặt bàn" };
+                    return response;
+                }
+                return HandleConfirmOrder(message, session);
+            }
+
             switch (intent.Intent)
             {
                 case "GREETING":
@@ -416,6 +451,22 @@ CÂU HỎI: {message}";
                     response = GetOrderStatusResponse();
                     break;
 
+                case "ADD_TO_CART":
+                    response = HandleAddToCart(message, intent.Entities, session);
+                    break;
+
+                case "VIEW_CART":
+                    response = HandleViewCart(session);
+                    break;
+
+                case "CONFIRM_ORDER":
+                    response = HandleConfirmOrder(message, session);
+                    break;
+
+                case "CONFIRM_BOOKING":
+                    response = HandleConfirmBooking(message, session);
+                    break;
+
                 case "THANKS":
                     response.Response = "😊 Não gate gì! Nếu cần gì thêm, cứ hỏi mình nhé!";
                     response.QuickReplies = new List<string> { "🍜 Xem thêm món", "📅 Đặt bàn", "👋 Tạm biệt" };
@@ -456,10 +507,11 @@ CÂU HỎI: {message}";
             return $"👋 {greeting}! Mình là **LDP Bot**.\n\n" +
                 "Mình có thể giúp bạn:\n" +
                 "🍽️ Tìm món ăn phù hợp\n" +
+                "🛒 Đặt món nhanh qua chat\n" +
                 "💰 Gợi ý theo ngân sách\n" +
                 "⭐ Xem món bán chạy\n" +
-                "📅 Hỗ trợ đặt bàn\n\n" +
-                "Bạn muốn tìm gì hôm nay?";
+                "📅 Đặt bàn trực tiếp\n\n" +
+                "Bạn muốn gì hôm nay?";
         }
 
         /// <summary>
@@ -1016,106 +1068,71 @@ CÂU HỎI: {message}";
         {
             var response = new ChatBotResponseModel();
             
-            // Phân tích thời gian từ tin nhắn
-            DateTime? bookingTime = null;
+            // Kiểm tra nếu đang trong booking flow
+            if (session.Context.ContainsKey("BookingInfo"))
+            {
+                return HandleConfirmBooking(message, session);
+            }
+
+            // Phân tích thời gian và số khách từ tin nhắn
+            DateTime? bookingTime = ParseBookingTime(message);
             int guestCount = entities.PartySize ?? 0;
 
-            // Detect time expressions
-            if (message.Contains("tối nay") || message.Contains("tonight"))
-            {
-                bookingTime = DateTime.Today.AddHours(19);
-            }
-            else if (message.Contains("trưa nay") || message.Contains("trưa"))
-            {
-                bookingTime = DateTime.Today.AddHours(12);
-            }
-            else if (message.Contains("cuối tuần") || message.Contains("weekend"))
-            {
-                var nextSaturday = DateTime.Today.AddDays(((int)DayOfWeek.Saturday - (int)DateTime.Today.DayOfWeek + 7) % 7);
-                bookingTime = nextSaturday.AddHours(19);
-            }
-            else if (message.Contains("mai") || message.Contains("tomorrow"))
-            {
-                bookingTime = DateTime.Today.AddDays(1).AddHours(19);
-            }
-
-            // Detect guest count if not found
             if (guestCount == 0)
             {
-                var match = System.Text.RegularExpressions.Regex.Match(message, @"(\d+)\s*(người|ng|khách)?");
+                var match = Regex.Match(message, @"(\d+)\s*(người|ng|khách)?");
                 if (match.Success)
                 {
                     guestCount = int.Parse(match.Groups[1].Value);
                 }
             }
 
-            // Lưu vào context
-            if (bookingTime.HasValue)
-            {
-                session.Context["BookingTime"] = bookingTime.Value;
-            }
-            if (guestCount > 0)
-            {
-                session.Context["GuestCount"] = guestCount;
-            }
-
-            // Tạo response dựa trên thông tin đã có
+            // Nếu có cả thời gian và số khách → bắt đầu flow xác nhận
             if (bookingTime.HasValue && guestCount > 0)
             {
-                // Kiểm tra bàn trống
+                var booking = new ChatBookingInfo
+                {
+                    NumberOfGuests = guestCount,
+                    BookingDateTime = bookingTime,
+                    Step = "name"
+                };
+                session.Context["BookingInfo"] = booking;
+
                 var availableTables = _db.RestaurantTable
                     .Where(t => t.Status == "Available" && t.Capacity >= guestCount)
                     .OrderBy(t => t.Capacity)
                     .Take(3)
                     .ToList();
 
-                if (availableTables.Any())
+                response.Response = $"📅 **Đặt bàn:**\n\n" +
+                    $"👥 Số khách: **{guestCount} người**\n" +
+                    $"🕐 Thời gian: **{bookingTime.Value:dddd dd/MM/yyyy HH:mm}**\n" +
+                    (availableTables.Any() ? $"✅ Có **{availableTables.Count} bàn** phù hợp!\n\n" : "⚠️ Bàn hơi đông nhưng sẽ cố sắp xếp!\n\n") +
+                    "👤 Cho mình **họ tên** để đặt bàn:";
+            }
+            else if (guestCount > 0)
+            {
+                // Có số người, thiếu thời gian
+                var booking = new ChatBookingInfo
                 {
-                    response.Response = $"📅 **Thông tin đặt bàn:**\n\n" +
-                        $"👥 Số khách: **{guestCount} người**\n" +
-                        $"🕐 Thời gian: **{bookingTime.Value:dddd, dd/MM/yyyy HH:mm}**\n\n" +
-                        $"✅ Có **{availableTables.Count} bàn** phù hợp!\n\n" +
-                        "📞 Để xác nhận, vui lòng:\n" +
-                        "• Gọi: **0123 456 789**\n" +
-                        "• Hoặc cho mình số điện thoại của bạn";
+                    NumberOfGuests = guestCount,
+                    Step = "time"
+                };
+                session.Context["BookingInfo"] = booking;
 
-                    response.QuickReplies = new List<string>
-                    {
-                        "✅ Gọi ngay 0123 456 789",
-                        "🔄 Đổi thời gian",
-                        "🍜 Xem menu trước"
-                    };
-                }
-                else
-                {
-                    response.Response = $"😔 Rất tiếc, hiện không có bàn phù hợp cho **{guestCount} người** vào thời gian này.\n\n" +
-                        "Bạn có thể:\n" +
-                        "• Thử thời gian khác\n" +
-                        "• Gọi hotline **0123 456 789** để được hỗ trợ";
-
-                    response.QuickReplies = new List<string>
-                    {
-                        "🕐 Thử giờ khác",
-                        "📞 Gọi hotline"
-                    };
-                }
+                response.Response = $"👥 Số khách: **{guestCount} người**\n\n🕐 Bạn muốn đặt vào **thời gian nào**?";
+                response.QuickReplies = new List<string> { "🌙 Tối nay", "☀️ Trưa mai", "📅 Cuối tuần", "📆 Ngày khác" };
             }
             else
             {
-                // Chưa đủ thông tin
-                response.Response = "📅 **Đặt bàn tại Nhà Hàng LDP:**\n\n" +
-                    "Cho mình biết thêm:\n" +
-                    "• 👥 Số người?\n" +
-                    "• 🕐 Thời gian? (VD: tối nay, trưa mai, cuối tuần)\n\n" +
-                    "Hoặc gọi ngay: **0123 456 789**";
+                // Bắt đầu flow từ đầu
+                var booking = new ChatBookingInfo { Step = "guests" };
+                session.Context["BookingInfo"] = booking;
 
-                response.QuickReplies = new List<string>
-                {
-                    "2 người tối nay",
-                    "4 người cuối tuần",
-                    "6 người trưa mai",
-                    "📞 Gọi hotline"
-                };
+                response.Response = "📅 **Đặt bàn Nhà Hàng LDP**\n\n" +
+                    "Mình sẽ hỗ trợ đặt bàn nhanh cho bạn!\n\n" +
+                    "👥 Bạn đi **bao nhiêu người**?";
+                response.QuickReplies = new List<string> { "2 người", "4 người", "6 người", "8 người", "10+ người" };
             }
 
             return response;
@@ -1237,6 +1254,793 @@ CÂU HỎI: {message}";
                     "🍜 Xem menu"
                 }
             };
+
+            return response;
+        }
+
+        // ===== CHATBOT ORDERING FLOW =====
+
+        /// <summary>
+        /// Lấy giỏ hàng chatbot từ session
+        /// </summary>
+        private ChatOrderCart GetCartFromSession(ChatSession session)
+        {
+            if (session.Context.ContainsKey("OrderCart"))
+            {
+                var cartJson = JsonConvert.SerializeObject(session.Context["OrderCart"]);
+                return JsonConvert.DeserializeObject<ChatOrderCart>(cartJson);
+            }
+            var cart = new ChatOrderCart();
+            session.Context["OrderCart"] = cart;
+            return cart;
+        }
+
+        /// <summary>
+        /// Lưu giỏ hàng chatbot vào session
+        /// </summary>
+        private void SaveCartToSession(ChatSession session, ChatOrderCart cart)
+        {
+            session.Context["OrderCart"] = cart;
+        }
+
+        /// <summary>
+        /// Xử lý thêm món vào giỏ qua chat
+        /// </summary>
+        private ChatBotResponseModel HandleAddToCart(string message, ExtractedEntities entities, ChatSession session)
+        {
+            var response = new ChatBotResponseModel();
+            var cart = GetCartFromSession(session);
+            message = message.ToLower();
+
+            // Tìm món ăn phù hợp nhất từ tin nhắn
+            var allItems = _db.MenuItem.Where(m => m.IsAvailable).ToList();
+
+            // Trích xuất số lượng
+            int quantity = 1;
+            var qtyMatch = Regex.Match(message, @"(\d+)\s*(phần|suất|dĩa|tô|ly|chai|lon|cái)");
+            if (qtyMatch.Success)
+            {
+                quantity = int.Parse(qtyMatch.Groups[1].Value);
+            }
+
+            // Tìm món bằng fuzzy matching
+            var bestMatch = allItems
+                .Select(m => new
+                {
+                    Item = m,
+                    Score = CalculateSimilarity(message, m.Name.ToLower())
+                })
+                .Where(x => x.Score > 0.25)
+                .OrderByDescending(x => x.Score)
+                .FirstOrDefault();
+
+            if (bestMatch != null)
+            {
+                var item = bestMatch.Item;
+
+                // Kiểm tra đã có trong giỏ chưa
+                var existingItem = cart.Items.FirstOrDefault(i => i.MenuItemId == item.Id);
+                if (existingItem != null)
+                {
+                    existingItem.Quantity += quantity;
+                }
+                else
+                {
+                    cart.Items.Add(new ChatOrderItem
+                    {
+                        MenuItemId = item.Id,
+                        Name = item.Name,
+                        Price = item.Price,
+                        Quantity = quantity,
+                        ImageUrl = item.ImageUrl
+                    });
+                }
+
+                SaveCartToSession(session, cart);
+
+                response.Response = $"✅ Đã thêm **{quantity}x {item.Name}** ({item.Price:N0}đ) vào giỏ!\n\n" +
+                    $"🛒 **Giỏ hàng:** {cart.TotalItems} món - **{cart.TotalAmount:N0}đ**\n\n" +
+                    "Bạn muốn gọi thêm hay đặt ngay?";
+
+                response.Suggestions = new List<MenuSuggestionModel>
+                {
+                    new MenuSuggestionModel
+                    {
+                        Id = item.Id,
+                        Name = item.Name,
+                        Price = item.Price,
+                        ImageUrl = item.ImageUrl
+                    }
+                };
+
+                response.QuickReplies = new List<string>
+                {
+                    "🔥 Gọi thêm món",
+                    "🛒 Xem giỏ hàng",
+                    "✅ Đặt hàng ngay",
+                    "❌ Xóa giỏ hàng"
+                };
+
+                response.Metadata["action"] = "item_added";
+                response.Metadata["cart_total"] = cart.TotalAmount;
+                response.Metadata["cart_count"] = cart.TotalItems;
+            }
+            else
+            {
+                // Không tìm thấy → gợi ý top món
+                var topItems = allItems.OrderByDescending(m => m.SoldCount).Take(5).ToList();
+
+                response.Response = "🤔 Mình chưa tìm thấy món bạn muốn.\n\n" +
+                    "Hãy chọn một trong những món bán chạy dưới đây, hoặc nói rõ tên món nhé!";
+
+                response.Suggestions = topItems.Select(m => new MenuSuggestionModel
+                {
+                    Id = m.Id,
+                    Name = m.Name,
+                    Price = m.Price,
+                    ImageUrl = m.ImageUrl,
+                    Category = m.Category,
+                    SoldCount = m.SoldCount
+                }).ToList();
+
+                response.QuickReplies = new List<string> { "🍜 Xem menu", "🔥 Top bán chạy" };
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// Thêm món vào giỏ theo ID (từ nút bấm)
+        /// </summary>
+        public ChatBotResponseModel AddItemToCart(int menuItemId, int quantity, string sessionId)
+        {
+            var response = new ChatBotResponseModel();
+            var session = GetOrCreateSession(sessionId);
+            response.SessionId = session.SessionId;
+            var cart = GetCartFromSession(session);
+
+            var item = _db.MenuItem.FirstOrDefault(m => m.Id == menuItemId && m.IsAvailable);
+            if (item == null)
+            {
+                response.Success = false;
+                response.Response = "Món ăn không tồn tại hoặc đã hết!";
+                return response;
+            }
+
+            var existingItem = cart.Items.FirstOrDefault(i => i.MenuItemId == item.Id);
+            if (existingItem != null)
+            {
+                existingItem.Quantity += quantity;
+            }
+            else
+            {
+                cart.Items.Add(new ChatOrderItem
+                {
+                    MenuItemId = item.Id,
+                    Name = item.Name,
+                    Price = item.Price,
+                    Quantity = quantity,
+                    ImageUrl = item.ImageUrl
+                });
+            }
+
+            SaveCartToSession(session, cart);
+
+            response.Success = true;
+            response.Response = $"✅ Đã thêm **{quantity}x {item.Name}** ({item.Price:N0}đ) vào giỏ!\n\n" +
+                $"🛒 **Giỏ hàng:** {cart.TotalItems} món - **{cart.TotalAmount:N0}đ**";
+
+            response.QuickReplies = new List<string>
+            {
+                "🔥 Gọi thêm món",
+                "🛒 Xem giỏ hàng",
+                "✅ Đặt hàng ngay"
+            };
+
+            response.Metadata["action"] = "item_added";
+            response.Metadata["cart_total"] = cart.TotalAmount;
+            response.Metadata["cart_count"] = cart.TotalItems;
+
+            return response;
+        }
+
+        /// <summary>
+        /// Xem giỏ hàng chatbot
+        /// </summary>
+        private ChatBotResponseModel HandleViewCart(ChatSession session)
+        {
+            var response = new ChatBotResponseModel();
+            var cart = GetCartFromSession(session);
+
+            if (!cart.Items.Any())
+            {
+                response.Response = "🛒 Giỏ hàng của bạn đang trống!\n\n" +
+                    "Hãy chọn món từ menu hoặc nói tên món bạn muốn gọi.";
+                response.QuickReplies = new List<string> { "🔥 Top bán chạy", "🍜 Xem menu", "💰 Món dưới 100k" };
+                return response;
+            }
+
+            var cartText = "🛒 **Giỏ hàng của bạn:**\n\n";
+            int idx = 1;
+            foreach (var item in cart.Items)
+            {
+                cartText += $"{idx}. **{item.Name}** x{item.Quantity} = {(item.Price * item.Quantity):N0}đ\n";
+                idx++;
+            }
+            cartText += $"\n💵 **Tổng cộng: {cart.TotalAmount:N0}đ**\n\n" +
+                "Bạn muốn thêm món hay đặt hàng?";
+
+            response.Response = cartText;
+            response.QuickReplies = new List<string>
+            {
+                "✅ Đặt hàng ngay",
+                "🔥 Gọi thêm món",
+                "❌ Xóa giỏ hàng"
+            };
+
+            response.Metadata["action"] = "view_cart";
+            response.Metadata["cart_total"] = cart.TotalAmount;
+            response.Metadata["cart_count"] = cart.TotalItems;
+
+            return response;
+        }
+
+        /// <summary>
+        /// Xử lý xác nhận đơn hàng qua chat
+        /// </summary>
+        private ChatBotResponseModel HandleConfirmOrder(string message, ChatSession session)
+        {
+            var response = new ChatBotResponseModel();
+            var cart = GetCartFromSession(session);
+
+            if (!cart.Items.Any())
+            {
+                response.Response = "🛒 Giỏ hàng trống! Hãy chọn món trước nhé.";
+                response.QuickReplies = new List<string> { "🔥 Top bán chạy", "🍜 Xem menu" };
+                return response;
+            }
+
+            // Kiểm tra đã có thông tin khách chưa
+            string step = session.Context.ContainsKey("OrderStep") ? session.Context["OrderStep"].ToString() : "start";
+
+            switch (step)
+            {
+                case "start":
+                    // Hiển thị giỏ hàng và hỏi thông tin
+                    var cartText = "📋 **Xác nhận đơn hàng:**\n\n";
+                    foreach (var item in cart.Items)
+                    {
+                        cartText += $"• {item.Name} x{item.Quantity} = {(item.Price * item.Quantity):N0}đ\n";
+                    }
+                    cartText += $"\n💵 **Tổng: {cart.TotalAmount:N0}đ**\n\n" +
+                        "Vui lòng cho mình **họ tên** của bạn:";
+
+                    response.Response = cartText;
+                    session.Context["OrderStep"] = "name";
+                    break;
+
+                case "name":
+                    cart.CustomerName = message.Trim();
+                    SaveCartToSession(session, cart);
+                    response.Response = $"👤 Tên: **{cart.CustomerName}**\n\nVui lòng cho mình **số điện thoại**:";
+                    session.Context["OrderStep"] = "phone";
+                    break;
+
+                case "phone":
+                    var phoneMatch = Regex.Match(message, @"(0\d{9,10})");
+                    if (phoneMatch.Success)
+                    {
+                        cart.CustomerPhone = phoneMatch.Groups[1].Value;
+                        SaveCartToSession(session, cart);
+                        response.Response = $"📞 SĐT: **{cart.CustomerPhone}**\n\n" +
+                            "Bạn muốn **ăn tại nhà hàng** hay **giao hàng**?";
+                        response.QuickReplies = new List<string> { "🍽️ Ăn tại nhà hàng", "🚗 Giao hàng", "🛍️ Mang về" };
+                        session.Context["OrderStep"] = "type";
+                    }
+                    else
+                    {
+                        response.Response = "❌ Số điện thoại chưa hợp lệ. Vui lòng nhập lại (VD: 0901234567):";
+                    }
+                    break;
+
+                case "type":
+                    if (message.Contains("giao") || message.Contains("delivery"))
+                    {
+                        cart.OrderType = "Delivery";
+                        SaveCartToSession(session, cart);
+                        response.Response = "🏠 Vui lòng cho mình **địa chỉ giao hàng**:";
+                        session.Context["OrderStep"] = "address";
+                    }
+                    else if (message.Contains("mang về") || message.Contains("takeaway"))
+                    {
+                        cart.OrderType = "TakeAway";
+                        SaveCartToSession(session, cart);
+                        session.Context["OrderStep"] = "final_confirm";
+                        return ShowFinalOrderConfirmation(cart, response, session);
+                    }
+                    else
+                    {
+                        cart.OrderType = "DineIn";
+                        SaveCartToSession(session, cart);
+                        session.Context["OrderStep"] = "final_confirm";
+                        return ShowFinalOrderConfirmation(cart, response, session);
+                    }
+                    break;
+
+                case "address":
+                    cart.DeliveryAddress = message.Trim();
+                    SaveCartToSession(session, cart);
+                    session.Context["OrderStep"] = "final_confirm";
+                    return ShowFinalOrderConfirmation(cart, response, session);
+
+                case "final_confirm":
+                    // Người dùng xác nhận → tạo đơn
+                    if (message.Contains("xác nhận") || message.Contains("ok") || message.Contains("đồng ý") || message.Contains("đặt"))
+                    {
+                        return CreateOrderFromChat(cart, session);
+                    }
+                    else
+                    {
+                        response.Response = "Bạn muốn **xác nhận đặt hàng** hay **chỉnh sửa**?";
+                        response.QuickReplies = new List<string> { "✅ Xác nhận đặt hàng", "✏️ Sửa đơn", "❌ Hủy đơn" };
+                    }
+                    break;
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// Hiển thị xác nhận cuối cùng trước khi đặt
+        /// </summary>
+        private ChatBotResponseModel ShowFinalOrderConfirmation(ChatOrderCart cart, ChatBotResponseModel response, ChatSession session)
+        {
+            var orderTypeText = cart.OrderType == "Delivery" ? "Giao hàng" :
+                               cart.OrderType == "TakeAway" ? "Mang về" : "Ăn tại nhà hàng";
+
+            var confirmText = "📋 **XÁC NHẬN ĐƠN HÀNG:**\n\n";
+            confirmText += $"👤 Tên: **{cart.CustomerName}**\n";
+            confirmText += $"📞 SĐT: **{cart.CustomerPhone}**\n";
+            confirmText += $"📦 Hình thức: **{orderTypeText}**\n";
+            if (cart.OrderType == "Delivery" && !string.IsNullOrEmpty(cart.DeliveryAddress))
+            {
+                confirmText += $"🏠 Địa chỉ: **{cart.DeliveryAddress}**\n";
+            }
+            confirmText += "\n**Món đã đặt:**\n";
+            foreach (var item in cart.Items)
+            {
+                confirmText += $"• {item.Name} x{item.Quantity} = {(item.Price * item.Quantity):N0}đ\n";
+            }
+            confirmText += $"\n💵 **Tổng cộng: {cart.TotalAmount:N0}đ**\n\n";
+            confirmText += "Bấm **Xác nhận** để hoàn tất đặt hàng!";
+
+            response.Response = confirmText;
+            response.QuickReplies = new List<string>
+            {
+                "✅ Xác nhận đặt hàng",
+                "✏️ Sửa đơn",
+                "❌ Hủy đơn"
+            };
+
+            response.Metadata["action"] = "order_review";
+            return response;
+        }
+
+        /// <summary>
+        /// Tạo đơn hàng thực tế từ giỏ chatbot
+        /// </summary>
+        private ChatBotResponseModel CreateOrderFromChat(ChatOrderCart cart, ChatSession session)
+        {
+            var response = new ChatBotResponseModel();
+
+            try
+            {
+                // Tạo mã đơn hàng
+                var orderCode = "DH" + DateTime.Now.ToString("yyMMdd") + new Random().Next(1000, 9999).ToString();
+
+                // Insert CustomerOrder
+                var sql = @"INSERT INTO CustomerOrder 
+                    (OrderCode, CustomerName, CustomerPhone, OrderType, DeliveryAddress,
+                     SubTotal, DeliveryFee, Discount, TotalAmount, PaymentMethod, PaymentStatus, 
+                     Status, Note, OrderDate, EstimatedDeliveryTime) 
+                    VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, GETDATE(), DATEADD(HOUR, 1, GETDATE()));
+                    SELECT SCOPE_IDENTITY();";
+
+                decimal deliveryFee = cart.OrderType == "Delivery" ? 30000 : 0;
+                var totalAmount = cart.TotalAmount + deliveryFee;
+
+                var orderId = _db.Database.SqlQuery<decimal>(sql,
+                    orderCode,
+                    cart.CustomerName ?? "Khách chatbot",
+                    cart.CustomerPhone ?? "",
+                    cart.OrderType,
+                    cart.DeliveryAddress ?? "",
+                    cart.TotalAmount,
+                    deliveryFee,
+                    0m, // discount
+                    totalAmount,
+                    "COD",
+                    "Pending",
+                    "Pending",
+                    "Đặt qua chatbot" + (string.IsNullOrEmpty(cart.Note) ? "" : " - " + cart.Note)
+                ).FirstOrDefault();
+
+                if (orderId > 0)
+                {
+                    // Insert OrderDetails
+                    foreach (var item in cart.Items)
+                    {
+                        var detailSql = @"INSERT INTO CustomerOrderDetail 
+                            (CustomerOrderId, MenuItemId, ItemName, Quantity, UnitPrice, Subtotal) 
+                            VALUES (@p0, @p1, @p2, @p3, @p4, @p5)";
+
+                        _db.Database.ExecuteSqlCommand(detailSql,
+                            (int)orderId,
+                            item.MenuItemId,
+                            item.Name,
+                            item.Quantity,
+                            item.Price,
+                            item.Price * item.Quantity
+                        );
+                    }
+
+                    // Reset cart
+                    session.Context["OrderCart"] = new ChatOrderCart();
+                    session.Context.Remove("OrderStep");
+
+                    var orderTypeText = cart.OrderType == "Delivery" ? "Giao hàng" :
+                                       cart.OrderType == "TakeAway" ? "Mang về" : "Ăn tại nhà hàng";
+
+                    response.Success = true;
+                    response.Response = $"🎉 **ĐẶT HÀNG THÀNH CÔNG!**\n\n" +
+                        $"📦 Mã đơn: **{orderCode}**\n" +
+                        $"📋 Hình thức: **{orderTypeText}**\n" +
+                        $"💵 Tổng tiền: **{totalAmount:N0}đ**\n" +
+                        $"💳 Thanh toán: **Khi nhận hàng (COD)**\n\n" +
+                        "Cảm ơn bạn đã đặt hàng! 🙏\n" +
+                        "Nhà hàng sẽ xác nhận đơn trong vài phút.";
+
+                    response.QuickReplies = new List<string>
+                    {
+                        "🍜 Đặt thêm đơn mới",
+                        "📅 Đặt bàn",
+                        "🔥 Xem menu"
+                    };
+
+                    response.Metadata["action"] = "order_created";
+                    response.Metadata["order_code"] = orderCode;
+                    response.Metadata["order_id"] = (int)orderId;
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Response = "❌ Có lỗi khi tạo đơn hàng. Vui lòng thử lại hoặc gọi **0123 456 789**!";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"CreateOrderFromChat Error: {ex.Message}");
+                response.Success = false;
+                response.Response = "❌ Có lỗi khi tạo đơn hàng. Vui lòng gọi **0123 456 789** để được hỗ trợ!";
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// Xóa giỏ hàng chatbot
+        /// </summary>
+        public ChatBotResponseModel ClearCart(string sessionId)
+        {
+            var response = new ChatBotResponseModel();
+            var session = GetOrCreateSession(sessionId);
+            response.SessionId = session.SessionId;
+
+            session.Context["OrderCart"] = new ChatOrderCart();
+            session.Context.Remove("OrderStep");
+
+            response.Success = true;
+            response.Response = "🗑️ Đã xóa giỏ hàng!\n\nBạn muốn chọn món mới?";
+            response.QuickReplies = new List<string> { "🔥 Top bán chạy", "🍜 Xem menu", "📅 Đặt bàn" };
+
+            return response;
+        }
+
+        /// <summary>
+        /// Lấy giỏ hàng hiện tại (public cho controller)
+        /// </summary>
+        public ChatOrderCart GetCurrentCart(string sessionId)
+        {
+            var session = GetOrCreateSession(sessionId);
+            return GetCartFromSession(session);
+        }
+
+        // ===== CHATBOT BOOKING FLOW =====
+
+        /// <summary>
+        /// Lấy thông tin booking từ session
+        /// </summary>
+        private ChatBookingInfo GetBookingFromSession(ChatSession session)
+        {
+            if (session.Context.ContainsKey("BookingInfo"))
+            {
+                var json = JsonConvert.SerializeObject(session.Context["BookingInfo"]);
+                return JsonConvert.DeserializeObject<ChatBookingInfo>(json);
+            }
+            var booking = new ChatBookingInfo();
+            session.Context["BookingInfo"] = booking;
+            return booking;
+        }
+
+        /// <summary>
+        /// Xử lý xác nhận đặt bàn qua chat (multi-step)
+        /// </summary>
+        private ChatBotResponseModel HandleConfirmBooking(string message, ChatSession session)
+        {
+            var response = new ChatBotResponseModel();
+            var booking = GetBookingFromSession(session);
+            message = message.ToLower();
+
+            string step = booking.Step ?? "init";
+
+            switch (step)
+            {
+                case "guests":
+                    var guestMatch = Regex.Match(message, @"(\d+)");
+                    if (guestMatch.Success)
+                    {
+                        booking.NumberOfGuests = int.Parse(guestMatch.Groups[1].Value);
+                        booking.Step = "time";
+                        session.Context["BookingInfo"] = booking;
+                        response.Response = $"👥 Số khách: **{booking.NumberOfGuests} người**\n\n" +
+                            "🕐 Bạn muốn đặt vào **thời gian nào**?";
+                        response.QuickReplies = new List<string>
+                        {
+                            "🌙 Tối nay",
+                            "☀️ Trưa mai",
+                            "📅 Cuối tuần",
+                            "📆 Ngày khác"
+                        };
+                    }
+                    else
+                    {
+                        response.Response = "Vui lòng nhập **số người** (VD: 4):";
+                    }
+                    break;
+
+                case "time":
+                    DateTime? bookingTime = ParseBookingTime(message);
+                    if (bookingTime.HasValue)
+                    {
+                        booking.BookingDateTime = bookingTime;
+                        booking.Step = "name";
+                        session.Context["BookingInfo"] = booking;
+                        response.Response = $"🕐 Thời gian: **{bookingTime.Value:dddd dd/MM/yyyy HH:mm}**\n\n" +
+                            "👤 Cho mình **họ tên** để đặt bàn:";
+                    }
+                    else
+                    {
+                        response.Response = "Mình chưa hiểu thời gian. Vui lòng nói rõ hơn (VD: tối nay, trưa mai, thứ 7):";
+                        response.QuickReplies = new List<string> { "🌙 Tối nay", "☀️ Trưa mai", "📅 Cuối tuần" };
+                    }
+                    break;
+
+                case "name":
+                    booking.CustomerName = message.Trim();
+                    if (booking.CustomerName.Length > 1)
+                    {
+                        booking.Step = "phone";
+                        session.Context["BookingInfo"] = booking;
+                        response.Response = $"👤 Tên: **{booking.CustomerName}**\n\n📞 Cho mình **số điện thoại** để liên hệ:";
+                    }
+                    else
+                    {
+                        response.Response = "Vui lòng nhập **họ tên** đầy đủ:";
+                    }
+                    break;
+
+                case "phone":
+                    var phoneMatch = Regex.Match(message, @"(0\d{9,10})");
+                    if (phoneMatch.Success)
+                    {
+                        booking.CustomerPhone = phoneMatch.Groups[1].Value;
+                        booking.Step = "confirm";
+                        session.Context["BookingInfo"] = booking;
+                        return ShowBookingConfirmation(booking, response);
+                    }
+                    else
+                    {
+                        response.Response = "❌ Số điện thoại chưa hợp lệ. Vui lòng nhập lại (VD: 0901234567):";
+                    }
+                    break;
+
+                case "confirm":
+                    if (message.Contains("xác nhận") || message.Contains("ok") || message.Contains("đồng ý") || message.Contains("đặt"))
+                    {
+                        return CreateBookingFromChat(booking, session);
+                    }
+                    else
+                    {
+                        response.Response = "Bạn muốn **xác nhận đặt bàn** hay **thay đổi**?";
+                        response.QuickReplies = new List<string> { "✅ Xác nhận đặt bàn", "🔄 Đặt lại từ đầu", "❌ Hủy" };
+                    }
+                    break;
+
+                default:
+                    // Start booking flow
+                    booking.Step = "guests";
+                    session.Context["BookingInfo"] = booking;
+                    response.Response = "📅 **Đặt bàn Nhà Hàng LDP**\n\n👥 Bạn đi **bao nhiêu người**?";
+                    response.QuickReplies = new List<string> { "2 người", "4 người", "6 người", "8 người", "10+ người" };
+                    break;
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// Parse thời gian đặt bàn từ ngôn ngữ tự nhiên
+        /// </summary>
+        private DateTime? ParseBookingTime(string message)
+        {
+            if (message.Contains("tối nay") || message.Contains("tonight"))
+                return DateTime.Today.AddHours(19);
+            if (message.Contains("trưa nay"))
+                return DateTime.Today.AddHours(12);
+            if (message.Contains("trưa mai"))
+                return DateTime.Today.AddDays(1).AddHours(12);
+            if (message.Contains("tối mai"))
+                return DateTime.Today.AddDays(1).AddHours(19);
+            if (message.Contains("mai"))
+                return DateTime.Today.AddDays(1).AddHours(19);
+            if (message.Contains("cuối tuần") || message.Contains("weekend") || message.Contains("thứ 7") || message.Contains("thứ bảy"))
+            {
+                var nextSat = DateTime.Today.AddDays(((int)DayOfWeek.Saturday - (int)DateTime.Today.DayOfWeek + 7) % 7);
+                if (nextSat == DateTime.Today) nextSat = nextSat.AddDays(7);
+                return nextSat.AddHours(19);
+            }
+            if (message.Contains("chủ nhật"))
+            {
+                var nextSun = DateTime.Today.AddDays(((int)DayOfWeek.Sunday - (int)DateTime.Today.DayOfWeek + 7) % 7);
+                if (nextSun == DateTime.Today) nextSun = nextSun.AddDays(7);
+                return nextSun.AddHours(12);
+            }
+
+            // Try parse explicit time
+            var timeMatch = Regex.Match(message, @"(\d{1,2})[h:](\d{0,2})");
+            if (timeMatch.Success)
+            {
+                int hour = int.Parse(timeMatch.Groups[1].Value);
+                int minute = timeMatch.Groups[2].Success && timeMatch.Groups[2].Value.Length > 0
+                    ? int.Parse(timeMatch.Groups[2].Value) : 0;
+                var date = message.Contains("mai") ? DateTime.Today.AddDays(1) : DateTime.Today;
+                if (hour >= 0 && hour <= 23)
+                    return date.AddHours(hour).AddMinutes(minute);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Hiển thị xác nhận đặt bàn
+        /// </summary>
+        private ChatBotResponseModel ShowBookingConfirmation(ChatBookingInfo booking, ChatBotResponseModel response)
+        {
+            // Kiểm tra bàn trống
+            var availableTables = _db.RestaurantTable
+                .Where(t => t.Status == "Available" && t.Capacity >= booking.NumberOfGuests)
+                .OrderBy(t => t.Capacity)
+                .Take(3)
+                .ToList();
+
+            var confirmText = "📋 **XÁC NHẬN ĐẶT BÀN:**\n\n";
+            confirmText += $"👤 Tên: **{booking.CustomerName}**\n";
+            confirmText += $"📞 SĐT: **{booking.CustomerPhone}**\n";
+            confirmText += $"👥 Số khách: **{booking.NumberOfGuests} người**\n";
+            confirmText += $"🕐 Thời gian: **{booking.BookingDateTime:dddd dd/MM/yyyy HH:mm}**\n\n";
+
+            if (availableTables.Any())
+            {
+                confirmText += $"✅ Có **{availableTables.Count} bàn** phù hợp!\n\n";
+            }
+            else
+            {
+                confirmText += "⚠️ Hiện tại bàn hơi đông, nhưng chúng tôi sẽ cố gắng sắp xếp!\n\n";
+            }
+
+            confirmText += "Bấm **Xác nhận** để hoàn tất đặt bàn!";
+
+            response.Response = confirmText;
+            response.QuickReplies = new List<string>
+            {
+                "✅ Xác nhận đặt bàn",
+                "🔄 Đặt lại từ đầu",
+                "❌ Hủy"
+            };
+
+            response.Metadata["action"] = "booking_review";
+            return response;
+        }
+
+        /// <summary>
+        /// Tạo reservation thực tế từ chatbot
+        /// </summary>
+        private ChatBotResponseModel CreateBookingFromChat(ChatBookingInfo booking, ChatSession session)
+        {
+            var response = new ChatBotResponseModel();
+
+            try
+            {
+                // Tạo reservation code
+                var resCode = "RES" + DateTime.Now.ToString("yyMMddHHmm") + new Random().Next(100, 999).ToString();
+
+                // Tìm bàn phù hợp
+                var table = _db.RestaurantTable
+                    .Where(t => t.Status == "Available" && t.Capacity >= booking.NumberOfGuests)
+                    .OrderBy(t => t.Capacity)
+                    .FirstOrDefault();
+
+                int? tableId = table?.Id;
+
+                // Insert Reservation
+                var sql = @"INSERT INTO Reservation 
+                    (ReservationCode, CustomerName, CustomerPhone, ReservationDate, ReservationTime, 
+                     NumberOfGuests, TableId, SpecialRequests, Status, CreatedDate) 
+                    VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, GETDATE());
+                    SELECT SCOPE_IDENTITY();";
+
+                var bookingDate = booking.BookingDateTime ?? DateTime.Now.AddHours(2);
+                var bookingTimeSpan = bookingDate.TimeOfDay;
+
+                var resId = _db.Database.SqlQuery<decimal>(sql,
+                    resCode,
+                    booking.CustomerName,
+                    booking.CustomerPhone,
+                    bookingDate.Date,
+                    bookingTimeSpan,
+                    booking.NumberOfGuests,
+                    tableId.HasValue ? (object)tableId.Value : DBNull.Value,
+                    booking.SpecialRequests ?? "Đặt qua chatbot",
+                    "Pending"
+                ).FirstOrDefault();
+
+                if (resId > 0)
+                {
+                    // Xóa booking info
+                    session.Context.Remove("BookingInfo");
+
+                    response.Success = true;
+                    response.Response = $"🎉 **ĐẶT BÀN THÀNH CÔNG!**\n\n" +
+                        $"📋 Mã đặt bàn: **{resCode}**\n" +
+                        $"👤 Tên: **{booking.CustomerName}**\n" +
+                        $"👥 Số khách: **{booking.NumberOfGuests} người**\n" +
+                        $"🕐 Thời gian: **{bookingDate:dddd dd/MM/yyyy HH:mm}**\n" +
+                        (table != null ? $"🪑 Bàn số: **{table.TableNumber}** (sức chứa {table.Capacity})\n" : "") +
+                        "\nCảm ơn bạn! Nhà hàng sẽ xác nhận trong vài phút. 🙏\n" +
+                        "📞 Hotline: **0123 456 789**";
+
+                    response.QuickReplies = new List<string>
+                    {
+                        "🍜 Xem menu trước",
+                        "🔥 Gợi ý combo",
+                        "👋 Cảm ơn"
+                    };
+
+                    response.Metadata["action"] = "booking_created";
+                    response.Metadata["reservation_code"] = resCode;
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Response = "❌ Có lỗi khi đặt bàn. Vui lòng gọi **0123 456 789**!";
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"CreateBookingFromChat Error: {ex.Message}");
+                response.Success = false;
+                response.Response = "❌ Có lỗi khi đặt bàn. Vui lòng gọi **0123 456 789** để được hỗ trợ!";
+            }
 
             return response;
         }

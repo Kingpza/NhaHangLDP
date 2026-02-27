@@ -196,4 +196,75 @@ namespace NhaHangLDP.Models
         public int Count { get; set; }
         public string Intent { get; set; }
     }
+
+    /// <summary>
+    /// Một item trong giỏ hàng chatbot
+    /// </summary>
+    public class ChatOrderItem
+    {
+        public int MenuItemId { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+        public int Quantity { get; set; }
+        public string Notes { get; set; }
+        public string ImageUrl { get; set; }
+    }
+
+    /// <summary>
+    /// Giỏ hàng chatbot (lưu trong session context)
+    /// </summary>
+    public class ChatOrderCart
+    {
+        public List<ChatOrderItem> Items { get; set; }
+        public string OrderType { get; set; } // "DineIn", "TakeAway", "Delivery"
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public string CustomerEmail { get; set; }
+        public string DeliveryAddress { get; set; }
+        public string Note { get; set; }
+
+        public ChatOrderCart()
+        {
+            Items = new List<ChatOrderItem>();
+            OrderType = "DineIn";
+        }
+
+        public decimal TotalAmount => Items.Sum(i => i.Price * i.Quantity);
+        public int TotalItems => Items.Sum(i => i.Quantity);
+    }
+
+    /// <summary>
+    /// Thông tin đặt bàn qua chatbot
+    /// </summary>
+    public class ChatBookingInfo
+    {
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public int NumberOfGuests { get; set; }
+        public DateTime? BookingDateTime { get; set; }
+        public string SpecialRequests { get; set; }
+        public string Step { get; set; } // "init", "guests", "time", "name", "phone", "confirm"
+
+        public ChatBookingInfo()
+        {
+            Step = "init";
+        }
+
+        public bool IsComplete =>
+            !string.IsNullOrEmpty(CustomerName) &&
+            !string.IsNullOrEmpty(CustomerPhone) &&
+            NumberOfGuests > 0 &&
+            BookingDateTime.HasValue;
+    }
+
+    /// <summary>
+    /// Response metadata cho actions (đặt hàng, đặt bàn)
+    /// </summary>
+    public class ChatActionResult
+    {
+        public string Action { get; set; } // "order_created", "booking_created", "item_added", "cart_updated"
+        public string OrderCode { get; set; }
+        public string ReservationCode { get; set; }
+        public bool Success { get; set; }
+    }
 }
