@@ -20,6 +20,12 @@ namespace NhaHangLDP.Services
         private readonly string _connectionString;
         private readonly bool _isRedisEnabled;
 
+        // Safe JSON settings - prevent type name handling attacks
+        private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.None
+        };
+
         // In-memory fallback cache
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, CacheEntry> _memoryCache
             = new System.Collections.Concurrent.ConcurrentDictionary<string, CacheEntry>();
@@ -74,7 +80,7 @@ namespace NhaHangLDP.Services
                 {
                     if (entry.Expiry > DateTime.UtcNow)
                     {
-                        return JsonConvert.DeserializeObject<T>(entry.Value);
+                        return JsonConvert.DeserializeObject<T>(entry.Value, _jsonSettings);
                     }
                     _memoryCache.TryRemove(key, out _);
                 }
@@ -103,7 +109,7 @@ namespace NhaHangLDP.Services
             try
             {
                 var expiryTime = expiry ?? TimeSpan.FromMinutes(10);
-                var serialized = JsonConvert.SerializeObject(value);
+                var serialized = JsonConvert.SerializeObject(value, _jsonSettings);
 
                 _memoryCache[key] = new CacheEntry
                 {

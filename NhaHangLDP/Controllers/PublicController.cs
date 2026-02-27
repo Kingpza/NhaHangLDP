@@ -275,6 +275,11 @@ namespace NhaHangLDP.Controllers
         {
             try
             {
+                if (quantity <= 0 || quantity > 50)
+                {
+                    return Json(new { success = false, response = "Số lượng không hợp lệ (1-50)." });
+                }
+
                 var response = _chatbotService.AddItemToCart(menuItemId, quantity, sessionId);
                 return Json(new
                 {

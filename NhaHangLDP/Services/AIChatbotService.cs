@@ -1642,6 +1642,24 @@ CÂU HỎI: {message}";
 
             try
             {
+                // Validate input
+                if (cart.Items == null || !cart.Items.Any())
+                {
+                    response.Success = false;
+                    response.Response = "❌ Giỏ hàng trống!";
+                    return response;
+                }
+
+                // Sanitize customer input (truncate to safe lengths)
+                var customerName = (cart.CustomerName ?? "Khách chatbot").Length > 100
+                    ? cart.CustomerName.Substring(0, 100) : (cart.CustomerName ?? "Khách chatbot");
+                var customerPhone = (cart.CustomerPhone ?? "").Length > 15
+                    ? cart.CustomerPhone.Substring(0, 15) : (cart.CustomerPhone ?? "");
+                var deliveryAddress = (cart.DeliveryAddress ?? "").Length > 500
+                    ? cart.DeliveryAddress.Substring(0, 500) : (cart.DeliveryAddress ?? "");
+                var note = (cart.Note ?? "").Length > 500
+                    ? cart.Note.Substring(0, 500) : (cart.Note ?? "");
+
                 // Tạo mã đơn hàng
                 var orderCode = "DH" + DateTime.Now.ToString("yyMMdd") + _random.Next(1000, 9999).ToString();
 
@@ -1658,10 +1676,10 @@ CÂU HỎI: {message}";
 
                 var orderId = _db.Database.SqlQuery<decimal>(sql,
                     orderCode,
-                    cart.CustomerName ?? "Khách chatbot",
-                    cart.CustomerPhone ?? "",
+                    customerName,
+                    customerPhone,
                     cart.OrderType,
-                    cart.DeliveryAddress ?? "",
+                    deliveryAddress,
                     cart.TotalAmount,
                     deliveryFee,
                     0m, // discount
@@ -1669,7 +1687,7 @@ CÂU HỎI: {message}";
                     "COD",
                     "Pending",
                     "Pending",
-                    "Đặt qua chatbot" + (string.IsNullOrEmpty(cart.Note) ? "" : " - " + cart.Note)
+                    "Đặt qua chatbot" + (string.IsNullOrEmpty(note) ? "" : " - " + note)
                 ).FirstOrDefault();
 
                 if (orderId > 0)
@@ -1978,6 +1996,22 @@ CÂU HỎI: {message}";
 
             try
             {
+                // Validate input
+                if (booking.NumberOfGuests <= 0 || booking.NumberOfGuests > 100)
+                {
+                    response.Success = false;
+                    response.Response = "❌ Số khách không hợp lệ!";
+                    return response;
+                }
+
+                // Sanitize customer input
+                var customerName = (booking.CustomerName ?? "").Length > 100
+                    ? booking.CustomerName.Substring(0, 100) : (booking.CustomerName ?? "Khách");
+                var customerPhone = (booking.CustomerPhone ?? "").Length > 15
+                    ? booking.CustomerPhone.Substring(0, 15) : (booking.CustomerPhone ?? "");
+                var specialRequests = (booking.SpecialRequests ?? "Đặt qua chatbot").Length > 500
+                    ? booking.SpecialRequests.Substring(0, 500) : (booking.SpecialRequests ?? "Đặt qua chatbot");
+
                 // Tạo reservation code
                 var resCode = "RES" + DateTime.Now.ToString("yyMMddHHmm") + _random.Next(100, 999).ToString();
 
@@ -2001,13 +2035,13 @@ CÂU HỎI: {message}";
 
                 var resId = _db.Database.SqlQuery<decimal>(sql,
                     resCode,
-                    booking.CustomerName,
-                    booking.CustomerPhone,
+                    customerName,
+                    customerPhone,
                     bookingDate.Date,
                     bookingTimeSpan,
                     booking.NumberOfGuests,
                     tableId.HasValue ? (object)tableId.Value : DBNull.Value,
-                    booking.SpecialRequests ?? "Đặt qua chatbot",
+                    specialRequests,
                     "Pending"
                 ).FirstOrDefault();
 
