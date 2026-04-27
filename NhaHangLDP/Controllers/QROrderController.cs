@@ -143,7 +143,7 @@ namespace NhaHangLDP.Controllers
             }
 
             // Restaurant info
-            var restaurantName = db.AppSetting.FirstOrDefault(s => s.SettingKey == "RestaurantName")?.SettingValue ?? "Nhà Hàng LDP";
+            var restaurantName = db.AppSetting.FirstOrDefault(s => s.SettingKey == "RestaurantName")?.SettingValue ?? "Nhà hàng Hỷ Lạc Hotpot";
             var restaurantPhone = db.AppSetting.FirstOrDefault(s => s.SettingKey == "PhoneNumber")?.SettingValue ?? "";
 
             var viewModel = new QRMenuViewModel

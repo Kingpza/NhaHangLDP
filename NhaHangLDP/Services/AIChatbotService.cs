@@ -65,7 +65,7 @@ namespace NhaHangLDP.Services
             new FAQItem 
             { 
                 Question = "Địa chỉ nhà hàng ở đâu?",
-                Answer = "📍 **Địa chỉ:**\nNhà hàng LDP\n123 Đường ABC, Quận XYZ\nTP. Hồ Chí Minh\n\n📞 Hotline: 0123 456 789",
+                Answer = "📍 **Địa chỉ:**\nNhà hàng Hỷ Lạc Hotpot\n123 Đường ABC, Quận XYZ\nTP. Hồ Chí Minh\n\n📞 Hotline: 0123 456 789",
                 Keywords = new List<string> { "địa chỉ", "ở đâu", "location", "chỗ" }
             },
             new FAQItem 
@@ -267,7 +267,7 @@ namespace NhaHangLDP.Services
                 var historyContext = GetHistoryContext(session);
 
                 var systemPrompt = $@"
-Bạn là trợ lý ảo của Nhà Hàng LDP, tên là LDP Bot.
+Bạn là trợ lý ảo của Nhà hàng Hỷ Lạc Hotpot, tên là LDP Bot.
 Nhiệm vụ: Tư vấn món ăn, trả lời câu hỏi về nhà hàng.
 Phong cách: Thân thiện, ngắn gọn, dùng emoji phù hợp.
 Ngôn ngữ: Tiếng Việt.
@@ -713,7 +713,7 @@ CÂU HỎI: {message}";
         {
             var response = new ChatBotResponseModel
             {
-                Response = "📅 **Đặt bàn tại Nhà Hàng LDP:**\n\n" +
+                Response = "📅 **Đặt bàn tại Nhà hàng Hỷ Lạc Hotpot:**\n\n" +
                     "Bạn có thể đặt bàn qua:\n\n" +
                     "📞 **Hotline:** 0123 456 789\n" +
                     "🌐 **Website:** nhahangldp.com/dat-ban\n\n" +
@@ -1103,7 +1103,7 @@ CÂU HỎI: {message}";
             else
             {
                 // Chưa đủ thông tin
-                response.Response = "📅 **Đặt bàn tại Nhà Hàng LDP:**\n\n" +
+                response.Response = "📅 **Đặt bàn tại Nhà hàng Hỷ Lạc Hotpot:**\n\n" +
                     "Cho mình biết thêm:\n" +
                     "• 👥 Số người?\n" +
                     "• 🕐 Thời gian? (VD: tối nay, trưa mai, cuối tuần)\n\n" +
