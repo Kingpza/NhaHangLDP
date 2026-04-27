@@ -368,7 +368,7 @@ namespace NhaHangLDP.Controllers
                     .Replace("{{BookingTime}}", "19:00")
                     .Replace("{{GuestCount}}", "4")
                     .Replace("{{BookingCode}}", "BK000001")
-                    .Replace("{{RestaurantName}}", "Nhà Hàng LDP")
+                    .Replace("{{RestaurantName}}", "Nhà hàng Hỷ Lạc Hotpot")
                     .Replace("{{RestaurantPhone}}", "0123 456 789")
                     .Replace("{{RestaurantAddress}}", "123 Đường ABC, Quận 1, TP.HCM")
                     .Replace("{{CurrentYear}}", DateTime.Now.Year.ToString())

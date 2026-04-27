@@ -218,7 +218,7 @@ namespace NhaHangLDP.Services
                 { "GuestCount", booking.NumberOfGuests.ToString() },
                 { "BookingCode", $"BK{booking.Id:D6}" },
                 { "Notes", booking.Notes ?? "Không có" },
-                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà Hàng LDP" },
+                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà hàng Hỷ Lạc Hotpot" },
                 { "RestaurantPhone", GetSetting("PhoneNumber") ?? "" },
                 { "RestaurantAddress", GetSetting("Address") ?? "" }
             };
@@ -246,7 +246,7 @@ namespace NhaHangLDP.Services
                 { "BookingTime", booking.BookingDateTime.ToString("HH:mm") },
                 { "GuestCount", booking.NumberOfGuests.ToString() },
                 { "BookingCode", $"BK{booking.Id:D6}" },
-                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà Hàng LDP" },
+                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà hàng Hỷ Lạc Hotpot" },
                 { "RestaurantPhone", GetSetting("PhoneNumber") ?? "" },
                 { "RestaurantAddress", GetSetting("Address") ?? "" }
             };
@@ -286,7 +286,7 @@ namespace NhaHangLDP.Services
                 { "OrderItems", itemsHtml },
                 { "TotalAmount", totalAmount.ToString("N0") },
                 { "Notes", order.Notes ?? "Không có" },
-                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà Hàng LDP" },
+                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà hàng Hỷ Lạc Hotpot" },
                 { "RestaurantPhone", GetSetting("PhoneNumber") ?? "" }
             };
 
@@ -320,7 +320,7 @@ namespace NhaHangLDP.Services
                 { "StartDate", promotion.StartDate.ToString("dd/MM/yyyy") },
                 { "EndDate", promotion.EndDate.ToString("dd/MM/yyyy") },
                 { "Description", promotion.Description ?? "" },
-                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà Hàng LDP" }
+                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà hàng Hỷ Lạc Hotpot" }
             };
 
             return await SendTemplateEmailAsync(new SendTemplateEmailDto
@@ -367,7 +367,7 @@ namespace NhaHangLDP.Services
                 { "Discount", bill.DiscountAmount.ToString("N0") },
                 { "TotalAmount", bill.FinalAmount.ToString("N0") },
                 { "PaymentMethod", GetPaymentMethodText(bill.PaymentMethod) },
-                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà Hàng LDP" },
+                { "RestaurantName", GetSetting("RestaurantName") ?? "Nhà hàng Hỷ Lạc Hotpot" },
                 { "RestaurantAddress", GetSetting("Address") ?? "" },
                 { "RestaurantPhone", GetSetting("PhoneNumber") ?? "" },
                 { "RestaurantTaxCode", GetSetting("TaxCode") ?? "" }
@@ -393,17 +393,17 @@ namespace NhaHangLDP.Services
             {
                 ToEmail = toEmail,
                 ToName = toEmail,
-                Subject = "Email test từ hệ thống Nhà Hàng LDP",
+                Subject = "Email test từ hệ thống Nhà hàng Hỷ Lạc Hotpot",
                 Body = $@"
                     <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
                         <h2 style='color: #dc7633;'>Email Test Thành Công!</h2>
                         <p>Xin chào,</p>
-                        <p>Đây là email test từ hệ thống <strong>Nhà Hàng LDP</strong>.</p>
+                        <p>Đây là email test từ hệ thống <strong>Nhà hàng Hỷ Lạc Hotpot</strong>.</p>
                         <p>Nếu bạn nhận được email này, cấu hình SMTP đã hoạt động đúng!</p>
                         <hr style='border: 1px solid #eee;'>
                         <p style='color: #666; font-size: 12px;'>
                             Gửi lúc: {DateTime.Now:HH:mm:ss dd/MM/yyyy}<br>
-                            © {DateTime.Now.Year} Nhà Hàng LDP
+                            © {DateTime.Now.Year} Nhà hàng Hỷ Lạc Hotpot
                         </p>
                     </div>",
                 IsHtml = true,

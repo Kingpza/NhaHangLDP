@@ -488,7 +488,7 @@ namespace NhaHangLDP.Controllers
             {
                 BankId = settings.FirstOrDefault(s => s.SettingKey == "BankId")?.SettingValue ?? "MB",
                 AccountNumber = settings.FirstOrDefault(s => s.SettingKey == "BankAccountNumber")?.SettingValue ?? "0123456789",
-                AccountName = settings.FirstOrDefault(s => s.SettingKey == "BankAccountName")?.SettingValue ?? "NHA HANG LDP"
+                AccountName = settings.FirstOrDefault(s => s.SettingKey == "BankAccountName")?.SettingValue ?? "NHA HANG HY LAC HOTPOT"
             };
         }
 
