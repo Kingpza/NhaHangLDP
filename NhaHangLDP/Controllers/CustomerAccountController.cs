@@ -202,7 +202,7 @@ namespace NhaHangLDP.Controllers
                     Session[CART_SESSION_KEY] = null;
                 }
 
-                TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà Hàng LDP.";
+                TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà hàng Hỷ Lạc Hotpot.";
                 return RedirectToAction("Menu", "Public");
             }
             catch (Exception ex)
