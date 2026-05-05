@@ -918,7 +918,7 @@ namespace NhaHangLDP.Services
         {
             var settings = db.AppSetting.ToList();
             return (
-                settings.FirstOrDefault(s => s.SettingKey == "RestaurantName")?.SettingValue ?? "LDP Restaurant",
+                settings.FirstOrDefault(s => s.SettingKey == "RestaurantName")?.SettingValue ?? "Nhà hàng Hỷ Lạc Hotpot",
                 settings.FirstOrDefault(s => s.SettingKey == "Address")?.SettingValue ?? "123 Đường ABC, Quận 1, TP.HCM",
                 settings.FirstOrDefault(s => s.SettingKey == "PhoneNumber")?.SettingValue ?? "0123 456 789",
                 settings.FirstOrDefault(s => s.SettingKey == "TaxCode")?.SettingValue ?? "0123456789"
