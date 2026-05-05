@@ -147,7 +147,7 @@ namespace NhaHangLDP.Models
         public decimal TotalAmount { get; set; }
 
         // Bạn có thể thêm các thông tin nhà hàng ở đây
-        public string RestaurantName { get; set; } = "LDP Restaurant";
+        public string RestaurantName { get; set; } = "Nhà hàng Hỷ Lạc Hotpot";
         public string RestaurantAddress { get; set; } = "123 Đường ABC, Quận 1, TP.HCM";
         public string RestaurantPhone { get; set; } = "0123 456 789";
     }

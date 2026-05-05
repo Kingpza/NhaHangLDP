@@ -25,7 +25,7 @@ namespace NhaHangLDP.Controllers
 
                 var viewModel = new SettingsViewModel
                 {
-                    RestaurantName = GetSettingValue(allSettings, "RestaurantName", " Restaurant"),
+                    RestaurantName = GetSettingValue(allSettings, "RestaurantName", "Nhà hàng Hỷ Lạc Hotpot"),
                     Address = GetSettingValue(allSettings, "Address", "123 Đường ABC, Quận 1, TP.HCM"),
                     PhoneNumber = GetSettingValue(allSettings, "PhoneNumber", "0123456789"),
                     Email = GetSettingValue(allSettings, "Email", "info@ldprestaurant.com"),
@@ -202,7 +202,7 @@ namespace NhaHangLDP.Controllers
             {
                 var currentUser = Session["Username"]?.ToString() ?? "Admin";
 
-                UpsertSetting("RestaurantName", "LDP Restaurant", "Tên nhà hàng", currentUser);
+                UpsertSetting("RestaurantName", "Nhà hàng Hỷ Lạc Hotpot", "Tên nhà hàng", currentUser);
                 UpsertSetting("Address", "123 Đường ABC, Quận 1, TP.HCM", "Địa chỉ nhà hàng", currentUser);
                 UpsertSetting("PhoneNumber", "0123456789", "Số điện thoại liên hệ", currentUser);
                 UpsertSetting("Email", "info@ldprestaurant.com", "Email liên hệ", currentUser);
