@@ -9,7 +9,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Thanh toán - Nhà Hàng LDP</title>
+    <title>Thanh toán - Nhà hàng Hỷ Lạc Hotpot</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
@@ -229,6 +229,7 @@
                                     </label>
                                     <div class="relative">
                                         <input type="text" name="DeliveryAddress" id="deliveryAddress"
+                                               value="@Model.Form.DeliveryAddress"
                                                class="w-full px-4 py-3 pr-10 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                                placeholder="Ví dụ: 123 Nguyễn Huệ" />
                                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">home</span>
@@ -242,18 +243,20 @@
                                     <div>
                                         <label class="block text-sm font-medium mb-2">Phường/Xã</label>
                                         <input type="text" name="Ward" id="ward"
+                                               value="@Model.Form.Ward"
                                                class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                                placeholder="Phường/Xã" />
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-2">Quận/Huyện</label>
                                         <input type="text" name="District" id="district"
+                                               value="@Model.Form.District"
                                                class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary"
                                                placeholder="Quận/Huyện" />
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-2">Tỉnh/TP</label>
-                                        <input type="text" name="City" id="city" value="TP. Hồ Chí Minh"
+                                        <input type="text" name="City" id="city" value="@(Model.Form.City ?? "TP. Hồ Chí Minh")"
                                                class="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary" />
                                     </div>
                                 </div>
@@ -264,13 +267,10 @@
                                 
                                 @if (Model.CustomerInfo?.IsLoggedIn == true)
                                 {
-                                    <label class="flex items-center gap-2 cursor-pointer p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                                        <input type="checkbox" name="SaveAddress" value="true" class="w-5 h-5 text-primary rounded focus:ring-primary" />
-                                        <span class="text-sm flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-sm">bookmark</span>
-                                            Lưu địa chỉ này cho lần sau
-                                        </span>
-                                    </label>
+                                    <button type="button" onclick="saveAddressToProfile()" class="px-4 py-2 bg-success text-white rounded-xl font-medium hover:bg-green-600 transition-colors flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-sm">save</span>
+                                        Lưu địa chỉ
+                                    </button>
                                 }
                             </div>
                         </div>
@@ -295,16 +295,16 @@
                                 <input type="radio" name="PaymentMethod" value="VNPay" class="w-5 h-5 text-primary" />
                                 <img src="https://vnpay.vn/s1/statics.vnpay.vn/2023/6/0oxhzjmxbksr1686814746087.png" alt="VNPay" class="h-8" />
                                 <div class="flex-1">
-                                    <p class="font-semibold">VNPay</p>
-                                    <p class="text-sm text-text-secondary">Thanh toán qua VNPay QR, ATM, Visa...</p>
+                                    <p class="font-semibold">VNPay <span class="text-xs bg-warning/20 text-warning px-2 py-0.5 rounded-full">Sandbox</span></p>
+                                    <p class="text-sm text-text-secondary">Thanh toán qua VNPay QR, ATM, Visa... (Chế độ test)</p>
                                 </div>
                             </label>
-                            <label class="flex items-center gap-4 p-4 border-2 border-border rounded-xl cursor-pointer hover:border-primary transition-all opacity-50">
-                                <input type="radio" name="PaymentMethod" value="MoMo" disabled class="w-5 h-5" />
+                            <label class="flex items-center gap-4 p-4 border-2 border-border rounded-xl cursor-pointer hover:border-primary transition-all">
+                                <input type="radio" name="PaymentMethod" value="MoMo" class="w-5 h-5 text-primary" />
                                 <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" class="h-8" />
                                 <div class="flex-1">
-                                    <p class="font-semibold">Ví MoMo</p>
-                                    <p class="text-sm text-text-secondary">Sắp ra mắt</p>
+                                    <p class="font-semibold">Ví MoMo <span class="text-xs bg-warning/20 text-warning px-2 py-0.5 rounded-full">Sandbox</span></p>
+                                    <p class="text-sm text-text-secondary">Thanh toán qua ví MoMo (Chế độ test)</p>
                                 </div>
                             </label>
                         </div>
@@ -363,18 +363,22 @@
                                 <span>Tạm tính</span>
                                 <span>@Model.Cart.SubTotal.ToString("N0")đ</span>
                             </div>
-                            <div class="flex justify-between text-text-secondary">
+                            <div id="deliveryFeeRow" class="flex justify-between text-text-secondary">
                                 <span>Phí giao hàng</span>
                                 <span id="checkoutDeliveryFee">
-                                    @if (Model.Cart.DeliveryFee == 0)
-                                    {
-                                        <span class="text-success">Miễn phí</span>
-                                    }
-                                    else
+                                    @if (Model.Cart.DeliveryFee > 0)
                                     {
                                         @Model.Cart.DeliveryFee.ToString("N0")@:đ
                                     }
+                                    else
+                                    {
+                                        <span class="text-success">Miễn phí</span>
+                                    }
                                 </span>
+                            </div>
+                            <div id="distanceInfoRow" class="flex justify-between text-text-secondary text-sm" style="display:none;">
+                                <span>Khoảng cách</span>
+                                <span id="distanceText"></span>
                             </div>
                             @if (Model.Cart.Discount > 0)
                             {
@@ -385,7 +389,7 @@
                             }
                             <div class="flex justify-between text-xl font-bold pt-3 border-t border-border">
                                 <span>Tổng cộng</span>
-                                <span class="text-primary">@Model.Cart.TotalAmount.ToString("N0")đ</span>
+                                <span id="checkoutTotal" class="text-primary">@Model.Cart.TotalAmount.ToString("N0")đ</span>
                             </div>
                         </div>
 
@@ -443,10 +447,10 @@
             
             restaurantMarker = L.marker(restaurantLocation, {
                 icon: restaurantIcon,
-                title: 'Nhà Hàng LDP'
+                title: 'Nhà hàng Hỷ Lạc Hotpot'
             }).addTo(map);
             
-            restaurantMarker.bindPopup('<b>Nhà Hàng LDP</b><br>Vị trí nhà hàng').openPopup();
+            restaurantMarker.bindPopup('<b>Nhà hàng Hỷ Lạc Hotpot</b><br>Vị trí nhà hàng').openPopup();
             
             // Add delivery marker (red, draggable)
             var deliveryIcon = L.divIcon({
@@ -536,6 +540,9 @@
                         // Visual feedback
                         highlightFilledFields();
                         showAddressUpdated();
+
+                        // Calculate delivery fee by distance
+                        calculateDeliveryFeeByDistance(lat, lng);
                     } else {
                         marker.getPopup().setContent('❌ Không tìm thấy địa chỉ').update();
                     }
@@ -644,10 +651,65 @@
             if (orderType === 'Delivery') {
                 section.style.display = 'block';
                 document.getElementById('deliveryAddress').required = true;
+                // Recalculate delivery fee based on current position
+                var lat = document.getElementById('latitude').value;
+                var lng = document.getElementById('longitude').value;
+                if (lat && lng) {
+                    calculateDeliveryFeeByDistance(parseFloat(lat), parseFloat(lng));
+                } else {
+                    updateDeliveryFeeDisplay(@Html.Raw(Model.Cart.DeliveryFee.ToString(System.Globalization.CultureInfo.InvariantCulture)), null);
+                }
             } else {
                 section.style.display = 'none';
                 document.getElementById('deliveryAddress').required = false;
+                // No delivery fee for pickup/dine-in
+                updateDeliveryFeeDisplay(0, null);
             }
+        }
+
+        // Update delivery fee display and total
+        var currentSubTotal = @Html.Raw(Model.Cart.SubTotal.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        var currentDiscount = @Html.Raw(Model.Cart.Discount.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        var currentDeliveryFee = @Html.Raw(Model.Cart.DeliveryFee.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+        function updateDeliveryFeeDisplay(fee, distanceKm) {
+            currentDeliveryFee = fee;
+            var feeEl = document.getElementById('checkoutDeliveryFee');
+            var feeRow = document.getElementById('deliveryFeeRow');
+            var distanceRow = document.getElementById('distanceInfoRow');
+            var distanceText = document.getElementById('distanceText');
+            var totalEl = document.getElementById('checkoutTotal');
+
+            if (fee > 0) {
+                feeEl.innerHTML = fee.toLocaleString('vi-VN') + 'đ';
+            } else {
+                feeEl.innerHTML = '<span class="text-success">Miễn phí</span>';
+            }
+            feeRow.style.display = 'flex';
+
+            if (distanceKm !== null && distanceKm !== undefined) {
+                distanceRow.style.display = 'flex';
+                distanceText.textContent = distanceKm.toFixed(1) + ' km';
+            } else {
+                distanceRow.style.display = 'none';
+            }
+
+            var total = currentSubTotal + fee - (currentDiscount || 0);
+            totalEl.textContent = total.toLocaleString('vi-VN') + 'đ';
+        }
+
+        // Calculate delivery fee by distance
+        function calculateDeliveryFeeByDistance(lat, lng) {
+            $.post('@Url.Action("CalculateDeliveryFeeByDistance", "Checkout")', {
+                customerLat: lat,
+                customerLng: lng
+            }).done(function(response) {
+                if (response.success) {
+                    updateDeliveryFeeDisplay(response.fee, response.distanceKm);
+                }
+            }).fail(function() {
+                console.error('Không thể tính phí giao hàng theo khoảng cách');
+            });
         }
 
         // Toggle new address form
@@ -672,6 +734,53 @@
             document.getElementById('city').value = radio.dataset.city;
             document.getElementById('newAddressForm').classList.add('hidden');
             highlightFilledFields();
+
+            // Geocode the saved address to calculate delivery fee by distance
+            var fullAddress = [radio.dataset.address, radio.dataset.ward, radio.dataset.district, radio.dataset.city]
+                .filter(function(part) { return part && part.trim(); })
+                .join(', ');
+
+            if (fullAddress) {
+                fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(fullAddress) + '&limit=1', {
+                        headers: { 'User-Agent': 'NhaHangLDP/1.0' }
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data && data.length > 0) {
+                            var lat = parseFloat(data[0].lat);
+                            var lng = parseFloat(data[0].lon);
+                            document.getElementById('latitude').value = lat;
+                            document.getElementById('longitude').value = lng;
+                            calculateDeliveryFeeByDistance(lat, lng);
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('Geocoding saved address error:', error);
+                    });
+            }
+        }
+
+        // Save address to profile
+        function saveAddressToProfile() {
+            var address = $('#deliveryAddress').val().trim();
+            if (!address) {
+                Swal.fire('Lỗi', 'Vui lòng nhập địa chỉ trước khi lưu!', 'error');
+                return;
+            }
+            $.post('@Url.Action("SaveAddressFromCheckout", "Checkout")', {
+                deliveryAddress: address,
+                ward: $('#ward').val(),
+                district: $('#district').val(),
+                city: $('#city').val()
+            }).done(function(response) {
+                if (response.success) {
+                    Swal.fire('Thành công!', response.message, 'success');
+                } else {
+                    Swal.fire('Lỗi', response.message, 'error');
+                }
+            }).fail(function() {
+                Swal.fire('Lỗi', 'Có lỗi xảy ra!', 'error');
+            });
         }
 
         // Form submit
@@ -698,15 +807,28 @@
             $.post('@Url.Action("PlaceOrder", "Checkout")', formData)
                 .done(function(response) {
                     if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Đặt hàng thành công!',
-                            text: 'Mã đơn hàng: ' + response.orderCode,
-                            confirmButtonText: 'Xem đơn hàng',
-                            confirmButtonColor: '#007bff'
-                        }).then(() => {
-                            window.location.href = response.redirectUrl;
-                        });
+                        if (response.requirePayment) {
+                            // Non-COD payment: redirect to payment page
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Đơn hàng đã tạo!',
+                                text: 'Vui lòng hoàn tất thanh toán qua ' + response.paymentMethod,
+                                confirmButtonText: 'Thanh toán ngay',
+                                confirmButtonColor: '#007bff'
+                            }).then(() => {
+                                window.location.href = response.redirectUrl;
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Đặt hàng thành công!',
+                                text: 'Mã đơn hàng: ' + response.orderCode,
+                                confirmButtonText: 'Xem đơn hàng',
+                                confirmButtonColor: '#007bff'
+                            }).then(() => {
+                                window.location.href = response.redirectUrl;
+                            });
+                        }
                     } else {
                         btn.prop('disabled', false).html(originalText);
                         Swal.fire('Lỗi', response.message, 'error');

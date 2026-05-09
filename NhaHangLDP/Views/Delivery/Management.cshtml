@@ -1,0 +1,280 @@
+﻿@model NhaHangLDP.Models.DeliveryManagementViewModel
+@{
+    ViewBag.Title = "Quản Lý Giao Hàng";
+    Layout = null;
+    var thirdPartyShippers = ViewBag.ThirdPartyShippers as List<string> ?? new List<string>();
+    Func<string, string> GetStatusClass = (status) => {
+        switch (status) {
+            case "Pending": return "bg-gray-500";
+            case "Confirmed": return "bg-blue-500";
+            case "Preparing": return "bg-yellow-500";
+            case "Ready": return "bg-indigo-500";
+            case "Delivering": return "bg-purple-500";
+            case "AssignedToThirdParty": return "bg-orange-500";
+            case "Completed": return "bg-green-500";
+            case "Cancelled": return "bg-red-500";
+            default: return "bg-gray-500";
+        }
+    };
+    Func<string, string> GetStatusText = (status) => {
+        switch (status) {
+            case "Pending": return "Chờ xác nhận";
+            case "Confirmed": return "Đã xác nhận";
+            case "Preparing": return "Đang chuẩn bị";
+            case "Ready": return "Sẵn sàng giao";
+            case "Delivering": return "Đang giao";
+            case "AssignedToThirdParty": return "Đã giao bên thứ 3";
+            case "Assigned": return "Đã gán shipper";
+            case "Accepted": return "Shipper đã nhận";
+            case "PickedUp": return "Đã lấy hàng";
+            case "Completed": return "Hoàn thành";
+            case "Cancelled": return "Đã hủy";
+            default: return status;
+        }
+    };
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewBag.Title - Nhà hàng Hỷ Lạc Hotpot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: {
+                colors: { "primary": "#007bff", "sidebar-surface": "#f0f2f5", "text-primary": "#212529", "text-secondary": "#6c757d", "border-light": "#e0e0e0" },
+                fontFamily: { "display": ["Manrope", "sans-serif"] }
+            }}
+        }
+    </script>
+    <style>
+        .order-card { transition: all 0.3s ease; }
+        .order-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .tab-active { border-bottom: 3px solid #007bff; color: #007bff; }
+    </style>
+</head>
+<body class="bg-sidebar-surface font-display text-text-primary min-h-screen">
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 border-b border-border-light bg-white/95 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="@Url.Action("Index", "Delivery")" class="flex items-center gap-3">
+                        <div class="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
+                            <span class="material-symbols-outlined text-white text-2xl">local_shipping</span>
+                        </div>
+                        <div>
+                            <h1 class="text-xl font-black text-text-primary">GIAO HÀNG</h1>
+                            <p class="text-xs text-text-secondary">Delivery Management</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="@Url.Action("Index", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Dashboard</a>
+                    <a href="@Url.Action("Management", "Delivery")" class="text-primary font-semibold border-b-2 border-primary pb-1">Quản lý giao hàng</a>
+                    <a href="@Url.Action("Orders", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Đơn hàng</a>
+                    <a href="@Url.Action("Shippers", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Shipper</a>
+                    <a href="@Url.Action("Tracking", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Theo dõi</a>
+                    <a href="@Url.Action("FeeSettings", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Cài đặt phí</a>
+                    <a href="@Url.Action("Statistics", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Thống kê</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="location.reload()" class="flex items-center gap-2 px-4 py-2 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all font-semibold">
+                        <span class="material-symbols-outlined text-lg">refresh</span>
+                        Làm mới
+                    </button>
+                    <a href="@Url.Action("Dashboard", "Management")" class="flex items-center gap-2 px-6 py-2 bg-primary rounded-full text-white hover:bg-blue-700 transition-all font-bold shadow-lg">
+                        <span class="material-symbols-outlined text-lg">dashboard</span>
+                        Quản lý
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <main class="max-w-7xl mx-auto px-6 py-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-yellow-100 flex items-center justify-center"><i class="fas fa-clock text-yellow-600 text-2xl"></i></div>
+                    <div><p class="text-gray-500 text-sm">Chờ giao</p><p class="text-3xl font-bold">@Model.TotalPending</p></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center"><i class="fas fa-motorcycle text-purple-600 text-2xl"></i></div>
+                    <div><p class="text-gray-500 text-sm">Đang giao</p><p class="text-3xl font-bold">@Model.TotalDelivering</p></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center"><i class="fas fa-check-circle text-green-600 text-2xl"></i></div>
+                    <div><p class="text-gray-500 text-sm">Hoàn thành hôm nay</p><p class="text-3xl font-bold">@Model.TotalCompletedToday</p></div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-6 mb-8 text-white">
+            <h3 class="text-lg font-semibold mb-4"><i class="fas fa-road mr-2"></i>Phí giao hàng theo khoảng cách</h3>
+            <div class="grid grid-cols-3 gap-4">
+                @foreach(var config in Model.FeeConfigs)
+                {
+                    <div class="bg-white/20 rounded-lg p-4 text-center">
+                        <p class="text-sm opacity-80">@config.RangeName</p>
+                        <p class="text-2xl font-bold">@config.Fee.ToString("N0")đ</p>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm mb-6">
+            <div class="flex border-b">
+                <button onclick="showTab('pending')" id="tab-pending" class="px-6 py-4 font-medium tab-active"><i class="fas fa-hourglass-half mr-2"></i>Chờ giao (@Model.PendingOrders.Count)</button>
+                <button onclick="showTab('shop')" id="tab-shop" class="px-6 py-4 font-medium text-gray-500 hover:text-primary"><i class="fas fa-store mr-2"></i>Nhân viên Shop (@Model.ShopDeliveryOrders.Count)</button>
+                <button onclick="showTab('thirdparty')" id="tab-thirdparty" class="px-6 py-4 font-medium text-gray-500 hover:text-primary"><i class="fas fa-truck mr-2"></i>Bên thứ 3 (@Model.ThirdPartyOrders.Count)</button>
+            </div>
+            <div id="content-pending" class="p-6">
+                @if(Model.PendingOrders.Any()) {
+                    <div class="space-y-4">
+                    @foreach(var order in Model.PendingOrders) {
+                        <div class="order-card bg-gray-50 rounded-xl p-5 border border-gray-200">
+                            <div class="flex justify-between items-start mb-4">
+                                <div><h4 class="font-bold text-lg">#@order.OrderCode</h4><p class="text-gray-500 text-sm">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p></div>
+                                <span class="px-3 py-1 rounded-full text-white text-sm @GetStatusClass(order.Status)">@GetStatusText(order.Status)</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div><p class="text-sm text-gray-500">Khách hàng</p><p class="font-medium">@order.CustomerName</p><p class="text-sm text-gray-600">@order.CustomerPhone</p></div>
+                                <div><p class="text-sm text-gray-500">Địa chỉ giao</p><p class="font-medium text-sm">@order.DeliveryAddress</p><p class="text-sm text-gray-600">@order.District, @order.Ward</p></div>
+                            </div>
+                            <div class="flex justify-between items-center pt-4 border-t">
+                                <div>
+                                    <span class="text-xl font-bold text-primary">@order.TotalAmount.ToString("N0")đ</span>
+                                    <span class="text-sm text-gray-500 ml-2">(Phí ship: @order.DeliveryFee.ToString("N0")đ)</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="showAssignModal(@order.OrderId, '@order.OrderCode', 'shop')" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"><i class="fas fa-user mr-1"></i>Gán NV Shop</button>
+                                    <button onclick="showAssignModal(@order.OrderId, '@order.OrderCode', 'thirdparty')" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"><i class="fas fa-truck mr-1"></i>Giao bên thứ 3</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    </div>
+                } else {
+                    <div class="text-center py-12 text-gray-500"><i class="fas fa-inbox text-6xl mb-4"></i><p>Không có đơn hàng chờ giao</p></div>
+                }
+            </div>
+            <div id="content-shop" class="p-6 hidden">
+                @if(Model.ShopDeliveryOrders.Any()) {
+                    <div class="space-y-4">
+                    @foreach(var order in Model.ShopDeliveryOrders) {
+                        <div class="order-card bg-blue-50 rounded-xl p-5 border border-blue-200">
+                            <div class="flex justify-between items-start mb-4">
+                                <div><h4 class="font-bold text-lg">#@order.OrderCode</h4><p class="text-gray-500 text-sm">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p></div>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"><i class="fas fa-store mr-1"></i>Nhân viên Shop</span>
+                                    <span class="px-3 py-1 rounded-full text-white text-sm @GetStatusClass(order.Status)">@GetStatusText(order.Status)</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <div><p class="text-sm text-gray-500">Khách hàng</p><p class="font-medium">@order.CustomerName</p><p class="text-sm text-gray-600">@order.CustomerPhone</p></div>
+                                <div><p class="text-sm text-gray-500">Địa chỉ giao</p><p class="font-medium text-sm">@order.DeliveryAddress</p></div>
+                                <div>
+                                    <p class="text-sm text-gray-500">Shipper</p><p class="font-medium text-blue-600">@order.ShipperName</p>
+                                    @if(order.DistanceKm.HasValue) { <p class="text-sm text-gray-600">Khoảng cách: @order.DistanceKm?.ToString("N1") km</p> }
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center pt-4 border-t">
+                                <div><span class="text-xl font-bold text-primary">@order.TotalAmount.ToString("N0")đ</span><span class="text-sm text-gray-500 ml-2">- Phí ship: @order.DeliveryFee.ToString("N0")đ</span></div>
+                                <a href="@Url.Action("OrderDetail", "Delivery", new { id = order.OrderId })" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"><i class="fas fa-eye mr-1"></i>Chi tiết</a>
+                            </div>
+                        </div>
+                    }
+                    </div>
+                } else {
+                    <div class="text-center py-12 text-gray-500"><i class="fas fa-store text-6xl mb-4"></i><p>Không có đơn hàng đang giao bởi nhân viên shop</p></div>
+                }
+            </div>
+            <div id="content-thirdparty" class="p-6 hidden">
+                @if(Model.ThirdPartyOrders.Any()) {
+                    <div class="space-y-4">
+                    @foreach(var order in Model.ThirdPartyOrders) {
+                        <div class="order-card bg-orange-50 rounded-xl p-5 border border-orange-200">
+                            <div class="flex justify-between items-start mb-4">
+                                <div><h4 class="font-bold text-lg">#@order.OrderCode</h4><p class="text-gray-500 text-sm">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p></div>
+                                <div class="flex items-center gap-2">
+                                    <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm"><i class="fas fa-truck mr-1"></i>@(order.ThirdPartyName ?? "Bên thứ 3")</span>
+                                    <span class="px-3 py-1 rounded-full text-white text-sm @GetStatusClass(order.Status)">@GetStatusText(order.Status)</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <div><p class="text-sm text-gray-500">Khách hàng</p><p class="font-medium">@order.CustomerName</p><p class="text-sm text-gray-600">@order.CustomerPhone</p></div>
+                                <div><p class="text-sm text-gray-500">Địa chỉ giao</p><p class="font-medium text-sm">@order.DeliveryAddress</p></div>
+                                <div>
+                                    @if(!string.IsNullOrEmpty(order.ThirdPartyShipperName)) {
+                                        <p class="text-sm text-gray-500">Shipper</p><p class="font-medium text-orange-600">@order.ThirdPartyShipperName</p><p class="text-sm text-gray-600">@order.ThirdPartyShipperPhone</p>
+                                    }
+                                    @if(!string.IsNullOrEmpty(order.ThirdPartyOrderCode)) {
+                                        <p class="text-sm text-gray-500 mt-2">Mã đơn:</p><p class="font-mono text-sm">@order.ThirdPartyOrderCode</p>
+                                    }
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center pt-4 border-t">
+                                <span class="text-xl font-bold text-primary">@order.TotalAmount.ToString("N0")đ</span>
+                                <div class="flex gap-2">
+                                    <button onclick="markDelivered(@order.OrderId)" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"><i class="fas fa-check mr-1"></i>Đã giao</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    </div>
+                } else {
+                    <div class="text-center py-12 text-gray-500"><i class="fas fa-truck text-6xl mb-4"></i><p>Không có đơn hàng đang giao bởi bên thứ 3</p></div>
+                }
+            </div>
+        </div>
+    </main>
+    <div id="assignModal" class="fixed inset-0 bg-black/50 items-center justify-center z-50" style="display:none;">
+        <div class="bg-white rounded-xl w-full max-w-lg mx-4 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold" id="modalTitle">Gán đơn hàng</h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <input type="hidden" id="assignOrderId" /><input type="hidden" id="assignType" />
+            <p class="text-gray-600 mb-4">Đơn hàng: <strong id="assignOrderCode"></strong></p>
+            <div id="shopShipperSection">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Chọn nhân viên giao hàng</label>
+                <select id="shipperSelect" class="w-full p-3 border rounded-lg mb-4">
+                    <option value="">-- Chọn shipper --</option>
+                    @foreach(var shipper in Model.AvailableShopShippers) { <option value="@shipper.Id">@shipper.FullName - @shipper.Phone</option> }
+                </select>
+            </div>
+            <div id="thirdPartySection" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Chọn hãng giao hàng</label>
+                <select id="thirdPartySelect" class="w-full p-3 border rounded-lg mb-4">
+                    <option value="">-- Chọn hãng --</option>
+                    @foreach(var name in thirdPartyShippers) { <option value="@name">@name</option> }
+                </select>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Mã đơn bên thứ 3</label><input type="text" id="thirdPartyOrderCode" class="w-full p-3 border rounded-lg" placeholder="VD: GF12345678" /></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-2">Tên shipper</label><input type="text" id="thirdPartyShipperName" class="w-full p-3 border rounded-lg" /></div>
+                </div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">SĐT Shipper</label><input type="text" id="thirdPartyShipperPhone" class="w-full p-3 border rounded-lg" placeholder="VD: 0901234567" /></div>
+            </div>
+            <div class="mt-4"><label class="block text-sm font-medium text-gray-700 mb-2">Ghi chú</label><textarea id="assignNotes" class="w-full p-3 border rounded-lg" rows="2" placeholder="Ghi chú thêm..."></textarea></div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeModal()" class="flex-1 py-3 bg-gray-200 rounded-lg hover:bg-gray-300">Hủy</button>
+                <button onclick="submitAssign()" class="flex-1 py-3 bg-primary text-white rounded-lg hover:bg-blue-600"><i class="fas fa-check mr-2"></i>Xác nhận</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function showTab(t){document.querySelectorAll('[id^="content-"]').forEach(function(e){e.classList.add('hidden')});document.querySelectorAll('[id^="tab-"]').forEach(function(e){e.classList.remove('tab-active');e.classList.add('text-gray-500')});document.getElementById('content-'+t).classList.remove('hidden');document.getElementById('tab-'+t).classList.add('tab-active');document.getElementById('tab-'+t).classList.remove('text-gray-500')}
+        function showAssignModal(id,code,type){document.getElementById('assignOrderId').value=id;document.getElementById('assignOrderCode').textContent=code;document.getElementById('assignType').value=type;if(type==='shop'){document.getElementById('modalTitle').textContent='Gán nhân viên Shop';document.getElementById('shopShipperSection').classList.remove('hidden');document.getElementById('thirdPartySection').classList.add('hidden')}else{document.getElementById('modalTitle').textContent='Giao cho bên thứ 3';document.getElementById('shopShipperSection').classList.add('hidden');document.getElementById('thirdPartySection').classList.remove('hidden')}document.getElementById('assignModal').style.display='flex'}
+        function closeModal(){document.getElementById('assignModal').style.display='none'}
+        function submitAssign(){var oid=document.getElementById('assignOrderId').value;var type=document.getElementById('assignType').value;if(type==='shop'){var sid=document.getElementById('shipperSelect').value;if(!sid){alert('Vui lòng chọn shipper');return}fetch('@Url.Action("AssignShipper","Delivery")',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'orderId='+oid+'&shipperId='+sid}).then(function(r){return r.json()}).then(function(d){if(d.Success||d.success){alert('Đã gán shipper!');location.reload()}else{alert(d.Message||d.message||'Lỗi')}})}else{var tp=document.getElementById('thirdPartySelect').value;if(!tp){alert('Vui lòng chọn hãng');return}fetch('@Url.Action("AssignToThirdParty","Delivery")',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({OrderId:parseInt(oid),ThirdPartyName:tp,ThirdPartyOrderCode:document.getElementById('thirdPartyOrderCode').value,ThirdPartyShipperName:document.getElementById('thirdPartyShipperName').value,ThirdPartyShipperPhone:document.getElementById('thirdPartyShipperPhone').value,Notes:document.getElementById('assignNotes').value})}).then(function(r){return r.json()}).then(function(d){if(d.Success||d.success){alert('Đã chuyển bên thứ 3!');location.reload()}else{alert(d.Message||d.message||'Lỗi')}})}}
+        function markDelivered(id){if(!confirm('Xác nhận đơn đã giao?'))return;fetch('@Url.Action("UpdateDeliveryStatus","Delivery")',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({AssignmentId:id,Status:'Delivered'})}).then(function(r){return r.json()}).then(function(d){if(d.success){alert('Cập nhật thành công!');location.reload()}else{alert(d.message||'Lỗi')}})}
+        setInterval(function(){location.reload()},30000);
+    </script>
+</body>
+</html>

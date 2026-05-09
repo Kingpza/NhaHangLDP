@@ -1,0 +1,196 @@
+﻿@model NhaHangLDP.Models.PermissionManagementViewModel
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon me-3" style="background: rgba(59, 130, 246, 0.1);">
+                    <i class="fas fa-user-tag" style="color: #3b82f6;"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@Model.Roles.Count</h3>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Vai trò</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon me-3" style="background: rgba(34, 197, 94, 0.1);">
+                    <i class="fas fa-file-alt" style="color: #22c55e;"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@Model.AvailablePages.Count</h3>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Trang chức năng</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon me-3" style="background: rgba(245, 158, 11, 0.1);">
+                    <i class="fas fa-users" style="color: #f59e0b;"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@Model.Roles.Sum(r => r.AccountCount)</h3>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Tài khoản</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Permission Management Card -->
+<div class="card border-0 shadow-sm">
+    <!-- Tab Navigation -->
+    <div class="card-header bg-white border-bottom">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            @for (int i = 0; i < Model.Roles.Count; i++)
+            {
+                var role = Model.Roles[i];
+                var roleColorClass = role.RoleName == "Admin" ? "text-danger" :
+                                     role.RoleName == "Manager" ? "text-primary" :
+                                     role.RoleName == "Cashier" ? "text-success" :
+                                     role.RoleName == "Delivery" ? "text-purple" : "text-secondary";
+                <li class="nav-item">
+                    <a class="nav-link permission-tab @(i == 0 ? "active" : "")" 
+                       id="role-tab-@role.RoleId" 
+                       data-bs-toggle="tab" 
+                       href="#role-content-@role.RoleId" 
+                       role="tab">
+                        <span class="@roleColorClass fw-bold">@role.RoleName</span>
+                        <span class="badge bg-light text-dark ms-2">@role.AccountCount</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content card-body">
+        @foreach (var role in Model.Roles)
+        {
+            <div class="tab-pane fade @(role == Model.Roles.First() ? "show active" : "")" 
+                 id="role-content-@role.RoleId" 
+                 role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="mb-1" style="color: var(--primary-dark); font-weight: 600;">Quyền của vai trò: @role.RoleName</h5>
+                        <p class="text-muted mb-0" style="font-size: 13px;">@role.AccountCount tài khoản đang sử dụng vai trò này</p>
+                    </div>
+                    <button onclick="saveAllPermissions(@role.RoleId)" 
+                            class="btn btn-primary-custom">
+                        <i class="fas fa-save me-2"></i>Lưu thay đổi
+                    </button>
+                </div>
+
+                <!-- Permission Table -->
+                <div class="table-responsive">
+                    <table class="table table-custom">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Trang / Chức năng</th>
+                                <th class="text-center" style="width: 15%;">
+                                    <i class="fas fa-eye me-1"></i> Xem
+                                </th>
+                                <th class="text-center" style="width: 15%;">
+                                    <i class="fas fa-plus-circle me-1"></i> Thêm
+                                </th>
+                                <th class="text-center" style="width: 15%;">
+                                    <i class="fas fa-edit me-1"></i> Sửa
+                                </th>
+                                <th class="text-center" style="width: 15%;">
+                                    <i class="fas fa-trash me-1"></i> Xóa
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var categories = Model.AvailablePages.Select(p => p.Category).Distinct();
+                            }
+                            @foreach (var category in categories)
+                            {
+                                <tr>
+                                    <td colspan="5" class="pt-3 pb-2">
+                                        <span class="text-uppercase fw-bold" style="font-size: 11px; color: #94a3b8; letter-spacing: 0.5px;">@category</span>
+                                    </td>
+                                </tr>
+                                foreach (var page in Model.AvailablePages.Where(p => p.Category == category))
+                                {
+                                    var perm = role.Permissions.FirstOrDefault(p => p.Controller == page.Controller && p.ActionName == page.ActionName);
+                                    var canView = perm?.CanView ?? false;
+                                    var canAdd = perm?.CanAdd ?? false;
+                                    var canEdit = perm?.CanEdit ?? false;
+                                    var canDelete = perm?.CanDelete ?? false;
+
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-@page.Icon me-2 text-muted"></i>
+                                                <span style="font-weight: 500; color: var(--text-dark);">@page.DisplayName</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" class="perm-checkbox" 
+                                                       data-role="@role.RoleId" data-controller="@page.Controller" 
+                                                       data-action="@page.ActionName" data-type="view"
+                                                       @(canView ? "checked" : "") />
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </td>
+                                        <td class="text-center">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" class="perm-checkbox"
+                                                       data-role="@role.RoleId" data-controller="@page.Controller"
+                                                       data-action="@page.ActionName" data-type="add"
+                                                       @(canAdd ? "checked" : "") />
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </td>
+                                        <td class="text-center">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" class="perm-checkbox"
+                                                       data-role="@role.RoleId" data-controller="@page.Controller"
+                                                       data-action="@page.ActionName" data-type="edit"
+                                                       @(canEdit ? "checked" : "") />
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </td>
+                                        <td class="text-center">
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" class="perm-checkbox"
+                                                       data-role="@role.RoleId" data-controller="@page.Controller"
+                                                       data-action="@page.ActionName" data-type="delete"
+                                                       @(canDelete ? "checked" : "") />
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Info Note -->
+<div class="alert alert-info mt-4 d-flex align-items-start" style="background: #eff6ff; border-color: #bfdbfe;">
+    <i class="fas fa-info-circle me-3 mt-1" style="color: #3b82f6;"></i>
+    <div>
+        <p class="fw-bold mb-2" style="color: var(--text-dark);">Hướng dẫn phân quyền</p>
+        <ul class="mb-2" style="font-size: 14px; color: var(--text-gray);">
+            <li><strong>Xem:</strong> Cho phép truy cập và xem dữ liệu của trang</li>
+            <li><strong>Thêm:</strong> Cho phép thêm mới dữ liệu</li>
+            <li><strong>Sửa:</strong> Cho phép chỉnh sửa dữ liệu hiện có</li>
+            <li><strong>Xóa:</strong> Cho phép xóa dữ liệu</li>
+        </ul>
+        <p class="mb-0" style="font-size: 13px; color: #64748b;">Lưu ý: Cần chạy file <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">Scripts/RolePermission_Create.sql</code> trong SQL Server để tạo bảng trước khi sử dụng.</p>
+    </div>
+</div>

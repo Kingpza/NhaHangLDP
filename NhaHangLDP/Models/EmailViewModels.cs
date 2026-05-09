@@ -270,7 +270,7 @@ namespace NhaHangLDP.Models
 
         public TestEmailViewModel()
         {
-            Subject = "Email test từ hệ thống Nhà Hàng LDP";
+            Subject = "Email test từ hệ thống Nhà hàng Hỷ Lạc Hotpot";
             Body = "Đây là email test. Nếu bạn nhận được email này, cấu hình SMTP đã hoạt động đúng!";
         }
     }

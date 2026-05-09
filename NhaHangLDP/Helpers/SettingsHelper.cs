@@ -132,7 +132,7 @@ namespace NhaHangLDP.Helpers
         }
      
         // Các property tiện lợi để truy cập nhanh các cài đặt thường dùng
-        public static string RestaurantName => GetSetting("RestaurantName", "LDP Restaurant");
+        public static string RestaurantName => GetSetting("RestaurantName", "Nhà hàng Hỷ Lạc Hotpot");
         public static string Address => GetSetting("Address", "123 Đường ABC, Quận 1, TP.HCM");
         public static string PhoneNumber => GetSetting("PhoneNumber", "0123456789");
     public static string Email => GetSetting("Email", "info@ldprestaurant.com");

@@ -1,0 +1,172 @@
+﻿@model List<NhaHangLDP.Controllers.AccountManagementViewModel>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon me-3" style="background: rgba(59, 130, 246, 0.1);">
+                    <i class="fas fa-users" style="color: #3b82f6;"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@Model.Count</h3>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Tổng tài khoản</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon me-3" style="background: rgba(34, 197, 94, 0.1);">
+                    <i class="fas fa-check-circle" style="color: #22c55e;"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@Model.Count(a => a.IsActive)</h3>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Đang hoạt động</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon me-3" style="background: rgba(239, 68, 68, 0.1);">
+                    <i class="fas fa-ban" style="color: #ef4444;"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@Model.Count(a => !a.IsActive)</h3>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Bị khóa</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center">
+                <div class="stat-icon me-3" style="background: rgba(245, 158, 11, 0.1);">
+                    <i class="fas fa-user-tag" style="color: #f59e0b;"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">@ViewBag.Roles.Count</h3>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Vai trò</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter and Search -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm tên, username, email...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select id="roleFilter" class="form-select">
+                    <option value="">Tất cả vai trò</option>
+                    @foreach (var role in ViewBag.Roles)
+                    {
+                        <option value="@role.RoleName">@role.RoleName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="statusFilter" class="form-select">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Bị khóa</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button onclick="clearFilters()" class="btn btn-outline-custom w-100">
+                    <i class="fas fa-redo me-1"></i>Làm mới
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accounts Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-custom" id="accountsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 15%;">Tên đăng nhập</th>
+                        <th style="width: 20%;">Họ tên</th>
+                        <th style="width: 15%;">Email</th>
+                        <th style="width: 10%;">Vai trò</th>
+                        <th style="width: 10%;" class="text-center">Trạng thái</th>
+                        <th style="width: 10%;">Đăng nhập cuối</th>
+                        <th style="width: 15%;" class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var account in Model)
+                    {
+                        <tr data-account-id="@account.Id" data-role="@account.RoleName" data-status="@(account.IsActive ? "active" : "inactive")">
+                            <td>@account.Id</td>
+                            <td>
+                                <strong>@account.Username</strong>
+                            </td>
+                            <td>@account.FullName</td>
+                            <td>@(account.Email ?? "N/A")</td>
+                            <td>
+                                <select class="form-select form-select-sm role-selector" 
+                                        data-account-id="@account.Id" 
+                                        onchange="updateRole(@account.Id, this.value)">
+                                    @foreach (var role in ViewBag.Roles)
+                                    {
+                                        <option value="@role.Id" @(role.Id == account.RoleId ? "selected" : "")>
+                                            @role.RoleName
+                                        </option>
+                                    }
+                                </select>
+                            </td>
+                            <td class="text-center">
+                                @if (account.IsActive)
+                                {
+                                    <span class="badge bg-success">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Bị khóa</span>
+                                }
+                            </td>
+                            <td>
+                                @if (account.LastLogin.HasValue)
+                                {
+                                    <small>@account.LastLogin.Value.ToString("dd/MM/yyyy HH:mm")</small>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">Chưa đăng nhập</small>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-primary" onclick="toggleStatus(@account.Id)" title="Khóa/Mở khóa">
+                                        <i class="fas fa-@(account.IsActive ? "lock" : "unlock")"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning" onclick="resetPassword(@account.Id)" title="Đặt lại mật khẩu">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="deleteAccount(@account.Id)" title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

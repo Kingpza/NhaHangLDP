@@ -145,6 +145,7 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\AccountManagementController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\CartController.cs" />
     <Compile Include="Controllers\CashierController.cs" />
@@ -173,6 +174,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\AuthorizationHelper.cs" />
+    <Compile Include="Helpers\DeliveryFeeHelper.cs" />
     <Compile Include="Helpers\SettingsHelper.cs" />
     <Compile Include="Helpers\StatusTextHelper.cs" />
     <Compile Include="Hubs\RestaurantHub.cs" />
@@ -226,6 +228,7 @@
     <Compile Include="Models\DeliveryAssignment.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
+    <Compile Include="Models\DeliveryAssignment.Extended.cs" />
     <Compile Include="Models\DeliveryModels.cs" />
     <Compile Include="Models\DeliverySettings.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
@@ -313,6 +316,7 @@
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
     <Compile Include="Models\PaymentModels.cs" />
+    <Compile Include="Models\PermissionViewModels.cs" />
     <Compile Include="Models\Payroll.cs">
       <DependentUpon>NhaHangLDP.tt</DependentUpon>
     </Compile>
@@ -523,6 +527,7 @@
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="Scripts\chatbot.js" />
     <None Include="Scripts\jquery-3.7.1.intellisense.js" />
+    <Content Include="Scripts\CleanupDuplicateRoles.sql" />
     <Content Include="Scripts\jquery-3.7.1.js" />
     <Content Include="Scripts\jquery-3.7.1.min.js" />
     <Content Include="Scripts\jquery-3.7.1.slim.js" />
@@ -684,6 +689,7 @@
     <Content Include="Views\Delivery\Tracking.cshtml" />
     <Content Include="Views\Delivery\Zones.cshtml" />
     <Content Include="Views\Delivery\Statistics.cshtml" />
+    <Content Include="Views\Checkout\ProcessOnlinePayment.cshtml" />
     <Content Include="Views\ShipperApp\Login.cshtml" />
     <Content Include="Views\ShipperApp\Dashboard.cshtml" />
     <Content Include="Views\ShipperApp\NewOrders.cshtml" />
@@ -707,6 +713,13 @@
     <Content Include="Views\QRCode\AllEmployeesQR.cshtml" />
     <Content Include="Views\QRCode\CheckInScanner.cshtml" />
     <Content Include="Views\QRCode\BankTransferQR.cshtml" />
+    <Content Include="Views\Delivery\Management.cshtml" />
+    <Content Include="Views\Delivery\FeeSettings.cshtml" />
+    <Content Include="Views\Delivery\ShopEmployeeOrders.cshtml" />
+    <Content Include="Views\AccountManagement\Index.cshtml" />
+    <Content Include="Views\AccountManagement\Create.cshtml" />
+    <Content Include="Views\AccountManagement\_AccountsTab.cshtml" />
+    <Content Include="Views\AccountManagement\_PermissionsTab.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

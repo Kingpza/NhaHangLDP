@@ -52,7 +52,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>@ViewBag.Title - Nhà Hàng LDP</title>
+    <title>@ViewBag.Title - Nhà hàng Hỷ Lạc Hotpot</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
@@ -135,10 +135,11 @@
                 </div>
                 <div class="hidden md:flex items-center gap-6">
                     <a href="@Url.Action("Index", "Delivery")" class="text-primary font-semibold border-b-2 border-primary pb-1">Dashboard</a>
+                    <a href="@Url.Action("Management", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Quản lý giao hàng</a>
                     <a href="@Url.Action("Orders", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Đơn hàng</a>
                     <a href="@Url.Action("Shippers", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Shipper</a>
                     <a href="@Url.Action("Tracking", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Theo dõi</a>
-                    <a href="@Url.Action("Zones", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Khu vực</a>
+                    <a href="@Url.Action("FeeSettings", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Cài đặt phí</a>
                     <a href="@Url.Action("Statistics", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Thống kê</a>
                 </div>
                 <div class="flex items-center gap-3">
@@ -468,10 +469,10 @@
                     </div>
                     <div>
                         <h3 class="font-bold">Hệ Thống Giao Hàng</h3>
-                        <p class="text-xs text-white/70">Nhà Hàng LDP</p>
+                        <p class="text-xs text-white/70">Nhà hàng Hỷ Lạc Hotpot</p>
                     </div>
                 </div>
-                <p class="text-white/70 text-sm">© 2024 Nhà Hàng LDP. All rights reserved.</p>
+                <p class="text-white/70 text-sm">© 2024 Nhà hàng Hỷ Lạc Hotpot. All rights reserved.</p>
             </div>
         </div>
     </footer>

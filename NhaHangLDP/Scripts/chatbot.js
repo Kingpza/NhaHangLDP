@@ -1,5 +1,5 @@
 ﻿/**
- * LDP Restaurant Chatbot - Enhanced Version with Live Support
+ * Nhà hàng Hỷ Lạc Hotpot Chatbot - Enhanced Version with Live Support
  * Features: AI Integration, Live Chat Support, SignalR Real-time, Session Management, Voice Input
  */
 

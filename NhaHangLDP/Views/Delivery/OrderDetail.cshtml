@@ -50,9 +50,10 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>@ViewBag.Title - Nhà Hàng LDP</title>
+    <title>@ViewBag.Title - Nhà hàng Hỷ Lạc Hotpot</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -111,10 +112,19 @@
                             <span class="material-symbols-outlined text-white text-2xl">receipt_long</span>
                         </div>
                         <div>
-                            <h1 class="text-xl font-black text-text-primary">#@Model.Order.OrderCode</h1>
-                            <p class="text-xs text-text-secondary">Chi tiết đơn hàng</p>
+                            <h1 class="text-xl font-black text-text-primary">GIAO HÀNG</h1>
+                            <p class="text-xs text-text-secondary">Delivery Management</p>
                         </div>
                     </a>
+                </div>
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="@Url.Action("Index", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Dashboard</a>
+                    <a href="@Url.Action("Management", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Quản lý giao hàng</a>
+                    <a href="@Url.Action("Orders", "Delivery")" class="text-primary font-semibold border-b-2 border-primary pb-1">Đơn hàng</a>
+                    <a href="@Url.Action("Shippers", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Shipper</a>
+                    <a href="@Url.Action("Tracking", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Theo dõi</a>
+                    <a href="@Url.Action("FeeSettings", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Cài đặt phí</a>
+                    <a href="@Url.Action("Statistics", "Delivery")" class="text-text-primary hover:text-primary transition-colors">Thống kê</a>
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="px-4 py-2 rounded-full text-white font-semibold @statusClass">@statusText</span>
@@ -342,7 +352,7 @@
                                         <span>Trạng thái:</span>
                                         <strong>@GetAssignmentStatusText(Model.Assignment.Status)</strong>
                                     </div>
-                                    if (Model.Assignment.EstimatedArrival.HasValue)
+                                    @if (Model.Assignment.EstimatedArrival.HasValue)
                                     {
                                         <div class="flex justify-between">
                                             <span>Dự kiến giao:</span>
@@ -383,7 +393,7 @@
                                     var stepClass = step.IsCompleted ? "completed" : (step.IsCurrent ? "current" : "");
                                     <div class="timeline-step @stepClass">
                                         <div class="step-icon">
-                                            <span class="material-symbols-outlined text-lg">@step.Icon</span>
+                                            <i class="@step.Icon text-sm"></i>
                                         </div>
                                         <div>
                                             <h4 class="font-bold text-text-primary @(step.IsCompleted || step.IsCurrent ? "" : "text-text-secondary")">

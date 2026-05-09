@@ -83,7 +83,7 @@ namespace NhaHangLDP.Services
                 CancelledOrders = cancelledOrders,
                 PaymentMethods = paymentMethods,
                 TopOrders = topOrders,
-                RestaurantName = appSettings.FirstOrDefault(a => a.SettingKey == "RestaurantName")?.SettingValue ?? "LDP POS System",
+                RestaurantName = appSettings.FirstOrDefault(a => a.SettingKey == "RestaurantName")?.SettingValue ?? "Nhà hàng Hỷ Lạc Hotpot",
                 RestaurantAddress = appSettings.FirstOrDefault(a => a.SettingKey == "Address")?.SettingValue ?? "N/A",
                 RestaurantPhone = appSettings.FirstOrDefault(a => a.SettingKey == "PhoneNumber")?.SettingValue ?? "N/A",
                 RestaurantTaxCode = "0123456789"

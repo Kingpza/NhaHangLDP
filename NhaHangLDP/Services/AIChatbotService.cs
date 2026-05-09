@@ -22,6 +22,8 @@ namespace NhaHangLDP.Services
         private readonly NhaHangLDPEntities _db;
         private readonly string _geminiApiKey;
         private readonly bool _useGeminiAI;
+        private readonly string _dockerChatbotUrl;
+        private readonly bool _useDockerChatbot;
         private static readonly HttpClient _httpClient = new HttpClient();
         
         // Cache sessions trong memory (production nên dùng Redis)
@@ -65,7 +67,7 @@ namespace NhaHangLDP.Services
             new FAQItem 
             { 
                 Question = "Địa chỉ nhà hàng ở đâu?",
-                Answer = "📍 **Địa chỉ:**\nNhà hàng LDP\n123 Đường ABC, Quận XYZ\nTP. Hồ Chí Minh\n\n📞 Hotline: 0123 456 789",
+                Answer = "📍 **Địa chỉ:**\nNhà hàng Hỷ Lạc Hotpot\n123 Đường ABC, Quận XYZ\nTP. Hồ Chí Minh\n\n📞 Hotline: 0123 456 789",
                 Keywords = new List<string> { "địa chỉ", "ở đâu", "location", "chỗ" }
             },
             new FAQItem 
@@ -81,6 +83,8 @@ namespace NhaHangLDP.Services
             _db = new NhaHangLDPEntities();
             _geminiApiKey = ConfigurationManager.AppSettings["GeminiApiKey"];
             _useGeminiAI = !string.IsNullOrEmpty(_geminiApiKey);
+            _dockerChatbotUrl = ConfigurationManager.AppSettings["DockerChatbotUrl"];
+            _useDockerChatbot = !string.IsNullOrEmpty(_dockerChatbotUrl);
         }
 
         public AIChatbotService(NhaHangLDPEntities db)
@@ -88,6 +92,8 @@ namespace NhaHangLDP.Services
             _db = db;
             _geminiApiKey = ConfigurationManager.AppSettings["GeminiApiKey"];
             _useGeminiAI = !string.IsNullOrEmpty(_geminiApiKey);
+            _dockerChatbotUrl = ConfigurationManager.AppSettings["DockerChatbotUrl"];
+            _useDockerChatbot = !string.IsNullOrEmpty(_dockerChatbotUrl);
         }
 
         /// <summary>
@@ -125,7 +131,11 @@ namespace NhaHangLDP.Services
                 response.Confidence = intentResult.Confidence;
 
                 // Xử lý theo intent
-                if (_useGeminiAI && intentResult.Confidence < 0.7)
+                if (_useDockerChatbot)
+                {
+                    response = await ProcessWithDockerChatbotAsync(message, session);
+                }
+                else if (_useGeminiAI && intentResult.Confidence < 0.7)
                 {
                     // Dùng Gemini AI khi không chắc chắn intent
                     response = await ProcessWithGeminiAsync(message, session);
@@ -267,7 +277,7 @@ namespace NhaHangLDP.Services
                 var historyContext = GetHistoryContext(session);
 
                 var systemPrompt = $@"
-Bạn là trợ lý ảo của Nhà Hàng LDP, tên là LDP Bot.
+Bạn là trợ lý ảo của Nhà hàng Hỷ Lạc Hotpot, tên là LDP Bot.
 Nhiệm vụ: Tư vấn món ăn, trả lời câu hỏi về nhà hàng.
 Phong cách: Thân thiện, ngắn gọn, dùng emoji phù hợp.
 Ngôn ngữ: Tiếng Việt.
@@ -331,6 +341,43 @@ CÂU HỎI: {message}";
 
             response.QuickReplies = GetDefaultQuickReplies();
             return response;
+        }
+
+        private async Task<ChatBotResponseModel> ProcessWithDockerChatbotAsync(string message, ChatSession session)
+        {
+            try
+            {
+                var payload = new
+                {
+                    message = message,
+                    sessionId = session.SessionId
+                };
+
+                var json = JsonConvert.SerializeObject(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var httpResponse = await _httpClient.PostAsync(_dockerChatbotUrl, content);
+                var result = await httpResponse.Content.ReadAsStringAsync();
+
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    var data = JsonConvert.DeserializeObject<DockerChatbotResponse>(result);
+                    if (data != null && data.Success)
+                    {
+                        return new ChatBotResponseModel
+                        {
+                            Response = data.Reply ?? string.Empty,
+                            QuickReplies = GetDefaultQuickReplies()
+                        };
+                    }
+                }
+            }
+            catch
+            {
+                // fallback
+            }
+
+            return ProcessWithRules(message, AnalyzeIntent(message.ToLower()), session);
         }
 
         /// <summary>
@@ -713,7 +760,7 @@ CÂU HỎI: {message}";
         {
             var response = new ChatBotResponseModel
             {
-                Response = "📅 **Đặt bàn tại Nhà Hàng LDP:**\n\n" +
+                Response = "📅 **Đặt bàn tại Nhà hàng Hỷ Lạc Hotpot:**\n\n" +
                     "Bạn có thể đặt bàn qua:\n\n" +
                     "📞 **Hotline:** 0123 456 789\n" +
                     "🌐 **Website:** nhahangldp.com/dat-ban\n\n" +
@@ -1103,7 +1150,7 @@ CÂU HỎI: {message}";
             else
             {
                 // Chưa đủ thông tin
-                response.Response = "📅 **Đặt bàn tại Nhà Hàng LDP:**\n\n" +
+                response.Response = "📅 **Đặt bàn tại Nhà hàng Hỷ Lạc Hotpot:**\n\n" +
                     "Cho mình biết thêm:\n" +
                     "• 👥 Số người?\n" +
                     "• 🕐 Thời gian? (VD: tối nay, trưa mai, cuối tuần)\n\n" +
@@ -1239,6 +1286,15 @@ CÂU HỎI: {message}";
             };
 
             return response;
+        }
+
+        private class DockerChatbotResponse
+        {
+            [JsonProperty("success")]
+            public bool Success { get; set; }
+
+            [JsonProperty("reply")]
+            public string Reply { get; set; }
         }
     }
 }

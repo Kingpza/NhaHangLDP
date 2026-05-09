@@ -100,6 +100,17 @@ namespace NhaHangLDP.Models
         public string ShipperPhone { get; set; }
         public string DeliveryStatus { get; set; }
 
+        // Loại hình giao hàng mở rộng
+        public string DeliveryType { get; set; }  // ShopEmployee hoặc ThirdParty
+        public string ThirdPartyName { get; set; }  // Tên hãng giao hàng (Grab, ShopeeFood, ...)
+        public string ThirdPartyOrderCode { get; set; }  // Mã đơn bên thứ 3
+        public string ThirdPartyShipperName { get; set; }  // Tên shipper bên thứ 3
+        public string ThirdPartyShipperPhone { get; set; }  // SĐT shipper bên thứ 3
+        public decimal? DistanceKm { get; set; }  // Khoảng cách giao hàng (km)
+        public string DistanceRange { get; set; }  // Khoảng cách dạng text (<10km, 10-20km, >20km)
+        public int? EmployeeId { get; set; }  // Nhân viên shop giao hàng
+        public string EmployeeName { get; set; }  // Tên nhân viên shop
+
         // Order items
         public List<OrderItemSummary> Items { get; set; }
     }
@@ -311,6 +322,7 @@ namespace NhaHangLDP.Models
         public string District { get; set; }
         public string Ward { get; set; }
         public decimal OrderAmount { get; set; }
+        public decimal? DistanceKm { get; set; }
     }
 
     /// <summary>
@@ -323,6 +335,162 @@ namespace NhaHangLDP.Models
         public bool IsFreeDelivery { get; set; }
         public decimal MinOrderForFree { get; set; }
         public string Message { get; set; }
+        public decimal? DistanceKm { get; set; }
+        public string DistanceRange { get; set; }
+    }
+
+    #endregion
+
+    #region Delivery Management Extended Models
+
+    /// <summary>
+    /// Loại hình giao hàng
+    /// </summary>
+    public static class DeliveryType
+    {
+        public const string ShopEmployee = "ShopEmployee";   // Nhân viên giao hàng của shop
+        public const string ThirdParty = "ThirdParty";       // Bên thứ 3 (Grab, ShopeeFood, ...)
+    }
+
+    /// <summary>
+    /// Danh sách các hãng giao hàng bên thứ 3
+    /// </summary>
+    public static class ThirdPartyShippers
+    {
+        public const string Grab = "Grab";
+        public const string ShopeeFood = "ShopeeFood";
+        public const string GoFood = "GoFood";
+        public const string Baemin = "Baemin";
+        public const string AhaMove = "AhaMove";
+        public const string Other = "Other";
+
+        public static List<string> GetAll()
+        {
+            return new List<string> { Grab, ShopeeFood, GoFood, Baemin, AhaMove, Other };
+        }
+    }
+
+    /// <summary>
+    /// Cấu hình phí giao hàng theo khoảng cách
+    /// </summary>
+    public class DistanceBasedFeeConfig
+    {
+        public decimal MaxDistanceKm { get; set; }
+        public decimal Fee { get; set; }
+        public string RangeName { get; set; }
+    }
+
+    /// <summary>
+    /// DTO cho gán đơn hàng cho bên thứ 3
+    /// </summary>
+    public class AssignThirdPartyDto
+    {
+        public int OrderId { get; set; }
+        public string ThirdPartyName { get; set; }
+        public string ThirdPartyOrderCode { get; set; }
+        public string ThirdPartyShipperName { get; set; }
+        public string ThirdPartyShipperPhone { get; set; }
+        public string Notes { get; set; }
+    }
+
+    /// <summary>
+    /// DTO cho tính phí theo khoảng cách
+    /// </summary>
+    public class CalculateFeeByDistanceDto
+    {
+        public decimal DistanceKm { get; set; }
+        public decimal OrderAmount { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel cho đơn hàng của nhân viên shop giao hàng
+    /// </summary>
+    public class ShopEmployeeDeliveryViewModel
+    {
+        public int AssignmentId { get; set; }
+        public int OrderId { get; set; }
+        public string OrderCode { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+        public string DeliveryAddress { get; set; }
+        public string District { get; set; }
+        public string Ward { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal DeliveryFee { get; set; }
+        public string PaymentMethod { get; set; }
+        public string PaymentStatus { get; set; }
+        public string Note { get; set; }
+        public string Status { get; set; }
+        public DateTime OrderDate { get; set; }
+        public DateTime AssignedTime { get; set; }
+        public DateTime? PickupTime { get; set; }
+        public DateTime? EstimatedArrival { get; set; }
+        public string DeliveryType { get; set; }
+        public int? EmployeeId { get; set; }
+        public string EmployeeName { get; set; }
+        public decimal? DistanceKm { get; set; }
+        public List<OrderItemSummary> Items { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel cho dashboard nhân viên giao hàng shop
+    /// </summary>
+    public class ShopEmployeeDeliveryDashboardViewModel
+    {
+        public Employee Employee { get; set; }
+        public List<ShopEmployeeDeliveryViewModel> ActiveOrders { get; set; }
+        public List<ShopEmployeeDeliveryViewModel> CompletedTodayOrders { get; set; }
+        public int TodayOrderCount { get; set; }
+        public int TodayCompletedCount { get; set; }
+        public decimal TodayTotalDeliveryFees { get; set; }
+    }
+
+    /// <summary>
+    /// Thông tin giao hàng bên thứ 3
+    /// </summary>
+    public class ThirdPartyDeliveryInfo
+    {
+        public int Id { get; set; }
+        public int OrderId { get; set; }
+        public string ThirdPartyName { get; set; }
+        public string ThirdPartyOrderCode { get; set; }
+        public string ThirdPartyShipperName { get; set; }
+        public string ThirdPartyShipperPhone { get; set; }
+        public string Status { get; set; }
+        public DateTime AssignedTime { get; set; }
+        public DateTime? PickupTime { get; set; }
+        public DateTime? DeliveryTime { get; set; }
+        public string Notes { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel tổng hợp quản lý giao hàng
+    /// </summary>
+    public class DeliveryManagementViewModel
+    {
+        public List<DeliveryOrderItemViewModel> PendingOrders { get; set; }
+        public List<DeliveryOrderItemViewModel> ShopDeliveryOrders { get; set; }
+        public List<DeliveryOrderItemViewModel> ThirdPartyOrders { get; set; }
+        public List<Shipper> AvailableShopShippers { get; set; }
+        public List<Employee> AvailableDeliveryEmployees { get; set; }
+        public List<DistanceBasedFeeConfig> FeeConfigs { get; set; }
+        public int TotalPending { get; set; }
+        public int TotalDelivering { get; set; }
+        public int TotalCompletedToday { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel cho cài đặt phí theo khoảng cách
+    /// </summary>
+    public class DistanceFeeSettingsViewModel
+    {
+        public decimal FeeUnder10Km { get; set; }
+        public decimal Fee10To20Km { get; set; }
+        public decimal FeeOver20Km { get; set; }
+        public decimal FreeDeliveryMinOrder { get; set; }
+        public bool EnableDistanceBasedFee { get; set; }
+        public double RestaurantLat { get; set; }
+        public double RestaurantLng { get; set; }
     }
 
     #endregion

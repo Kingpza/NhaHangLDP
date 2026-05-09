@@ -26,6 +26,25 @@ namespace NhaHangLDP.Controllers
         public ActionResult Index()
         {
             var cart = GetCart();
+            // Tính lại phí giao hàng theo cài đặt mới nhất
+            if (cart != null && cart.Items != null && cart.Items.Any())
+            {
+                UpdateCartTotals(cart);
+                SaveCart(cart);
+            }
+            ViewBag.FreeDeliveryMinOrder = GetFreeDeliveryMinOrder();
+
+            // Kiểm tra user có địa chỉ đã lưu không
+            var customerId = GetCustomerId();
+            ViewBag.HasAddress = false;
+            if (customerId.HasValue)
+            {
+                var addressCount = _db.Database.SqlQuery<int>(
+                    "SELECT COUNT(*) FROM CustomerAddress WHERE CustomerId = @p0", customerId.Value
+                ).FirstOrDefault();
+                ViewBag.HasAddress = addressCount > 0;
+            }
+
             return View(cart);
         }
 
@@ -459,12 +478,49 @@ namespace NhaHangLDP.Controllers
         {
             cart.SubTotal = cart.Items.Sum(i => i.Subtotal);
             cart.TotalItems = cart.Items.Sum(i => i.Quantity);
-            
-            // Phí ship (miễn phí đơn từ 300k)
-            cart.DeliveryFee = cart.SubTotal >= 300000 ? 0 : 25000;
-            
+
+            // Đọc phí giao hàng và ngưỡng miễn phí từ cài đặt
+            var defaultFee = GetDeliveryFeeFromSettings();
+            var freeMinOrder = GetFreeDeliveryMinOrder();
+
+            cart.DeliveryFee = (freeMinOrder > 0 && cart.SubTotal >= freeMinOrder) ? 0 : defaultFee;
+
             cart.TotalAmount = cart.SubTotal + cart.DeliveryFee - cart.Discount;
             if (cart.TotalAmount < 0) cart.TotalAmount = 0;
+        }
+
+        /// <summary>
+        /// Lấy phí giao hàng mặc định từ DB
+        /// </summary>
+        private decimal GetDeliveryFeeFromSettings()
+        {
+            try
+            {
+                var result = _db.Database.SqlQuery<string>(
+                    "SELECT SettingValue FROM DeliverySettings WHERE SettingKey = 'DefaultDeliveryFee'"
+                ).FirstOrDefault();
+                if (result != null && decimal.TryParse(result, out decimal value))
+                    return value;
+            }
+            catch { }
+            return 25000m;
+        }
+
+        /// <summary>
+        /// Lấy ngưỡng đơn miễn phí giao hàng từ DB
+        /// </summary>
+        private decimal GetFreeDeliveryMinOrder()
+        {
+            try
+            {
+                var result = _db.Database.SqlQuery<string>(
+                    "SELECT SettingValue FROM DeliverySettings WHERE SettingKey = 'FreeDeliveryMinOrder'"
+                ).FirstOrDefault();
+                if (result != null && decimal.TryParse(result, out decimal value))
+                    return value;
+            }
+            catch { }
+            return 300000m;
         }
 
         #endregion

@@ -202,7 +202,7 @@ namespace NhaHangLDP.Controllers
                     Session[CART_SESSION_KEY] = null;
                 }
 
-                TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà Hàng LDP.";
+                TempData["Success"] = "Đăng ký thành công! Chào mừng bạn đến với Nhà hàng Hỷ Lạc Hotpot.";
                 return RedirectToAction("Menu", "Public");
             }
             catch (Exception ex)
@@ -360,9 +360,9 @@ namespace NhaHangLDP.Controllers
             var pageSize = 10;
             var orders = _db.Database.SqlQuery<OrderSummaryInfo>(
                 @"SELECT o.Id, o.OrderCode, o.OrderDate, o.Status, o.TotalAmount,
-                         (SELECT COUNT(*) FROM OrderDetail WHERE OrderId = o.Id) as ItemCount,
-                         (SELECT TOP 1 m.ImageUrl FROM OrderDetail od 
-                          JOIN MenuItem m ON od.MenuItemId = m.Id WHERE od.OrderId = o.Id) as FirstItemImage
+                         (SELECT COUNT(*) FROM CustomerOrderDetail WHERE CustomerOrderId = o.Id) as ItemCount,
+                         (SELECT TOP 1 m.ImageUrl FROM CustomerOrderDetail od 
+                          JOIN MenuItem m ON od.MenuItemId = m.Id WHERE od.CustomerOrderId = o.Id) as FirstItemImage
                   FROM CustomerOrder o
                   WHERE o.CustomerId = @p0
                   ORDER BY o.OrderDate DESC
@@ -556,7 +556,7 @@ namespace NhaHangLDP.Controllers
                 var addresses = _db.Database.SqlQuery<CustomerAddressInfo>(
                     @"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault
                       FROM CustomerAddress
-                      WHERE CustomerId = @p0 AND IsDeleted = 0
+                      WHERE CustomerId = @p0
                       ORDER BY IsDefault DESC, Id DESC",
                     customerId).ToList();
 
@@ -597,7 +597,7 @@ namespace NhaHangLDP.Controllers
                 var address = _db.Database.SqlQuery<CustomerAddressInfo>(
                     @"SELECT Id, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault
                       FROM CustomerAddress
-                      WHERE Id = @p0 AND CustomerId = @p1 AND IsDeleted = 0",
+                      WHERE Id = @p0 AND CustomerId = @p1",
                     id, customerId).FirstOrDefault();
 
                 if (address == null)
@@ -641,8 +641,8 @@ namespace NhaHangLDP.Controllers
                 {
                     // Insert new address
                     _db.Database.ExecuteSqlCommand(
-                        @"INSERT INTO CustomerAddress (CustomerId, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault, IsDeleted, CreatedDate)
-                          VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, 0, GETDATE())",
+                        @"INSERT INTO CustomerAddress (CustomerId, ReceiverName, ReceiverPhone, AddressLine, Ward, District, City, AddressType, IsDefault)
+                          VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8)",
                         customerId, receiverName, receiverPhone, addressLine, ward, district, city, addressType, isDefault);
             
             return Json(new { success = true, message = "Thêm địa chỉ thành công!" });
@@ -721,9 +721,9 @@ public JsonResult DeleteAddress(int id)
             return Json(new { success = false, message = "Không thể xóa địa chỉ mặc định!" });
         }
 
-        // Soft delete
+        // Delete address
         _db.Database.ExecuteSqlCommand(
-            "UPDATE CustomerAddress SET IsDeleted = 1 WHERE Id = @p0 AND CustomerId = @p1",
+            "DELETE FROM CustomerAddress WHERE Id = @p0 AND CustomerId = @p1",
             id, customerId);
 
         return Json(new { success = true, message = "Đã xóa địa chỉ!" });

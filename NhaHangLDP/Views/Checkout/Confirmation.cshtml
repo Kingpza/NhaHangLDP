@@ -9,7 +9,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Đặt hàng thành công - Nhà Hàng LDP</title>
+    <title>Đặt hàng thành công - Nhà hàng Hỷ Lạc Hotpot</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,7 +38,7 @@
                 <span class="material-symbols-outlined text-5xl text-success">check_circle</span>
             </div>
             <h1 class="text-3xl font-bold text-gray-800 mb-2">Đặt hàng thành công!</h1>
-            <p class="text-gray-600">Cảm ơn bạn đã đặt hàng tại Nhà Hàng LDP</p>
+            <p class="text-gray-600">Cảm ơn bạn đã đặt hàng tại Nhà hàng Hỷ Lạc Hotpot</p>
         </div>
 
         <!-- Order Info Card -->
@@ -157,5 +157,21 @@
             <p class="mt-1">Hoặc email: support@nhahangldp.com</p>
         </div>
     </div>
+
+    @if (TempData["PaymentSuccess"] != null)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thanh toán thành công!',
+                    text: '@Html.Raw(TempData["PaymentMessage"])',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#007bff'
+                });
+            });
+        </script>
+    }
 </body>
 </html>

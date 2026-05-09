@@ -1,0 +1,125 @@
+﻿@model NhaHangLDP.Controllers.CreateAccountDto
+@{
+    ViewBag.Title = "Tạo Tài Khoản Mới";
+    Layout = "~/Views/Shared/_ManagementLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex align-items-center">
+                <a href="@Url.Action("Index")" class="btn btn-outline-custom me-3">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+                <div>
+                    <h4 class="mb-1" style="color: var(--primary-dark); font-weight: 700;">
+                        <i class="fas fa-user-plus me-2" style="color: var(--primary-blue);"></i>Tạo Tài Khoản Mới
+                    </h4>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Nhập thông tin để tạo tài khoản mới</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    @using (Html.BeginForm("Create", "AccountManagement", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tên đăng nhập <span class="text-danger">*</span></label>
+                                @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Nhập tên đăng nhập", required = "required" })
+                                <small class="text-muted">Chỉ sử dụng chữ cái, số và dấu gạch dưới</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mật khẩu <span class="text-danger">*</span></label>
+                                @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Nhập mật khẩu", required = "required", minlength = "6" })
+                                <small class="text-muted">Tối thiểu 6 ký tự</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                            @Html.TextBoxFor(m => m.FullName, new { @class = "form-control", placeholder = "Nhập họ và tên đầy đủ", required = "required" })
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "example@email.com", type = "email" })
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Số điện thoại</label>
+                                @Html.TextBoxFor(m => m.Phone, new { @class = "form-control", placeholder = "0123456789", pattern = "[0-9]{10,11}" })
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Vai trò <span class="text-danger">*</span></label>
+                            @Html.DropDownListFor(m => m.RoleId, 
+                                new SelectList(ViewBag.Roles, "Id", "RoleName"), 
+                                "-- Chọn vai trò --",
+                                new { @class = "form-select", required = "required" })
+                            <small class="text-muted">Vai trò xác định quyền truy cập của người dùng</small>
+                        </div>
+
+                        <div class="alert alert-info d-flex align-items-start">
+                            <i class="fas fa-info-circle me-3 mt-1" style="font-size: 20px;"></i>
+                            <div>
+                                <strong>Lưu ý về vai trò:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li><strong>Admin:</strong> Toàn quyền quản trị hệ thống</li>
+                                    <li><strong>Manager:</strong> Quản lý nhà hàng, xem báo cáo</li>
+                                    <li><strong>Cashier:</strong> Thu ngân, thanh toán hóa đơn</li>
+                                    <li><strong>Chef:</strong> Quản lý bếp, xem đơn hàng</li>
+                                    <li><strong>Staff:</strong> Nhân viên phục vụ</li>
+                                    <li><strong>DeliveryStaff:</strong> Nhân viên giao hàng</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary-custom">
+                                <i class="fas fa-save me-2"></i>Tạo Tài Khoản
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-outline-custom">
+                                <i class="fas fa-times me-2"></i>Hủy
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        // Form validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+}
